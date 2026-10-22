@@ -79,6 +79,12 @@ final class Rules
         return $this->data['tracks'][$slug] ?? null;
     }
 
+    /** The track a new run starts on: the first one of the rules. */
+    public function startingTrack(): string
+    {
+        return (string) array_key_first($this->data['tracks']);
+    }
+
     /** @return array<string, array<string, mixed>> */
     public function tracks(): array
     {

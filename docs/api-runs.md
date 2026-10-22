@@ -44,12 +44,17 @@ Każda odpowiedź ma `data` (bieg) i `wallet` (gotówka w centach i XP po wywoł
 
 | Metoda i ścieżka | Co robi |
 |---|---|
+| `GET /starter-cars` | Wraki startowe do wyboru, z opisem i tym, co robią na torze startowym |
 | `POST /runs` | Start: wrak startowy na torze, z pełnym bakiem |
 | `GET /runs/current` | Bieg kierowcy, rozliczony do teraz, z podsumowaniem |
 | `GET /runs/{id}` | To samo, po identyfikatorze |
 | `POST /runs/{id}/refuel` | Tankowanie |
 | `PATCH /runs/{id}` | Zmiana ustawień (na razie toru) |
 | `POST /runs/{id}/repair` | Naprawa po awarii |
+
+### Wybór wraku: `GET /starter-cars`
+
+Trzy wraki startowe, od najtańszego (to on jest polecany na start), i tor, na którym zacznie się bieg (`track`). Każde auto ma `name`, `description`, `class`, `drivetrain`, `engine` (`layout`, `displacement_l`), `power_kw`, `mass_kg`, `top_speed_kmh`, `cargo_kg`, `tank_l` oraz `lap`: czas okrążenia, nagrodę, XP i zużycie paliwa w najczęstszej pogodzie na torze. Liczby `lap` policzył ten sam kod, który zamraża bieg, więc ekran wyboru pokazuje to, co auto naprawdę pojedzie.
 
 ### Start: `POST /runs`
 
