@@ -1,0 +1,14 @@
+{
+  "slug": "street-tires-t2",
+  "name": {
+    "en": "Street tires",
+    "pl": "Opony uliczne",
+    "fr": "Pneus routiers",
+    "de": "Straßenreifen",
+    "pt-BR": "Pneus de rua"
+  },
+  "slot": "tires",
+  "tier": 2,
+  "price_cents": 57000,
+  "stats": { "grip": 100, "handling": 98, "braking": 100 }
+}

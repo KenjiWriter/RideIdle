@@ -1,0 +1,24 @@
+{
+  "slug": "kuna-4x4",
+  "name": {
+    "en": "Kuna 4x4",
+    "pl": "Kuna 4x4",
+    "fr": "Kuna 4x4",
+    "de": "Kuna 4x4",
+    "pt-BR": "Kuna 4x4"
+  },
+  "class": "pickup",
+  "drivetrain": "awd",
+  "powertrain": "ice",
+  "engine": { "layout": "R4", "displacement_l": 2.0, "tune": 0.9 },
+  "power_kw": 97,
+  "mass_kg": 1480,
+  "top_speed_kmh": 160,
+  "cargo_kg": 520,
+  "seats": 5,
+  "tank_l": 70,
+  "tier": 2,
+  "min_player_level": 3,
+  "price_cents": 3200000,
+  "sources": ["start", "exchange"]
+}

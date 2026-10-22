@@ -1,0 +1,14 @@
+{
+  "slug": "factory-cooling-t1",
+  "name": {
+    "en": "Factory cooling",
+    "pl": "Chłodzenie fabryczne",
+    "fr": "Refroidissement d’origine",
+    "de": "Serienkühlung",
+    "pt-BR": "Arrefecimento de fábrica"
+  },
+  "slot": "cooling",
+  "tier": 1,
+  "price_cents": 30000,
+  "stats": { "cooling": 100 }
+}

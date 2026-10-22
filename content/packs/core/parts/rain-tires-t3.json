@@ -1,0 +1,14 @@
+{
+  "slug": "rain-tires-t3",
+  "name": {
+    "en": "Rain tires",
+    "pl": "Opony deszczowe",
+    "fr": "Pneus pluie",
+    "de": "Regenreifen",
+    "pt-BR": "Pneus de chuva"
+  },
+  "slot": "tires",
+  "tier": 3,
+  "price_cents": 75000,
+  "stats": { "grip": 96, "handling": 95, "braking": 97, "wet_grip": 125 }
+}

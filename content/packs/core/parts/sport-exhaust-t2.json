@@ -1,0 +1,14 @@
+{
+  "slug": "sport-exhaust-t2",
+  "name": {
+    "en": "Sport exhaust",
+    "pl": "Wydech sportowy",
+    "fr": "Échappement sport",
+    "de": "Sportauspuff",
+    "pt-BR": "Escapamento esportivo"
+  },
+  "slot": "exhaust",
+  "tier": 2,
+  "price_cents": 47500,
+  "stats": { "power_mult": 1.02 }
+}

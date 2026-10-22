@@ -1,0 +1,14 @@
+{
+  "slug": "fuel-tank-45l-t1",
+  "name": {
+    "en": "Standard fuel tank 45 l",
+    "pl": "Standardowy zbiornik paliwa 45 l",
+    "fr": "Réservoir standard 45 l",
+    "de": "Standardtank 45 l",
+    "pt-BR": "Tanque padrão de 45 l"
+  },
+  "slot": "tank",
+  "tier": 1,
+  "price_cents": 22500,
+  "stats": { "capacity_l": 45 }
+}

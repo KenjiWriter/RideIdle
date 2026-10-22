@@ -1,0 +1,12 @@
+{
+  "schema": 0,
+  "name": "core",
+  "version": "2026.10.0",
+  "description": {
+    "en": "Core content: the three starter wrecks and the basic parts",
+    "pl": "Treść podstawowa: trzy wraki startowe i podstawowe części",
+    "fr": "Contenu de base : les trois épaves de départ et les pièces de base",
+    "de": "Basisinhalt: die drei Start-Wracks und die Grundteile",
+    "pt-BR": "Conteúdo base: as três carcaças iniciais e as peças básicas"
+  }
+}

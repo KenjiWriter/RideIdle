@@ -1,0 +1,24 @@
+{
+  "slug": "rdzak-gt-4",
+  "name": {
+    "en": "Rdzak GT-4",
+    "pl": "Rdzak GT-4",
+    "fr": "Rdzak GT-4",
+    "de": "Rdzak GT-4",
+    "pt-BR": "Rdzak GT-4"
+  },
+  "class": "hatchback",
+  "drivetrain": "fwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R4", "displacement_l": 1.8, "tune": 1.0 },
+  "power_kw": 97,
+  "mass_kg": 1000,
+  "top_speed_kmh": 175,
+  "cargo_kg": 120,
+  "seats": 4,
+  "tank_l": 45,
+  "tier": 2,
+  "min_player_level": 3,
+  "price_cents": 2150000,
+  "sources": ["start", "exchange"]
+}

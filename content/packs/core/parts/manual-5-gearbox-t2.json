@@ -1,0 +1,14 @@
+{
+  "slug": "manual-5-gearbox-t2",
+  "name": {
+    "en": "Manual 5-speed gearbox",
+    "pl": "Skrzynia manualna 5-biegowa",
+    "fr": "Boîte manuelle 5 vitesses",
+    "de": "Fünfgang-Schaltgetriebe",
+    "pt-BR": "Câmbio manual de 5 marchas"
+  },
+  "slot": "gearbox",
+  "tier": 2,
+  "price_cents": 114000,
+  "stats": { "gears": 5, "top_speed_cap_kmh": 190 }
+}

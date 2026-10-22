@@ -1,0 +1,14 @@
+{
+  "slug": "offroad-tires-t2",
+  "name": {
+    "en": "Off-road tires",
+    "pl": "Opony terenowe",
+    "fr": "Pneus tout-terrain",
+    "de": "Geländereifen",
+    "pt-BR": "Pneus off-road"
+  },
+  "slot": "tires",
+  "tier": 2,
+  "price_cents": 62000,
+  "stats": { "grip": 92, "handling": 90, "braking": 90 }
+}

@@ -1,0 +1,14 @@
+{
+  "slug": "disc-brakes-t2",
+  "name": {
+    "en": "Disc brakes",
+    "pl": "Hamulce tarczowe",
+    "fr": "Freins à disque",
+    "de": "Scheibenbremsen",
+    "pt-BR": "Freios a disco"
+  },
+  "slot": "brakes",
+  "tier": 2,
+  "price_cents": 76000,
+  "stats": { "braking": 105, "fade_resistance": 100 }
+}
