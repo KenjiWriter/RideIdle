@@ -7,6 +7,8 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -53,5 +55,17 @@ class User extends Authenticatable
     public function hasRecoveryCode(): bool
     {
         return $this->recovery_code_hash !== null;
+    }
+
+    /** @return HasOne<Wallet, $this> */
+    public function wallet(): HasOne
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
+    /** @return HasMany<RaceRun, $this> */
+    public function raceRuns(): HasMany
+    {
+        return $this->hasMany(RaceRun::class);
     }
 }
