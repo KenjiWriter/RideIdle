@@ -78,6 +78,6 @@ Testy API na konkretnej bazie: `DB_CONNECTION=mariadb DB_HOST=127.0.0.1 DB_PORT=
 
 Faza F0 (środowisko i szkielet). Postęp według roadmapy z płótna.
 
-Zrobione: szkielet Laravel 13 (Sanctum, Pest, testy architektury), szkielet Vue 3 (TypeScript, Pinia, router, Tailwind, Vitest), wsparcie pięciu języków w API i w aplikacji, Docker Compose, CI z macierzą baz.
+Zrobione: szkielet Laravel 13 (Sanctum, Pest, testy architektury), szkielet Vue 3 (TypeScript, Pinia, router, Tailwind, Vitest), wsparcie pięciu języków w API i w aplikacji, Docker Compose, CI z macierzą baz, konto gościa (unikalne imię kierowcy, token urządzenia, kod odzyskiwania z limitami prób, wygasanie nieużywanych kont), schemat paczki treści v0 z walidatorem i paczka startowa (`content/`).
 
-Dalej: rejestracja i logowanie gościa (kod odzyskiwania), schemat paczki treści v0, rozliczanie według specyfikacji (`settle` jako funkcja czysta z testami W1–W7).
+Dalej: ekran tworzenia kierowcy w `web` (landing, imię, kod odzyskiwania), rozliczanie według specyfikacji (`settle` jako funkcja czysta z testami W1–W7), tabele definicji i instancji z paczek treści.
