@@ -2,10 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Domain\Run\CarStats;
 use App\Domain\Run\RunFreezer;
-use App\Domain\Run\RunInputs;
-use App\Domain\Run\TrackProfile;
 use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\Settlement;
@@ -13,24 +10,6 @@ use App\Models\User;
 use Database\Factories\RaceRunFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Event;
-
-/** Dry weather only, so the lap time is the same everywhere and the arithmetic stays readable. */
-function dryInputs(float $stat = 100.0, int $rewardCents = 2_000, int $breakChancePpm = 0): RunInputs
-{
-    return new RunInputs(
-        car: new CarStats(['grip' => $stat, 'power' => $stat]),
-        track: new TrackProfile(['grip' => 0.5, 'power' => 0.5], ['grip' => 100.0, 'power' => 100.0], 75_000, 1_500, $rewardCents, 30),
-        weatherChancesPpm: ['dry' => 1_000_000],
-        weatherEffects: [],
-        climateSeed: 'region-zlomowo',
-        breakChancePerLapPpm: $breakChancePpm,
-    );
-}
-
-function lapMsOf(RaceRun $run): int
-{
-    return $run->config['lap_ms']['dry'];
-}
 
 it('settles with the old configuration, then freezes the new one and continues from now', function () {
     $run = aRun(['fuel_ml' => 45_000]);

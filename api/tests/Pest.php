@@ -1,5 +1,8 @@
 <?php
 
+use App\Domain\Run\CarStats;
+use App\Domain\Run\RunInputs;
+use App\Domain\Run\TrackProfile;
 use App\Models\RaceRun;
 use App\Services\Ledger;
 use App\Services\RunService;
@@ -65,4 +68,22 @@ function aRun(array $attributes = []): RaceRun
 function cashOf(RaceRun $run): int
 {
     return (new Ledger())->balance($run->user_id);
+}
+
+/** Dry weather only, so the lap time is the same everywhere and the arithmetic stays readable. */
+function dryInputs(float $stat = 100.0, int $rewardCents = 2_000, int $breakChancePpm = 0): RunInputs
+{
+    return new RunInputs(
+        car: new CarStats(['grip' => $stat, 'power' => $stat]),
+        track: new TrackProfile(['grip' => 0.5, 'power' => 0.5], ['grip' => 100.0, 'power' => 100.0], 75_000, 1_500, $rewardCents, 30),
+        weatherChancesPpm: ['dry' => 1_000_000],
+        weatherEffects: [],
+        climateSeed: 'region-zlomowo',
+        breakChancePerLapPpm: $breakChancePpm,
+    );
+}
+
+function lapMsOf(RaceRun $run): int
+{
+    return $run->config['lap_ms']['dry'];
 }

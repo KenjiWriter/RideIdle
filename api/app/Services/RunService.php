@@ -105,6 +105,44 @@ final class RunService
     }
 
     /**
+     * Repairs a run that broke down. The run is settled first, so the laps up to the breakdown are paid with
+     * the old configuration. Then the configuration is frozen again with a new seed, which plans the next
+     * breakdown independently of the one that just happened, and the car drives again from now: the time it stood
+     * is not paid.
+     *
+     * Only a breakdown is repaired. A run that is driving, or that only ran out of fuel, is left as it is, so a
+     * repair cannot be used to re-roll the planned breakdown. If the tank is empty as well, the run stays
+     * stopped for fuel and a refuel starts it.
+     */
+    public function repair(int $runId, RunInputs $inputs, ?int $nowMs = null): Repaired
+    {
+        return $this->locked($runId, $nowMs, function (RaceRun $run, int $now) use ($inputs): Repaired {
+            $this->settleLocked($run, $now);
+
+            if ($run->status !== RaceRun::STATUS_STOPPED || $run->stop_reason !== EventType::Breakdown->value) {
+                return new Repaired($run, false);
+            }
+
+            $seed = bin2hex(random_bytes(16));
+            $frozen = $this->freezer->freeze($inputs, $seed, $run->laps_done);
+            $canDrive = $run->fuel_ml >= $frozen->config['fuel_per_lap_ml'];
+
+            $run->forceFill([
+                'seed' => $seed,
+                'config' => $frozen->config,
+                'break_after_laps' => $frozen->breakAfterLaps,
+                'ruleset_version' => $this->rulesetVersion(),
+                'status' => $canDrive ? RaceRun::STATUS_RUNNING : RaceRun::STATUS_STOPPED,
+                'stop_reason' => $canDrive ? null : EventType::FuelEmpty->value,
+                'cursor_ms' => max($run->cursor_ms, $now),
+                'state_version' => $run->state_version + 1,
+            ])->save();
+
+            return new Repaired($run, true);
+        });
+    }
+
+    /**
      * Buys fuel for a run: settles it first (what the car earned so far can pay for the fuel), charges the
      * ledger and fills the tank. Fills the tank when `$addMl` is null, and never more than the tank holds.
      * The price is rounded up to a whole cent.
