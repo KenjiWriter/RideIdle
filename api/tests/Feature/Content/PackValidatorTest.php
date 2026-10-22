@@ -233,3 +233,28 @@ it('rejects a malformed pack version', function () {
 
     expect(errorsOf($result))->toContain('pack.json /version');
 });
+
+it('accepts an optional description and warns about its missing translations', function () use ($manifest) {
+    $result = validatePack([
+        'pack.json' => $manifest,
+        'vehicles/rdzak-gt-4.json' => validVehicle(['description' => ['en' => 'City streets.', 'pl' => 'Ulica.']]),
+    ]);
+
+    $pointers = array_column($result->warnings(), 'pointer');
+
+    expect($result->isValid())->toBeTrue()
+        ->and($pointers)->toEqualCanonicalizing([
+            '/name/fr', '/name/de', '/name/pt-BR',
+            '/description/fr', '/description/de', '/description/pt-BR',
+        ]);
+});
+
+it('refuses a description that lacks a required language', function () use ($manifest) {
+    $result = validatePack([
+        'pack.json' => $manifest,
+        'vehicles/rdzak-gt-4.json' => validVehicle(['description' => ['en' => 'City streets.']]),
+    ]);
+
+    expect($result->isValid())->toBeFalse()
+        ->and(errorsOf($result))->toContain('vehicles/rdzak-gt-4.json /description');
+});

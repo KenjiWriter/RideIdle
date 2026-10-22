@@ -157,15 +157,17 @@ final class PackValidator
     /** @param array<string, mixed> $data */
     private function warnAboutMissingTranslations(string $relative, array $data, PackValidationResult $result): void
     {
-        $name = $data['name'] ?? null;
+        foreach (['name', 'description'] as $field) {
+            $text = $data[$field] ?? null;
 
-        if (! is_array($name)) {
-            return;
-        }
+            if (! is_array($text)) {
+                continue;
+            }
 
-        foreach (Locale::supported() as $locale) {
-            if (! isset($name[$locale])) {
-                $result->addWarning($relative, "/name/{$locale}", "Missing translation, English is used instead.");
+            foreach (Locale::supported() as $locale) {
+                if (! isset($text[$locale])) {
+                    $result->addWarning($relative, "/{$field}/{$locale}", 'Missing translation, English is used instead.');
+                }
             }
         }
     }

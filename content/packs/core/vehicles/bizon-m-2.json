@@ -7,6 +7,13 @@
     "de": "Bizon M-2",
     "pt-BR": "Bizon M-2"
   },
+  "description": {
+    "en": "Plenty of power on dry asphalt. Weak on gravel and in the rain.",
+    "pl": "Dużo mocy na suchym asfalcie. Słaby na żwirze i w deszczu.",
+    "fr": "Beaucoup de puissance sur asphalte sec. Faible sur gravier et sous la pluie.",
+    "de": "Viel Leistung auf trockenem Asphalt. Schwach auf Schotter und im Regen.",
+    "pt-BR": "Muita potência no asfalto seco. Fraco no cascalho e na chuva."
+  },
   "class": "muscle",
   "drivetrain": "rwd",
   "powertrain": "ice",

@@ -6,6 +6,10 @@
   "properties": {
     "slug": { "$ref": "common.schema.json#/$defs/slug" },
     "name": { "$ref": "common.schema.json#/$defs/i18n" },
+    "description": {
+      "description": "Optional short text for the player, for example on the choice of a starter wreck.",
+      "$ref": "common.schema.json#/$defs/i18n"
+    },
     "class": {
       "enum": ["hatchback", "hot_hatch", "sedan", "coupe", "muscle", "pickup", "van", "gt", "super", "hyper"]
     },

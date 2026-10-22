@@ -7,6 +7,13 @@
     "de": "Kuna 4x4",
     "pt-BR": "Kuna 4x4"
   },
+  "description": {
+    "en": "Off-road, rain and cargo. Weaker at drag racing and top speed.",
+    "pl": "Teren, deszcz i towary. Słabsza na dragu i w prędkości.",
+    "fr": "Tout-terrain, pluie et marchandises. Moins à l’aise en drag et en vitesse de pointe.",
+    "de": "Gelände, Regen und Fracht. Schwächer im Drag-Rennen und bei der Höchstgeschwindigkeit.",
+    "pt-BR": "Fora de estrada, chuva e carga. Mais fraca em arrancadas e em velocidade final."
+  },
   "class": "pickup",
   "drivetrain": "awd",
   "powertrain": "ice",
