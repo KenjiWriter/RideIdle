@@ -12,12 +12,16 @@
   "language": {
     "label": "Język"
   },
-  "home": {
-    "title": "Twoja dziupla czeka",
-    "subtitle": "Odbuduj wraki, kupuj coraz lepsze auta i ścigaj się, nawet gdy Cię nie ma."
-  },
   "common": {
     "loading": "Ładowanie…",
     "retry": "Spróbuj ponownie"
+  },
+  "landing": {
+    "title": "Twoja dziupla czeka",
+    "subtitle": "Odbuduj wraki, kupuj coraz lepsze auta i ścigaj się, nawet gdy Cię nie ma.",
+    "create": "Utwórz kierowcę",
+    "continue": "Kontynuuj jako {name}",
+    "continueGeneric": "Kontynuuj",
+    "haveDriver": "Mam już kierowcę"
   }
 }

@@ -12,12 +12,16 @@
   "language": {
     "label": "Langue"
   },
-  "home": {
-    "title": "Votre atelier vous attend",
-    "subtitle": "Retapez des épaves, achetez de meilleures voitures et courez même en votre absence."
-  },
   "common": {
     "loading": "Chargement…",
     "retry": "Réessayer"
+  },
+  "landing": {
+    "title": "Votre atelier vous attend",
+    "subtitle": "Retapez des épaves, achetez de meilleures voitures et courez même en votre absence.",
+    "create": "Créer votre pilote",
+    "continue": "Continuer en tant que {name}",
+    "continueGeneric": "Continuer",
+    "haveDriver": "J’ai déjà un pilote"
   }
 }

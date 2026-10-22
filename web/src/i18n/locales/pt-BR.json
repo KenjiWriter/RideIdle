@@ -12,12 +12,16 @@
   "language": {
     "label": "Idioma"
   },
-  "home": {
-    "title": "Sua oficina está esperando",
-    "subtitle": "Reconstrua carcaças, compre carros melhores e corra mesmo quando você não está."
-  },
   "common": {
     "loading": "Carregando…",
     "retry": "Tentar novamente"
+  },
+  "landing": {
+    "title": "Sua oficina está esperando",
+    "subtitle": "Reconstrua carcaças, compre carros melhores e corra mesmo quando você não está.",
+    "create": "Criar seu piloto",
+    "continue": "Continuar como {name}",
+    "continueGeneric": "Continuar",
+    "haveDriver": "Já tenho um piloto"
   }
 }

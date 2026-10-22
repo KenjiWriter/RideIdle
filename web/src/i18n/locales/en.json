@@ -12,12 +12,16 @@
   "language": {
     "label": "Language"
   },
-  "home": {
-    "title": "Your workshop is waiting",
-    "subtitle": "Rebuild wrecks, buy better cars and race even when you are away."
-  },
   "common": {
     "loading": "Loading…",
     "retry": "Try again"
+  },
+  "landing": {
+    "title": "Your workshop is waiting",
+    "subtitle": "Rebuild wrecks, buy better cars and race even when you are away.",
+    "create": "Create your driver",
+    "continue": "Continue as {name}",
+    "continueGeneric": "Continue",
+    "haveDriver": "I already have a driver"
   }
 }

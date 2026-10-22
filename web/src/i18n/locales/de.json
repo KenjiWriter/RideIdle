@@ -12,12 +12,16 @@
   "language": {
     "label": "Sprache"
   },
-  "home": {
-    "title": "Deine Werkstatt wartet",
-    "subtitle": "Baue Wracks wieder auf, kaufe bessere Autos und fahre Rennen, auch wenn du nicht da bist."
-  },
   "common": {
     "loading": "Wird geladen…",
     "retry": "Erneut versuchen"
+  },
+  "landing": {
+    "title": "Deine Werkstatt wartet",
+    "subtitle": "Baue Wracks wieder auf, kaufe bessere Autos und fahre Rennen, auch wenn du nicht da bist.",
+    "create": "Fahrer erstellen",
+    "continue": "Weiter als {name}",
+    "continueGeneric": "Weiter",
+    "haveDriver": "Ich habe schon einen Fahrer"
   }
 }
