@@ -56,6 +56,37 @@ final class RunController extends Controller
         return $this->respond($run, 201);
     }
 
+    /**
+     * Buys fuel. `request_id` is chosen by the client for one intention to refuel: sending it again, for example
+     * after an answer was lost, charges and fills once. `liters` is how much to buy, or the whole tank when
+     * left out, and never more than the tank holds. What the car earned until now is settled first and can pay for it.
+     */
+    public function refuel(Request $request, int $run): JsonResponse
+    {
+        $found = $this->ownRun($request, $run);
+
+        if ($found === null) {
+            return $this->noRun();
+        }
+
+        $data = $request->validate([
+            'request_id' => ['required', 'string', 'max:'.RunService::MAX_REQUEST_ID_LENGTH],
+            'liters' => ['nullable', 'integer', 'min:1', 'max:1000'],
+        ]);
+
+        $refueled = $this->runs->refuel(
+            $found->id,
+            $data['request_id'],
+            $this->inputs->tankMl($found->car_slug),
+            $this->rules->fuelPriceCentsPerLiter(),
+            isset($data['liters']) ? $data['liters'] * 1000 : null,
+        );
+
+        return $this->respond($refueled->run, 200, [
+            'refuel' => ['added_ml' => $refueled->addedMl, 'cost_cents' => $refueled->costCents, 'repeated' => $refueled->repeated],
+        ]);
+    }
+
     /** The run of the driver, settled up to now. */
     public function current(Request $request): JsonResponse
     {
@@ -67,9 +98,15 @@ final class RunController extends Controller
     /** A run of the driver by id, settled up to now. */
     public function show(Request $request, int $run): JsonResponse
     {
-        $found = RaceRun::query()->where('user_id', $request->user()->getAuthIdentifier())->find($run);
+        $found = $this->ownRun($request, $run);
 
         return $found === null ? $this->noRun() : $this->summary($request, $found);
+    }
+
+    /** A run by id, but only if it is the driver's own: another driver's run is as good as not there. */
+    private function ownRun(Request $request, int $id): ?RaceRun
+    {
+        return RaceRun::query()->where('user_id', $request->user()->getAuthIdentifier())->find($id);
     }
 
     /**

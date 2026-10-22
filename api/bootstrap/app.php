@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\RunAlreadyExistsException;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -30,4 +31,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'code' => 'run_exists',
             'run_id' => $e->runId,
         ], 409));
+
+        $exceptions->render(fn (InsufficientFundsException $e) => response()->json([
+            'message' => __('game.errors.insufficient_funds'),
+            'code' => 'insufficient_funds',
+            'available_cents' => $e->availableCents,
+            'required_cents' => $e->requiredCents,
+        ], 422));
     })->create();
