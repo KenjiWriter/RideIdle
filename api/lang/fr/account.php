@@ -7,4 +7,9 @@ return [
         'locked' => 'Trop de tentatives échouées. Réessayez plus tard.',
     ],
 
+    'name' => [
+        'attribute' => 'nom du pilote',
+        'taken' => 'Ce nom de pilote est déjà pris.',
+    ],
+
 ];

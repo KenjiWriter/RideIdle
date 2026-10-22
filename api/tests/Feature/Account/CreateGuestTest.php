@@ -73,17 +73,26 @@ it('does not allow the same name in a different case', function () {
     expect(User::query()->count())->toBe(1);
 });
 
-it('returns validation messages in the language of the request', function () {
+it('says that a name is taken in the language of the request', function (array $headers, string $message) {
     $this->postJson('/api/v1/players', ['name' => 'Turbo'])->assertCreated();
 
-    $english = $this->postJson('/api/v1/players', ['name' => 'Turbo'])->json('errors.name.0');
-    $french = $this->postJson('/api/v1/players', ['name' => 'Turbo'], ['Accept-Language' => 'fr'])->json('errors.name.0');
-    $polish = $this->postJson('/api/v1/players', ['name' => 'Turbo'], ['X-Locale' => 'pl'])->json('errors.name.0');
+    $this->postJson('/api/v1/players', ['name' => 'Turbo'], $headers)
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.name.0', $message);
+})->with([
+    'English' => [[], 'This driver name is already taken.'],
+    'Polish' => [['X-Locale' => 'pl'], 'To imię kierowcy jest już zajęte.'],
+    'French' => [['Accept-Language' => 'fr'], 'Ce nom de pilote est déjà pris.'],
+    'German' => [['X-Locale' => 'de'], 'Dieser Fahrername ist bereits vergeben.'],
+    'Brazilian Portuguese' => [['X-Locale' => 'br'], 'Este nome de piloto já está em uso.'],
+]);
 
-    expect($english)->toBeString()
-        ->and($french)->not->toBe($english)
-        ->and($polish)->not->toBe($english)
-        ->and($polish)->not->toBe($french);
+it('names the field in validation messages in the language of the request', function () {
+    $english = $this->postJson('/api/v1/players', ['name' => 'ab'])->json('errors.name.0');
+    $polish = $this->postJson('/api/v1/players', ['name' => 'ab'], ['X-Locale' => 'pl'])->json('errors.name.0');
+
+    expect($english)->toContain('driver name')
+        ->and($polish)->toContain('imię kierowcy');
 });
 
 it('limits guest creation per address', function () {

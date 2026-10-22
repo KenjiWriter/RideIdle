@@ -7,4 +7,9 @@ return [
         'locked' => 'Too many failed attempts. Try again later.',
     ],
 
+    'name' => [
+        'attribute' => 'driver name',
+        'taken' => 'This driver name is already taken.',
+    ],
+
 ];

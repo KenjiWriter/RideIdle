@@ -35,6 +35,12 @@ final class CreateGuestRequest extends FormRequest
         ];
     }
 
+    /** Field names used in validation messages, in the language of the request. */
+    public function attributes(): array
+    {
+        return ['name' => __('account.name.attribute')];
+    }
+
     /** The preferred language: the one in the body, otherwise the language negotiated for this request. */
     public function preferredLocale(): string
     {
@@ -46,7 +52,7 @@ final class CreateGuestRequest extends FormRequest
     private function nameIsFree(string $attribute, mixed $value, Closure $fail): void
     {
         if (is_string($value) && User::query()->where('name_key', User::nameKey($value))->exists()) {
-            $fail('validation.unique')->translate();
+            $fail('account.name.taken')->translate();
         }
     }
 }

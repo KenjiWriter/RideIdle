@@ -29,9 +29,7 @@ final class PlayerController extends Controller
             $user->save();
         } catch (UniqueConstraintViolationException) {
             // Two requests with the same name raced past the validation: the database decides.
-            throw ValidationException::withMessages([
-                'name' => __('validation.unique', ['attribute' => 'name']),
-            ]);
+            throw ValidationException::withMessages(['name' => __('account.name.taken')]);
         }
 
         return response()->json([
