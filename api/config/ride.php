@@ -44,4 +44,16 @@ return [
     // Kolejność szukania tłumaczenia treści, gdy brakuje wybranego języka.
     'content_fallbacks' => ['en', 'pl'],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Konta gościa
+    |--------------------------------------------------------------------------
+    |
+    | Gość bez aktywności przez tyle dni jest usuwany (konto gościa nie ma
+    | danych osobowych ani sposobu kontaktu).
+    |
+    */
+
+    'guest_expiry_days' => 90,
+
 ];
