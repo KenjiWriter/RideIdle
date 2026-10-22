@@ -25,16 +25,54 @@ final class Settler
     /** 22.5 minutes in milliseconds. */
     public const SEGMENT_MS = 1_350_000;
 
-    public function settle(RunState $state, int $nowMs, RunConfig $config): SettlementResult
-    {
-        $cursor = $state->cursorMs;
+    /** The longest window settled in one step by settleInChunks: 72 hours. */
+    public const MAX_WINDOW_MS = 259_200_000;
 
-        // Laps the car can still drive: limited by the fuel and by the planned breakdown.
+    /** Laps the car can still drive: limited by the fuel and by the planned breakdown. */
+    public static function lapBudget(RunState $state, RunConfig $config): int
+    {
         $budget = intdiv($state->fuelMl, $config->fuelPerLapMl);
 
         if ($state->breakAfterLaps !== null) {
             $budget = min($budget, max(0, $state->breakAfterLaps - $state->lapsDone));
         }
+
+        return $budget;
+    }
+
+    /**
+     * Settles a long absence in windows of at most $maxWindowMs and merges the results.
+     * Because settling in steps equals settling at once, nothing is lost or paid twice;
+     * the windows only keep every step (and the transaction around it) small.
+     */
+    public function settleInChunks(RunState $state, int $nowMs, RunConfig $config, int $maxWindowMs = self::MAX_WINDOW_MS): SettlementResult
+    {
+        $events = [];
+        $laps = 0;
+        $cashCents = 0;
+        $xp = 0;
+        $windowStart = $state->cursorMs;
+
+        while ($windowStart < $nowMs && self::lapBudget($state, $config) > 0) {
+            $windowEnd = min($nowMs, $windowStart + $maxWindowMs);
+            $step = $this->settle($state, $windowEnd, $config);
+
+            $state = $step->state;
+            $laps += $step->laps;
+            $cashCents += $step->cashCents;
+            $xp += $step->xp;
+            array_push($events, ...$step->events);
+
+            $windowStart = $windowEnd;
+        }
+
+        return new SettlementResult($state, self::ordered($events), $laps, $cashCents, $xp);
+    }
+
+    public function settle(RunState $state, int $nowMs, RunConfig $config): SettlementResult
+    {
+        $cursor = $state->cursorMs;
+        $budget = self::lapBudget($state, $config);
 
         $events = [];
         $laps = 0;
