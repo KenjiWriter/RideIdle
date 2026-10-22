@@ -109,6 +109,36 @@ final class RunController extends Controller
         return $this->respond($changed);
     }
 
+    /**
+     * Repairs a car that broke down for the cost of the rules and sends it on its way from now, with a new plan
+     * of the next breakdown. What the car earned before it broke down is settled first and can pay for the repair.
+     * A car that did not break down is left as it is and `repaired` says false, so a repair cannot be used to
+     * draw the breakdown again. `request_id` makes a repeated request harmless, as in refuel.
+     */
+    public function repair(Request $request, int $run): JsonResponse
+    {
+        $found = $this->ownRun($request, $run);
+
+        if ($found === null) {
+            return $this->noRun();
+        }
+
+        $data = $request->validate([
+            'request_id' => ['required', 'string', 'max:'.RunService::MAX_REQUEST_ID_LENGTH],
+        ]);
+
+        $repaired = $this->runs->repair(
+            $found->id,
+            $this->inputs->make($found->car_slug, $found->track_slug),
+            costCents: $this->rules->repairCostCents(),
+            requestId: $data['request_id'],
+        );
+
+        return $this->respond($repaired->run, 200, [
+            'repair' => ['repaired' => $repaired->repaired, 'cost_cents' => $repaired->costCents, 'repeated' => $repaired->repeated],
+        ]);
+    }
+
     /** The run of the driver, settled up to now. */
     public function current(Request $request): JsonResponse
     {

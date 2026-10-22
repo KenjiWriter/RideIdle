@@ -29,5 +29,6 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/runs/{run}', [RunController::class, 'show'])->whereNumber('run');
         Route::patch('/runs/{run}', [RunController::class, 'update'])->whereNumber('run');
         Route::post('/runs/{run}/refuel', [RunController::class, 'refuel'])->whereNumber('run');
+        Route::post('/runs/{run}/repair', [RunController::class, 'repair'])->whereNumber('run');
     });
 });
