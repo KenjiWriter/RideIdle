@@ -26,6 +26,7 @@ class RaceRun extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
             'config' => 'array',
             'cursor_ms' => 'integer',
             'laps_done' => 'integer',

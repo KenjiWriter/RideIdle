@@ -7,13 +7,18 @@ namespace App\Services;
 use App\Domain\Run\FrozenRun;
 use App\Domain\Run\RunFreezer;
 use App\Domain\Run\RunInputs;
+use App\Domain\Settlement\EventType;
 use App\Domain\Settlement\RunState;
 use App\Domain\Settlement\SettlementEvent;
 use App\Domain\Settlement\Settler;
+use App\Exceptions\IdempotencyConflictException;
+use App\Exceptions\InsufficientFundsException;
+use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use InvalidArgumentException;
 
 /**
  * Starts runs and settles them in the database.
@@ -25,6 +30,9 @@ use Illuminate\Support\Facades\DB;
  */
 final class RunService
 {
+    /** Leaves room in the 128 characters of a ledger key for refuel:{run}:{id}. */
+    public const MAX_REQUEST_ID_LENGTH = 64;
+
     public function __construct(
         private readonly Ledger $ledger,
         private readonly Settler $settler = new Settler(),
@@ -93,6 +101,69 @@ final class RunService
             ])->save();
 
             return $run;
+        });
+    }
+
+    /**
+     * Buys fuel for a run: settles it first (what the car earned so far can pay for the fuel), charges the
+     * ledger and fills the tank. Fills the tank when `$addMl` is null, and never more than the tank holds.
+     * The price is rounded up to a whole cent.
+     *
+     * `$requestId` is chosen by the caller for one intention to refuel: sending it again returns the first
+     * outcome without charging or filling twice. If the driver cannot pay, nothing at all is changed.
+     * A run that was standing (out of fuel) drives again from now, so the time it stood is not paid;
+     * a run that broke down stays stopped until it is repaired.
+     *
+     * @throws InsufficientFundsException when the driver cannot pay
+     */
+    public function refuel(int $runId, string $requestId, int $tankMl, int $priceCentsPerLiter, ?int $addMl = null, ?int $nowMs = null): Refueled
+    {
+        if ($requestId === '' || strlen($requestId) > self::MAX_REQUEST_ID_LENGTH) {
+            throw new InvalidArgumentException('A refuel needs a request id of at most '.self::MAX_REQUEST_ID_LENGTH.' characters.');
+        }
+
+        if ($tankMl <= 0 || $priceCentsPerLiter <= 0 || ($addMl !== null && $addMl <= 0)) {
+            throw new InvalidArgumentException('The tank, the price and the amount to add must be positive.');
+        }
+
+        return $this->locked($runId, $nowMs, function (RaceRun $run, int $now) use ($requestId, $tankMl, $priceCentsPerLiter, $addMl): Refueled {
+            $key = "refuel:{$run->id}:{$requestId}";
+            $earlier = LedgerEntry::query()->where('idem_key', $key)->first();
+
+            if ($earlier !== null) {
+                if ($earlier->user_id !== $run->user_id) {
+                    throw new IdempotencyConflictException($key);
+                }
+
+                return new Refueled($run, 0, 0, true);
+            }
+
+            $this->settleLocked($run, $now);
+
+            $room = max(0, $tankMl - $run->fuel_ml);
+            $added = min($addMl ?? $room, $room);
+
+            if ($added === 0) {
+                return new Refueled($run, 0, 0, false);
+            }
+
+            $cost = intdiv($added * $priceCentsPerLiter + 999, 1000);
+            $this->ledger->post($run->user_id, -$cost, 'refuel', $key);
+
+            $fuelPerLap = (int) $run->config['fuel_per_lap_ml'];
+            $fuel = $run->fuel_ml + $added;
+            $wasStanding = $run->status === RaceRun::STATUS_STOPPED || $run->fuel_ml < $fuelPerLap;
+            $drivesAgain = $wasStanding && $fuel >= $fuelPerLap && $run->stop_reason !== EventType::Breakdown->value;
+
+            $run->forceFill([
+                'fuel_ml' => $fuel,
+                'status' => $drivesAgain ? RaceRun::STATUS_RUNNING : $run->status,
+                'stop_reason' => $drivesAgain ? null : $run->stop_reason,
+                'cursor_ms' => $drivesAgain ? max($run->cursor_ms, $now) : $run->cursor_ms,
+                'state_version' => $run->state_version + 1,
+            ])->save();
+
+            return new Refueled($run, $added, $cost, false);
         });
     }
 
