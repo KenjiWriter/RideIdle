@@ -3,17 +3,25 @@
 declare(strict_types=1);
 
 use App\Domain\Run\RunFreezer;
+use App\Exceptions\IdempotencyConflictException;
+use App\Exceptions\InsufficientFundsException;
 use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\Settlement;
+use App\Models\User;
+use App\Services\Ledger;
 use Database\Factories\RaceRunFactory;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Event;
 
-/** A run that is planned to break down after its second lap (a lap is 75 s). */
-function brokenRun(array $attributes = []): RaceRun
+/**
+ * A run that is planned to break down after its second lap (a lap is 75 s), optionally with money to spend.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function brokenRun(array $attributes = [], int $cents = 0): RaceRun
 {
-    return aRun([...['fuel_ml' => 45_000, 'break_after_laps' => 2], ...$attributes]);
+    return fundedRun($cents, [...['fuel_ml' => 45_000, 'break_after_laps' => 2], ...$attributes]);
 }
 
 it('repairs a run that broke down: new seed, new plan, driving again from now', function () {
@@ -177,3 +185,99 @@ it('undoes the settlement when the repair cannot be saved', function () {
 it('fails for a run that does not exist', function () {
     runService()->repair(999_999, dryInputs(), 1_000);
 })->throws(ModelNotFoundException::class);
+
+it('charges the ledger for a repair', function () {
+    $run = brokenRun(cents: 10_000);
+
+    $repaired = runService()->repair($run->id, dryInputs(), 1_000_000, 2_500, 'r1');
+
+    $entry = LedgerEntry::query()->where('reason', 'repair')->firstOrFail();
+
+    expect($repaired->repaired)->toBeTrue()
+        ->and($repaired->costCents)->toBe(2_500)
+        ->and($repaired->repeated)->toBeFalse()
+        ->and($entry->delta)->toBe(-2_500)
+        ->and($entry->idem_key)->toBe("repair:{$run->id}:r1")
+        ->and(cashOf($run))->toBe(10_000 + 2 * 1_550 - 2_500)
+        ->and((new Ledger())->isConsistent($run->user_id))->toBeTrue()
+        ->and($run->fresh()->status)->toBe('running');
+});
+
+it('pays for the repair with what the car earned before it broke down', function () {
+    $run = brokenRun();
+
+    runService()->repair($run->id, dryInputs(), 1_000_000, 2_000, 'r1');
+
+    expect(cashOf($run))->toBe(2 * 1_550 - 2_000);
+});
+
+it('changes nothing when the driver cannot pay, not even the settlement', function () {
+    $run = brokenRun();
+    $seed = $run->seed;
+
+    // The two laps earn $31.00, the repair costs $50.00.
+    expect(fn () => runService()->repair($run->id, dryInputs(), 1_000_000, 5_000, 'r1'))->toThrow(InsufficientFundsException::class);
+
+    $fresh = $run->fresh();
+
+    expect($fresh->seed)->toBe($seed)
+        ->and($fresh->status)->toBe('running')
+        ->and($fresh->laps_done)->toBe(0)
+        ->and($fresh->state_version)->toBe(0)
+        ->and(Settlement::query()->count())->toBe(0)
+        ->and(LedgerEntry::query()->count())->toBe(0);
+});
+
+it('does not charge for a repair that does not happen', function () {
+    $run = fundedRun(10_000, ['fuel_ml' => 45_000]);
+
+    $repaired = runService()->repair($run->id, dryInputs(), 1_000_000, 2_500, 'r1');
+
+    expect($repaired->repaired)->toBeFalse()
+        ->and($repaired->costCents)->toBe(0)
+        ->and(LedgerEntry::query()->where('reason', 'repair')->count())->toBe(0);
+});
+
+it('charges once for the same request, even when the car broke down again', function () {
+    $run = brokenRun(cents: 10_000);
+    $inputs = dryInputs(breakChancePpm: 1_000_000); // the next lap after a repair is a breakdown again
+
+    runService()->repair($run->id, $inputs, 1_000_000, 500, 'r1');
+    runService()->settle($run->id, 3_000_000);
+    expect($run->fresh()->stop_reason)->toBe('breakdown');
+
+    $again = runService()->repair($run->id, $inputs, 3_000_000, 500, 'r1');
+
+    expect($again->repeated)->toBeTrue()
+        ->and($again->repaired)->toBeFalse()
+        ->and($run->fresh()->status)->toBe('stopped')
+        ->and(LedgerEntry::query()->where('reason', 'repair')->count())->toBe(1);
+
+    // Another request id is another intention to repair.
+    $next = runService()->repair($run->id, $inputs, 3_000_000, 500, 'r2');
+
+    expect($next->repaired)->toBeTrue()
+        ->and($run->fresh()->status)->toBe('running')
+        ->and(LedgerEntry::query()->where('reason', 'repair')->count())->toBe(2);
+});
+
+it('refuses a repair request id that already belongs to another driver', function () {
+    $run = brokenRun(cents: 10_000);
+    $other = User::factory()->guest()->create();
+    (new Ledger())->post($other->id, 1_000, 'gift', 'seed');
+    (new Ledger())->post($other->id, -100, 'repair', "repair:{$run->id}:r1");
+
+    expect(fn () => runService()->repair($run->id, dryInputs(), 1_000_000, 500, 'r1'))->toThrow(IdempotencyConflictException::class);
+    expect($run->fresh()->state_version)->toBe(0);
+});
+
+it('rejects an invalid cost or request id', function (int $cost, ?string $requestId) {
+    $run = brokenRun(cents: 10_000);
+
+    runService()->repair($run->id, dryInputs(), 1_000_000, $cost, $requestId);
+})->throws(InvalidArgumentException::class)->with([
+    'negative cost' => [-1, 'r1'],
+    'paid repair without a request id' => [500, null],
+    'paid repair with an empty request id' => [500, ''],
+    'request id too long' => [500, str_repeat('x', 65)],
+]);

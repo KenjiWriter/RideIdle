@@ -16,18 +16,6 @@ use Illuminate\Support\Facades\Event;
 const TANK_ML = 45_000;
 const PRICE_PER_LITER = 150;
 
-/** Gives the driver of a run some money to spend. */
-function fundedRun(int $cents, array $attributes = []): RaceRun
-{
-    $run = aRun($attributes);
-
-    if ($cents > 0) {
-        (new Ledger())->post($run->user_id, $cents, 'gift', 'seed-money:'.$run->id);
-    }
-
-    return $run;
-}
-
 function refuelOf(RaceRun $run, string $requestId = 'r1', ?int $addMl = null, int $now = 0, int $price = PRICE_PER_LITER): Refueled
 {
     return runService()->refuel($run->id, $requestId, TANK_ML, $price, $addMl, $now);

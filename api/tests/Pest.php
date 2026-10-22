@@ -65,6 +65,22 @@ function aRun(array $attributes = []): RaceRun
     return RaceRun::factory()->create($attributes);
 }
 
+/**
+ * A run whose driver already has some money to spend.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function fundedRun(int $cents, array $attributes = []): RaceRun
+{
+    $run = aRun($attributes);
+
+    if ($cents > 0) {
+        (new Ledger())->post($run->user_id, $cents, 'gift', 'seed-money:'.$run->id);
+    }
+
+    return $run;
+}
+
 function cashOf(RaceRun $run): int
 {
     return (new Ledger())->balance($run->user_id);

@@ -113,14 +113,39 @@ final class RunService
      * Only a breakdown is repaired. A run that is driving, or that only ran out of fuel, is left as it is, so a
      * repair cannot be used to re-roll the planned breakdown. If the tank is empty as well, the run stays
      * stopped for fuel and a refuel starts it.
+     *
+     * A repair that costs money (`$costCents` above zero) is paid after the settlement, so what the car earned
+     * before it broke down can pay for it, and only when the repair happens. It needs a `$requestId` chosen by
+     * the caller for one intention to repair: sending it again returns the first outcome without repairing or
+     * charging twice. If the driver cannot pay, nothing at all is changed.
+     *
+     * @throws InsufficientFundsException when the driver cannot pay
      */
-    public function repair(int $runId, RunInputs $inputs, ?int $nowMs = null): Repaired
+    public function repair(int $runId, RunInputs $inputs, ?int $nowMs = null, int $costCents = 0, ?string $requestId = null): Repaired
     {
-        return $this->locked($runId, $nowMs, function (RaceRun $run, int $now) use ($inputs): Repaired {
+        if ($costCents < 0) {
+            throw new InvalidArgumentException('The cost of a repair cannot be negative.');
+        }
+
+        if ($costCents > 0) {
+            self::checkRequestId($requestId, 'A paid repair');
+        }
+
+        return $this->locked($runId, $nowMs, function (RaceRun $run, int $now) use ($inputs, $costCents, $requestId): Repaired {
+            $key = $costCents > 0 ? "repair:{$run->id}:{$requestId}" : null;
+
+            if ($key !== null && $this->earlierPosting($key, $run) !== null) {
+                return new Repaired($run, false, 0, true);
+            }
+
             $this->settleLocked($run, $now);
 
             if ($run->status !== RaceRun::STATUS_STOPPED || $run->stop_reason !== EventType::Breakdown->value) {
                 return new Repaired($run, false);
+            }
+
+            if ($key !== null) {
+                $this->ledger->post($run->user_id, -$costCents, 'repair', $key);
             }
 
             $seed = bin2hex(random_bytes(16));
@@ -138,7 +163,7 @@ final class RunService
                 'state_version' => $run->state_version + 1,
             ])->save();
 
-            return new Repaired($run, true);
+            return new Repaired($run, true, $costCents);
         });
     }
 
@@ -156,9 +181,7 @@ final class RunService
      */
     public function refuel(int $runId, string $requestId, int $tankMl, int $priceCentsPerLiter, ?int $addMl = null, ?int $nowMs = null): Refueled
     {
-        if ($requestId === '' || strlen($requestId) > self::MAX_REQUEST_ID_LENGTH) {
-            throw new InvalidArgumentException('A refuel needs a request id of at most '.self::MAX_REQUEST_ID_LENGTH.' characters.');
-        }
+        self::checkRequestId($requestId, 'A refuel');
 
         if ($tankMl <= 0 || $priceCentsPerLiter <= 0 || ($addMl !== null && $addMl <= 0)) {
             throw new InvalidArgumentException('The tank, the price and the amount to add must be positive.');
@@ -166,13 +189,8 @@ final class RunService
 
         return $this->locked($runId, $nowMs, function (RaceRun $run, int $now) use ($requestId, $tankMl, $priceCentsPerLiter, $addMl): Refueled {
             $key = "refuel:{$run->id}:{$requestId}";
-            $earlier = LedgerEntry::query()->where('idem_key', $key)->first();
 
-            if ($earlier !== null) {
-                if ($earlier->user_id !== $run->user_id) {
-                    throw new IdempotencyConflictException($key);
-                }
-
+            if ($this->earlierPosting($key, $run) !== null) {
                 return new Refueled($run, 0, 0, true);
             }
 
@@ -285,6 +303,25 @@ final class RunService
 
             return $work($run, $nowMs ?? self::nowMs());
         }, Ledger::DEADLOCK_ATTEMPTS);
+    }
+
+    /** The ledger entry of an earlier request with this key, or null. A key of another driver is a conflict. */
+    private function earlierPosting(string $key, RaceRun $run): ?LedgerEntry
+    {
+        $earlier = LedgerEntry::query()->where('idem_key', $key)->first();
+
+        if ($earlier !== null && $earlier->user_id !== $run->user_id) {
+            throw new IdempotencyConflictException($key);
+        }
+
+        return $earlier;
+    }
+
+    private static function checkRequestId(?string $requestId, string $what): void
+    {
+        if ($requestId === null || $requestId === '' || strlen($requestId) > self::MAX_REQUEST_ID_LENGTH) {
+            throw new InvalidArgumentException("{$what} needs a request id of at most ".self::MAX_REQUEST_ID_LENGTH.' characters.');
+        }
     }
 
     private function rulesetVersion(): string
