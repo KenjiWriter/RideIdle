@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rideidle.local/schema/common.schema.json",
+  "title": "Shared definitions for content packs (schema v0)",
+  "$defs": {
+    "slug": {
+      "description": "Stable identifier. Lower case words joined by dashes. Never renamed and never reused.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 64
+    },
+    "i18n": {
+      "description": "Text in the product languages. English and Polish are required, the others fall back to English.",
+      "type": "object",
+      "properties": {
+        "en": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "pl": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "fr": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "de": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "pt-BR": { "type": "string", "minLength": 1, "maxLength": 200 }
+      },
+      "required": ["en", "pl"],
+      "additionalProperties": false
+    },
+    "cents": {
+      "description": "Money in cents (integer). 1 dollar is 100.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "tier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    }
+  }
+}

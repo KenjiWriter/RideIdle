@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rideidle.local/schema/part.schema.json",
+  "title": "Part definition (one file in parts/)",
+  "type": "object",
+  "properties": {
+    "slug": { "$ref": "common.schema.json#/$defs/slug" },
+    "name": { "$ref": "common.schema.json#/$defs/i18n" },
+    "slot": {
+      "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"]
+    },
+    "tier": { "$ref": "common.schema.json#/$defs/tier" },
+    "price_cents": { "$ref": "common.schema.json#/$defs/cents" },
+    "stats": {
+      "description": "Base statistics of the model. Rarity and upgrades multiply them at run time.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+      "additionalProperties": { "type": "number" }
+    },
+    "fits": {
+      "description": "Optional restriction to vehicle classes or powertrains.",
+      "type": "object",
+      "properties": {
+        "powertrain": { "enum": ["ice", "ev"] },
+        "classes": {
+          "type": "array",
+          "items": {
+            "enum": ["hatchback", "hot_hatch", "sedan", "coupe", "muscle", "pickup", "van", "gt", "super", "hyper"]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["slug", "name", "slot", "tier", "price_cents", "stats"],
+  "additionalProperties": false
+}

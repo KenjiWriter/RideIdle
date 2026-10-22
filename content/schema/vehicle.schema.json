@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rideidle.local/schema/vehicle.schema.json",
+  "title": "Vehicle definition (one file in vehicles/)",
+  "type": "object",
+  "properties": {
+    "slug": { "$ref": "common.schema.json#/$defs/slug" },
+    "name": { "$ref": "common.schema.json#/$defs/i18n" },
+    "class": {
+      "enum": ["hatchback", "hot_hatch", "sedan", "coupe", "muscle", "pickup", "van", "gt", "super", "hyper"]
+    },
+    "drivetrain": { "enum": ["fwd", "rwd", "awd"] },
+    "powertrain": { "enum": ["ice", "ev"] },
+    "engine": {
+      "type": "object",
+      "properties": {
+        "layout": { "enum": ["R4", "V6", "R6", "V8", "V10", "V12"] },
+        "displacement_l": { "type": "number", "minimum": 0.8, "maximum": 8 },
+        "tune": { "type": "number", "minimum": 0.75, "maximum": 1.1 },
+        "motors": { "type": "integer", "minimum": 1, "maximum": 4 }
+      },
+      "additionalProperties": false
+    },
+    "power_kw": { "type": "integer", "minimum": 20, "maximum": 1500 },
+    "mass_kg": { "type": "integer", "minimum": 500, "maximum": 4000 },
+    "top_speed_kmh": { "type": "integer", "minimum": 60, "maximum": 450 },
+    "cargo_kg": { "type": "integer", "minimum": 0, "maximum": 3000 },
+    "seats": { "type": "integer", "minimum": 1, "maximum": 9 },
+    "tank_l": { "type": "number", "exclusiveMinimum": 0, "maximum": 200 },
+    "battery_kwh": { "type": "number", "exclusiveMinimum": 0, "maximum": 250 },
+    "max_charge_kw": { "type": "integer", "exclusiveMinimum": 0, "maximum": 400 },
+    "tier": { "$ref": "common.schema.json#/$defs/tier" },
+    "min_player_level": { "type": "integer", "minimum": 1, "maximum": 100 },
+    "price_cents": { "$ref": "common.schema.json#/$defs/cents" },
+    "sources": {
+      "description": "Where the car can be obtained: given at the start, used market, dealer.",
+      "type": "array",
+      "items": { "enum": ["start", "exchange", "dealer"] },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "slug", "name", "class", "drivetrain", "powertrain", "engine", "power_kw", "mass_kg",
+    "top_speed_kmh", "cargo_kg", "seats", "tier", "min_player_level", "price_cents", "sources"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": { "properties": { "powertrain": { "const": "ice" } }, "required": ["powertrain"] },
+      "then": {
+        "properties": { "engine": { "required": ["layout", "displacement_l", "tune"], "not": { "required": ["motors"] } } },
+        "required": ["tank_l"],
+        "not": { "anyOf": [{ "required": ["battery_kwh"] }, { "required": ["max_charge_kw"] }] }
+      }
+    },
+    {
+      "if": { "properties": { "powertrain": { "const": "ev" } }, "required": ["powertrain"] },
+      "then": {
+        "properties": {
+          "engine": { "required": ["motors"], "not": { "anyOf": [{ "required": ["layout"] }, { "required": ["displacement_l"] }, { "required": ["tune"] }] } }
+        },
+        "required": ["battery_kwh", "max_charge_kw"],
+        "not": { "required": ["tank_l"] }
+      }
+    }
+  ]
+}

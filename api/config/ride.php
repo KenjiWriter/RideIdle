@@ -56,4 +56,16 @@ return [
 
     'guest_expiry_days' => 90,
 
+    /*
+    |--------------------------------------------------------------------------
+    | Paczki treści
+    |--------------------------------------------------------------------------
+    |
+    | Katalog content/ w repozytorium: schema/ ze schematami JSON i packs/ z
+    | paczkami (auta, części). Walidacja: php artisan content:validate.
+    |
+    */
+
+    'content_path' => env('CONTENT_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'content'),
+
 ];

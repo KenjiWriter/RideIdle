@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rideidle.local/schema/pack.schema.json",
+  "title": "Content pack manifest (pack.json)",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "description": "Version of the content schema this pack follows.",
+      "const": 0
+    },
+    "name": { "$ref": "common.schema.json#/$defs/slug" },
+    "version": {
+      "description": "Pack version, year.month.patch.",
+      "type": "string",
+      "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$"
+    },
+    "description": { "$ref": "common.schema.json#/$defs/i18n" }
+  },
+  "required": ["schema", "name", "version"],
+  "additionalProperties": false
+}
