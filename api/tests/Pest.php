@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Ledger;
 use App\Services\RunService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 /*
@@ -93,6 +94,24 @@ function bearerFor(User $user): array
     app('auth')->forgetGuards();
 
     return ['Authorization' => 'Bearer '.$user->createToken('test')->plainTextToken];
+}
+
+/** A moment on a segment boundary of the weather, so the numbers are those of the settlement vector W1. */
+const RUN_T0 = 1_792_692_000_000;
+
+function clockAt(int $msAfterT0): void
+{
+    Carbon::setTestNow(Carbon::createFromTimestampMs(RUN_T0 + $msAfterT0));
+}
+
+/** A run with a constant 75 s lap that pays $15.50 and 25 XP, started at T0 with 45 l (30 laps). */
+function driverWithRun(array $attributes = []): array
+{
+    clockAt(0);
+    $driver = User::factory()->guest()->create();
+    $run = RaceRun::factory()->create([...['user_id' => $driver->id, 'cursor_ms' => RUN_T0], ...$attributes]);
+
+    return [$driver, $run];
 }
 
 function cashOf(RaceRun $run): int

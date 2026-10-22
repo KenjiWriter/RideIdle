@@ -5,6 +5,7 @@ return [
     'errors' => [
         'insufficient_funds' => 'Not enough cash.',
         'run_exists' => 'You already have a car on the track.',
+        'no_run' => 'You have no car on the track yet.',
         'player_level_required' => 'Requires player level :required (you have :current).',
         'car_level_required' => 'Requires car level :required (you have :current).',
         'workshop_level_required' => 'Requires workshop level :required.',

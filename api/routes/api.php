@@ -25,5 +25,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/account/recovery-code', [AccountRecoveryController::class, 'issue'])->middleware('throttle:recovery-issue');
 
         Route::post('/runs', [RunController::class, 'store']);
+        Route::get('/runs/current', [RunController::class, 'current']);
+        Route::get('/runs/{run}', [RunController::class, 'show'])->whereNumber('run');
     });
 });

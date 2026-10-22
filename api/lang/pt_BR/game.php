@@ -5,6 +5,7 @@ return [
     'errors' => [
         'insufficient_funds' => 'Dinheiro insuficiente.',
         'run_exists' => 'Você já tem um carro na pista.',
+        'no_run' => 'Você ainda não tem um carro na pista.',
         'player_level_required' => 'Requer nível de jogador :required (você tem :current).',
         'car_level_required' => 'Requer nível do carro :required (você tem :current).',
         'workshop_level_required' => 'Requer nível da oficina :required.',
