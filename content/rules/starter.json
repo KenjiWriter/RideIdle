@@ -1,0 +1,47 @@
+{
+  "schema": 0,
+  "version": "2026.10.0",
+  "fuel": { "price_cents_per_liter": 200, "reference_power_kw": 97 },
+  "repair": { "cost_cents": 3000 },
+  "breakdown": { "chance_per_lap_ppm": 3000 },
+  "stock_tires": "street-tires-t1",
+  "weather": {
+    "dry": { "reward_ppm": 1000000, "xp_ppm": 1000000, "stat_ppm": {} },
+    "cloudy": { "reward_ppm": 1000000, "xp_ppm": 1000000, "stat_ppm": {} },
+    "rain": {
+      "reward_ppm": 930000,
+      "xp_ppm": 930000,
+      "stat_ppm": { "grip": 850000, "handling": 850000, "braking": 850000 }
+    },
+    "downpour": {
+      "reward_ppm": 930000,
+      "xp_ppm": 930000,
+      "stat_ppm": { "grip": 765000, "handling": 850000, "braking": 850000 }
+    },
+    "fog": { "reward_ppm": 1000000, "xp_ppm": 1000000, "stat_ppm": { "top_speed": 920000 } }
+  },
+  "regions": {
+    "zlomowo": {
+      "climate_seed": "region-zlomowo",
+      "weather_ppm": { "dry": 500000, "cloudy": 250000, "rain": 170000, "downpour": 50000, "fog": 30000 }
+    }
+  },
+  "tracks": {
+    "zlomowo-street": {
+      "name": {
+        "en": "Złomowo Street Sprint",
+        "pl": "Sprint uliczny Złomowo",
+        "fr": "Sprint urbain de Złomowo",
+        "de": "Złomowo Stadtsprint",
+        "pt-BR": "Sprint urbano de Złomowo"
+      },
+      "region": "zlomowo",
+      "base_lap_ms": 75000,
+      "fuel_per_lap_ml": 1500,
+      "reward_cents_per_lap": 1550,
+      "xp_per_lap": 25,
+      "demand": { "accel": 20, "top_speed": 15, "grip": 25, "handling": 25, "braking": 15 },
+      "reference": { "accel": 97, "top_speed": 175, "grip": 90, "handling": 88, "braking": 90 }
+    }
+  }
+}

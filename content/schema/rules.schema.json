@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rideidle.local/schema/rules.schema.json",
+  "title": "Rules of a run (content/rules/<name>.json, schema v0)",
+  "description": "Tracks, regional climate, weather effects and prices that a run is frozen from. Provisional: the values are starting points to calibrate in the economy simulator.",
+  "type": "object",
+  "properties": {
+    "schema": { "const": 0 },
+    "version": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$" },
+    "fuel": {
+      "type": "object",
+      "properties": {
+        "price_cents_per_liter": { "type": "integer", "minimum": 1 },
+        "reference_power_kw": {
+          "description": "Power of a car with the fuel use of the track. More power burns more: 1 + 0.6 * power / reference, relative to 1.6.",
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": ["price_cents_per_liter", "reference_power_kw"],
+      "additionalProperties": false
+    },
+    "repair": {
+      "type": "object",
+      "properties": { "cost_cents": { "$ref": "common.schema.json#/$defs/cents" } },
+      "required": ["cost_cents"],
+      "additionalProperties": false
+    },
+    "breakdown": {
+      "type": "object",
+      "properties": { "chance_per_lap_ppm": { "type": "integer", "minimum": 0, "maximum": 1000000 } },
+      "required": ["chance_per_lap_ppm"],
+      "additionalProperties": false
+    },
+    "stock_tires": {
+      "description": "Slug of the tires every car drives on until tires can be chosen. The weather effects below assume them.",
+      "$ref": "common.schema.json#/$defs/slug"
+    },
+    "weather": {
+      "description": "Effect of every weather. Statistics are multiplied by stat_ppm / 1 000 000, the lap reward and XP by reward_ppm and xp_ppm.",
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[a-z][a-z_]*$" },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "reward_ppm": { "type": "integer", "minimum": 0 },
+          "xp_ppm": { "type": "integer", "minimum": 0 },
+          "stat_ppm": {
+            "type": "object",
+            "propertyNames": { "$ref": "#/$defs/stat" },
+            "additionalProperties": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "required": ["reward_ppm", "xp_ppm", "stat_ppm"],
+        "additionalProperties": false
+      }
+    },
+    "regions": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "common.schema.json#/$defs/slug" },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "climate_seed": { "type": "string", "minLength": 1 },
+          "weather_ppm": {
+            "description": "Chance of every weather in a 22.5 minute segment, adding up to 1 000 000.",
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": { "type": "integer", "minimum": 1, "maximum": 1000000 }
+          }
+        },
+        "required": ["climate_seed", "weather_ppm"],
+        "additionalProperties": false
+      }
+    },
+    "tracks": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "$ref": "common.schema.json#/$defs/slug" },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "name": { "$ref": "common.schema.json#/$defs/i18n" },
+          "region": { "$ref": "common.schema.json#/$defs/slug" },
+          "base_lap_ms": { "description": "Lap time of a car that matches the reference exactly.", "type": "integer", "minimum": 1 },
+          "fuel_per_lap_ml": { "type": "integer", "minimum": 1 },
+          "reward_cents_per_lap": { "$ref": "common.schema.json#/$defs/cents" },
+          "xp_per_lap": { "type": "integer", "minimum": 0 },
+          "demand": {
+            "description": "How much every statistic counts on this track, in percent, adding up to 100.",
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": { "$ref": "#/$defs/stat" },
+            "additionalProperties": { "type": "integer", "minimum": 1, "maximum": 100 }
+          },
+          "reference": {
+            "description": "The value of a statistic that counts as normal on this track.",
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": { "$ref": "#/$defs/stat" },
+            "additionalProperties": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "required": ["name", "region", "base_lap_ms", "fuel_per_lap_ml", "reward_cents_per_lap", "xp_per_lap", "demand", "reference"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "stock_tires", "weather", "regions", "tracks"],
+  "additionalProperties": false,
+  "$defs": {
+    "stat": { "enum": ["accel", "top_speed", "grip", "handling", "braking", "clearance"] }
+  }
+}

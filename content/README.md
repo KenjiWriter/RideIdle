@@ -10,6 +10,8 @@ content/
       pack.json          manifest: schema, name, version, description
       vehicles/<slug>.json
       parts/<slug>.json
+  rules/
+    starter.json         zasady biegu: tory, klimat regionu, efekty pogody, ceny
 ```
 
 ## Zasady
@@ -30,6 +32,15 @@ php artisan content:validate ../content/packs/core --strict
 ```
 
 Komenda sprawdza schemat, zgodność nazwy pliku ze slugiem, poziom dealera i tłumaczenia. Test `CorePackTest` uruchamia ją na paczce startowej, więc CI zatrzymuje zmianę, która psuje paczkę.
+
+## Zasady biegu (`rules/starter.json`)
+
+Z tego pliku zamrażana jest konfiguracja biegu: tor (wagi i wartości odniesienia statystyk, czas bazowy, nagroda, XP, zużycie paliwa), klimat regionu (szanse pogody w odcinku 22,5 min i ziarno), efekt każdej pogody, cena paliwa, koszt naprawy i szansa awarii na okrążenie. Liczby pochodzą z płótna projektowego (tor Złomowo, klimat regionu, cena paliwa 2 $/l) i z wektorów rozliczania (okrążenie 75 s, 15,50 $, 25 XP, 1,5 l). Wartości bez źródła w projekcie (koszt naprawy, szansa awarii) są tymczasowe i czekają na kalibrację w symulatorze ekonomii.
+
+- Mnożniki są w ppm (850 000 to 0,85), wagi toru w procentach i sumują się do 100, szanse pogody sumują się do 1 000 000.
+- Wartości odniesienia toru Złomowo to statystyki fabrycznego Rdzaka GT-4 na oponach `stock_tires`, więc to auto jeździ tam dokładnie czas bazowy.
+- Efekty pogody zakładają opony fabryczne. Gdy dojdzie wybór opon, efekt wyliczy się z macierzy opon i nawierzchni.
+- Schemat to `schema/rules.schema.json`, a zależności, których schemat nie wyrazi (sumy, regiony, tłumaczenia), sprawdza test `StarterRulesTest`.
 
 ## Wersje i zmiany balansu
 
