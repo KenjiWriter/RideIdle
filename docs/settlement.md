@@ -98,9 +98,10 @@ Zasady, które kod pilnuje i które testy współbieżności sprawdzają na praw
 - `tests/Feature/Settlement` (SQLite i prawdziwe bazy): wartości W1 i W2 w bazie, awaria, atomowość, duplikaty, długa nieobecność, zamrożenie, tankowanie. Najważniejsze reguły (rozliczenie przed obciążeniem, kursor od teraz, zachowanie ziarna, ponowione żądanie, zaokrąglanie w górę) sprawdzono, psując kod i patrząc, że testy padają.
 - `tests/Concurrency` (osobne procesy PHP na MySQL, MariaDB i PostgreSQL, pomijane na SQLite): osiem procesów księguje ten sam klucz, wydaje saldo, rozlicza ten sam bieg, tankuje tym samym żądaniem i naprawia tym samym żądaniem (płatnym i darmowym) naraz, a mieszanka rozliczeń, tankowań i napraw na jednym biegu kończy się sprawdzeniem sum: księga równa rozliczeniom i kosztom paliwa i napraw, okrążenia równe rozliczonym, paliwo równe kupionemu minus przejechane, wersja równa liczbie zmian.
 
+Punkty końcowe HTTP, które to wywołują, opisuje `docs/api-runs.md`.
+
 ## Czego jeszcze nie ma
 
 - Zmiana auta na bieg w trakcie.
 - Cena paliwa, pojemność baku i koszt naprawy z paczek treści (na razie parametry `refuel` i `repair`), prawdziwy harmonogram pogody z klimatu regionu.
-- Punkty końcowe HTTP dla biegu (start, podsumowanie, tankowanie, zmiana ustawień).
 - Rundy z pozycją (`round_complete`) i dropy z ziarna (`sha256`), kursy i podróże, cykl jazda i ładowanie EV.

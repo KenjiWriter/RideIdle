@@ -88,4 +88,6 @@ Rozliczanie (`api/app/Domain/Settlement/`, opis w `docs/settlement.md`): czysta 
 
 Zapis w bazie (`api/app/Services/`, też w `docs/settlement.md`): zamrażanie konfiguracji biegu do liczb całkowitych, tabele `wallets`, `race_runs`, `settlements`, `settlement_events` i `ledger_entries`, rozliczanie w jednej transakcji z blokadami (portfel, potem bieg), księga z kluczem idempotencji, zmiana ustawień, tankowanie i naprawa po awarii (nowe ziarno, jazda od teraz). Testy współbieżności (osobne procesy na MySQL, MariaDB i PostgreSQL) uruchamiają się razem z resztą, gdy baza nie jest SQLite.
 
-Dalej: punkty końcowe HTTP dla biegu, tabele definicji i instancji z paczek treści, zabezpieczenie konta e-mailem, historia wprowadzająca i wybór wraku startowego.
+Punkty końcowe biegu (`api/app/Http/Controllers/Api/V1/RunController.php`, opis w `docs/api-runs.md`): start, podsumowanie z `since_version`, tankowanie, zmiana toru i naprawa. Dane toru, klimatu, pogody i cen są w `content/rules/starter.json`, a auto z paczki `core`.
+
+Dalej: tabele definicji i instancji z paczek treści (garaż, części, więcej aut i torów), zabezpieczenie konta e-mailem, historia wprowadzająca i wybór wraku startowego.
