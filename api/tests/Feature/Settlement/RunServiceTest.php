@@ -21,22 +21,6 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 
-function runService(): RunService
-{
-    return new RunService(new Ledger());
-}
-
-/** @param  array<string, mixed>  $attributes */
-function aRun(array $attributes = []): RaceRun
-{
-    return RaceRun::factory()->create($attributes);
-}
-
-function cashOf(RaceRun $run): int
-{
-    return (new Ledger())->balance($run->user_id);
-}
-
 it('starts a run with a frozen configuration and a new seed', function () {
     $user = User::factory()->guest()->create();
     $inputs = new RunInputs(

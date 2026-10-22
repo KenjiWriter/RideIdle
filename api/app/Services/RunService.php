@@ -55,7 +55,7 @@ final class RunService
             'break_after_laps' => $frozen->breakAfterLaps,
             'seed' => $seed,
             'config' => $frozen->config,
-            'ruleset_version' => (string) config('ride.ruleset_version'),
+            'ruleset_version' => $this->rulesetVersion(),
             'state_version' => 0,
         ]);
     }
@@ -66,16 +66,33 @@ final class RunService
      */
     public function settle(int $runId, ?int $nowMs = null): Settled
     {
-        $userId = RaceRun::query()->whereKey($runId)->value('user_id') ?? throw (new ModelNotFoundException())->setModel(RaceRun::class, [$runId]);
+        return $this->locked($runId, $nowMs, fn (RaceRun $run, int $now): Settled => $this->settleLocked($run, $now));
+    }
 
-        return DB::transaction(function () use ($runId, $userId, $nowMs): Settled {
-            $this->ledger->lockWallet((int) $userId);
-            $run = RaceRun::query()->whereKey($runId)->lockForUpdate()->firstOrFail();
+    /**
+     * Freezes a new configuration into the run, for example after a part was changed or the service state moved.
+     *
+     * The run is settled first, so everything up to now is paid with the old configuration. A driving run
+     * continues from now: the lap in progress is dropped rather than finished with the new lap time, which
+     * would apply the change to time that already passed. The seed stays, so saving the same setup again cannot
+     * re-roll the planned breakdown; a new plan needs a repair. A stopped run stays stopped.
+     */
+    public function reconfigure(int $runId, RunInputs $inputs, ?int $nowMs = null): RaceRun
+    {
+        return $this->locked($runId, $nowMs, function (RaceRun $run, int $now) use ($inputs): RaceRun {
+            $this->settleLocked($run, $now);
 
-            // The clock is read after the locks: whoever waited for them gets the real time of its turn.
-            $nowMs ??= self::nowMs();
+            $frozen = $this->freezer->freeze($inputs, $run->seed, $run->laps_done);
 
-            return $this->settleLocked($run, $nowMs);
+            $run->forceFill([
+                'config' => $frozen->config,
+                'break_after_laps' => $frozen->breakAfterLaps,
+                'ruleset_version' => $this->rulesetVersion(),
+                'cursor_ms' => $run->status === RaceRun::STATUS_RUNNING ? max($run->cursor_ms, $now) : $run->cursor_ms,
+                'state_version' => $run->state_version + 1,
+            ])->save();
+
+            return $run;
         });
     }
 
@@ -135,5 +152,31 @@ final class RunService
         ])->save();
 
         return new Settled($result, $settlement);
+    }
+
+    /**
+     * Runs `$work` with the wallet of the driver and then the run locked, always in this order, so two requests
+     * cannot wait for each other. The clock is read after the locks: whoever waited for them gets the real time of its turn.
+     *
+     * @template T
+     *
+     * @param  callable(RaceRun, int): T  $work
+     * @return T
+     */
+    private function locked(int $runId, ?int $nowMs, callable $work): mixed
+    {
+        $userId = RaceRun::query()->whereKey($runId)->value('user_id') ?? throw (new ModelNotFoundException())->setModel(RaceRun::class, [$runId]);
+
+        return DB::transaction(function () use ($runId, $userId, $nowMs, $work): mixed {
+            $this->ledger->lockWallet((int) $userId);
+            $run = RaceRun::query()->whereKey($runId)->lockForUpdate()->firstOrFail();
+
+            return $work($run, $nowMs ?? self::nowMs());
+        });
+    }
+
+    private function rulesetVersion(): string
+    {
+        return (string) config('ride.ruleset_version');
     }
 }

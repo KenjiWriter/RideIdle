@@ -1,5 +1,8 @@
 <?php
 
+use App\Models\RaceRun;
+use App\Services\Ledger;
+use App\Services\RunService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +47,18 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function runService(): RunService
 {
-    // ..
+    return new RunService(new Ledger());
+}
+
+/** @param  array<string, mixed>  $attributes */
+function aRun(array $attributes = []): RaceRun
+{
+    return RaceRun::factory()->create($attributes);
+}
+
+function cashOf(RaceRun $run): int
+{
+    return (new Ledger())->balance($run->user_id);
 }
