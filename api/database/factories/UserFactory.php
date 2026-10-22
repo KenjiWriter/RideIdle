@@ -18,19 +18,38 @@ class UserFactory extends Factory
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
+     * Define the model's default state: a claimed account with an e-mail.
      *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
+        $name = Str::limit(fake()->unique()->userName(), User::NAME_MAX_LENGTH, '');
+
         return [
-            'name' => fake()->name(),
+            'name' => $name,
+            'name_key' => User::nameKey($name),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'claimed_at' => now(),
+            'last_seen_at' => now(),
         ];
+    }
+
+    /**
+     * A guest account: no e-mail, no password, not claimed.
+     */
+    public function guest(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email' => null,
+            'email_verified_at' => null,
+            'password' => null,
+            'remember_token' => null,
+            'claimed_at' => null,
+        ]);
     }
 
     /**
