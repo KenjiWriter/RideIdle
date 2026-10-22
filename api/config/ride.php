@@ -68,4 +68,7 @@ return [
 
     'content_path' => env('CONTENT_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'content'),
 
+    // Version of the set of rules (prices, rewards, anchors) that runs are frozen with.
+    'ruleset_version' => env('RIDE_RULESET_VERSION', 'dev'),
+
 ];
