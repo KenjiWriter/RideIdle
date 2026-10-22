@@ -84,4 +84,6 @@ Zrobione: szkielet Laravel 13 (Sanctum, Pest, testy architektury), szkielet Vue 
 
 Przepływ wejścia (sprawdzony ręcznie w przeglądarce na lokalnym API): landing → imię → garaż → „Pokaż mój kod odzyskiwania” (kod widać tylko raz) → wylogowanie → „Mam już kierowcę” → kod → garaż w języku zapisanym na koncie.
 
-Dalej: rozliczanie według specyfikacji (`settle` jako funkcja czysta z testami W1–W7), tabele definicji i instancji z paczek treści, zabezpieczenie konta e-mailem, historia wprowadzająca i wybór wraku startowego.
+Rozliczanie (`api/app/Domain/Settlement/`, opis w `docs/settlement.md`): czysta funkcja `settle` na liczbach całkowitych z wektorami W1–W7, testami własności na 10 000 losowych biegów, podział puli turnieju i Respekt z tablicą oczekiwanych wyników.
+
+Dalej: zamrażanie konfiguracji biegu i zapis rozliczeń w bazie (transakcja, blokady, księga), tabele definicji i instancji z paczek treści, zabezpieczenie konta e-mailem, historia wprowadzająca i wybór wraku startowego.
