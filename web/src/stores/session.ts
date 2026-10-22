@@ -5,6 +5,9 @@ import { ApiError, api } from '@/api/client'
 import type { Me, MeResponse, RecoveryCodeResponse, SessionResponse } from '@/api/types'
 import { clearToken, readToken, storeToken } from '@/auth/token'
 import { currentLocale } from '@/i18n'
+import { normalizeLocale } from '@/i18n/locales'
+
+import { useSettingsStore } from './settings'
 
 /** Who is playing on this device: the profile of the driver and the device token. */
 export const useSessionStore = defineStore('session', () => {
@@ -29,7 +32,7 @@ export const useSessionStore = defineStore('session', () => {
     start(response.data, response.token)
   }
 
-  /** Signs in on this device with a recovery code. */
+  /** Signs in on this device with a recovery code. The interface switches to the language of the account. */
   async function recover(code: string): Promise<void> {
     const response = await api<SessionResponse>('/v1/account/recover', {
       method: 'POST',
@@ -37,6 +40,12 @@ export const useSessionStore = defineStore('session', () => {
     })
 
     start(response.data, response.token)
+
+    const accountLocale = normalizeLocale(response.data.locale)
+
+    if (accountLocale && accountLocale !== currentLocale()) {
+      await useSettingsStore().applyLocale(accountLocale)
+    }
   }
 
   /** Loads the profile. A token the server no longer knows ends the session. */

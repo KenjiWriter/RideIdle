@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '@/api/client'
 import type { Me } from '@/api/types'
 import { readToken, storeToken } from '@/auth/token'
+import { currentLocale, setLocale } from '@/i18n'
 
 import { useSessionStore } from './session'
 
@@ -73,6 +74,28 @@ describe('session store', () => {
     expect(JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string)).toEqual({ code: 'ABCD-EFGH-JKLM' })
     expect(session.me?.has_recovery_code).toBe(true)
     expect(readToken()).toBe('restored')
+  })
+
+  it('switches the interface to the language of the restored account', async () => {
+    fetchMock.mockResolvedValue(respond(200, { data: { ...profile, locale: 'de' }, token: 'restored' }))
+    const session = useSessionStore()
+
+    await session.recover('ABCD-EFGH-JKLM')
+
+    expect(currentLocale()).toBe('de')
+    expect(document.documentElement.lang).toBe('de')
+
+    await setLocale('en')
+  })
+
+  it('keeps the interface language when the account has none or an unknown one', async () => {
+    fetchMock.mockResolvedValue(respond(200, { data: { ...profile, locale: null }, token: 'restored' }))
+    await useSessionStore().recover('ABCD-EFGH-JKLM')
+    expect(currentLocale()).toBe('en')
+
+    fetchMock.mockResolvedValue(respond(200, { data: { ...profile, locale: 'es' }, token: 'restored' }))
+    await useSessionStore().recover('ABCD-EFGH-JKLM')
+    expect(currentLocale()).toBe('en')
   })
 
   it('returns a new recovery code and updates the profile', async () => {
