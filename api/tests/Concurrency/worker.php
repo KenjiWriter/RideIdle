@@ -1,0 +1,52 @@
+<?php
+
+declare(strict_types=1);
+
+/*
+| A worker process of ConcurrencyTest: boots the application, waits for the common start time so that
+| all workers collide, runs its operations one after another and prints one JSON result per operation.
+| A failed operation is reported, not thrown, so the test can tell a refused payment from a deadlock.
+*/
+
+use App\Services\Ledger;
+use App\Services\RunService;
+
+require __DIR__.'/../../vendor/autoload.php';
+
+/** @var array{start_at: float, ops: list<array<string, mixed>>} $job */
+$job = json_decode($argv[1] ?? '', true, flags: JSON_THROW_ON_ERROR);
+
+$app = require __DIR__.'/../../bootstrap/app.php';
+$app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+
+while (microtime(true) < $job['start_at']) {
+    usleep(200);
+}
+
+$ledger = new Ledger();
+$runs = new RunService($ledger);
+$results = [];
+
+foreach ($job['ops'] as $op) {
+    try {
+        $value = match ($op['type']) {
+            'post' => ['entry' => $ledger->post($op['user'], $op['delta'], $op['reason'], $op['key'])->id],
+            'settle' => (function () use ($runs, $op): array {
+                $settled = $runs->settle($op['run'], $op['now']);
+
+                return ['changed' => $settled->changedAnything(), 'cash' => $settled->result->cashCents, 'laps' => $settled->result->laps];
+            })(),
+            'refuel' => (function () use ($runs, $op): array {
+                $refueled = $runs->refuel($op['run'], $op['request'], $op['tank'], $op['price'], $op['add'], $op['now']);
+
+                return ['added' => $refueled->addedMl, 'cost' => $refueled->costCents, 'repeated' => $refueled->repeated];
+            })(),
+        };
+
+        $results[] = ['ok' => true, 'type' => $op['type'], 'value' => $value];
+    } catch (Throwable $e) {
+        $results[] = ['ok' => false, 'type' => $op['type'], 'error' => $e::class, 'message' => $e->getMessage()];
+    }
+}
+
+echo json_encode($results, JSON_THROW_ON_ERROR);
