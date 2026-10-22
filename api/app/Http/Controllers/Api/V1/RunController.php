@@ -87,6 +87,28 @@ final class RunController extends Controller
         ]);
     }
 
+    /**
+     * Changes the settings of the run, which for now is the track. Everything until now is settled with the old
+     * settings and pays out. The car then drives the new track from this moment: the lap in progress is dropped,
+     * and the planned breakdown does not move, because the seed of the run stays. A car that stopped stays stopped.
+     */
+    public function update(Request $request, int $run): JsonResponse
+    {
+        $found = $this->ownRun($request, $run);
+
+        if ($found === null) {
+            return $this->noRun();
+        }
+
+        $data = $request->validate([
+            'track' => ['required', 'string', Rule::in(array_keys($this->rules->tracks()))],
+        ]);
+
+        $changed = $this->runs->reconfigure($found->id, $this->inputs->make($found->car_slug, $data['track']), trackSlug: $data['track']);
+
+        return $this->respond($changed);
+    }
+
     /** The run of the driver, settled up to now. */
     public function current(Request $request): JsonResponse
     {
