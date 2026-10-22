@@ -14,7 +14,9 @@
   },
   "common": {
     "loading": "Chargement…",
-    "retry": "Réessayer"
+    "retry": "Réessayer",
+    "error": "Un problème est survenu. Réessayez.",
+    "tooManyRequests": "Trop de tentatives. Réessayez plus tard."
   },
   "landing": {
     "title": "Votre atelier vous attend",
@@ -23,5 +25,23 @@
     "continue": "Continuer en tant que {name}",
     "continueGeneric": "Continuer",
     "haveDriver": "J’ai déjà un pilote"
+  },
+  "create": {
+    "title": "Créer votre pilote",
+    "nameLabel": "Nom du pilote",
+    "nameHint": "3 à 16 caractères : lettres, chiffres, _ ou -. Les autres pilotes le verront.",
+    "submit": "C’est parti",
+    "submitting": "Création…",
+    "back": "Retour",
+    "errors": {
+      "required": "Saisissez un nom.",
+      "length": "Le nom doit comporter 3 à 16 caractères.",
+      "characters": "Utilisez uniquement des lettres, des chiffres, _ et -."
+    }
+  },
+  "garage": {
+    "welcome": "Bienvenue, {name}",
+    "placeholder": "Votre première épave vous attend. Le garage ouvrira dans la prochaine version.",
+    "signOut": "Se déconnecter"
   }
 }

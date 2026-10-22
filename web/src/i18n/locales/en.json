@@ -14,7 +14,9 @@
   },
   "common": {
     "loading": "Loading…",
-    "retry": "Try again"
+    "retry": "Try again",
+    "error": "Something went wrong. Try again.",
+    "tooManyRequests": "Too many attempts. Try again later."
   },
   "landing": {
     "title": "Your workshop is waiting",
@@ -23,5 +25,23 @@
     "continue": "Continue as {name}",
     "continueGeneric": "Continue",
     "haveDriver": "I already have a driver"
+  },
+  "create": {
+    "title": "Create your driver",
+    "nameLabel": "Driver name",
+    "nameHint": "3–16 characters: letters, digits, _ or -. Other drivers will see it.",
+    "submit": "Let’s go",
+    "submitting": "Creating…",
+    "back": "Back",
+    "errors": {
+      "required": "Enter a name.",
+      "length": "The name needs 3–16 characters.",
+      "characters": "Use only letters, digits, _ and -."
+    }
+  },
+  "garage": {
+    "welcome": "Welcome, {name}",
+    "placeholder": "Your first wreck is waiting. The garage opens in the next version.",
+    "signOut": "Sign out"
   }
 }

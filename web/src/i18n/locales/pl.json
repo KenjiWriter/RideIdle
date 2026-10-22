@@ -14,7 +14,9 @@
   },
   "common": {
     "loading": "Ładowanie…",
-    "retry": "Spróbuj ponownie"
+    "retry": "Spróbuj ponownie",
+    "error": "Coś poszło nie tak. Spróbuj ponownie.",
+    "tooManyRequests": "Zbyt wiele prób. Spróbuj ponownie później."
   },
   "landing": {
     "title": "Twoja dziupla czeka",
@@ -23,5 +25,23 @@
     "continue": "Kontynuuj jako {name}",
     "continueGeneric": "Kontynuuj",
     "haveDriver": "Mam już kierowcę"
+  },
+  "create": {
+    "title": "Utwórz kierowcę",
+    "nameLabel": "Imię kierowcy",
+    "nameHint": "3–16 znaków: litery, cyfry, _ lub -. Zobaczą je inni kierowcy.",
+    "submit": "Jedziemy",
+    "submitting": "Tworzenie…",
+    "back": "Wstecz",
+    "errors": {
+      "required": "Wpisz imię.",
+      "length": "Imię musi mieć 3–16 znaków.",
+      "characters": "Użyj tylko liter, cyfr, _ i -."
+    }
+  },
+  "garage": {
+    "welcome": "Witaj, {name}",
+    "placeholder": "Twój pierwszy wrak już czeka. Garaż otworzy się w następnej wersji.",
+    "signOut": "Wyloguj"
   }
 }

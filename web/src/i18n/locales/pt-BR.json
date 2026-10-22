@@ -14,7 +14,9 @@
   },
   "common": {
     "loading": "Carregando…",
-    "retry": "Tentar novamente"
+    "retry": "Tentar novamente",
+    "error": "Algo deu errado. Tente novamente.",
+    "tooManyRequests": "Muitas tentativas. Tente novamente mais tarde."
   },
   "landing": {
     "title": "Sua oficina está esperando",
@@ -23,5 +25,23 @@
     "continue": "Continuar como {name}",
     "continueGeneric": "Continuar",
     "haveDriver": "Já tenho um piloto"
+  },
+  "create": {
+    "title": "Criar seu piloto",
+    "nameLabel": "Nome do piloto",
+    "nameHint": "3 a 16 caracteres: letras, números, _ ou -. Outros pilotos vão ver.",
+    "submit": "Vamos lá",
+    "submitting": "Criando…",
+    "back": "Voltar",
+    "errors": {
+      "required": "Digite um nome.",
+      "length": "O nome precisa ter de 3 a 16 caracteres.",
+      "characters": "Use apenas letras, números, _ e -."
+    }
+  },
+  "garage": {
+    "welcome": "Bem-vindo, {name}",
+    "placeholder": "Sua primeira carcaça já está esperando. A garagem abre na próxima versão.",
+    "signOut": "Sair"
   }
 }

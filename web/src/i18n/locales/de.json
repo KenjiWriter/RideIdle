@@ -14,7 +14,9 @@
   },
   "common": {
     "loading": "Wird geladen…",
-    "retry": "Erneut versuchen"
+    "retry": "Erneut versuchen",
+    "error": "Etwas ist schiefgelaufen. Versuche es erneut.",
+    "tooManyRequests": "Zu viele Versuche. Versuche es später erneut."
   },
   "landing": {
     "title": "Deine Werkstatt wartet",
@@ -23,5 +25,23 @@
     "continue": "Weiter als {name}",
     "continueGeneric": "Weiter",
     "haveDriver": "Ich habe schon einen Fahrer"
+  },
+  "create": {
+    "title": "Fahrer erstellen",
+    "nameLabel": "Fahrername",
+    "nameHint": "3–16 Zeichen: Buchstaben, Ziffern, _ oder -. Andere Fahrer sehen ihn.",
+    "submit": "Los geht’s",
+    "submitting": "Wird erstellt…",
+    "back": "Zurück",
+    "errors": {
+      "required": "Gib einen Namen ein.",
+      "length": "Der Name braucht 3–16 Zeichen.",
+      "characters": "Verwende nur Buchstaben, Ziffern, _ und -."
+    }
+  },
+  "garage": {
+    "welcome": "Willkommen, {name}",
+    "placeholder": "Dein erstes Wrack wartet schon. Die Garage öffnet in der nächsten Version.",
+    "signOut": "Abmelden"
   }
 }
