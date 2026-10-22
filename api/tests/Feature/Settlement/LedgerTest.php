@@ -32,6 +32,16 @@ it('credits a driver and creates the wallet on the first posting', function () {
         ->and(Wallet::query()->count())->toBe(1);
 });
 
+it('creates the wallet once, before any lock is taken', function () {
+    $user = aDriver();
+
+    ledger()->ensureWallet($user->id);
+    ledger()->ensureWallet($user->id);
+
+    expect(Wallet::query()->count())->toBe(1)
+        ->and(ledger()->balance($user->id))->toBe(0);
+});
+
 it('keeps the balance after every posting', function () {
     $user = aDriver();
 

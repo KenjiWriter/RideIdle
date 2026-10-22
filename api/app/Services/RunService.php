@@ -238,12 +238,15 @@ final class RunService
     {
         $userId = RaceRun::query()->whereKey($runId)->value('user_id') ?? throw (new ModelNotFoundException())->setModel(RaceRun::class, [$runId]);
 
+        // Before the transaction: creating the wallet under a lock deadlocks (see Ledger::ensureWallet).
+        $this->ledger->ensureWallet((int) $userId);
+
         return DB::transaction(function () use ($runId, $userId, $nowMs, $work): mixed {
             $this->ledger->lockWallet((int) $userId);
             $run = RaceRun::query()->whereKey($runId)->lockForUpdate()->firstOrFail();
 
             return $work($run, $nowMs ?? self::nowMs());
-        });
+        }, Ledger::DEADLOCK_ATTEMPTS);
     }
 
     private function rulesetVersion(): string

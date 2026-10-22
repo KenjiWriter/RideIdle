@@ -23,6 +23,9 @@ final class Ledger
 {
     public const MAX_KEY_LENGTH = 128;
 
+    /** A transaction that lost a deadlock is retried this many times in all (only the outermost one is retried). */
+    public const DEADLOCK_ATTEMPTS = 3;
+
     /**
      * Posts a change of the cash balance. A positive delta is income, a negative one a cost.
      *
@@ -41,6 +44,8 @@ final class Ledger
         if ($reason === '' || $idemKey === '' || strlen($idemKey) > self::MAX_KEY_LENGTH) {
             throw new InvalidArgumentException('A posting needs a reason and an idempotency key of at most '.self::MAX_KEY_LENGTH.' characters.');
         }
+
+        $this->ensureWallet($userId);
 
         return DB::transaction(function () use ($userId, $delta, $reason, $idemKey, $settlementId): LedgerEntry {
             $wallet = $this->lockWallet($userId);
@@ -75,7 +80,7 @@ final class Ledger
             $wallet->forceFill(['cash_cents' => $balance])->save();
 
             return $entry;
-        });
+        }, self::DEADLOCK_ATTEMPTS);
     }
 
     /** Adds experience points. The caller makes it idempotent (it happens inside an idempotent settlement). */
@@ -89,10 +94,12 @@ final class Ledger
             return;
         }
 
+        $this->ensureWallet($userId);
+
         DB::transaction(function () use ($userId, $xp): void {
             $wallet = $this->lockWallet($userId);
             $wallet->forceFill(['xp' => $wallet->xp + $xp])->save();
-        });
+        }, self::DEADLOCK_ATTEMPTS);
     }
 
     public function balance(int $userId): int
@@ -110,7 +117,20 @@ final class Ledger
         return $balance === $sum && ($last === null || $last->balance_after === $balance);
     }
 
-    /** Creates the wallet when it does not exist, then locks it for the rest of the transaction. */
+    /**
+     * Makes sure the wallet row exists. Call it before opening a transaction: the insert then commits at once
+     * and holds no locks. Creating the row inside the transaction after a locking read of the missing row
+     * deadlocks on InnoDB, because every transaction holds the gap lock that blocks the insert of the others.
+     */
+    public function ensureWallet(int $userId): void
+    {
+        if (! Wallet::query()->whereKey($userId)->exists()) {
+            // Two requests may get here together: the loser of the insert simply ignores the conflict.
+            Wallet::query()->insertOrIgnore(['user_id' => $userId, 'cash_cents' => 0, 'xp' => 0, 'created_at' => now(), 'updated_at' => now()]);
+        }
+    }
+
+    /** Locks the wallet for the rest of the transaction, creating it when it does not exist (see ensureWallet). */
     public function lockWallet(int $userId): Wallet
     {
         $query = fn () => Wallet::query()->whereKey($userId)->lockForUpdate()->first();
@@ -118,8 +138,7 @@ final class Ledger
         $wallet = $query();
 
         if ($wallet === null) {
-            // Two requests may get here together: the loser of the insert simply ignores the conflict.
-            Wallet::query()->insertOrIgnore(['user_id' => $userId, 'cash_cents' => 0, 'xp' => 0, 'created_at' => now(), 'updated_at' => now()]);
+            $this->ensureWallet($userId);
             $wallet = $query() ?? throw new InvalidArgumentException("The driver {$userId} does not exist.");
         }
 
