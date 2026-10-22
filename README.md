@@ -60,12 +60,14 @@ vendor/bin/pest                # testy (domyślnie SQLite w pamięci)
 # Web
 cd web
 npm install
-npm run dev                    # http://localhost:5173, /api idzie do portu 8000
+npm run dev                    # http://localhost:5173, /api idzie do DEV_API_TARGET (domyślnie port 8000)
 npm test && npm run typecheck && npm run build
 
 # Usługi pomocnicze w Dockerze (MariaDB, PostgreSQL, Redis, Mailpit)
 docker compose -f docker/compose.yaml up -d
 ```
+
+Jeśli port 8000 zajmuje inny projekt, uruchom API na innym (`php artisan serve --port=8011`) i wskaż go w `web/.env.local`: `DEV_API_TARGET=http://127.0.0.1:8011`.
 
 Testy API na konkretnej bazie: `DB_CONNECTION=mariadb DB_HOST=127.0.0.1 DB_PORT=3307 DB_DATABASE=ride_idle DB_USERNAME=root DB_PASSWORD=secret vendor/bin/pest`. CI uruchamia je na SQLite, MariaDB i PostgreSQL.
 
@@ -78,6 +80,8 @@ Testy API na konkretnej bazie: `DB_CONNECTION=mariadb DB_HOST=127.0.0.1 DB_PORT=
 
 Faza F0 (środowisko i szkielet). Postęp według roadmapy z płótna.
 
-Zrobione: szkielet Laravel 13 (Sanctum, Pest, testy architektury), szkielet Vue 3 (TypeScript, Pinia, router, Tailwind, Vitest), wsparcie pięciu języków w API i w aplikacji, Docker Compose, CI z macierzą baz, konto gościa (unikalne imię kierowcy, token urządzenia, kod odzyskiwania z limitami prób, wygasanie nieużywanych kont), schemat paczki treści v0 z walidatorem i paczka startowa (`content/`).
+Zrobione: szkielet Laravel 13 (Sanctum, Pest, testy architektury), szkielet Vue 3 (TypeScript, Pinia, router, Tailwind, Vitest), wsparcie pięciu języków w API i w aplikacji, Docker Compose, CI z macierzą baz, konto gościa (unikalne imię kierowcy, token urządzenia, kod odzyskiwania z limitami prób, wygasanie nieużywanych kont), schemat paczki treści v0 z walidatorem i paczka startowa (`content/`), ekrany wejścia w `web`: landing, tworzenie kierowcy, kod odzyskiwania i przywracanie kierowcy, synchronizacja języka z kontem.
 
-Dalej: ekran tworzenia kierowcy w `web` (landing, imię, kod odzyskiwania), rozliczanie według specyfikacji (`settle` jako funkcja czysta z testami W1–W7), tabele definicji i instancji z paczek treści.
+Przepływ wejścia (sprawdzony ręcznie w przeglądarce na lokalnym API): landing → imię → garaż → „Pokaż mój kod odzyskiwania” (kod widać tylko raz) → wylogowanie → „Mam już kierowcę” → kod → garaż w języku zapisanym na koncie.
+
+Dalej: rozliczanie według specyfikacji (`settle` jako funkcja czysta z testami W1–W7), tabele definicji i instancji z paczek treści, zabezpieczenie konta e-mailem, historia wprowadzająca i wybór wraku startowego.
