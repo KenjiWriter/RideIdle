@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "RideIdle"
+  },
+  "nav": {
+    "map": "Carte",
+    "garage": "Garage",
+    "tournament": "Tournoi",
+    "city": "Ville",
+    "workshop": "Atelier"
+  },
+  "language": {
+    "label": "Langue"
+  },
+  "home": {
+    "title": "Votre atelier vous attend",
+    "subtitle": "Retapez des épaves, achetez de meilleures voitures et courez même en votre absence."
+  },
+  "common": {
+    "loading": "Chargement…",
+    "retry": "Réessayer"
+  }
+}

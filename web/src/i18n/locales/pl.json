@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "RideIdle"
+  },
+  "nav": {
+    "map": "Mapa",
+    "garage": "Garaż",
+    "tournament": "Turniej",
+    "city": "Miasto",
+    "workshop": "Warsztat"
+  },
+  "language": {
+    "label": "Język"
+  },
+  "home": {
+    "title": "Twoja dziupla czeka",
+    "subtitle": "Odbuduj wraki, kupuj coraz lepsze auta i ścigaj się, nawet gdy Cię nie ma."
+  },
+  "common": {
+    "loading": "Ładowanie…",
+    "retry": "Spróbuj ponownie"
+  }
+}

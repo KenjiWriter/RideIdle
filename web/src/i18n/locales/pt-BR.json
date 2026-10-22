@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "RideIdle"
+  },
+  "nav": {
+    "map": "Mapa",
+    "garage": "Garagem",
+    "tournament": "Torneio",
+    "city": "Cidade",
+    "workshop": "Oficina"
+  },
+  "language": {
+    "label": "Idioma"
+  },
+  "home": {
+    "title": "Sua oficina está esperando",
+    "subtitle": "Reconstrua carcaças, compre carros melhores e corra mesmo quando você não está."
+  },
+  "common": {
+    "loading": "Carregando…",
+    "retry": "Tentar novamente"
+  }
+}

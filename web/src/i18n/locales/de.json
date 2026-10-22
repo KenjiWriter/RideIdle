@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "RideIdle"
+  },
+  "nav": {
+    "map": "Karte",
+    "garage": "Garage",
+    "tournament": "Turnier",
+    "city": "Stadt",
+    "workshop": "Werkstatt"
+  },
+  "language": {
+    "label": "Sprache"
+  },
+  "home": {
+    "title": "Deine Werkstatt wartet",
+    "subtitle": "Baue Wracks wieder auf, kaufe bessere Autos und fahre Rennen, auch wenn du nicht da bist."
+  },
+  "common": {
+    "loading": "Wird geladen…",
+    "retry": "Erneut versuchen"
+  }
+}

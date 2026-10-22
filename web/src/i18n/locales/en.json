@@ -1,0 +1,23 @@
+{
+  "app": {
+    "name": "RideIdle"
+  },
+  "nav": {
+    "map": "Map",
+    "garage": "Garage",
+    "tournament": "Tournament",
+    "city": "City",
+    "workshop": "Workshop"
+  },
+  "language": {
+    "label": "Language"
+  },
+  "home": {
+    "title": "Your workshop is waiting",
+    "subtitle": "Rebuild wrecks, buy better cars and race even when you are away."
+  },
+  "common": {
+    "loading": "Loading…",
+    "retry": "Try again"
+  }
+}
