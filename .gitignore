@@ -1,0 +1,19 @@
+# systemowe i edytory
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# narzędzia lokalne (np. composer.phar)
+.tools/
+
+# środowisko
+.env
+.env.*
+!.env.example
+
+# logi i pliki tymczasowe
+*.log
+/tmp/
