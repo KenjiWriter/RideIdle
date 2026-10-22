@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Exceptions\InsufficientFundsException;
+use App\Exceptions\RunAlreadyExistsException;
 use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\Settlement;
@@ -90,7 +91,7 @@ function flattenResults(array $results): Illuminate\Support\Collection
 /** Everything that went wrong other than a refused payment, for example a deadlock or a lock timeout. */
 function unexpectedErrors(Illuminate\Support\Collection $operations): array
 {
-    return $operations->where('ok', false)->reject(fn (array $op) => $op['error'] === InsufficientFundsException::class)->values()->all();
+    return $operations->where('ok', false)->reject(fn (array $op) => in_array($op['error'], [InsufficientFundsException::class, RunAlreadyExistsException::class], true))->values()->all();
 }
 
 function committedDriver(object $test): User
@@ -165,6 +166,18 @@ it('charges and fills once when eight processes send the same refuel request', f
         ->and($run->fresh()->fuel_ml)->toBe(25_000)
         ->and(LedgerEntry::query()->where('reason', 'refuel')->where('user_id', $run->user_id)->count())->toBe(1)
         ->and(cashOf($run))->toBe(98_500);
+});
+
+it('starts one run when eight processes start a run for the same driver', function () {
+    $user = committedDriver($this);
+
+    $op = ['type' => 'start', 'user' => $user->id, 'now' => 1_000_000];
+    $operations = flattenResults(runWorkers(array_fill(0, 8, [$op])));
+
+    expect(unexpectedErrors($operations))->toBe([])
+        ->and($operations->where('ok', true)->count())->toBe(1)
+        ->and($operations->where('error', RunAlreadyExistsException::class)->count())->toBe(7)
+        ->and(RaceRun::query()->where('user_id', $user->id)->count())->toBe(1);
 });
 
 it('repairs a broken run once when eight processes send the same paid repair', function () {

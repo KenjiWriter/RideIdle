@@ -4,6 +4,7 @@ return [
 
     'errors' => [
         'insufficient_funds' => 'Pas assez d’argent.',
+        'run_exists' => 'Vous avez déjà une voiture en piste.',
         'player_level_required' => 'Niveau de joueur :required requis (vous avez :current).',
         'car_level_required' => 'Niveau de voiture :required requis (vous avez :current).',
         'workshop_level_required' => 'Niveau d’atelier :required requis.',

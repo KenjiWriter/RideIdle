@@ -4,6 +4,7 @@ use App\Domain\Run\CarStats;
 use App\Domain\Run\RunInputs;
 use App\Domain\Run\TrackProfile;
 use App\Models\RaceRun;
+use App\Models\User;
 use App\Services\Ledger;
 use App\Services\RunService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -79,6 +80,19 @@ function fundedRun(int $cents, array $attributes = []): RaceRun
     }
 
     return $run;
+}
+
+/**
+ * The headers of a device token for a driver, to call the API as that driver.
+ * The guards forget the user of an earlier request, which a test running several drivers in one process needs.
+ *
+ * @return array<string, string>
+ */
+function bearerFor(User $user): array
+{
+    app('auth')->forgetGuards();
+
+    return ['Authorization' => 'Bearer '.$user->createToken('test')->plainTextToken];
 }
 
 function cashOf(RaceRun $run): int

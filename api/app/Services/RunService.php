@@ -13,6 +13,7 @@ use App\Domain\Settlement\SettlementEvent;
 use App\Domain\Settlement\Settler;
 use App\Exceptions\IdempotencyConflictException;
 use App\Exceptions\InsufficientFundsException;
+use App\Exceptions\RunAlreadyExistsException;
 use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\Settlement;
@@ -66,6 +67,30 @@ final class RunService
             'ruleset_version' => $this->rulesetVersion(),
             'state_version' => 0,
         ]);
+    }
+
+    /**
+     * Starts the run of a driver who has none. A driver has at most one run for now: a second car on the track
+     * would double the income. The check runs under the lock of the wallet, so two requests of one driver
+     * arriving together cannot both pass it.
+     *
+     * @throws RunAlreadyExistsException
+     */
+    public function startFirstRun(int $userId, string $carSlug, string $trackSlug, RunInputs $inputs, int $fuelMl, ?int $nowMs = null): RaceRun
+    {
+        $this->ledger->ensureWallet($userId);
+
+        return DB::transaction(function () use ($userId, $carSlug, $trackSlug, $inputs, $fuelMl, $nowMs): RaceRun {
+            $this->ledger->lockWallet($userId);
+
+            $existing = RaceRun::query()->where('user_id', $userId)->value('id');
+
+            if ($existing !== null) {
+                throw new RunAlreadyExistsException((int) $existing);
+            }
+
+            return $this->start($userId, $carSlug, $trackSlug, $inputs, $fuelMl, $nowMs);
+        }, Ledger::DEADLOCK_ATTEMPTS);
     }
 
     /**

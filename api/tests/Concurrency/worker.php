@@ -57,6 +57,7 @@ foreach ($job['ops'] as $op) {
 
                 return ['added' => $refueled->addedMl, 'cost' => $refueled->costCents, 'repeated' => $refueled->repeated];
             })(),
+            'start' => ['run' => $runs->startFirstRun($op['user'], 'rdzak-gt-4', 'zlomowo-street', workerInputs(0), 45_000, $op['now'])->id],
             'repair' => (function () use ($runs, $op): array {
                 $repaired = $runs->repair($op['run'], workerInputs($op['chance']), $op['now'], $op['cost'], $op['request']);
 

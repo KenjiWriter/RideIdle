@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\RunAlreadyExistsException;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,4 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Refusals of the game rules have a stable `code` for the client next to the translated message.
+        $exceptions->render(fn (RunAlreadyExistsException $e) => response()->json([
+            'message' => __('game.errors.run_exists'),
+            'code' => 'run_exists',
+            'run_id' => $e->runId,
+        ], 409));
     })->create();

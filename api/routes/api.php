@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AccountRecoveryController;
 use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PlayerController;
+use App\Http\Controllers\Api\V1\RunController;
 use App\Http\Middleware\TouchLastSeen;
 use Illuminate\Support\Facades\Route;
 
@@ -22,5 +23,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/me', [MeController::class, 'show']);
         Route::patch('/me/locale', [MeController::class, 'updateLocale']);
         Route::post('/account/recovery-code', [AccountRecoveryController::class, 'issue'])->middleware('throttle:recovery-issue');
+
+        Route::post('/runs', [RunController::class, 'store']);
     });
 });
