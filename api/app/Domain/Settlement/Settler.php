@@ -12,7 +12,9 @@ namespace App\Domain\Settlement;
  * - A lap takes the lap time of the weather segment in which it starts and is never split.
  * - A lap counts when it finishes no later than `now`; the lap in progress is neither paid nor lost
  *   (the cursor stays at its start).
- * - Fuel, and the lap after which the car breaks down, limit the number of laps.
+ * - Fuel, and the lap after which the car breaks down, limit the number of laps. The lap after
+ *   which the car breaks down is paid. When the breakdown and the empty tank come at the same
+ *   moment both are logged, the breakdown first, and it is the reason the car stopped.
  * - Weather changes every 22.5 minutes, counted from the Unix epoch, so laps are counted
  *   per segment with a closed formula instead of one by one.
  *
@@ -68,14 +70,21 @@ final class Settler
             $xp += $batchXp;
         }
 
+        $lapsDone = $state->lapsDone + $laps;
         $fuelMl = $state->fuelMl - $laps * $config->fuelPerLapMl;
+
+        // The stop events belong to this settlement only when it drove the car to the stop:
+        // settling a car that was already stopped adds nothing.
+        if ($laps > 0 && $state->breakAfterLaps !== null && $lapsDone === $state->breakAfterLaps) {
+            $events[] = SettlementEvent::breakdown($cursor);
+        }
 
         if ($laps > 0 && $fuelMl < $config->fuelPerLapMl) {
             $events[] = SettlementEvent::fuelEmpty($cursor);
         }
 
         return new SettlementResult(
-            $state->with(cursorMs: $cursor, lapsDone: $state->lapsDone + $laps, fuelMl: $fuelMl),
+            $state->with(cursorMs: $cursor, lapsDone: $lapsDone, fuelMl: $fuelMl),
             self::ordered($events),
             $laps,
             $cashCents,
