@@ -86,6 +86,6 @@ Przepływ wejścia (sprawdzony ręcznie w przeglądarce na lokalnym API): landin
 
 Rozliczanie (`api/app/Domain/Settlement/`, opis w `docs/settlement.md`): czysta funkcja `settle` na liczbach całkowitych z wektorami W1–W7, testami własności na 10 000 losowych biegów, podział puli turnieju i Respekt z tablicą oczekiwanych wyników.
 
-Zapis w bazie (`api/app/Services/`, też w `docs/settlement.md`): zamrażanie konfiguracji biegu do liczb całkowitych, tabele `wallets`, `race_runs`, `settlements`, `settlement_events` i `ledger_entries`, rozliczanie w jednej transakcji z blokadami (portfel, potem bieg), księga z kluczem idempotencji, zmiana ustawień i tankowanie. Testy współbieżności (osobne procesy na MySQL, MariaDB i PostgreSQL) uruchamiają się razem z resztą, gdy baza nie jest SQLite.
+Zapis w bazie (`api/app/Services/`, też w `docs/settlement.md`): zamrażanie konfiguracji biegu do liczb całkowitych, tabele `wallets`, `race_runs`, `settlements`, `settlement_events` i `ledger_entries`, rozliczanie w jednej transakcji z blokadami (portfel, potem bieg), księga z kluczem idempotencji, zmiana ustawień, tankowanie i naprawa po awarii (nowe ziarno, jazda od teraz). Testy współbieżności (osobne procesy na MySQL, MariaDB i PostgreSQL) uruchamiają się razem z resztą, gdy baza nie jest SQLite.
 
-Dalej: punkty końcowe HTTP dla biegu, naprawa po awarii, tabele definicji i instancji z paczek treści, zabezpieczenie konta e-mailem, historia wprowadzająca i wybór wraku startowego.
+Dalej: punkty końcowe HTTP dla biegu, tabele definicji i instancji z paczek treści, zabezpieczenie konta e-mailem, historia wprowadzająca i wybór wraku startowego.

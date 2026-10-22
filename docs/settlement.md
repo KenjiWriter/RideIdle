@@ -83,6 +83,7 @@ Tabele (migracje `2026_10_22_19*`): `wallets` (saldo i XP kierowcy, `CHECK cash_
 | `RunService::settle` | Jedna transakcja: rozliczenie w oknach, zapis rozliczenia z logiem, księgowanie z kluczem `settle:{bieg}:{wersja}`, XP, nowy stan biegu i `state_version + 1`. Drugie wywołanie w tej samej chwili nic nie zmienia |
 | `RunService::reconfigure` | Rozlicza, potem zamraża nową konfigurację. Jadący bieg rusza od teraz (okrążenie w toku przepada, żeby zmiana nie działała wstecz). Ziarno zostaje, więc ponowny zapis tych samych ustawień nie losuje awarii od nowa. Zatrzymany bieg zostaje zatrzymany |
 | `RunService::refuel` | Rozlicza, potem obciąża księgę (cena zaokrąglona w górę do centa, nie więcej niż mieści bak) i dolewa. Klucz `refuel:{bieg}:{id żądania}`: to samo żądanie ponowione nic nie zmienia. Brak środków cofa wszystko, razem z rozliczeniem. Bieg bez paliwa rusza od teraz, po awarii zostaje zatrzymany do naprawy |
+| `RunService::repair` | Rozlicza (okrążenia do awarii są płatne według starej konfiguracji), potem zamraża konfigurację z **nowym ziarnem**, czyli z nowym, niezależnym planem awarii, i rusza od teraz. Naprawia tylko awarię: jadący bieg albo bieg bez paliwa zostaje bez zmian, więc naprawą nie da się przelosować planu. Jeśli bak jest też pusty, bieg zostaje zatrzymany z powodu paliwa, a ruszy go tankowanie. Naprawa może kosztować (`$costCents`): płatna po rozliczeniu i tylko wtedy, gdy naprawa naprawdę się odbyła, z kluczem `repair:{bieg}:{id żądania}` (id jest wtedy wymagane). Brak środków cofa wszystko |
 
 Zasady, które kod pilnuje i które testy współbieżności sprawdzają na prawdziwej bazie:
 
@@ -95,11 +96,11 @@ Zasady, które kod pilnuje i które testy współbieżności sprawdzają na praw
 ### Testy zapisu
 
 - `tests/Feature/Settlement` (SQLite i prawdziwe bazy): wartości W1 i W2 w bazie, awaria, atomowość, duplikaty, długa nieobecność, zamrożenie, tankowanie. Najważniejsze reguły (rozliczenie przed obciążeniem, kursor od teraz, zachowanie ziarna, ponowione żądanie, zaokrąglanie w górę) sprawdzono, psując kod i patrząc, że testy padają.
-- `tests/Concurrency` (osobne procesy PHP na MySQL, MariaDB i PostgreSQL, pomijane na SQLite): osiem procesów księguje ten sam klucz, wydaje saldo, rozlicza ten sam bieg i tankuje tym samym żądaniem naraz, a mieszanka rozliczeń i tankowań na jednym biegu kończy się sprawdzeniem sum: księga równa rozliczeniom i kosztom paliwa, okrążenia równe rozliczonym, paliwo równe kupionemu minus przejechane, wersja równa liczbie zmian.
+- `tests/Concurrency` (osobne procesy PHP na MySQL, MariaDB i PostgreSQL, pomijane na SQLite): osiem procesów księguje ten sam klucz, wydaje saldo, rozlicza ten sam bieg, tankuje tym samym żądaniem i naprawia tym samym żądaniem (płatnym i darmowym) naraz, a mieszanka rozliczeń, tankowań i napraw na jednym biegu kończy się sprawdzeniem sum: księga równa rozliczeniom i kosztom paliwa i napraw, okrążenia równe rozliczonym, paliwo równe kupionemu minus przejechane, wersja równa liczbie zmian.
 
 ## Czego jeszcze nie ma
 
-- Naprawa po awarii (nowe ziarno, wznowienie od teraz) i zmiana auta na bieg w trakcie.
-- Cena paliwa i pojemność baku z paczek treści (na razie parametry `refuel`), prawdziwy harmonogram pogody z klimatu regionu.
+- Zmiana auta na bieg w trakcie.
+- Cena paliwa, pojemność baku i koszt naprawy z paczek treści (na razie parametry `refuel` i `repair`), prawdziwy harmonogram pogody z klimatu regionu.
 - Punkty końcowe HTTP dla biegu (start, podsumowanie, tankowanie, zmiana ustawień).
 - Rundy z pozycją (`round_complete`) i dropy z ziarna (`sha256`), kursy i podróże, cykl jazda i ładowanie EV.
