@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Content\Catalog;
+use App\Content\Rules;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -14,7 +16,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // The content is read once per process.
+        $this->app->singleton(Catalog::class, fn () => Catalog::fromConfig());
+        $this->app->singleton(Rules::class, fn () => Rules::fromConfig());
     }
 
     /**

@@ -1,0 +1,77 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Content;
+
+/**
+ * Read access to the definitions of a content pack at run time (vehicles and parts).
+ * The files are read once per process and looked up by slug, never by a path that came from a request.
+ */
+final class Catalog
+{
+    /** @var array<string, array<string, mixed>>|null */
+    private ?array $vehicles = null;
+
+    /** @var array<string, array<string, mixed>>|null */
+    private ?array $parts = null;
+
+    public function __construct(private readonly string $packPath)
+    {
+    }
+
+    public static function fromConfig(): self
+    {
+        return new self(config('ride.content_path').'/packs/core');
+    }
+
+    /** @return array<string, mixed>|null */
+    public function vehicle(string $slug): ?array
+    {
+        return $this->vehicles()[$slug] ?? null;
+    }
+
+    /** @return array<string, mixed>|null */
+    public function part(string $slug): ?array
+    {
+        return $this->parts()[$slug] ?? null;
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function vehicles(): array
+    {
+        return $this->vehicles ??= $this->load('vehicles');
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    public function parts(): array
+    {
+        return $this->parts ??= $this->load('parts');
+    }
+
+    /**
+     * The wrecks a new driver can start with.
+     *
+     * @return array<string, array<string, mixed>>
+     */
+    public function startingVehicles(): array
+    {
+        return array_filter($this->vehicles(), static fn (array $vehicle): bool => in_array('start', $vehicle['sources'], true));
+    }
+
+    /** @return array<string, array<string, mixed>> */
+    private function load(string $folder): array
+    {
+        $files = glob("{$this->packPath}/{$folder}/*.json") ?: [];
+        sort($files);
+
+        $definitions = [];
+
+        foreach ($files as $file) {
+            $definition = json_decode((string) file_get_contents($file), true, 512, JSON_THROW_ON_ERROR);
+            $definitions[$definition['slug']] = $definition;
+        }
+
+        return $definitions;
+    }
+}
