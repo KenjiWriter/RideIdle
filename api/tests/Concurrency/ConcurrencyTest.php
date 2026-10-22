@@ -167,8 +167,45 @@ it('charges and fills once when eight processes send the same refuel request', f
         ->and(cashOf($run))->toBe(98_500);
 });
 
-it('settles and refuels in parallel without deadlocks and keeps the books straight', function () {
-    $run = committedRun($this, ['fuel_ml' => 6_000]);
+it('repairs a broken run once when eight processes send the same paid repair', function () {
+    $run = committedRun($this, ['fuel_ml' => 45_000, 'break_after_laps' => 2]);
+    (new Ledger())->post($run->user_id, 10_000, 'gift', "start:{$run->id}");
+    $seed = $run->seed;
+
+    $op = ['type' => 'repair', 'run' => $run->id, 'request' => 'same-request', 'cost' => 2_500, 'chance' => 50_000, 'now' => 1_000_000];
+    $operations = flattenResults(runWorkers(array_fill(0, 8, [$op])));
+
+    $fresh = $run->fresh();
+
+    expect(unexpectedErrors($operations))->toBe([])
+        ->and($operations->where('value.repaired', true)->count())->toBe(1)
+        ->and($operations->where('value.repeated', true)->count())->toBe(7)
+        ->and($fresh->seed)->not->toBe($seed)
+        ->and($fresh->status)->toBe('running')
+        ->and($fresh->state_version)->toBe(2) // the settlement of the two laps and the repair
+        ->and(LedgerEntry::query()->where('reason', 'repair')->where('user_id', $run->user_id)->count())->toBe(1)
+        ->and(cashOf($run))->toBe(10_000 + 2 * 1_550 - 2_500);
+});
+
+it('repairs a broken run once when eight processes ask for the same free repair', function () {
+    $run = committedRun($this, ['fuel_ml' => 45_000, 'break_after_laps' => 2]);
+    $seed = $run->seed;
+
+    // No request id: it is the state of the run that stops the others, the car is no longer broken.
+    $op = ['type' => 'repair', 'run' => $run->id, 'request' => null, 'cost' => 0, 'chance' => 50_000, 'now' => 1_000_000];
+    $operations = flattenResults(runWorkers(array_fill(0, 8, [$op])));
+
+    $fresh = $run->fresh();
+
+    expect(unexpectedErrors($operations))->toBe([])
+        ->and($operations->where('value.repaired', true)->count())->toBe(1)
+        ->and($fresh->seed)->not->toBe($seed)
+        ->and($fresh->state_version)->toBe(2);
+});
+
+it('settles, refuels and repairs in parallel without deadlocks and keeps the books straight', function () {
+    // The car breaks down after 3 laps and after that with a chance of 30% per lap, so repairs really happen.
+    $run = committedRun($this, ['fuel_ml' => 6_000, 'break_after_laps' => 3]);
     (new Ledger())->post($run->user_id, 20_000, 'gift', "start:{$run->id}");
 
     $settlers = array_map(
@@ -186,13 +223,22 @@ it('settles and refuels in parallel without deadlocks and keeps the books straig
         range(0, 2),
     );
 
-    $operations = flattenResults(runWorkers([...$settlers, ...$refuelers]));
+    $repairers = array_map(
+        fn (int $worker) => array_map(
+            fn (int $i) => ['type' => 'repair', 'run' => $run->id, 'request' => "p{$worker}-{$i}", 'cost' => 100, 'chance' => 300_000, 'now' => ($i * 4 + $worker) * 25_000],
+            range(1, 6),
+        ),
+        range(0, 1),
+    );
+
+    $operations = flattenResults(runWorkers([...$settlers, ...$refuelers, ...$repairers]));
 
     // A deadlock or a lock timeout shows up here as an error other than a refused payment.
     expect(unexpectedErrors($operations))->toBe([]);
 
     $settlements = Settlement::query()->where('race_run_id', $run->id)->get();
     $refuels = $operations->where('ok', true)->where('type', 'refuel')->pluck('value')->where('repeated', false);
+    $repairs = $operations->where('ok', true)->where('type', 'repair')->pluck('value')->where('repaired', true);
     $fresh = $run->fresh();
     $ledger = new Ledger();
 
@@ -201,11 +247,14 @@ it('settles and refuels in parallel without deadlocks and keeps the books straig
         ->and((int) LedgerEntry::query()->where('user_id', $run->user_id)->where('reason', 'settlement')->sum('delta'))->toBe((int) $settlements->sum('cash_cents'))
         // ...the laps of the run are the laps that were settled...
         ->and($fresh->laps_done)->toBe((int) $settlements->sum('laps'))
-        // ...the money is what was given plus what was earned minus what the fuel cost...
-        ->and($ledger->balance($run->user_id))->toBe(20_000 + (int) $settlements->sum('cash_cents') - (int) $refuels->sum('cost'))
+        // ...the money is what was given plus what was earned minus what the fuel and the repairs cost...
+        ->and($ledger->balance($run->user_id))->toBe(20_000 + (int) $settlements->sum('cash_cents') - (int) $refuels->sum('cost') - (int) $repairs->sum('cost'))
+        ->and((int) LedgerEntry::query()->where('user_id', $run->user_id)->where('reason', 'repair')->sum('delta'))->toBe(-(int) $repairs->sum('cost'))
         // ...the fuel is what was in the tank plus what was bought minus what was driven...
         ->and($fresh->fuel_ml)->toBe(6_000 + (int) $refuels->sum('added') - $fresh->laps_done * 1_500)
         ->and($fresh->fuel_ml)->toBeGreaterThanOrEqual(0)->toBeLessThanOrEqual(45_000)
-        // ...and every change of the state has its own version.
-        ->and($fresh->state_version)->toBe($settlements->count() + $refuels->where('added', '>', 0)->count());
+        // ...every change of the state has its own version...
+        ->and($fresh->state_version)->toBe($settlements->count() + $refuels->where('added', '>', 0)->count() + $repairs->count())
+        // ...and the repair path was really walked: the car breaks down at its third lap whatever the order.
+        ->and($repairs->count())->toBeGreaterThanOrEqual(1);
 });
