@@ -59,9 +59,47 @@ Dodatkowo testy architektury (`tests/Arch/DomainArchTest.php`) pilnują czystoś
 
 `content/tables/elo-expected-ppm.json` jest generowana poleceniem `php artisan content:elo-table`, a `--check` (i test) wykrywa nieaktualny plik. Kod gry nie liczy potęg w czasie działania.
 
+## Zamrażanie konfiguracji (`api/app/Domain/Run/`)
+
+Rozliczanie czyta tylko liczby całkowite, które `RunFreezer` policzył raz: przy starcie biegu i za każdym razem, gdy zmienia się auto, część, tor albo stan serwisu (zawsze po rozliczeniu do tej chwili).
+
+| Klasa | Rola |
+|---|---|
+| `RunFreezer` | `freeze(RunInputs, ziarno, okrążenia)` zwraca `FrozenRun`. Jedyne miejsce, gdzie wolno użyć `float` (oprócz tablicy Respektu) |
+| `RunInputs`, `CarStats`, `TrackProfile`, `WeatherEffect` | Dane wejściowe: statystyki auta, wagi i wartości odniesienia toru, mnożniki pogody |
+| `FrozenRun` | `config` (to, co ląduje w kolumnie `race_runs.config`) i okrążenie planowanej awarii |
+| `SeededWeather`, `Rng` | Pogoda segmentu z ziarna klimatu regionu: pierwsze 32 bity `sha256("ziarno\|domena\|indeks")` modulo 1 000 000 |
+
+Czas okrążenia to `baza / perf^1,15` zaokrąglone do ms, gdzie `perf` to suma wag razy statystyka z pogodą podzielona przez wartość odniesienia, obcięta do 0,2–1,6. Nagroda i XP na pogodę to `Ppm::mul`. Awaria jest zaplanowana na pierwsze okrążenie po wykonanych, którego rzut z ziarna biegu jest mniejszy od szansy.
+
+## Zapis w bazie (`api/app/Services/`)
+
+Tabele (migracje `2026_10_22_19*`): `wallets` (saldo i XP kierowcy, `CHECK cash_cents >= 0`), `race_runs` (stan biegu, zamrożona konfiguracja i `state_version`), `settlements` (unikalne `(race_run_id, state_version)`), `settlement_events` (log, unikalne `(settlement_id, seq)`) i `ledger_entries` (księga, unikalny `idem_key`).
+
+| Operacja | Co robi |
+|---|---|
+| `Ledger::post` | Jedyny sposób zmiany salda. Blokuje portfel, sprawdza klucz idempotencji (ponowione księgowanie zwraca pierwszy wpis, ten sam klucz z inną kwotą to `IdempotencyConflictException`), nie pozwala zejść poniżej zera |
+| `RunService::start` | Zamraża konfigurację z nowym ziarnem, kursor = teraz |
+| `RunService::settle` | Jedna transakcja: rozliczenie w oknach, zapis rozliczenia z logiem, księgowanie z kluczem `settle:{bieg}:{wersja}`, XP, nowy stan biegu i `state_version + 1`. Drugie wywołanie w tej samej chwili nic nie zmienia |
+| `RunService::reconfigure` | Rozlicza, potem zamraża nową konfigurację. Jadący bieg rusza od teraz (okrążenie w toku przepada, żeby zmiana nie działała wstecz). Ziarno zostaje, więc ponowny zapis tych samych ustawień nie losuje awarii od nowa. Zatrzymany bieg zostaje zatrzymany |
+| `RunService::refuel` | Rozlicza, potem obciąża księgę (cena zaokrąglona w górę do centa, nie więcej niż mieści bak) i dolewa. Klucz `refuel:{bieg}:{id żądania}`: to samo żądanie ponowione nic nie zmienia. Brak środków cofa wszystko, razem z rozliczeniem. Bieg bez paliwa rusza od teraz, po awarii zostaje zatrzymany do naprawy |
+
+Zasady, które kod pilnuje i które testy współbieżności sprawdzają na prawdziwej bazie:
+
+1. **Kolejność blokad: portfel kierowcy, potem bieg.** Zawsze. Dzięki temu dwa żądania nie czekają na siebie nawzajem.
+2. **Zegar czytamy po blokadach.** Kto czekał na blokadę, dostaje prawdziwy czas swojej kolejki.
+3. **Portfel zakładamy przed transakcją** (`Ledger::ensureWallet`). Test współbieżności wykrył, że założenie go w transakcji po odczycie z blokadą nieistniejącego wiersza kończy się zakleszczeniem w InnoDB (każda transakcja trzyma blokadę przerwy, która blokuje wstawienie pozostałych). Zdarzyłoby się przy pierwszych żądaniach nowego kierowcy.
+4. **Zakleszczenia są ponawiane** (3 próby) na zewnętrznej transakcji jako dodatkowe zabezpieczenie.
+5. **Wszystko albo nic**: błąd na dowolnym kroku cofa rozliczenie, log, księgę i stan biegu.
+
+### Testy zapisu
+
+- `tests/Feature/Settlement` (SQLite i prawdziwe bazy): wartości W1 i W2 w bazie, awaria, atomowość, duplikaty, długa nieobecność, zamrożenie, tankowanie. Najważniejsze reguły (rozliczenie przed obciążeniem, kursor od teraz, zachowanie ziarna, ponowione żądanie, zaokrąglanie w górę) sprawdzono, psując kod i patrząc, że testy padają.
+- `tests/Concurrency` (osobne procesy PHP na MySQL, MariaDB i PostgreSQL, pomijane na SQLite): osiem procesów księguje ten sam klucz, wydaje saldo, rozlicza ten sam bieg i tankuje tym samym żądaniem naraz, a mieszanka rozliczeń i tankowań na jednym biegu kończy się sprawdzeniem sum: księga równa rozliczeniom i kosztom paliwa, okrążenia równe rozliczonym, paliwo równe kupionemu minus przejechane, wersja równa liczbie zmian.
+
 ## Czego jeszcze nie ma
 
-- Zamrażanie konfiguracji z wzorów statystyk (`RunConfig` z auta, części, toru i pogody) oraz `resume(now)` po tankowaniu i naprawie.
+- Naprawa po awarii (nowe ziarno, wznowienie od teraz) i zmiana auta na bieg w trakcie.
+- Cena paliwa i pojemność baku z paczek treści (na razie parametry `refuel`), prawdziwy harmonogram pogody z klimatu regionu.
+- Punkty końcowe HTTP dla biegu (start, podsumowanie, tankowanie, zmiana ustawień).
 - Rundy z pozycją (`round_complete`) i dropy z ziarna (`sha256`), kursy i podróże, cykl jazda i ładowanie EV.
-- Zapis w bazie: tabele `settlements`, `settlement_events`, `ledger`, transakcja z `lockForUpdate()` i kluczem idempotencji.
-- Prawdziwy harmonogram pogody z klimatu regionu.
