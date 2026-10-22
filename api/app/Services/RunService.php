@@ -109,15 +109,18 @@ final class RunService
      * continues from now: the lap in progress is dropped rather than finished with the new lap time, which
      * would apply the change to time that already passed. The seed stays, so saving the same setup again cannot
      * re-roll the planned breakdown; a new plan needs a repair. A stopped run stays stopped.
+     *
+     * When the new configuration is for another track, `$trackSlug` is saved together with it.
      */
-    public function reconfigure(int $runId, RunInputs $inputs, ?int $nowMs = null): RaceRun
+    public function reconfigure(int $runId, RunInputs $inputs, ?int $nowMs = null, ?string $trackSlug = null): RaceRun
     {
-        return $this->locked($runId, $nowMs, function (RaceRun $run, int $now) use ($inputs): RaceRun {
+        return $this->locked($runId, $nowMs, function (RaceRun $run, int $now) use ($inputs, $trackSlug): RaceRun {
             $this->settleLocked($run, $now);
 
             $frozen = $this->freezer->freeze($inputs, $run->seed, $run->laps_done);
 
             $run->forceFill([
+                'track_slug' => $trackSlug ?? $run->track_slug,
                 'config' => $frozen->config,
                 'break_after_laps' => $frozen->breakAfterLaps,
                 'ruleset_version' => $this->rulesetVersion(),

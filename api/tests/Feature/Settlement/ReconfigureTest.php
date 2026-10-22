@@ -154,3 +154,41 @@ it('undoes the settlement when freezing the new configuration cannot be saved', 
 it('fails for a run that does not exist', function () {
     runService()->reconfigure(999_999, dryInputs(), 1_000);
 })->throws(ModelNotFoundException::class);
+
+it('saves the track together with the new configuration', function () {
+    $run = aRun(['fuel_ml' => 45_000]);
+
+    $changed = runService()->reconfigure($run->id, dryInputs(rewardCents: 2_000), 1_000_000, 'another-track');
+
+    expect($changed->track_slug)->toBe('another-track')
+        ->and($run->fresh()->track_slug)->toBe('another-track')
+        ->and($run->fresh()->config['lap_cash_cents'])->toBe(['dry' => 2_000]);
+});
+
+it('keeps the track when none is given', function () {
+    $run = aRun();
+
+    runService()->reconfigure($run->id, dryInputs(), 1_000);
+
+    expect($run->fresh()->track_slug)->toBe('zlomowo-street');
+});
+
+it('keeps the old track when saving the new configuration fails', function () {
+    $run = aRun(['fuel_ml' => 45_000]);
+
+    $updates = 0;
+    $event = 'eloquent.updating: '.RaceRun::class;
+    Event::listen($event, static function () use (&$updates): void {
+        if (++$updates === 2) {
+            throw new RuntimeException('The disk is full.');
+        }
+    });
+
+    try {
+        expect(fn () => runService()->reconfigure($run->id, dryInputs(), 1_000_000, 'another-track'))->toThrow(RuntimeException::class);
+    } finally {
+        Event::forget($event);
+    }
+
+    expect($run->fresh()->track_slug)->toBe('zlomowo-street');
+});
