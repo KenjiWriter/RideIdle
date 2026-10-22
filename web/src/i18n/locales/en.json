@@ -43,5 +43,29 @@
     "welcome": "Welcome, {name}",
     "placeholder": "Your first wreck is waiting. The garage opens in the next version.",
     "signOut": "Sign out"
+  },
+  "recover": {
+    "title": "Restore your driver",
+    "description": "Enter the recovery code you saved. You can find it in your garage under Save your garage.",
+    "codeLabel": "Recovery code",
+    "submit": "Restore",
+    "submitting": "Restoring…",
+    "back": "Back",
+    "errors": {
+      "required": "Enter your recovery code."
+    }
+  },
+  "recovery": {
+    "title": "Save your garage",
+    "description": "If you clear your browser data or switch devices, this code brings your driver back. Without it a guest account is lost.",
+    "generate": "Show my recovery code",
+    "regenerate": "Create a new code",
+    "regenerateHint": "You already have a code. A new one makes the old one stop working.",
+    "generating": "Creating…",
+    "yourCode": "Your recovery code",
+    "once": "It is shown only once. Write it down or copy it and keep it safe.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "done": "I saved it"
   }
 }

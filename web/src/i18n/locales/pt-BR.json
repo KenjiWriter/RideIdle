@@ -43,5 +43,29 @@
     "welcome": "Bem-vindo, {name}",
     "placeholder": "Sua primeira carcaça já está esperando. A garagem abre na próxima versão.",
     "signOut": "Sair"
+  },
+  "recover": {
+    "title": "Restaurar seu piloto",
+    "description": "Digite o código de recuperação que você guardou. Você o encontra na sua garagem, em Salvar sua garagem.",
+    "codeLabel": "Código de recuperação",
+    "submit": "Restaurar",
+    "submitting": "Restaurando…",
+    "back": "Voltar",
+    "errors": {
+      "required": "Digite seu código de recuperação."
+    }
+  },
+  "recovery": {
+    "title": "Salvar sua garagem",
+    "description": "Se você limpar os dados do navegador ou trocar de aparelho, este código traz seu piloto de volta. Sem ele, uma conta de convidado se perde.",
+    "generate": "Mostrar meu código de recuperação",
+    "regenerate": "Criar um novo código",
+    "regenerateHint": "Você já tem um código. Um novo faz o antigo parar de funcionar.",
+    "generating": "Criando…",
+    "yourCode": "Seu código de recuperação",
+    "once": "Ele é mostrado só uma vez. Anote ou copie e guarde em um lugar seguro.",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "done": "Já guardei"
   }
 }

@@ -43,5 +43,29 @@
     "welcome": "Witaj, {name}",
     "placeholder": "Twój pierwszy wrak już czeka. Garaż otworzy się w następnej wersji.",
     "signOut": "Wyloguj"
+  },
+  "recover": {
+    "title": "Przywróć kierowcę",
+    "description": "Wpisz zapisany kod odzyskiwania. Znajdziesz go w garażu w sekcji Zapisz swój garaż.",
+    "codeLabel": "Kod odzyskiwania",
+    "submit": "Przywróć",
+    "submitting": "Przywracanie…",
+    "back": "Wstecz",
+    "errors": {
+      "required": "Wpisz kod odzyskiwania."
+    }
+  },
+  "recovery": {
+    "title": "Zapisz swój garaż",
+    "description": "Jeśli wyczyścisz dane przeglądarki albo zmienisz urządzenie, ten kod przywróci Twojego kierowcę. Bez niego konto gościa przepada.",
+    "generate": "Pokaż mój kod odzyskiwania",
+    "regenerate": "Utwórz nowy kod",
+    "regenerateHint": "Masz już kod. Nowy sprawi, że stary przestanie działać.",
+    "generating": "Tworzenie…",
+    "yourCode": "Twój kod odzyskiwania",
+    "once": "Pokazujemy go tylko raz. Zapisz go lub skopiuj i schowaj w bezpiecznym miejscu.",
+    "copy": "Kopiuj",
+    "copied": "Skopiowano",
+    "done": "Zapisałem"
   }
 }

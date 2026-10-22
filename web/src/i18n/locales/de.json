@@ -43,5 +43,29 @@
     "welcome": "Willkommen, {name}",
     "placeholder": "Dein erstes Wrack wartet schon. Die Garage öffnet in der nächsten Version.",
     "signOut": "Abmelden"
+  },
+  "recover": {
+    "title": "Fahrer wiederherstellen",
+    "description": "Gib den gespeicherten Wiederherstellungscode ein. Du findest ihn in deiner Garage unter Garage sichern.",
+    "codeLabel": "Wiederherstellungscode",
+    "submit": "Wiederherstellen",
+    "submitting": "Wird wiederhergestellt…",
+    "back": "Zurück",
+    "errors": {
+      "required": "Gib deinen Wiederherstellungscode ein."
+    }
+  },
+  "recovery": {
+    "title": "Garage sichern",
+    "description": "Wenn du Browserdaten löschst oder das Gerät wechselst, bringt dieser Code deinen Fahrer zurück. Ohne ihn ist ein Gastkonto verloren.",
+    "generate": "Meinen Wiederherstellungscode anzeigen",
+    "regenerate": "Neuen Code erstellen",
+    "regenerateHint": "Du hast bereits einen Code. Ein neuer macht den alten ungültig.",
+    "generating": "Wird erstellt…",
+    "yourCode": "Dein Wiederherstellungscode",
+    "once": "Er wird nur einmal angezeigt. Schreibe ihn auf oder kopiere ihn und bewahre ihn sicher auf.",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "done": "Ich habe ihn gespeichert"
   }
 }

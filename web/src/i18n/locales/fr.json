@@ -43,5 +43,29 @@
     "welcome": "Bienvenue, {name}",
     "placeholder": "Votre première épave vous attend. Le garage ouvrira dans la prochaine version.",
     "signOut": "Se déconnecter"
+  },
+  "recover": {
+    "title": "Récupérer votre pilote",
+    "description": "Saisissez le code de récupération que vous avez enregistré. Vous le trouverez dans votre garage, sous Sauvegarder votre garage.",
+    "codeLabel": "Code de récupération",
+    "submit": "Récupérer",
+    "submitting": "Récupération…",
+    "back": "Retour",
+    "errors": {
+      "required": "Saisissez votre code de récupération."
+    }
+  },
+  "recovery": {
+    "title": "Sauvegarder votre garage",
+    "description": "Si vous effacez les données du navigateur ou changez d’appareil, ce code rend votre pilote. Sans lui, un compte invité est perdu.",
+    "generate": "Afficher mon code de récupération",
+    "regenerate": "Créer un nouveau code",
+    "regenerateHint": "Vous avez déjà un code. Un nouveau code rend l’ancien inutilisable.",
+    "generating": "Création…",
+    "yourCode": "Votre code de récupération",
+    "once": "Il n’est affiché qu’une seule fois. Notez-le ou copiez-le et gardez-le en lieu sûr.",
+    "copy": "Copier",
+    "copied": "Copié",
+    "done": "Je l’ai enregistré"
   }
 }
