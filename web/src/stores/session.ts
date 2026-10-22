@@ -7,6 +7,7 @@ import { clearToken, readToken, storeToken } from '@/auth/token'
 import { currentLocale } from '@/i18n'
 import { normalizeLocale } from '@/i18n/locales'
 
+import { useRunStore } from './run'
 import { useSettingsStore } from './settings'
 
 /** Who is playing on this device: the profile of the driver and the device token. */
@@ -76,6 +77,8 @@ export const useSessionStore = defineStore('session', () => {
     clearToken()
     token.value = null
     me.value = null
+    // The next driver on this device must not see this driver's run, or the summary of their absence.
+    useRunStore().reset()
   }
 
   return { me, token, isAuthenticated, createDriver, recover, fetchMe, issueRecoveryCode, signOut }

@@ -2,15 +2,17 @@ import type { AppLocale } from './locales'
 
 /**
  * Gotówka w grze jest zapisana w centach (liczba całkowita), a wyświetlana
- * w dolarach, w formacie języka gracza.
+ * w dolarach, w formacie języka gracza. Domyślnie w pełnych dolarach; nagroda
+ * za okrążenie ($15,50) potrzebuje centów, więc można podać `fractionDigits`.
  */
-export function formatMoney(cents: number, locale: AppLocale): string {
+export function formatMoney(cents: number, locale: AppLocale, fractionDigits = 0): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'USD',
     currencyDisplay: 'narrowSymbol',
-    maximumFractionDigits: 0,
-  }).format(Math.round(cents / 100))
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(fractionDigits === 0 ? Math.round(cents / 100) : cents / 100)
 }
 
 export function formatNumber(value: number, locale: AppLocale, maximumFractionDigits = 0): string {

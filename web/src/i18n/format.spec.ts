@@ -16,6 +16,13 @@ describe('formatMoney', () => {
     expect(formatMoney(0, 'en')).toBe('$0')
     expect(formatMoney(150, 'en')).toBe('$2')
   })
+
+  it('shows the cents when asked, for the reward of a lap', () => {
+    expect(formatMoney(1550, 'en', 2)).toBe('$15.50')
+    expect(formatMoney(1442, 'en', 2)).toBe('$14.42')
+    expect(formatMoney(0, 'en', 2)).toBe('$0.00')
+    expect(formatMoney(1550, 'pl', 2).replace(/\s/g, ' ')).toBe('15,50 $')
+  })
 })
 
 describe('formatNumber', () => {
