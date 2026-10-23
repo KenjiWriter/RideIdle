@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\AccountDataController;
 use App\Http\Controllers\Api\V1\AccountEmailController;
 use App\Http\Controllers\Api\V1\AccountRecoveryController;
 use App\Http\Controllers\Api\V1\AuthProviderController;
@@ -42,6 +43,8 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware(['auth:sanctum', TouchLastSeen::class])->group(function (): void {
         Route::get('/me', [MeController::class, 'show']);
         Route::patch('/me/locale', [MeController::class, 'updateLocale']);
+        // A copy of the data of the account, and, in the same place, having the account deleted.
+        Route::get('/account/export', [AccountDataController::class, 'export'])->middleware('throttle:account-data');
         Route::post('/account/recovery-code', [AccountRecoveryController::class, 'issue'])->middleware('throttle:recovery-issue');
         Route::post('/account/email', [AccountEmailController::class, 'store'])->middleware('throttle:account-email');
         Route::post('/account/identities/{provider}/start', [SocialAuthController::class, 'startLink'])->whereIn('provider', AccountIdentity::SOCIAL)->middleware('throttle:account-oauth-start');
