@@ -7,11 +7,14 @@ use App\Mail\AccountLinkMail;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\RaceRun;
+use App\Models\Settlement;
+use App\Models\SettlementEvent;
 use App\Models\User;
 use App\Services\Ledger;
 use App\Services\RunService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
 use Laravel\Socialite\Facades\Socialite;
@@ -261,6 +264,50 @@ function finishWith(array $held, ?User $driver = null, array $body = []): TestRe
     app('auth')->forgetGuards();
 
     return test()->postJson('/api/v1/auth/complete', [...$held, ...$body], $driver === null ? [] : bearerFor($driver));
+}
+
+/** The export of an account, as the command prints it. */
+function exported(array $options): array
+{
+    expect(Artisan::call('accounts:export', $options))->toBe(0);
+
+    return json_decode(Artisan::output(), true, flags: JSON_THROW_ON_ERROR);
+}
+
+/** An account that has a little of everything the game keeps. */
+function accountWithHistory(): User
+{
+    $user = User::factory()->create([
+        'name' => 'Maciek_Turbo',
+        'name_key' => 'maciek_turbo',
+        'email' => 'turbo@example.com',
+        'locale' => 'pl',
+        'terms_accepted_at' => now()->subDays(3),
+        'terms_version' => '2026-10-23',
+        'age_confirmed_at' => now()->subDays(3),
+        'recovery_code_hash' => str_repeat('a', 64),
+        'recovery_code_set_at' => now()->subDay(),
+    ]);
+    identityOf($user, AccountIdentity::EMAIL, 'turbo@example.com', 'turbo@example.com');
+    identityOf($user, AccountIdentity::GOOGLE, '1098765', 'turbo@gmail.com');
+    $user->createToken('google-login');
+
+    $run = aRun(['user_id' => $user->id]);
+    $settlement = Settlement::query()->create([
+        'race_run_id' => $run->id,
+        'state_version' => 1,
+        'cursor_from_ms' => 0,
+        'cursor_to_ms' => 75_000,
+        'now_ms' => 75_000,
+        'laps' => 1,
+        'cash_cents' => 1_550,
+        'xp' => 25,
+        'created_at' => now(),
+    ]);
+    SettlementEvent::query()->create(['settlement_id' => $settlement->id, 'seq' => 0, 'type' => 'lap_batch', 'at_ms' => 75_000, 'payload' => ['laps' => 1]]);
+    (new Ledger)->post($user->id, 1_550, 'laps', 'export-test:'.$user->id);
+
+    return $user;
 }
 
 function cashOf(RaceRun $run): int
