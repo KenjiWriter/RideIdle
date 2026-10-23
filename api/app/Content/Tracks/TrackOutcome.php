@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Content\Tracks;
+
+/** The best build on a track, and what it took to find it. */
+final readonly class TrackOutcome
+{
+    /**
+     * @param  string  $surface  asphalt or gravel
+     * @param  int  $tierCap  the highest tier of a part that a car of the level of the track can have mounted
+     * @param  int  $candidates  how many builds were compared
+     * @param  float  $centsPerHour  what the winner earns an hour in the climate of the region, weather by weather
+     * @param  array<string, int>  $lapMs  the lap of the winner in every weather of the region
+     * @param  array<string, array{build: Build, lap_ms: int}>  $fastest  the fastest build in the dry and in the rain, when the region has them
+     */
+    public function __construct(
+        public string $track,
+        public string $surface,
+        public int $minPlayerLevel,
+        public int $tierCap,
+        public int $candidates,
+        public Build $winner,
+        public float $centsPerHour,
+        public array $lapMs,
+        public array $fastest,
+    ) {}
+}
