@@ -24,7 +24,8 @@
     "create": "Criar seu piloto",
     "continue": "Continuar como {name}",
     "continueGeneric": "Continuar",
-    "haveDriver": "Já tenho um piloto"
+    "haveDriver": "Já tenho um piloto",
+    "accountDeleted": "Sua conta foi excluída, com tudo o que havia nela."
   },
   "create": {
     "title": "Criar seu piloto",

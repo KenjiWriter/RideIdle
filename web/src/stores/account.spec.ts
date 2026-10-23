@@ -5,6 +5,7 @@ import { ApiError } from '@/api/client'
 import type { Me } from '@/api/types'
 import { readToken, storeToken } from '@/auth/token'
 import { readPending, storePending } from '@/features/account/oauth'
+import { saveAsFile } from '@/features/account/download'
 import { goTo } from '@/features/account/redirect'
 import { currentLocale, setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
@@ -13,6 +14,7 @@ import { MissingVerifierError, useAccountStore } from './account'
 import { useSessionStore } from './session'
 
 vi.mock('@/features/account/redirect', () => ({ goTo: vi.fn() }))
+vi.mock('@/features/account/download', async (original) => ({ ...(await original<typeof import('@/features/account/download')>()), saveAsFile: vi.fn() }))
 
 const guest: Me = { id: 1, name: 'Maciek_Turbo', locale: 'en', is_guest: true, has_recovery_code: false, identities: [] }
 const claimed: Me = { ...guest, is_guest: false, identities: [{ provider: 'google', email: 't***@example.com' }] }
@@ -24,6 +26,7 @@ describe('account store', () => {
     localStorage.clear()
     fetchMock.mockReset()
     vi.mocked(goTo).mockReset()
+    vi.mocked(saveAsFile).mockReset()
     vi.stubGlobal('fetch', fetchMock)
     setActivePinia(createPinia())
   })
@@ -58,6 +61,91 @@ describe('account store', () => {
       expect(account.providers).toEqual([])
       // It was asked: the screen does not keep asking.
       expect(account.providersLoaded).toBe(true)
+    })
+  })
+
+  describe('my data', () => {
+    const copy = { exported_at: '2026-10-23T10:00:00+00:00', account: { id: 1, name: 'Maciek_Turbo' }, game: { runs: [] } }
+
+    it('is taken from the server and handed to the browser as a file named after the driver', async () => {
+      storeToken('device-token')
+      vi.useFakeTimers({ toFake: ['Date'] })
+      vi.setSystemTime(new Date('2026-10-23T10:00:00Z'))
+      const calls = serveApi(fetchMock, { 'GET /api/v1/account/export': () => respond(200, copy) })
+      useSessionStore().me = guest
+
+      await useAccountStore().downloadData()
+      vi.useRealTimers()
+
+      expect(calls.map((call) => `${call.method} ${call.url}`)).toEqual(['GET /api/v1/account/export'])
+      expect(saveAsFile).toHaveBeenCalledTimes(1)
+      const [filename, text] = vi.mocked(saveAsFile).mock.calls[0] as [string, string]
+      expect(filename).toBe('ride-idle-data-maciek_turbo-2026-10-23.json')
+      expect(JSON.parse(text)).toEqual(copy)
+      // Written so that a person can read it.
+      expect(text).toContain('\n  "account": {')
+    })
+
+    it('has a name for the file even before the profile is known', async () => {
+      storeToken('device-token')
+      serveApi(fetchMock, { 'GET /api/v1/account/export': () => respond(200, copy) })
+
+      await useAccountStore().downloadData()
+
+      expect(vi.mocked(saveAsFile).mock.calls[0]?.[0]).toMatch(/^ride-idle-data-driver-\d{4}-\d{2}-\d{2}\.json$/)
+    })
+
+    it('saves no file when the server refuses, and passes the refusal on', async () => {
+      storeToken('device-token')
+      serveApi(fetchMock, { 'GET /api/v1/account/export': () => respond(429, { message: 'Too many attempts.' }) })
+
+      await expect(useAccountStore().downloadData()).rejects.toMatchObject({ status: 429 })
+
+      expect(saveAsFile).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('deleting my account', () => {
+    it('asks the server with the name the driver wrote, and the device forgets the account', async () => {
+      storeToken('device-token')
+      const calls = serveApi(fetchMock, { 'DELETE /api/v1/account': () => respond(200, { deleted: true }) })
+      const session = useSessionStore()
+      session.me = guest
+
+      await useAccountStore().deleteAccount('Maciek_Turbo')
+
+      expect(calls[0]?.body).toEqual({ confirm_name: 'Maciek_Turbo' })
+      expect(session.isAuthenticated).toBe(false)
+      expect(session.me).toBeNull()
+      expect(readToken()).toBeNull()
+      expect(session.accountDeleted).toBe(true)
+    })
+
+    it('keeps the session when the server says it is not the name, and passes the refusal on', async () => {
+      storeToken('device-token')
+      serveApi(fetchMock, {
+        'DELETE /api/v1/account': () => respond(422, { message: 'x', errors: { confirm_name: ['Type your driver name exactly as it is written to delete the account.'] } }),
+      })
+      const session = useSessionStore()
+      session.me = guest
+
+      await expect(useAccountStore().deleteAccount('nope')).rejects.toMatchObject({ status: 422 })
+
+      expect(session.isAuthenticated).toBe(true)
+      expect(session.me).toEqual(guest)
+      expect(readToken()).toBe('device-token')
+      expect(session.accountDeleted).toBe(false)
+    })
+
+    it('keeps the session when the server cannot be reached: nothing is known to be deleted', async () => {
+      storeToken('device-token')
+      fetchMock.mockRejectedValue(new TypeError('offline'))
+      const session = useSessionStore()
+
+      await expect(useAccountStore().deleteAccount('Maciek_Turbo')).rejects.toBeInstanceOf(TypeError)
+
+      expect(session.isAuthenticated).toBe(true)
+      expect(session.accountDeleted).toBe(false)
     })
   })
 

@@ -24,7 +24,8 @@
     "create": "Create your driver",
     "continue": "Continue as {name}",
     "continueGeneric": "Continue",
-    "haveDriver": "I already have a driver"
+    "haveDriver": "I already have a driver",
+    "accountDeleted": "Your account was deleted, with everything in it."
   },
   "create": {
     "title": "Create your driver",

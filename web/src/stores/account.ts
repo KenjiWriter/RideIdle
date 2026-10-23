@@ -12,6 +12,7 @@ import type {
   ProvidersResponse,
   SocialProvider,
 } from '@/api/types'
+import { dataFileName, saveAsFile } from '@/features/account/download'
 import { clearPending, readPending, storePending } from '@/features/account/oauth'
 import { goTo } from '@/features/account/redirect'
 
@@ -49,6 +50,27 @@ export const useAccountStore = defineStore('account', () => {
     if (legal.value === null) {
       legal.value = (await api<LegalResponse>('/v1/meta/legal')).data
     }
+  }
+
+  /**
+   * Takes a copy of the data of the account and hands it to the browser as a file. The server says what is in it; it
+   * holds no secret. A failure is passed on.
+   */
+  async function downloadData(): Promise<void> {
+    const session = useSessionStore()
+    const data = await api<unknown>('/v1/account/export')
+
+    saveAsFile(dataFileName(session.me?.name ?? '', new Date()), `${JSON.stringify(data, null, 2)}\n`)
+  }
+
+  /**
+   * Deletes the account on the server, for good, and this device forgets it. The driver writes their name to say they
+   * mean it, and the server checks it: a name that is not theirs is a 422 and nothing is deleted.
+   */
+  async function deleteAccount(confirmName: string): Promise<void> {
+    await api<{ deleted: boolean }>('/v1/account', { method: 'DELETE', body: JSON.stringify({ confirm_name: confirmName }) })
+
+    useSessionStore().forgetDeletedAccount()
   }
 
   /**
@@ -152,5 +174,5 @@ export const useAccountStore = defineStore('account', () => {
     return response.purpose
   }
 
-  return { providers, providersLoaded, loadProviders, legal, loadLegal, requestEmailLink, requestLoginLink, startProvider, finishProvider, confirmEmail }
+  return { providers, providersLoaded, loadProviders, legal, loadLegal, downloadData, deleteAccount, requestEmailLink, requestLoginLink, startProvider, finishProvider, confirmEmail }
 })

@@ -12,6 +12,8 @@ interface MountOptions {
   props?: Record<string, unknown>
   /** Where to put the component, when the test needs a real focus: jsdom moves focus only inside the document. */
   attachTo?: HTMLElement
+  /** Runs after Pinia is there and before the component is mounted: for state the component reads when it is set up. */
+  prepare?: () => void
 }
 
 /**
@@ -25,6 +27,8 @@ export async function mountView(component: Component, path = '/', options: Mount
   const router = installGuards(createRouter({ history: createMemoryHistory(), routes }))
   await router.push(path)
   await router.isReady()
+
+  options.prepare?.()
 
   const wrapper = mount(component, { props: options.props, attachTo: options.attachTo, global: { plugins: [pinia, router, i18n] } })
 

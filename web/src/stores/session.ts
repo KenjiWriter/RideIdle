@@ -18,6 +18,9 @@ export const useSessionStore = defineStore('session', () => {
   /** The driver told the window "Save your garage" to wait. It belongs to the driver on this device, not to the device. */
   const linkPromptDismissed = ref(readLinkPromptDismissed())
 
+  /** The account of this device was deleted a moment ago, which the start page says once. */
+  const accountDeleted = ref(false)
+
   const isAuthenticated = computed(() => token.value !== null)
 
   function start(profile: Me, deviceToken: string): void {
@@ -92,6 +95,17 @@ export const useSessionStore = defineStore('session', () => {
     return response.code
   }
 
+  /** The account was deleted on the server: this device forgets it and says so on the start page. */
+  function forgetDeletedAccount(): void {
+    signOut()
+    accountDeleted.value = true
+  }
+
+  /** The start page said it. */
+  function acknowledgeDeletion(): void {
+    accountDeleted.value = false
+  }
+
   function signOut(): void {
     clearToken()
     token.value = null
@@ -106,12 +120,15 @@ export const useSessionStore = defineStore('session', () => {
     token,
     isAuthenticated,
     linkPromptDismissed,
+    accountDeleted,
     createDriver,
     recover,
     acceptLogin,
     fetchMe,
     issueRecoveryCode,
     dismissLinkPrompt,
+    forgetDeletedAccount,
+    acknowledgeDeletion,
     signOut,
   }
 })

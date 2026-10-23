@@ -24,7 +24,8 @@
     "create": "Utwórz kierowcę",
     "continue": "Kontynuuj jako {name}",
     "continueGeneric": "Kontynuuj",
-    "haveDriver": "Mam już kierowcę"
+    "haveDriver": "Mam już kierowcę",
+    "accountDeleted": "Twoje konto zostało usunięte razem z całą zawartością."
   },
   "create": {
     "title": "Utwórz kierowcę",

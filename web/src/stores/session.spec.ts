@@ -175,6 +175,48 @@ describe('session store', () => {
     })
   })
 
+  describe('after the account was deleted', () => {
+    it('forgets the driver as a sign out does, and remembers that it was deleted', () => {
+      storeToken('device-token')
+      const session = useSessionStore()
+      session.me = profile
+      session.dismissLinkPrompt()
+
+      session.forgetDeletedAccount()
+
+      expect(session.isAuthenticated).toBe(false)
+      expect(session.me).toBeNull()
+      expect(readToken()).toBeNull()
+      expect(session.linkPromptDismissed).toBe(false)
+      expect(session.accountDeleted).toBe(true)
+    })
+
+    it('is said once: the start page acknowledges it', () => {
+      const session = useSessionStore()
+      session.forgetDeletedAccount()
+
+      session.acknowledgeDeletion()
+
+      expect(session.accountDeleted).toBe(false)
+    })
+
+    it('is not remembered over a reload', () => {
+      useSessionStore().forgetDeletedAccount()
+
+      setActivePinia(createPinia())
+
+      expect(useSessionStore().accountDeleted).toBe(false)
+    })
+
+    it('is not what an ordinary sign out says', () => {
+      const session = useSessionStore()
+
+      session.signOut()
+
+      expect(session.accountDeleted).toBe(false)
+    })
+  })
+
   describe('signing in with a token from the server', () => {
     it('starts the session and remembers the token', async () => {
       const session = useSessionStore()

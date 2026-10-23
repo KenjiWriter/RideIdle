@@ -24,7 +24,8 @@
     "create": "Fahrer erstellen",
     "continue": "Weiter als {name}",
     "continueGeneric": "Weiter",
-    "haveDriver": "Ich habe schon einen Fahrer"
+    "haveDriver": "Ich habe schon einen Fahrer",
+    "accountDeleted": "Dein Konto wurde mit allem, was darin war, gelöscht."
   },
   "create": {
     "title": "Fahrer erstellen",
