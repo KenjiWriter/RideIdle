@@ -21,7 +21,7 @@ const WORKSHOP_POLL_MS = 15_000
 /** The garage is asked again at the earliest this long after the last answer, so a job that is late cannot cause a storm of requests. */
 const MIN_ASK_MS = 3_000
 
-const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking']
+const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking', 'clearance']
 
 const { t } = useI18n()
 const { number } = useFormat()

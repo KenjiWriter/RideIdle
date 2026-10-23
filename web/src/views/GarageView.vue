@@ -128,7 +128,7 @@ const car = computed(() => garage.garage?.car ?? null)
 const xpInto = computed(() => (car.value ? car.value.xp.total - car.value.xp.level_start : 0))
 const xpNeeded = computed(() => (car.value && car.value.xp.next_level_at !== null ? car.value.xp.next_level_at - car.value.xp.level_start : null))
 const xpFill = computed(() => (xpNeeded.value ? Math.min(100, Math.round((xpInto.value / xpNeeded.value) * 100)) : 100))
-const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking']
+const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking', 'clearance']
 
 function delta(stat: CarStatKey): number {
   const value = (car.value?.stats[stat] ?? 0) - (car.value?.base_stats[stat] ?? 0)

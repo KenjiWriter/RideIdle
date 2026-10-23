@@ -38,7 +38,7 @@ describe('WorkshopView', () => {
         respond(
           200,
           aGarage({
-            car: aCar({ stats: { accel: 98.94, top_speed: 176.17, grip: 90, handling: 88, braking: 90 } }, { exhaust }),
+            car: aCar({ stats: { accel: 98.94, top_speed: 176.17, grip: 90, handling: 88, braking: 90, clearance: 20 } }, { exhaust }),
             inventory: [tires],
           }),
         ),
@@ -55,6 +55,9 @@ describe('WorkshopView', () => {
     expect(wrapper.get('[data-test="stat-accel"] > span:first-child').text()).toBe('Acceleration')
     expect(wrapper.get('[data-test="stat-accel"] > span:last-child').text()).toBe('98.9 +1.9')
     expect(wrapper.get('[data-test="delta-top_speed"]').text()).toBe('+1.2')
+    // The sixth statistic: how well the car can leave the road. A hatchback has little of it.
+    expect(wrapper.get('[data-test="stat-clearance"] > span:first-child').text()).toBe('Off-road')
+    expect(wrapper.get('[data-test="stat-clearance"] > span:last-child').text()).toBe('20')
     expect(wrapper.find('[data-test="delta-grip"]').exists()).toBe(false)
 
     expect(wrapper.get('[data-test="slot-exhaust"]').text()).toContain('Sport exhaust')

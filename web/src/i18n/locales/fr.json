@@ -299,7 +299,8 @@
     "top_speed": "Vitesse max.",
     "grip": "Adhérence",
     "handling": "Tenue de route",
-    "braking": "Freinage"
+    "braking": "Freinage",
+    "clearance": "Tout-terrain"
   },
   "part": {
     "tier": "T{tier}",
@@ -313,9 +314,16 @@
       "capacity_l": "{value} l",
       "gears": "{value} rapports",
       "top_speed_cap_kmh": "Limite {value} km/h",
-      "ride_height_mm": "Garde au sol {value} mm",
-      "wet_grip": "Adhérence sur mouillé {value}"
-    }
+      "clearance": "Tout-terrain {value}"
+    },
+    "surface": {
+      "asphalt_dry": "Sec",
+      "asphalt_wet": "Mouillé",
+      "gravel_dry": "Gravier",
+      "mud": "Boue",
+      "snow": "Neige"
+    },
+    "surfaceLine": "{surface} ×{value}"
   },
   "shop": {
     "title": "Boutique",

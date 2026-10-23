@@ -299,7 +299,8 @@
     "top_speed": "Vel. máxima",
     "grip": "Aderência",
     "handling": "Dirigibilidade",
-    "braking": "Frenagem"
+    "braking": "Frenagem",
+    "clearance": "Off-road"
   },
   "part": {
     "tier": "T{tier}",
@@ -313,9 +314,16 @@
       "capacity_l": "{value} l",
       "gears": "{value} marchas",
       "top_speed_cap_kmh": "Limite {value} km/h",
-      "ride_height_mm": "Altura livre {value} mm",
-      "wet_grip": "Aderência no molhado {value}"
-    }
+      "clearance": "Off-road {value}"
+    },
+    "surface": {
+      "asphalt_dry": "Seco",
+      "asphalt_wet": "Molhado",
+      "gravel_dry": "Cascalho",
+      "mud": "Lama",
+      "snow": "Neve"
+    },
+    "surfaceLine": "{surface} ×{value}"
   },
   "shop": {
     "title": "Loja",

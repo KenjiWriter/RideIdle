@@ -299,7 +299,8 @@
     "top_speed": "Top speed",
     "grip": "Grip",
     "handling": "Handling",
-    "braking": "Braking"
+    "braking": "Braking",
+    "clearance": "Off-road"
   },
   "part": {
     "tier": "T{tier}",
@@ -313,9 +314,16 @@
       "capacity_l": "{value} l",
       "gears": "{value} gears",
       "top_speed_cap_kmh": "Limit {value} km/h",
-      "ride_height_mm": "Ride height {value} mm",
-      "wet_grip": "Wet grip {value}"
-    }
+      "clearance": "Off-road {value}"
+    },
+    "surface": {
+      "asphalt_dry": "Dry",
+      "asphalt_wet": "Wet",
+      "gravel_dry": "Gravel",
+      "mud": "Mud",
+      "snow": "Snow"
+    },
+    "surfaceLine": "{surface} ×{value}"
   },
   "shop": {
     "title": "Shop",

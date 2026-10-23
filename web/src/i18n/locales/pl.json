@@ -299,7 +299,8 @@
     "top_speed": "Prędkość maks.",
     "grip": "Przyczepność",
     "handling": "Prowadzenie",
-    "braking": "Hamowanie"
+    "braking": "Hamowanie",
+    "clearance": "Terenowość"
   },
   "part": {
     "tier": "T{tier}",
@@ -313,9 +314,16 @@
       "capacity_l": "{value} l",
       "gears": "{value} biegów",
       "top_speed_cap_kmh": "Limit {value} km/h",
-      "ride_height_mm": "Prześwit {value} mm",
-      "wet_grip": "Przyczepność na mokrym {value}"
-    }
+      "clearance": "Terenowość {value}"
+    },
+    "surface": {
+      "asphalt_dry": "Sucho",
+      "asphalt_wet": "Mokro",
+      "gravel_dry": "Żwir",
+      "mud": "Błoto",
+      "snow": "Śnieg"
+    },
+    "surfaceLine": "{surface} ×{value}"
   },
   "shop": {
     "title": "Sklep",

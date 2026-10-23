@@ -18,7 +18,7 @@ const shop = (cashCents = 90_000, level = 3) =>
       parts: [
         anOffer(),
         anOffer({ slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', price_cents: 57_000, stats: { grip: 100, handling: 98, braking: 100 }, required_car_level: 3, mountable: level >= 3 }),
-        anOffer({ slug: 'sport-suspension-t1', name: 'Sport suspension', slot: 'suspension', tier: 1, price_cents: 75_000, stats: { handling: 100, ride_height_mm: 25 }, required_car_level: 0, mountable: true }),
+        anOffer({ slug: 'sport-suspension-t1', name: 'Sport suspension', slot: 'suspension', tier: 1, price_cents: 75_000, stats: { handling: 100, clearance: 25 }, required_car_level: 0, mountable: true }),
       ],
       car: { id: 5, level },
     },

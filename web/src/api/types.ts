@@ -210,6 +210,9 @@ export interface EmailConfirmation extends MeResponse {
 }
 
 /** What a definition of the pack says about a part. The name is in the language of the driver. */
+/** What a car drives on: the dry track, and what the weather makes of it. The columns of the tire matrix. */
+export type SurfaceKey = 'asphalt_dry' | 'asphalt_wet' | 'gravel_dry' | 'mud' | 'snow'
+
 export interface PartInfo {
   slug: string
   name: string
@@ -217,6 +220,8 @@ export interface PartInfo {
   tier: number | null
   price_cents: number | null
   stats: Record<string, number>
+  /** Tires only: how well they grip on each surface, 1 being the grip of the tires on dry asphalt. */
+  surfaces?: Record<SurfaceKey, number> | null
 }
 
 /** A part of the driver, in the inventory or on the car. */
@@ -245,7 +250,7 @@ export interface PurchaseResponse {
   wallet: Wallet
 }
 
-export type CarStatKey = 'accel' | 'top_speed' | 'grip' | 'handling' | 'braking'
+export type CarStatKey = 'accel' | 'top_speed' | 'grip' | 'handling' | 'braking' | 'clearance'
 
 export interface GarageSlot {
   slot: string
