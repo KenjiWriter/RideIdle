@@ -67,6 +67,13 @@ CACHE_STORE_VALUE="redis"
 
 export DEBIAN_FRONTEND=noninteractive
 
+# After every apt install, Ubuntu's needrestart restarts the services that use a library that has been updated since they
+# started. On a shared server those are the services of the other sites (nginx, the databases, Redis, supervisor ...), so
+# there it is held back: the packages are installed, and the services are restarted by whoever owns them, when it suits them.
+if [[ "$SHARED_SERVER" == "1" ]]; then
+    export NEEDRESTART_SUSPEND=1 NEEDRESTART_MODE=l
+fi
+
 say() { printf '\n\033[1m==> %s\033[0m\n' "$*"; }
 note() { printf '    %s\n' "$*"; }
 fail() { printf '\nprovision: %s\n' "$*" >&2; exit 1; }

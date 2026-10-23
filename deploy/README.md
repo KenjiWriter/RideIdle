@@ -111,6 +111,7 @@ Domyślnie `provision.sh` jest napisany dla serwera, na którym nie ma nic inneg
 | Redis (ustawienia, dane, restart) | używa go bez zmian, w bazie numer 5 (`artisan cache:clear` opróżnia całą bazę, więc inna numeracja chroni dane innych stron). Gdy Redis wymaga hasła, gra trzyma liczniki w bazie danych |
 | nginx | dodaje jeden plik strony i definicje o własnych nazwach; przed pierwszą zmianą robi kopię `/etc/nginx` w `/var/backups`, a po każdej zmianie sprawdza `nginx -t` i **jeśli nginx jej nie przyjmie, usuwa własne pliki**, żeby reload innych stron nie został z błędną konfiguracją |
 | domyślna strona nginx i cudze strony | nie usuwa; zatrzymuje się, jeśli inna strona już odpowiada na tę domenę |
+| usługi innych stron (nginx, bazy, Redis, supervisor) | instalacje `apt` nie restartują ich: `needrestart` jest wstrzymany (`NEEDRESTART_SUSPEND`). Ubuntu zwykle restartuje po instalacji wszystko, co używa zaktualizowanej biblioteki, a na serwerze współdzielonym byłyby to cudze usługi |
 | logi innych stron | użytkownik `deploy` dostaje tylko grupę `www-data` (bez `adm` i `systemd-journal`), więc logi czytasz przez `sudo` |
 
 Zostaje to, co wspólne dla całego serwera i czego tryb nie zmienia:
