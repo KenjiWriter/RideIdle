@@ -359,7 +359,15 @@
     "loadError": "Nie udało się wczytać warsztatu.",
     "idle": "Mechanik jest wolny.",
     "eta": "ok. {time}",
-    "mechanicTitle": "Mechanik"
+    "mechanicTitle": "Mechanik",
+    "cancel": "Anuluj",
+    "cancelSure": "Anulować to zlecenie?",
+    "cancelLoses": "Praca, która już trwa, przepadnie, a część zostaje tam, gdzie była.",
+    "cancelAlso": "Odpadnie też zakładanie części: {part}.",
+    "cancelConfirm": "Tak, anuluj",
+    "cancelKeep": "Zostaw",
+    "cancelled": "Zlecenie anulowane.",
+    "cancelledWith": "Zlecenie anulowane. Odpadło też zakładanie części: {part}."
   },
   "hud": {
     "level": "LV",

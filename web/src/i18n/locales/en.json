@@ -359,7 +359,15 @@
     "loadError": "The workshop could not be loaded.",
     "idle": "The mechanic is free.",
     "eta": "about {time}",
-    "mechanicTitle": "Mechanic"
+    "mechanicTitle": "Mechanic",
+    "cancel": "Cancel job",
+    "cancelSure": "Cancel this job?",
+    "cancelLoses": "The work already done is lost, and the part stays where it was.",
+    "cancelAlso": "Putting on {part} is cancelled with it.",
+    "cancelConfirm": "Yes, cancel",
+    "cancelKeep": "Keep it",
+    "cancelled": "Job cancelled.",
+    "cancelledWith": "Job cancelled, and putting on {part} with it."
   },
   "hud": {
     "level": "LV",

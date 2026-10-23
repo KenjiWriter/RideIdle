@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { api } from '@/api/client'
-import type { GarageResponse, JobKind, PurchaseResponse, ShopOffer, ShopResponse, Wallet } from '@/api/types'
+import type { CancelJobResponse, GarageResponse, JobKind, PurchaseResponse, ShopOffer, ShopResponse, Wallet, WorkshopJob } from '@/api/types'
 import { newRequestId } from '@/features/run/requestId'
 import { useRunStore } from '@/stores/run'
 
@@ -107,9 +107,24 @@ export const useGarageStore = defineStore('garage', () => {
     syncRun()
   }
 
+  /**
+   * Cancels a job of the workshop, one that waits or one that the mechanic is at. Nothing is paid or given back. A job that goes
+   * only with it (the putting on of the part that was to replace the one taken off) is cancelled too. Returns the jobs that were
+   * cancelled, the asked one first, as they stood in the queue.
+   */
+  async function cancelJob(jobId: number): Promise<WorkshopJob[]> {
+    const before = garage.value?.workshop.jobs ?? []
+    const response = await api<CancelJobResponse>(`/v1/garage/jobs/${jobId}`, { method: 'DELETE' })
+
+    applyGarage(response)
+    syncRun()
+
+    return response.cancelled.flatMap((id) => before.find((job) => job.id === id) ?? [])
+  }
+
   function acknowledgeLevelUp(): void {
     levelUp.value = null
   }
 
-  return { garage, loaded, offers, shopCar, shopLoaded, cash, levelUp, serverNow, loadGarage, loadShop, buy, queue, acknowledgeLevelUp }
+  return { garage, loaded, offers, shopCar, shopLoaded, cash, levelUp, serverNow, loadGarage, loadShop, buy, queue, cancelJob, acknowledgeLevelUp }
 })

@@ -201,6 +201,133 @@ describe('WorkshopView', () => {
     expect(wrapper.get('[data-test="error"]').text()).toBe('Requires car level 3 (you have 2).')
   })
 
+  describe('cancelling a job', () => {
+    const factoryTires = aPart({ id: 31, slug: 'street-tires-t1', name: 'Street tires T1', slot: 'tires', tier: 1, mounted: true, car_id: 5 })
+    const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+    const takeOff = aJob({ id: 1, kind: 'unmount', part: factoryTires, finish_ms: NOW + 60_000 })
+    const putOn = aJob({ id: 2, status: 'queued', part: tires, start_ms: NOW + 60_000, finish_ms: NOW + 295_200 })
+    const exhaustJob = aJob({ id: 3, status: 'queued', part: aPart({ id: 12, name: 'Sport exhaust' }), start_ms: NOW + 295_200, finish_ms: NOW + 530_400 })
+
+    it('cancels a job that waits at once, because nothing is lost with it', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, queueOf([takeOff, putOn, exhaustJob])),
+        'DELETE /api/v1/garage/jobs/3': () => respond(200, { ...queueOf([takeOff, putOn]), cancelled: [3] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="cancel-3"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.some((call) => call.method === 'DELETE' && call.url === '/api/v1/garage/jobs/3')).toBe(true)
+      expect(wrapper.find('[data-test="job-3"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="queue"] h2').text()).toBe('Queue 2 of 4')
+      expect(wrapper.get('[data-test="cancelled"]').text()).toBe('Job cancelled.')
+    })
+
+    it('asks first about the job the mechanic is at, because its work is lost', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, queueOf([aJob({ id: 1, part: tires })])),
+        'DELETE /api/v1/garage/jobs/1': () => respond(200, { ...queueOf([]), cancelled: [1] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="cancel-1"]').trigger('click')
+
+      expect(wrapper.get('[data-test="cancel-sure-1"]').text()).toContain('Cancel this job?')
+      expect(wrapper.get('[data-test="cancel-sure-1"]').text()).toContain('The work already done is lost, and the part stays where it was.')
+      expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
+
+      // Keeping it closes the question and sends nothing.
+      await wrapper.get('[data-test="cancel-keep-1"]').trigger('click')
+
+      expect(wrapper.find('[data-test="cancel-sure-1"]').exists()).toBe(false)
+      expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
+
+      await wrapper.get('[data-test="cancel-1"]').trigger('click')
+      await wrapper.get('[data-test="cancel-confirm-1"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.filter((call) => call.method === 'DELETE')).toHaveLength(1)
+      expect(wrapper.get('[data-test="queue-empty"]').text()).toBe('Nothing is waiting for the mechanic.')
+      expect(wrapper.get('[data-test="cancelled"]').text()).toBe('Job cancelled.')
+    })
+
+    it('says that the putting on of the new part goes with the taking off of the old one, and tells it afterwards', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, queueOf([takeOff, putOn])),
+        'DELETE /api/v1/garage/jobs/1': () => respond(200, { ...queueOf([]), cancelled: [1, 2] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="cancel-1"]').trigger('click')
+
+      expect(wrapper.get('[data-test="cancel-sure-1"]').text()).toContain('Putting on Street tires T2 is cancelled with it.')
+
+      await wrapper.get('[data-test="cancel-confirm-1"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="cancelled"]').text()).toBe('Job cancelled, and putting on Street tires T2 with it.')
+      expect(wrapper.find('[data-test="job-2"]').exists()).toBe(false)
+    })
+
+    it('cancels the putting on of the new part without asking, and leaves the taking off', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, queueOf([takeOff, putOn])),
+        'DELETE /api/v1/garage/jobs/2': () => respond(200, { ...queueOf([takeOff]), cancelled: [2] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="cancel-2"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.some((call) => call.method === 'DELETE' && call.url === '/api/v1/garage/jobs/2')).toBe(true)
+      expect(wrapper.find('[data-test="cancel-sure-2"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="job-1"]').text()).toContain('Taking off: Street tires T1')
+    })
+
+    it('shows what the server says when the job is gone, and asks for the queue again', async () => {
+      let asked = 0
+      serve({
+        'GET /api/v1/garage': () => respond(200, ++asked === 1 ? queueOf([takeOff, putOn]) : queueOf([])),
+        'DELETE /api/v1/garage/jobs/2': () => respond(422, { message: 'There is no such job.', code: 'job_not_found' }),
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="cancel-2"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="error"]').text()).toBe('There is no such job.')
+      expect(wrapper.find('[data-test="cancelled"]').exists()).toBe(false)
+      // The queue that was shown was stale: it is the server's now.
+      expect(asked).toBe(2)
+      expect(wrapper.find('[data-test="job-2"]').exists()).toBe(false)
+    })
+
+    it('speaks the language of the driver', async () => {
+      await setLocale('pl')
+      serve({ 'GET /api/v1/garage': () => respond(200, queueOf([aJob({ id: 1, part: tires })])) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="cancel-1"]').text()).toBe('Anuluj')
+
+      await wrapper.get('[data-test="cancel-1"]').trigger('click')
+
+      expect(wrapper.get('[data-test="cancel-sure-1"]').text()).toContain('Anulować to zlecenie?')
+      expect(wrapper.get('[data-test="cancel-confirm-1"]').text()).toBe('Tak, anuluj')
+    })
+  })
+
   it('says so when there is no car, and when there is nothing in the inventory', async () => {
     serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: null })) })
 

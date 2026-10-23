@@ -5,8 +5,10 @@ import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/api/client'
 import type { CarStatKey, JobKind, OwnedPart, WorkshopJob } from '@/api/types'
 import GameShell from '@/components/GameShell.vue'
+import JobCancel from '@/components/JobCancel.vue'
 import PartStats from '@/components/PartStats.vue'
 import { statFill } from '@/features/car/statFill'
+import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatDuration } from '@/i18n/format'
@@ -30,6 +32,7 @@ useLeaveOnSignOut()
 const loadError = ref(false)
 const busy = ref(false)
 const error = ref<string | null>(null)
+const { message: cancelled, show: showCancelled, clear: clearCancelled } = useFlash()
 
 /** What time it is for the server, to the second: the clock of the countdown. */
 const now = ref(store.serverNow())
@@ -104,6 +107,15 @@ function delta(stat: CarStatKey): number {
   return Math.abs(value) < 0.005 ? 0 : value
 }
 
+/** The text of a failed action: what the server says in the language of the driver (the level of the car, a full queue), or a general one. */
+function failureText(failure: unknown): string {
+  return failure instanceof ApiError && failure.status === 429
+    ? t('common.tooManyRequests')
+    : failure instanceof ApiError && failure.status === 422
+      ? failure.message
+      : t('common.error')
+}
+
 async function act(kind: JobKind, part: OwnedPart): Promise<void> {
   if (busy.value) {
     return
@@ -111,6 +123,7 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
 
   busy.value = true
   error.value = null
+  clearCancelled()
 
   try {
     await store.queue(kind, part.id)
@@ -120,13 +133,50 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
       return
     }
 
-    // The server says what is wrong in the language of the driver: the level of the car, a full queue.
-    error.value =
-      failure instanceof ApiError && failure.status === 429
-        ? t('common.tooManyRequests')
-        : failure instanceof ApiError && failure.status === 422
-          ? failure.message
-          : t('common.error')
+    error.value = failureText(failure)
+  } finally {
+    busy.value = false
+  }
+}
+
+/** The jobs that go with this one when it is cancelled: the putting on of the part that was to take the place of the one it takes off. */
+function dependents(job: WorkshopJob): WorkshopJob[] {
+  if (job.kind !== 'unmount') {
+    return []
+  }
+
+  const later = jobs.value.slice(jobs.value.findIndex((other) => other.id === job.id) + 1)
+
+  return later.filter((other) => other.kind === 'mount' && other.part.slot === job.part.slot)
+}
+
+async function cancel(jobId: number): Promise<void> {
+  if (busy.value) {
+    return
+  }
+
+  busy.value = true
+  error.value = null
+  clearCancelled()
+
+  try {
+    const gone = await store.cancelJob(jobId)
+    now.value = store.serverNow()
+
+    // The part of a job that went with the one asked for.
+    const [, withIt] = gone
+    showCancelled(withIt ? t('workshop.cancelledWith', { part: withIt.part.name }) : t('workshop.cancelled'))
+  } catch (failure) {
+    if (endSessionIfUnauthorized(failure)) {
+      return
+    }
+
+    error.value = failureText(failure)
+
+    // The job was not there any more, or was done in the meantime: the queue shown is stale.
+    if (failure instanceof ApiError && failure.status === 422) {
+      void load()
+    }
   } finally {
     busy.value = false
   }
@@ -156,6 +206,7 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
         {{ t('workshop.standing') }}
       </p>
       <p v-if="error" class="text-danger" role="alert" data-test="error">{{ error }}</p>
+      <p v-if="cancelled" class="card card-cy text-sm" role="status" data-test="cancelled">{{ cancelled }}</p>
 
       <section class="card flex flex-col gap-1.5 !p-3" aria-labelledby="mechanic-title" data-test="mechanic-card">
         <div class="flex items-center justify-between gap-2">
@@ -174,6 +225,7 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
             <span class="mono text-ink">{{ clock(now - working.start_ms) }} / {{ clock(working.finish_ms - working.start_ms) }}</span>
             <span>{{ `${t('workshop.working')}: ${t('workshop.left', { time: left(working) })}` }}</span>
           </p>
+          <JobCancel :key="working.id" class="self-start" :job="working" :dependents="dependents(working)" :disabled="busy" @cancel="cancel" />
         </template>
         <p v-else class="sub" data-test="mechanic-idle">{{ t('workshop.idle') }}</p>
       </section>
@@ -187,7 +239,7 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
           <li
             v-for="job in waiting"
             :key="job.id"
-            class="card flex items-center justify-between gap-2.5 !p-2.5"
+            class="card flex flex-wrap items-center justify-between gap-2.5 !p-2.5"
             :data-test="`job-${job.id}`"
           >
             <div class="min-w-0">
@@ -195,6 +247,7 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
               <p class="sub" :data-test="`job-${job.id}-state`">{{ t('workshop.waiting') }}</p>
             </div>
             <span class="chip">{{ t('workshop.eta', { time: clock(job.finish_ms - now) }) }}</span>
+            <JobCancel :job="job" :dependents="dependents(job)" :disabled="busy" @cancel="cancel" />
           </li>
         </ol>
       </section>

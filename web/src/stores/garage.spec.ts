@@ -190,4 +190,54 @@ describe('garage store', () => {
 
     await expect(store.queue('mount', 11)).rejects.toMatchObject({ status: 422, code: 'queue_full', message: 'The workshop queue is full.' })
   })
+
+  describe('cancelling a job', () => {
+    const takeOff = aJob({ id: 1, kind: 'unmount', part: aPart({ id: 11, slot: 'tires', mounted: true, car_id: 5 }) })
+    const putOn = aJob({ id: 2, status: 'queued', part: aPart({ id: 21, slot: 'tires', name: 'Street tires T2' }) })
+    const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+
+    it('cancels on the server, takes the garage from the answer and asks for the run again', async () => {
+      const calls = serveApi(fetchMock, {
+        'GET /api/v1/garage': () => respond(200, queueOf([takeOff, putOn])),
+        'DELETE /api/v1/garage/jobs/2': () => respond(200, { ...queueOf([takeOff]), cancelled: [2] }),
+        'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }),
+      })
+      const store = useGarageStore()
+      await store.loadGarage()
+
+      const gone = await store.cancelJob(2)
+
+      expect(calls.some((call) => call.method === 'DELETE' && call.url === '/api/v1/garage/jobs/2')).toBe(true)
+      expect(gone.map((job) => job.id)).toEqual([2])
+      expect(store.garage?.workshop.jobs.map((job) => job.id)).toEqual([1])
+      expect(calls.some((call) => call.url === '/api/v1/runs/current')).toBe(true)
+    })
+
+    it('gives back the jobs that went with the one asked for, as they stood in the queue', async () => {
+      serveApi(fetchMock, {
+        'GET /api/v1/garage': () => respond(200, queueOf([takeOff, putOn])),
+        'DELETE /api/v1/garage/jobs/1': () => respond(200, { ...queueOf([]), cancelled: [1, 2] }),
+        'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }),
+      })
+      const store = useGarageStore()
+      await store.loadGarage()
+
+      const gone = await store.cancelJob(1)
+
+      expect(gone.map((job) => job.part.name)).toEqual([takeOff.part.name, 'Street tires T2'])
+      expect(store.garage?.workshop.jobs).toEqual([])
+    })
+
+    it('keeps the queue it has when the server refuses, and lets the error reach the screen', async () => {
+      serveApi(fetchMock, {
+        'GET /api/v1/garage': () => respond(200, queueOf([takeOff])),
+        'DELETE /api/v1/garage/jobs/1': () => respond(422, { message: 'That job is already done.', code: 'job_done' }),
+      })
+      const store = useGarageStore()
+      await store.loadGarage()
+
+      await expect(store.cancelJob(1)).rejects.toMatchObject({ status: 422, code: 'job_done', message: 'That job is already done.' })
+      expect(store.garage?.workshop.jobs).toHaveLength(1)
+    })
+  })
 })

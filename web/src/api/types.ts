@@ -296,6 +296,11 @@ export interface GarageResponse {
   now_ms: number
 }
 
+/** DELETE /api/v1/garage/jobs/{job}: the garage as it is now, and the ids of the jobs that were cancelled, the asked one first. */
+export interface CancelJobResponse extends GarageResponse {
+  cancelled: number[]
+}
+
 export type TutorialStatus = 'in_progress' | 'finished' | 'skipped'
 
 /** The thing on the garage screen that a step of the tutorial points at. */

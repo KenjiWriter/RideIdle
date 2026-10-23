@@ -359,7 +359,15 @@
     "loadError": "Die Werkstatt konnte nicht geladen werden.",
     "idle": "Der Mechaniker ist frei.",
     "eta": "ca. {time}",
-    "mechanicTitle": "Mechaniker"
+    "mechanicTitle": "Mechaniker",
+    "cancel": "Abbrechen",
+    "cancelSure": "Diesen Auftrag abbrechen?",
+    "cancelLoses": "Die bereits geleistete Arbeit geht verloren, und das Teil bleibt, wo es war.",
+    "cancelAlso": "Der Einbau von {part} entfällt damit.",
+    "cancelConfirm": "Ja, abbrechen",
+    "cancelKeep": "Behalten",
+    "cancelled": "Auftrag abgebrochen.",
+    "cancelledWith": "Auftrag abgebrochen, und der Einbau von {part} entfällt damit."
   },
   "hud": {
     "level": "LV",

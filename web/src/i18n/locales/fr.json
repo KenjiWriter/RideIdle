@@ -359,7 +359,15 @@
     "loadError": "L’atelier n’a pas pu être chargé.",
     "idle": "Le mécanicien est libre.",
     "eta": "env. {time}",
-    "mechanicTitle": "Mécanicien"
+    "mechanicTitle": "Mécanicien",
+    "cancel": "Annuler",
+    "cancelSure": "Annuler ce travail ?",
+    "cancelLoses": "Le travail déjà fait est perdu, et la pièce reste là où elle était.",
+    "cancelAlso": "Le montage de {part} est annulé avec lui.",
+    "cancelConfirm": "Oui, annuler",
+    "cancelKeep": "Garder",
+    "cancelled": "Travail annulé.",
+    "cancelledWith": "Travail annulé, et le montage de {part} avec lui."
   },
   "hud": {
     "level": "LV",
