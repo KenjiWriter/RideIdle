@@ -179,7 +179,8 @@ describe('queueing a job', function () {
     });
 
     it('carries out every job that is due when the driver comes back after a long time', function () {
-        [$driver, $run, $car] = garageDriver();
+        // A fixed seed: the jobs freeze the run again, and a random one breaks the car down on one lap of twelve.
+        [$driver, $run, $car] = garageDriver(['seed' => str_repeat('0', 32)]);
         queueJob($driver, 'mount', inventoryPart($driver)->id)->assertCreated();
         queueJob($driver, 'mount', inventoryPart($driver, 'sport-exhaust-t2', 'exhaust')->id)->assertCreated();
 
