@@ -189,5 +189,35 @@
     "signedOut": "Deine Sitzung ist beendet. Melde dich bei deiner Garage an und versuche es erneut.",
     "garage": "Zur Garage",
     "signIn": "Zurück zur Anmeldung"
+  },
+  "account": {
+    "consentLegend": "Bevor du ein Konto verknüpfst",
+    "terms": "Ich akzeptiere die Nutzungsbedingungen und die Datenschutzerklärung.",
+    "age": "Ich bestätige, dass ich alt genug für ein Konto bin.",
+    "consentRequired": "Akzeptiere die Bedingungen und bestätige dein Alter, um fortzufahren.",
+    "continueWith": "Weiter mit {provider}",
+    "opening": "{provider} wird geöffnet…",
+    "or": "oder mit einer E-Mail",
+    "emailLabel": "E-Mail",
+    "sendLink": "Link an mich senden",
+    "sending": "Wird gesendet…",
+    "another": "Andere Adresse verwenden",
+    "errors": {
+      "emailRequired": "Gib deine E-Mail-Adresse ein.",
+      "emailInvalid": "Das sieht nicht nach einer E-Mail-Adresse aus."
+    }
+  },
+  "linkAccount": {
+    "title": "Garage sichern",
+    "description": "Verknüpfe ein Konto, um deine Garage auf einem anderen Gerät oder nach dem Löschen des Browsers zurückzubekommen. Ein Gastkonto ohne Verknüpfung kann verloren gehen.",
+    "useCode": "Ich nehme lieber einen Wiederherstellungscode",
+    "later": "Später"
+  },
+  "linkBanner": {
+    "text": "Deine Garage ist noch nicht gesichert.",
+    "action": "Jetzt sichern"
+  },
+  "linked": {
+    "title": "Deine Anmeldearten"
   }
 }

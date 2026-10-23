@@ -189,5 +189,35 @@
     "signedOut": "Votre session est terminée. Connectez-vous à votre garage et réessayez.",
     "garage": "Aller au garage",
     "signIn": "Retour à la connexion"
+  },
+  "account": {
+    "consentLegend": "Avant de lier un compte",
+    "terms": "J’accepte les conditions d’utilisation et la politique de confidentialité.",
+    "age": "Je confirme avoir l’âge requis pour avoir un compte.",
+    "consentRequired": "Acceptez les conditions et confirmez votre âge pour continuer.",
+    "continueWith": "Continuer avec {provider}",
+    "opening": "Ouverture de {provider}…",
+    "or": "ou avec un e-mail",
+    "emailLabel": "E-mail",
+    "sendLink": "Envoyez-moi un lien",
+    "sending": "Envoi…",
+    "another": "Utiliser une autre adresse",
+    "errors": {
+      "emailRequired": "Saisissez votre e-mail.",
+      "emailInvalid": "Cela ne ressemble pas à une adresse e-mail."
+    }
+  },
+  "linkAccount": {
+    "title": "Sauvegarder votre garage",
+    "description": "Liez un compte pour retrouver votre garage sur un autre appareil ou après avoir effacé votre navigateur. Sans cela, un compte invité peut être perdu.",
+    "useCode": "Je préfère un code de récupération",
+    "later": "Plus tard"
+  },
+  "linkBanner": {
+    "text": "Votre garage n’est pas encore sauvegardé.",
+    "action": "Le sauvegarder"
+  },
+  "linked": {
+    "title": "Vos moyens de connexion"
   }
 }

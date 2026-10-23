@@ -35,6 +35,7 @@ describe('account store', () => {
   describe('the providers that are on', () => {
     it('offers none until they are loaded', () => {
       expect(useAccountStore().providers).toEqual([])
+      expect(useAccountStore().providersLoaded).toBe(false)
     })
 
     it('loads the ones the server has keys for', async () => {
@@ -44,6 +45,7 @@ describe('account store', () => {
       await account.loadProviders()
 
       expect(account.providers).toEqual(['google', 'apple'])
+      expect(account.providersLoaded).toBe(true)
       expect(calls).toHaveLength(1)
     })
 
@@ -54,6 +56,8 @@ describe('account store', () => {
       await expect(account.loadProviders()).resolves.toBeUndefined()
 
       expect(account.providers).toEqual([])
+      // It was asked: the screen does not keep asking.
+      expect(account.providersLoaded).toBe(true)
     })
   })
 

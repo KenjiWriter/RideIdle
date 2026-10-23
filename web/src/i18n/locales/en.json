@@ -189,5 +189,35 @@
     "signedOut": "Your session has ended. Sign in to your garage and try again.",
     "garage": "Go to the garage",
     "signIn": "Back to signing in"
+  },
+  "account": {
+    "consentLegend": "Before you link an account",
+    "terms": "I accept the terms of service and the privacy policy.",
+    "age": "I confirm that I am old enough to have an account.",
+    "consentRequired": "Accept the terms and confirm your age to continue.",
+    "continueWith": "Continue with {provider}",
+    "opening": "Opening {provider}…",
+    "or": "or with an e-mail",
+    "emailLabel": "E-mail",
+    "sendLink": "Send me a link",
+    "sending": "Sending…",
+    "another": "Use another address",
+    "errors": {
+      "emailRequired": "Enter your e-mail.",
+      "emailInvalid": "This does not look like an e-mail address."
+    }
+  },
+  "linkAccount": {
+    "title": "Save your garage",
+    "description": "Link an account to get your garage back on another device or after clearing your browser. A guest account without one can be lost.",
+    "useCode": "I prefer a recovery code",
+    "later": "Later"
+  },
+  "linkBanner": {
+    "text": "Your garage is not saved yet.",
+    "action": "Save it"
+  },
+  "linked": {
+    "title": "Your sign-ins"
   }
 }

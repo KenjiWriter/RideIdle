@@ -189,5 +189,35 @@
     "signedOut": "Sua sessão terminou. Entre na sua garagem e tente novamente.",
     "garage": "Ir para a garagem",
     "signIn": "Voltar para a entrada"
+  },
+  "account": {
+    "consentLegend": "Antes de vincular uma conta",
+    "terms": "Aceito os termos de uso e a política de privacidade.",
+    "age": "Confirmo que tenho idade suficiente para ter uma conta.",
+    "consentRequired": "Aceite os termos e confirme sua idade para continuar.",
+    "continueWith": "Continuar com {provider}",
+    "opening": "Abrindo {provider}…",
+    "or": "ou com um e-mail",
+    "emailLabel": "E-mail",
+    "sendLink": "Enviar um link para mim",
+    "sending": "Enviando…",
+    "another": "Usar outro endereço",
+    "errors": {
+      "emailRequired": "Digite seu e-mail.",
+      "emailInvalid": "Isso não parece um endereço de e-mail."
+    }
+  },
+  "linkAccount": {
+    "title": "Salvar sua garagem",
+    "description": "Vincule uma conta para recuperar sua garagem em outro aparelho ou depois de limpar o navegador. Uma conta de convidado sem isso pode se perder.",
+    "useCode": "Prefiro um código de recuperação",
+    "later": "Depois"
+  },
+  "linkBanner": {
+    "text": "Sua garagem ainda não está salva.",
+    "action": "Salvar agora"
+  },
+  "linked": {
+    "title": "Suas formas de entrar"
   }
 }

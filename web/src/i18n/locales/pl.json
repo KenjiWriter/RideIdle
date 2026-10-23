@@ -189,5 +189,35 @@
     "signedOut": "Sesja się zakończyła. Zaloguj się do garażu i spróbuj ponownie.",
     "garage": "Przejdź do garażu",
     "signIn": "Wróć do logowania"
+  },
+  "account": {
+    "consentLegend": "Zanim połączysz konto",
+    "terms": "Akceptuję regulamin i politykę prywatności.",
+    "age": "Potwierdzam, że mam wiek wymagany do założenia konta.",
+    "consentRequired": "Zaakceptuj regulamin i potwierdź wiek, aby kontynuować.",
+    "continueWith": "Kontynuuj przez {provider}",
+    "opening": "Otwieramy {provider}…",
+    "or": "albo przez e-mail",
+    "emailLabel": "E-mail",
+    "sendLink": "Wyślij mi link",
+    "sending": "Wysyłamy…",
+    "another": "Użyj innego adresu",
+    "errors": {
+      "emailRequired": "Podaj swój e-mail.",
+      "emailInvalid": "To nie wygląda na adres e-mail."
+    }
+  },
+  "linkAccount": {
+    "title": "Zapisz swój garaż",
+    "description": "Połącz konto, żeby odzyskać garaż na innym urządzeniu albo po wyczyszczeniu przeglądarki. Konto gościa bez tego może przepaść.",
+    "useCode": "Wolę kod odzyskiwania",
+    "later": "Później"
+  },
+  "linkBanner": {
+    "text": "Twój garaż nie jest jeszcze zapisany.",
+    "action": "Zapisz go"
+  },
+  "linked": {
+    "title": "Twoje sposoby logowania"
   }
 }

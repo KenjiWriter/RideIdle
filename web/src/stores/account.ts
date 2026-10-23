@@ -26,6 +26,7 @@ export class MissingVerifierError extends Error {
 export const useAccountStore = defineStore('account', () => {
   /** The sign-ins of another service the server has keys for. Until they are loaded there are none to offer. */
   const providers = ref<SocialProvider[]>([])
+  const providersLoaded = ref(false)
 
   /** Asks the server which providers are on. If it cannot be asked, the e-mail link is still there to offer. */
   async function loadProviders(): Promise<void> {
@@ -33,6 +34,8 @@ export const useAccountStore = defineStore('account', () => {
       providers.value = (await api<ProvidersResponse>('/v1/auth/providers')).data
     } catch {
       providers.value = []
+    } finally {
+      providersLoaded.value = true
     }
   }
 
@@ -136,5 +139,5 @@ export const useAccountStore = defineStore('account', () => {
     return response.purpose
   }
 
-  return { providers, loadProviders, requestEmailLink, requestLoginLink, startProvider, finishProvider, confirmEmail }
+  return { providers, providersLoaded, loadProviders, requestEmailLink, requestLoginLink, startProvider, finishProvider, confirmEmail }
 })

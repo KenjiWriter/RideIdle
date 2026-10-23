@@ -7,11 +7,18 @@ import { i18n } from '@/i18n'
 import { installGuards } from '@/router/guards'
 import { routes } from '@/router/routes'
 
+interface MountOptions {
+  /** The props of a component that is not a screen. */
+  props?: Record<string, unknown>
+  /** Where to put the component, when the test needs a real focus: jsdom moves focus only inside the document. */
+  attachTo?: HTMLElement
+}
+
 /**
  * Mounts a view with the real i18n, a fresh Pinia and a router built from the
  * application routes (in-memory history, same guards), at the given path.
  */
-export async function mountView(component: Component, path = '/') {
+export async function mountView(component: Component, path = '/', options: MountOptions = {}) {
   const pinia = createPinia()
   setActivePinia(pinia)
 
@@ -19,7 +26,7 @@ export async function mountView(component: Component, path = '/') {
   await router.push(path)
   await router.isReady()
 
-  const wrapper = mount(component, { global: { plugins: [pinia, router, i18n] } })
+  const wrapper = mount(component, { props: options.props, attachTo: options.attachTo, global: { plugins: [pinia, router, i18n] } })
 
   return { wrapper, router, pinia }
 }

@@ -9,11 +9,13 @@ import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { mountView } from '@/test/mountView'
 
+import RecoveryPanel from '@/components/RecoveryPanel.vue'
+
 import GarageView from './GarageView.vue'
 
 const NOW = 1_792_692_000_000
 
-const profile = { id: 1, name: 'Maciek_Turbo', locale: 'en', is_guest: true, has_recovery_code: false }
+const profile = { id: 1, name: 'Maciek_Turbo', locale: 'en', is_guest: true, has_recovery_code: false, identities: [] }
 
 function aRun(overrides: Partial<Run> = {}): Run {
   return {
@@ -54,7 +56,11 @@ async function show() {
 
 /** The calls of the screen: the profile and the run. */
 function serve(run: () => Response | Promise<Response>, me: () => Response = () => respond(200, { data: profile })) {
-  return serveApi(fetchMock, { 'GET /api/v1/me': me, 'GET /api/v1/runs/current': run })
+  return serveApi(fetchMock, {
+    'GET /api/v1/me': me,
+    'GET /api/v1/runs/current': run,
+    'GET /api/v1/auth/providers': () => respond(200, { data: ['google', 'apple'] }),
+  })
 }
 
 function open(overrides: Partial<Run> = {}, summary?: RunSummary) {
@@ -66,6 +72,8 @@ function open(overrides: Partial<Run> = {}, summary?: RunSummary) {
 describe('GarageView', () => {
   beforeEach(async () => {
     localStorage.clear()
+    // These tests are about the run: the window "Save your garage" has its own, so it starts out dismissed here.
+    localStorage.setItem('ride.linkPrompt', '1')
     fetchMock.mockReset()
     vi.stubGlobal('fetch', fetchMock)
     await setLocale('en')
@@ -415,5 +423,144 @@ describe('GarageView', () => {
     expect(readToken()).toBeNull()
     expect(readSeen()).toBeNull()
     await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('landing'))
+  })
+
+  describe('saving the garage', () => {
+    const away = aSummary({ laps: 312, cash_cents: 486_000, xp: 7_800, from_ms: NOW - (8 * 3_600_000 + 12 * 60_000), to_ms: NOW - 60_000, stop_reason: 'fuel_empty' })
+
+    beforeEach(() => {
+      // The window has not been told to wait yet.
+      localStorage.removeItem('ride.linkPrompt')
+    })
+
+    it('opens the window for a guest who has earned something', async () => {
+      const { mounted } = open({ laps_done: 1 })
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="dialog"]').text()).toContain('Save your garage')
+      expect(wrapper.find('[data-test="link-banner"]').exists()).toBe(false)
+    })
+
+    it('does not bother a guest who has earned nothing yet', async () => {
+      const { mounted } = open({ laps_done: 0 })
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="link-banner"]').exists()).toBe(false)
+    })
+
+    it('opens when the first lap is earned while the driver watches', async () => {
+      vi.useFakeTimers()
+      const { mounted } = open({ laps_done: 0 })
+      const { wrapper } = await mounted
+      await flushPromises()
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
+
+      serve(() => respond(200, runAnswer(aRun({ laps_done: 1, state_version: 5 }))))
+      await vi.advanceTimersByTimeAsync(POLL_MS)
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(true)
+    })
+
+    it('leaves a quiet banner when the driver says later, and remembers it', async () => {
+      const { mounted } = open()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      await wrapper.get('[data-test="later"]').trigger('click')
+
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="link-banner"]').exists()).toBe(true)
+      expect(localStorage.getItem('ride.linkPrompt')).not.toBeNull()
+    })
+
+    it('opens the window again from the banner, and the banner steps aside while it is open', async () => {
+      const { mounted } = open()
+      const { wrapper } = await mounted
+      await flushPromises()
+      await wrapper.get('[data-test="later"]').trigger('click')
+
+      await wrapper.get('[data-test="link-banner-open"]').trigger('click')
+
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(true)
+      expect(wrapper.find('[data-test="link-banner"]').exists()).toBe(false)
+    })
+
+    it('shows only the banner to a driver who has already said later', async () => {
+      localStorage.setItem('ride.linkPrompt', '1')
+      const { mounted } = open()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="link-banner"]').exists()).toBe(true)
+    })
+
+    it('waits until the summary of an absence has been read', async () => {
+      storeSeen({ runId: 7, version: 1 })
+      const { mounted } = open({ state_version: 4 }, away)
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="away"]').exists()).toBe(true)
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="away-dismiss"]').trigger('click')
+
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(true)
+    })
+
+    it('closes the window and shows the recovery code panel when the driver prefers the code', async () => {
+      const scrollIntoView = vi.fn()
+      Element.prototype.scrollIntoView = scrollIntoView
+      const { mounted } = open()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      await wrapper.get('[data-test="recovery"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
+      expect(wrapper.findComponent(RecoveryPanel).exists()).toBe(true)
+      expect(scrollIntoView).toHaveBeenCalledTimes(1)
+      expect(scrollIntoView.mock.contexts[0]).toBe(wrapper.findComponent(RecoveryPanel).element)
+      expect(wrapper.find('[data-test="link-banner"]').exists()).toBe(true)
+
+      Reflect.deleteProperty(Element.prototype, 'scrollIntoView')
+    })
+
+    it('has nothing to ask of a driver who has an account, and lists how they sign in', async () => {
+      serve(() => respond(200, runAnswer(aRun())), () =>
+        respond(200, {
+          data: {
+            ...profile,
+            is_guest: false,
+            identities: [
+              { provider: 'email', email: 't***@example.com' },
+              { provider: 'google', email: 'm***@gmail.com' },
+            ],
+          },
+        }),
+      )
+      const { wrapper } = await show()
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="link-banner"]').exists()).toBe(false)
+      expect(wrapper.findComponent(RecoveryPanel).exists()).toBe(false)
+      expect(wrapper.findAll('[data-test="identity-email"] span').map((part) => part.text())).toEqual(['E-mail', 't***@example.com'])
+      expect(wrapper.findAll('[data-test="identity-google"] span').map((part) => part.text())).toEqual(['Google', 'm***@gmail.com'])
+    })
+
+    it('does not list sign-ins for a guest, who has none', async () => {
+      const { mounted } = open()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="linked"]').exists()).toBe(false)
+    })
   })
 })

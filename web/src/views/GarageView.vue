@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
 import AwaySummary from '@/components/AwaySummary.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
+import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
+import LinkAccountDialog from '@/components/LinkAccountDialog.vue'
+import LinkedAccounts from '@/components/LinkedAccounts.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RepairControl from '@/components/RepairControl.vue'
 import TowControl from '@/components/TowControl.vue'
@@ -61,6 +64,37 @@ const towing = computed(() => towMs.value > 0)
 /** Why the car stands, that it is being towed, or that it is racing: the key of the status in the messages. */
 const statusKey = computed(() => (towing.value ? 'towed' : (run.run?.stop_reason ?? 'running')))
 const stopped = computed(() => run.run?.status === 'stopped')
+
+/**
+ * A guest who has earned something has a garage worth saving: the window "Save your garage" opens once, and when the
+ * driver says later a quiet banner stays. It waits for the summary of an absence to be dismissed, so the two never
+ * pile up.
+ */
+const linkOpen = ref(false)
+const recoveryPanel = ref<InstanceType<typeof RecoveryPanel> | null>(null)
+const offerLinking = computed(() => session.me?.is_guest === true && (run.run?.laps_done ?? 0) > 0)
+
+watch(
+  () => [offerLinking.value, session.linkPromptDismissed, run.away] as const,
+  ([offer, dismissed, away]) => {
+    if (offer && !dismissed && away === null) {
+      linkOpen.value = true
+    }
+  },
+  { immediate: true },
+)
+
+function later(): void {
+  linkOpen.value = false
+  session.dismissLinkPrompt()
+}
+
+/** The driver prefers the recovery code: the window closes and the panel with the code is shown. */
+async function useCode(): Promise<void> {
+  later()
+  await nextTick()
+  recoveryPanel.value?.$el.scrollIntoView?.({ behavior: 'smooth' })
+}
 </script>
 
 <template>
@@ -68,6 +102,8 @@ const stopped = computed(() => run.run?.status === 'stopped')
     <p class="text-sm text-muted" data-test="welcome">
       {{ session.me ? t('garage.welcome', { name: session.me.name }) : t('common.loading') }}
     </p>
+
+    <LinkAccountBanner v-if="offerLinking && session.linkPromptDismissed && !linkOpen" @open="linkOpen = true" />
 
     <div v-if="loadError" class="flex flex-col items-start gap-3" data-test="load-error">
       <p class="text-danger" role="alert">{{ t('run.loadError') }}</p>
@@ -138,7 +174,11 @@ const stopped = computed(() => run.run?.status === 'stopped')
       <FuelGauge :run="run.run" />
     </template>
 
-    <RecoveryPanel v-if="session.me?.is_guest" />
+    <RecoveryPanel v-if="session.me?.is_guest" ref="recoveryPanel" />
+
+    <LinkedAccounts />
+
+    <LinkAccountDialog v-if="linkOpen && offerLinking" @later="later" @recovery="useCode" />
 
     <div>
       <button type="button" class="btn btn-secondary" data-test="sign-out" @click="session.signOut()">
