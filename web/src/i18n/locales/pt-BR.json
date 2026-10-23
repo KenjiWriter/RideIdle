@@ -159,5 +159,15 @@
     "copy": "Copiar",
     "copied": "Copiado",
     "done": "Já guardei"
+  },
+  "confirm": {
+    "checking": "Verificando o seu link…",
+    "claimTitle": "Sua garagem está salva",
+    "claimBody": "A partir de agora você pode entrar em qualquer aparelho com um link enviado para o seu e-mail.",
+    "failedTitle": "Este link não funciona",
+    "invalid": "Ele já foi usado, expirou ou está incompleto. Peça um novo.",
+    "garage": "Ir para a garagem",
+    "newLink": "Pedir um novo link",
+    "home": "Voltar ao início"
   }
 }

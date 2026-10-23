@@ -159,5 +159,15 @@
     "copy": "Copy",
     "copied": "Copied",
     "done": "I saved it"
+  },
+  "confirm": {
+    "checking": "Checking your link…",
+    "claimTitle": "Your garage is saved",
+    "claimBody": "From now on you can sign in on any device with a link sent to your e-mail.",
+    "failedTitle": "This link does not work",
+    "invalid": "It was already used, it has expired or it is not complete. Ask for a new one.",
+    "garage": "Go to the garage",
+    "newLink": "Ask for a new link",
+    "home": "Back to the start"
   }
 }

@@ -17,6 +17,8 @@ export const routes: RouteRecordRaw[] = [
   { path: '/', name: 'landing', component: () => import('@/views/LandingView.vue') },
   { path: '/create', name: 'create', component: () => import('@/views/CreateDriverView.vue'), meta: { guestOnly: true } },
   { path: '/recover', name: 'recover', component: () => import('@/views/RecoverView.vue'), meta: { guestOnly: true } },
+  // The link of an e-mail is opened in any browser, by a driver or not: it is open to everybody.
+  { path: '/account/confirm', name: 'account-confirm', component: () => import('@/views/ConfirmEmailView.vue') },
   { path: '/choose', name: 'choose', component: () => import('@/views/ChooseCarView.vue'), meta: { requiresAuth: true } },
   { path: '/garage', name: 'garage', component: () => import('@/views/GarageView.vue'), meta: { requiresAuth: true } },
 ]

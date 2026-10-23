@@ -159,5 +159,15 @@
     "copy": "Kopieren",
     "copied": "Kopiert",
     "done": "Ich habe ihn gespeichert"
+  },
+  "confirm": {
+    "checking": "Dein Link wird geprüft…",
+    "claimTitle": "Deine Garage ist gesichert",
+    "claimBody": "Ab jetzt kannst du dich auf jedem Gerät mit einem Link anmelden, den wir dir per E-Mail schicken.",
+    "failedTitle": "Dieser Link funktioniert nicht",
+    "invalid": "Er wurde schon benutzt, ist abgelaufen oder unvollständig. Fordere einen neuen an.",
+    "garage": "Zur Garage",
+    "newLink": "Neuen Link anfordern",
+    "home": "Zurück zum Start"
   }
 }

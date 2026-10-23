@@ -159,5 +159,15 @@
     "copy": "Copier",
     "copied": "Copié",
     "done": "Je l’ai enregistré"
+  },
+  "confirm": {
+    "checking": "Vérification de votre lien…",
+    "claimTitle": "Votre garage est sauvegardé",
+    "claimBody": "Désormais, vous pouvez vous connecter sur n’importe quel appareil avec un lien envoyé à votre e-mail.",
+    "failedTitle": "Ce lien ne fonctionne pas",
+    "invalid": "Il a déjà été utilisé, il a expiré ou il est incomplet. Demandez-en un nouveau.",
+    "garage": "Aller au garage",
+    "newLink": "Demander un nouveau lien",
+    "home": "Retour au début"
   }
 }

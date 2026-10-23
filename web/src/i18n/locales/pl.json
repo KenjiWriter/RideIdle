@@ -159,5 +159,15 @@
     "copy": "Kopiuj",
     "copied": "Skopiowano",
     "done": "Zapisałem"
+  },
+  "confirm": {
+    "checking": "Sprawdzamy Twój link…",
+    "claimTitle": "Twój garaż jest zapisany",
+    "claimBody": "Od teraz zalogujesz się na każdym urządzeniu linkiem wysłanym na Twój e-mail.",
+    "failedTitle": "Ten link nie działa",
+    "invalid": "Został już użyty, wygasł albo jest niepełny. Poproś o nowy.",
+    "garage": "Przejdź do garażu",
+    "newLink": "Poproś o nowy link",
+    "home": "Wróć na początek"
   }
 }
