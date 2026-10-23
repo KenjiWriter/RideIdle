@@ -7,7 +7,9 @@
     "garage": "Garage",
     "tournament": "Tournament",
     "city": "City",
-    "workshop": "Workshop"
+    "workshop": "Workshop",
+    "shop": "Shop",
+    "label": "Game navigation"
   },
   "language": {
     "label": "Language"
@@ -82,7 +84,8 @@
       "running": "Racing",
       "fuel_empty": "Out of fuel",
       "breakdown": "Broken down",
-      "towed": "Towed"
+      "towed": "Towed",
+      "workshop": "In the workshop"
     },
     "stat": {
       "cash": "Cash",
@@ -93,7 +96,8 @@
     },
     "banner": {
       "fuel_empty": "The tank is empty. The car stands until you refuel it.",
-      "breakdown": "The car broke down. It stands until it is repaired."
+      "breakdown": "The car broke down. It stands until it is repaired.",
+      "workshop": "The car stands in the workshop while the mechanic works. It drives again when the last job is done."
     },
     "fuel": {
       "title": "Fuel",
@@ -258,5 +262,78 @@
     "confirm": "Delete my account for good",
     "deleting": "Deleting…",
     "cancel": "Cancel"
+  },
+  "slot": {
+    "tires": "Tires",
+    "suspension": "Suspension",
+    "brakes": "Brakes",
+    "engine": "Engine",
+    "boost": "Forced induction",
+    "gearbox": "Gearbox",
+    "exhaust": "Exhaust",
+    "cooling": "Cooling",
+    "tank": "Tank"
+  },
+  "carStat": {
+    "accel": "Acceleration",
+    "top_speed": "Top speed",
+    "grip": "Grip",
+    "handling": "Handling",
+    "braking": "Braking"
+  },
+  "part": {
+    "tier": "T{tier}",
+    "stat": {
+      "grip": "Grip {value}",
+      "handling": "Handling {value}",
+      "braking": "Braking {value}",
+      "power_mult": "Power +{value}%",
+      "fade_resistance": "Fade resistance {value}",
+      "cooling": "Cooling {value}",
+      "capacity_l": "{value} l",
+      "gears": "{value} gears",
+      "top_speed_cap_kmh": "Limit {value} km/h",
+      "ride_height_mm": "Ride height {value} mm",
+      "wet_grip": "Wet grip {value}"
+    }
+  },
+  "shop": {
+    "title": "Shop",
+    "intro": "Parts for your car. Buy a part here, then put it on in the workshop.",
+    "cash": "Cash: {money}",
+    "buy": "Buy for {price}",
+    "buying": "Buying…",
+    "needsLevel": "Needs car level {level}",
+    "yourLevel": "Your car is level {level}.",
+    "noCash": "Not enough cash.",
+    "bought": "{name} is in your inventory. Put it on in the workshop.",
+    "repeated": "That purchase was already made.",
+    "loadError": "The shop could not be loaded.",
+    "toWorkshop": "To the workshop",
+    "noCar": "You have no car yet."
+  },
+  "workshop": {
+    "title": "Workshop",
+    "mechanic": "Mechanic of level {level}: jobs take {cut}% less time.",
+    "queue": "Queue {count} of {max}",
+    "queueEmpty": "Nothing is waiting for the mechanic.",
+    "mount": "Putting on: {part}",
+    "unmount": "Taking off: {part}",
+    "working": "In progress",
+    "waiting": "Waiting",
+    "left": "{time} left",
+    "standing": "The car stands in the workshop and earns nothing until the last job is done.",
+    "noCar": "You have no car yet.",
+    "car": "Car",
+    "level": "Level {level}",
+    "stats": "Statistics",
+    "slots": "Parts on the car",
+    "empty": "Factory",
+    "builtIn": "Part of the body",
+    "inventory": "Inventory",
+    "inventoryEmpty": "No spare parts. Buy some in the shop.",
+    "putOn": "Put on",
+    "takeOff": "Take off",
+    "loadError": "The workshop could not be loaded."
   }
 }

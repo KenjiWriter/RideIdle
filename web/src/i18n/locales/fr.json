@@ -7,7 +7,9 @@
     "garage": "Garage",
     "tournament": "Tournoi",
     "city": "Ville",
-    "workshop": "Atelier"
+    "workshop": "Atelier",
+    "shop": "Boutique",
+    "label": "Navigation du jeu"
   },
   "language": {
     "label": "Langue"
@@ -82,7 +84,8 @@
       "running": "En course",
       "fuel_empty": "Panne sèche",
       "breakdown": "En panne",
-      "towed": "Remorquée"
+      "towed": "Remorquée",
+      "workshop": "À l’atelier"
     },
     "stat": {
       "cash": "Argent",
@@ -93,7 +96,8 @@
     },
     "banner": {
       "fuel_empty": "Le réservoir est vide. La voiture reste arrêtée tant que vous ne faites pas le plein.",
-      "breakdown": "La voiture est tombée en panne. Elle reste arrêtée tant qu’elle n’est pas réparée."
+      "breakdown": "La voiture est tombée en panne. Elle reste arrêtée tant qu’elle n’est pas réparée.",
+      "workshop": "La voiture reste à l’atelier pendant que le mécanicien travaille. Elle repart quand le dernier travail est terminé."
     },
     "fuel": {
       "title": "Carburant",
@@ -258,5 +262,78 @@
     "confirm": "Supprimer mon compte définitivement",
     "deleting": "Suppression…",
     "cancel": "Annuler"
+  },
+  "slot": {
+    "tires": "Pneus",
+    "suspension": "Suspension",
+    "brakes": "Freins",
+    "engine": "Moteur",
+    "boost": "Suralimentation",
+    "gearbox": "Boîte de vitesses",
+    "exhaust": "Échappement",
+    "cooling": "Refroidissement",
+    "tank": "Réservoir"
+  },
+  "carStat": {
+    "accel": "Accélération",
+    "top_speed": "Vitesse maximale",
+    "grip": "Adhérence",
+    "handling": "Tenue de route",
+    "braking": "Freinage"
+  },
+  "part": {
+    "tier": "T{tier}",
+    "stat": {
+      "grip": "Adhérence {value}",
+      "handling": "Tenue de route {value}",
+      "braking": "Freinage {value}",
+      "power_mult": "Puissance +{value} \u0001",
+      "fade_resistance": "Résistance à la surchauffe {value}",
+      "cooling": "Refroidissement {value}",
+      "capacity_l": "{value} l",
+      "gears": "{value} rapports",
+      "top_speed_cap_kmh": "Limite {value} km/h",
+      "ride_height_mm": "Garde au sol {value} mm",
+      "wet_grip": "Adhérence sur mouillé {value}"
+    }
+  },
+  "shop": {
+    "title": "Boutique",
+    "intro": "Des pièces pour votre voiture. Achetez-les ici, puis montez-les à l’atelier.",
+    "cash": "Argent \u0001 {money}",
+    "buy": "Acheter pour {price}",
+    "buying": "Achat en cours…",
+    "needsLevel": "Nécessite une voiture de niveau {level}",
+    "yourLevel": "Votre voiture est de niveau {level}.",
+    "noCash": "Pas assez d’argent.",
+    "bought": "{name} est dans votre inventaire. Montez-la à l’atelier.",
+    "repeated": "Cet achat a déjà été fait.",
+    "loadError": "La boutique n’a pas pu être chargée.",
+    "toWorkshop": "À l’atelier",
+    "noCar": "Vous n’avez pas encore de voiture."
+  },
+  "workshop": {
+    "title": "Atelier",
+    "mechanic": "Mécanicien de niveau {level} \u0001 les travaux durent {cut} \u0001 de moins.",
+    "queue": "File {count} sur {max}",
+    "queueEmpty": "Rien n’attend le mécanicien.",
+    "mount": "Montage \u0001 {part}",
+    "unmount": "Démontage \u0001 {part}",
+    "working": "En cours",
+    "waiting": "En attente",
+    "left": "Encore {time}",
+    "standing": "La voiture reste à l’atelier et ne gagne rien tant que le dernier travail n’est pas terminé.",
+    "noCar": "Vous n’avez pas encore de voiture.",
+    "car": "Voiture",
+    "level": "Niveau {level}",
+    "stats": "Statistiques",
+    "slots": "Pièces sur la voiture",
+    "empty": "D’origine",
+    "builtIn": "Pièce de la carrosserie",
+    "inventory": "Inventaire",
+    "inventoryEmpty": "Aucune pièce de rechange. Achetez-en à la boutique.",
+    "putOn": "Monter",
+    "takeOff": "Démonter",
+    "loadError": "L’atelier n’a pas pu être chargé."
   }
 }

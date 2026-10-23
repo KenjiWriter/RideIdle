@@ -27,4 +27,6 @@ export const routes: RouteRecordRaw[] = [
   { path: '/privacy', name: 'privacy', component: () => import('@/views/LegalView.vue'), props: { document: 'privacy' } },
   { path: '/choose', name: 'choose', component: () => import('@/views/ChooseCarView.vue'), meta: { requiresAuth: true } },
   { path: '/garage', name: 'garage', component: () => import('@/views/GarageView.vue'), meta: { requiresAuth: true } },
+  { path: '/workshop', name: 'workshop', component: () => import('@/views/WorkshopView.vue'), meta: { requiresAuth: true } },
+  { path: '/shop', name: 'shop', component: () => import('@/views/ShopView.vue'), meta: { requiresAuth: true } },
 ]

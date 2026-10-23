@@ -7,7 +7,9 @@
     "garage": "Garagem",
     "tournament": "Torneio",
     "city": "Cidade",
-    "workshop": "Oficina"
+    "workshop": "Oficina",
+    "shop": "Loja",
+    "label": "Navegação do jogo"
   },
   "language": {
     "label": "Idioma"
@@ -82,7 +84,8 @@
       "running": "Correndo",
       "fuel_empty": "Sem combustível",
       "breakdown": "Quebrado",
-      "towed": "Rebocado"
+      "towed": "Rebocado",
+      "workshop": "Na oficina"
     },
     "stat": {
       "cash": "Dinheiro",
@@ -93,7 +96,8 @@
     },
     "banner": {
       "fuel_empty": "O tanque está vazio. O carro fica parado até você abastecer.",
-      "breakdown": "O carro quebrou. Ele fica parado até ser consertado."
+      "breakdown": "O carro quebrou. Ele fica parado até ser consertado.",
+      "workshop": "O carro fica parado na oficina enquanto o mecânico trabalha. Volta a andar quando o último serviço terminar."
     },
     "fuel": {
       "title": "Combustível",
@@ -258,5 +262,78 @@
     "confirm": "Excluir minha conta para sempre",
     "deleting": "Excluindo…",
     "cancel": "Cancelar"
+  },
+  "slot": {
+    "tires": "Pneus",
+    "suspension": "Suspensão",
+    "brakes": "Freios",
+    "engine": "Motor",
+    "boost": "Sobrealimentação",
+    "gearbox": "Câmbio",
+    "exhaust": "Escapamento",
+    "cooling": "Arrefecimento",
+    "tank": "Tanque"
+  },
+  "carStat": {
+    "accel": "Aceleração",
+    "top_speed": "Velocidade máxima",
+    "grip": "Aderência",
+    "handling": "Dirigibilidade",
+    "braking": "Frenagem"
+  },
+  "part": {
+    "tier": "T{tier}",
+    "stat": {
+      "grip": "Aderência {value}",
+      "handling": "Dirigibilidade {value}",
+      "braking": "Frenagem {value}",
+      "power_mult": "Potência +{value}%",
+      "fade_resistance": "Resistência ao superaquecimento {value}",
+      "cooling": "Arrefecimento {value}",
+      "capacity_l": "{value} l",
+      "gears": "{value} marchas",
+      "top_speed_cap_kmh": "Limite {value} km/h",
+      "ride_height_mm": "Altura livre {value} mm",
+      "wet_grip": "Aderência no molhado {value}"
+    }
+  },
+  "shop": {
+    "title": "Loja",
+    "intro": "Peças para o seu carro. Compre aqui e monte na oficina.",
+    "cash": "Dinheiro: {money}",
+    "buy": "Comprar por {price}",
+    "buying": "Comprando…",
+    "needsLevel": "Requer carro de nível {level}",
+    "yourLevel": "Seu carro é de nível {level}.",
+    "noCash": "Dinheiro insuficiente.",
+    "bought": "{name} está no seu inventário. Monte na oficina.",
+    "repeated": "Essa compra já foi feita.",
+    "loadError": "Não foi possível carregar a loja.",
+    "toWorkshop": "Para a oficina",
+    "noCar": "Você ainda não tem um carro."
+  },
+  "workshop": {
+    "title": "Oficina",
+    "mechanic": "Mecânico de nível {level}: os serviços levam {cut}% menos tempo.",
+    "queue": "Fila {count} de {max}",
+    "queueEmpty": "Nada está esperando o mecânico.",
+    "mount": "Montando: {part}",
+    "unmount": "Desmontando: {part}",
+    "working": "Em andamento",
+    "waiting": "Aguardando",
+    "left": "Faltam {time}",
+    "standing": "O carro fica parado na oficina e não ganha nada até o último serviço terminar.",
+    "noCar": "Você ainda não tem um carro.",
+    "car": "Carro",
+    "level": "Nível {level}",
+    "stats": "Estatísticas",
+    "slots": "Peças no carro",
+    "empty": "De fábrica",
+    "builtIn": "Peça da carroceria",
+    "inventory": "Inventário",
+    "inventoryEmpty": "Sem peças de reposição. Compre algumas na loja.",
+    "putOn": "Montar",
+    "takeOff": "Desmontar",
+    "loadError": "Não foi possível carregar a oficina."
   }
 }

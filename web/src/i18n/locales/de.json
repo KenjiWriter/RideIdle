@@ -7,7 +7,9 @@
     "garage": "Garage",
     "tournament": "Turnier",
     "city": "Stadt",
-    "workshop": "Werkstatt"
+    "workshop": "Werkstatt",
+    "shop": "Shop",
+    "label": "Spielnavigation"
   },
   "language": {
     "label": "Sprache"
@@ -82,7 +84,8 @@
       "running": "Im Rennen",
       "fuel_empty": "Kein Kraftstoff",
       "breakdown": "Panne",
-      "towed": "Abgeschleppt"
+      "towed": "Abgeschleppt",
+      "workshop": "In der Werkstatt"
     },
     "stat": {
       "cash": "Geld",
@@ -93,7 +96,8 @@
     },
     "banner": {
       "fuel_empty": "Der Tank ist leer. Das Auto steht, bis du tankst.",
-      "breakdown": "Das Auto hat eine Panne. Es steht, bis es repariert ist."
+      "breakdown": "Das Auto hat eine Panne. Es steht, bis es repariert ist.",
+      "workshop": "Das Auto steht in der Werkstatt, solange der Mechaniker arbeitet. Es fährt wieder, wenn der letzte Auftrag erledigt ist."
     },
     "fuel": {
       "title": "Kraftstoff",
@@ -258,5 +262,78 @@
     "confirm": "Mein Konto endgültig löschen",
     "deleting": "Wird gelöscht…",
     "cancel": "Abbrechen"
+  },
+  "slot": {
+    "tires": "Reifen",
+    "suspension": "Fahrwerk",
+    "brakes": "Bremsen",
+    "engine": "Motor",
+    "boost": "Aufladung",
+    "gearbox": "Getriebe",
+    "exhaust": "Auspuff",
+    "cooling": "Kühlung",
+    "tank": "Tank"
+  },
+  "carStat": {
+    "accel": "Beschleunigung",
+    "top_speed": "Höchstgeschwindigkeit",
+    "grip": "Haftung",
+    "handling": "Fahrverhalten",
+    "braking": "Bremsen"
+  },
+  "part": {
+    "tier": "T{tier}",
+    "stat": {
+      "grip": "Haftung {value}",
+      "handling": "Fahrverhalten {value}",
+      "braking": "Bremsen {value}",
+      "power_mult": "Leistung +{value} %",
+      "fade_resistance": "Fading-Beständigkeit {value}",
+      "cooling": "Kühlung {value}",
+      "capacity_l": "{value} l",
+      "gears": "{value} Gänge",
+      "top_speed_cap_kmh": "Grenze {value} km/h",
+      "ride_height_mm": "Bodenfreiheit {value} mm",
+      "wet_grip": "Nässehaftung {value}"
+    }
+  },
+  "shop": {
+    "title": "Shop",
+    "intro": "Teile für dein Auto. Kaufe sie hier und baue sie in der Werkstatt ein.",
+    "cash": "Geld: {money}",
+    "buy": "Für {price} kaufen",
+    "buying": "Wird gekauft…",
+    "needsLevel": "Erfordert Autostufe {level}",
+    "yourLevel": "Dein Auto hat Stufe {level}.",
+    "noCash": "Nicht genug Geld.",
+    "bought": "{name} liegt in deinem Inventar. Baue es in der Werkstatt ein.",
+    "repeated": "Dieser Kauf wurde bereits getätigt.",
+    "loadError": "Der Shop konnte nicht geladen werden.",
+    "toWorkshop": "Zur Werkstatt",
+    "noCar": "Du hast noch kein Auto."
+  },
+  "workshop": {
+    "title": "Werkstatt",
+    "mechanic": "Mechaniker der Stufe {level}: Aufträge dauern {cut} % kürzer.",
+    "queue": "Warteschlange {count} von {max}",
+    "queueEmpty": "Nichts wartet auf den Mechaniker.",
+    "mount": "Einbau: {part}",
+    "unmount": "Ausbau: {part}",
+    "working": "In Arbeit",
+    "waiting": "Wartet",
+    "left": "Noch {time}",
+    "standing": "Das Auto steht in der Werkstatt und verdient nichts, bis der letzte Auftrag erledigt ist.",
+    "noCar": "Du hast noch kein Auto.",
+    "car": "Auto",
+    "level": "Stufe {level}",
+    "stats": "Werte",
+    "slots": "Teile am Auto",
+    "empty": "Serie",
+    "builtIn": "Teil der Karosserie",
+    "inventory": "Inventar",
+    "inventoryEmpty": "Keine Ersatzteile. Kaufe welche im Shop.",
+    "putOn": "Einbauen",
+    "takeOff": "Ausbauen",
+    "loadError": "Die Werkstatt konnte nicht geladen werden."
   }
 }

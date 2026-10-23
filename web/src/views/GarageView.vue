@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router'
 import AccountData from '@/components/AccountData.vue'
 import AwaySummary from '@/components/AwaySummary.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
+import GameNav from '@/components/GameNav.vue'
 import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
 import LinkAccountDialog from '@/components/LinkAccountDialog.vue'
 import LinkedAccounts from '@/components/LinkedAccounts.vue'
@@ -100,6 +101,8 @@ async function useCode(): Promise<void> {
 
 <template>
   <main class="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8">
+    <GameNav />
+
     <p class="text-sm text-muted" data-test="welcome">
       {{ session.me ? t('garage.welcome', { name: session.me.name }) : t('common.loading') }}
     </p>

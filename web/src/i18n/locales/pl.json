@@ -7,7 +7,9 @@
     "garage": "Garaż",
     "tournament": "Turniej",
     "city": "Miasto",
-    "workshop": "Warsztat"
+    "workshop": "Warsztat",
+    "shop": "Sklep",
+    "label": "Nawigacja gry"
   },
   "language": {
     "label": "Język"
@@ -82,7 +84,8 @@
       "running": "Jedzie",
       "fuel_empty": "Brak paliwa",
       "breakdown": "Awaria",
-      "towed": "Holowane"
+      "towed": "Holowane",
+      "workshop": "W warsztacie"
     },
     "stat": {
       "cash": "Gotówka",
@@ -93,7 +96,8 @@
     },
     "banner": {
       "fuel_empty": "Bak jest pusty. Auto stoi, dopóki go nie zatankujesz.",
-      "breakdown": "Auto się zepsuło. Stoi, dopóki go nie naprawisz."
+      "breakdown": "Auto się zepsuło. Stoi, dopóki go nie naprawisz.",
+      "workshop": "Auto stoi w warsztacie, dopóki mechanik pracuje. Pojedzie dalej, gdy skończy się ostatnie zlecenie."
     },
     "fuel": {
       "title": "Paliwo",
@@ -258,5 +262,78 @@
     "confirm": "Usuń moje konto na zawsze",
     "deleting": "Usuwamy…",
     "cancel": "Anuluj"
+  },
+  "slot": {
+    "tires": "Opony",
+    "suspension": "Zawieszenie",
+    "brakes": "Hamulce",
+    "engine": "Silnik",
+    "boost": "Doładowanie",
+    "gearbox": "Skrzynia biegów",
+    "exhaust": "Wydech",
+    "cooling": "Chłodzenie",
+    "tank": "Zbiornik"
+  },
+  "carStat": {
+    "accel": "Przyspieszenie",
+    "top_speed": "Prędkość maksymalna",
+    "grip": "Przyczepność",
+    "handling": "Prowadzenie",
+    "braking": "Hamowanie"
+  },
+  "part": {
+    "tier": "T{tier}",
+    "stat": {
+      "grip": "Przyczepność {value}",
+      "handling": "Prowadzenie {value}",
+      "braking": "Hamowanie {value}",
+      "power_mult": "Moc +{value}%",
+      "fade_resistance": "Odporność na przegrzanie {value}",
+      "cooling": "Chłodzenie {value}",
+      "capacity_l": "{value} l",
+      "gears": "{value} biegów",
+      "top_speed_cap_kmh": "Limit {value} km/h",
+      "ride_height_mm": "Prześwit {value} mm",
+      "wet_grip": "Przyczepność na mokrym {value}"
+    }
+  },
+  "shop": {
+    "title": "Sklep",
+    "intro": "Części do Twojego auta. Kupujesz je tutaj, a zakładasz w warsztacie.",
+    "cash": "Gotówka: {money}",
+    "buy": "Kup za {price}",
+    "buying": "Kupowanie…",
+    "needsLevel": "Wymaga poziomu auta {level}",
+    "yourLevel": "Twoje auto ma poziom {level}.",
+    "noCash": "Za mało gotówki.",
+    "bought": "{name} jest w Twoim inwentarzu. Załóż ją w warsztacie.",
+    "repeated": "Ten zakup już został zrobiony.",
+    "loadError": "Nie udało się wczytać sklepu.",
+    "toWorkshop": "Do warsztatu",
+    "noCar": "Nie masz jeszcze auta."
+  },
+  "workshop": {
+    "title": "Warsztat",
+    "mechanic": "Mechanik poziomu {level}: zlecenia trwają o {cut}% krócej.",
+    "queue": "Kolejka {count} z {max}",
+    "queueEmpty": "Nic nie czeka na mechanika.",
+    "mount": "Zakładanie: {part}",
+    "unmount": "Zdejmowanie: {part}",
+    "working": "W toku",
+    "waiting": "Czeka",
+    "left": "Zostało {time}",
+    "standing": "Auto stoi w warsztacie i nic nie zarabia, dopóki nie skończy się ostatnie zlecenie.",
+    "noCar": "Nie masz jeszcze auta.",
+    "car": "Auto",
+    "level": "Poziom {level}",
+    "stats": "Statystyki",
+    "slots": "Części w aucie",
+    "empty": "Fabryczne",
+    "builtIn": "Część nadwozia",
+    "inventory": "Inwentarz",
+    "inventoryEmpty": "Nie masz części zapasowych. Kup je w sklepie.",
+    "putOn": "Załóż",
+    "takeOff": "Zdejmij",
+    "loadError": "Nie udało się wczytać warsztatu."
   }
 }
