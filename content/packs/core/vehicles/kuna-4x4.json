@@ -21,6 +21,7 @@
   "power_kw": 97,
   "mass_kg": 1480,
   "top_speed_kmh": 160,
+  "clearance": 80,
   "cargo_kg": 520,
   "seats": 5,
   "tank_l": 70,

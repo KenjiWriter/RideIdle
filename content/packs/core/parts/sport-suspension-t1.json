@@ -10,5 +10,5 @@
   "slot": "suspension",
   "tier": 1,
   "price_cents": 75000,
-  "stats": { "handling": 100, "ride_height_mm": 25 }
+  "stats": { "handling": 100, "clearance": 25 }
 }

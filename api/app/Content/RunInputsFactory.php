@@ -115,6 +115,8 @@ final class RunInputsFactory
      * - Top speed is the one of the body, grown with the cube root of the power gained, and never above the cap of the gearbox.
      * - Grip, handling and braking start from the tires, and the suspension and the brakes are averaged with the handling and
      *   the braking of the tires. A slot without a part adds nothing, so the stock car is the reference of the tracks.
+     * - Clearance (Off-road in the garage) starts from the body, and the suspension is averaged with it the same way:
+     *   a lowered one costs a 4x4 what it gives a hatchback on asphalt. The tires have their say through the tire matrix.
      * - Fuel use grows with power.
      *
      * Averaging is a first rule that the economy simulator will check; the numbers are in the definitions of the parts.
@@ -147,6 +149,7 @@ final class RunInputsFactory
                 'grip' => (float) $tires['stats']['grip'],
                 'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null),
                 'braking' => $this->average($tires['stats']['braking'], $parts['brakes']['stats']['braking'] ?? null),
+                'clearance' => $this->average($vehicle['clearance'], $parts['suspension']['stats']['clearance'] ?? null),
             ],
             fuelUseMultiplier: (1.0 + self::FUEL_USE_POWER_SHARE * $power / $this->rules->fuelReferencePowerKw()) / self::FUEL_USE_BASE,
         );

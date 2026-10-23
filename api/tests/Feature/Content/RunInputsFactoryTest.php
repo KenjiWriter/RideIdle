@@ -77,19 +77,19 @@ it('refuses a car that is not a combustion car', function () {
 
 it('refuses a track that asks for a statistic cars do not have yet', function () {
     $data = json_decode((string) file_get_contents(config('ride.content_path').'/rules/starter.json'), true);
-    $data['tracks']['zlomowo-street']['demand'] = ['clearance' => 100];
-    $data['tracks']['zlomowo-street']['reference'] = ['clearance' => 60];
+    $data['tracks']['zlomowo-street']['demand'] = ['noise' => 100];
+    $data['tracks']['zlomowo-street']['reference'] = ['noise' => 60];
 
     $factory = new RunInputsFactory(app(Catalog::class), Rules::fromArray($data));
 
-    expect(fn () => $factory->make('rdzak-gt-4', 'zlomowo-street'))->toThrow(InvalidArgumentException::class, 'clearance');
+    expect(fn () => $factory->make('rdzak-gt-4', 'zlomowo-street'))->toThrow(InvalidArgumentException::class, 'noise');
 });
 
 describe('the statistics of a car with parts on it', function () {
     it('is the stock car when nothing is mounted', function () {
         $stock = runInputsFactory()->stats('rdzak-gt-4');
 
-        expect($stock->stats)->toBe(['accel' => 97.0, 'top_speed' => 175.0, 'grip' => 90.0, 'handling' => 88.0, 'braking' => 90.0])
+        expect($stock->stats)->toBe(['accel' => 97.0, 'top_speed' => 175.0, 'grip' => 90.0, 'handling' => 88.0, 'braking' => 90.0, 'clearance' => 20.0])
             ->and(runInputsFactory()->stats('rdzak-gt-4', [])->stats)->toBe($stock->stats);
     });
 
@@ -105,6 +105,16 @@ describe('the statistics of a car with parts on it', function () {
         expect($stats['handling'])->toBe(94.0)
             ->and($stats['braking'])->toBe(97.5)
             ->and($stats['grip'])->toBe(90.0);
+    });
+
+    it('takes the clearance from the body and averages the suspension with it, so that a lowered one costs a 4x4 what it gives a hatchback', function () {
+        $sport = ['suspension' => 'sport-suspension-t1'];
+
+        expect(runInputsFactory()->stats('rdzak-gt-4')->get('clearance'))->toBe(20.0)
+            ->and(runInputsFactory()->stats('bizon-m-2')->get('clearance'))->toBe(15.0)
+            ->and(runInputsFactory()->stats('kuna-4x4')->get('clearance'))->toBe(80.0)
+            ->and(runInputsFactory()->stats('rdzak-gt-4', $sport)->get('clearance'))->toBe(22.5)
+            ->and(runInputsFactory()->stats('kuna-4x4', $sport)->get('clearance'))->toBe(52.5);
     });
 
     it('turns the power multiplier of the exhaust into acceleration, a little top speed and a thirstier car', function () {
@@ -200,7 +210,7 @@ describe('the tires and the surface', function () {
         $directory = sys_get_temp_dir().'/ride-pack-'.bin2hex(random_bytes(4));
         mkdir("{$directory}/vehicles", 0777, true);
         mkdir("{$directory}/parts", 0777, true);
-        file_put_contents("{$directory}/vehicles/toy.json", json_encode(['slug' => 'toy', 'powertrain' => 'ice', 'power_kw' => 97, 'mass_kg' => 1000, 'top_speed_kmh' => 175, 'tank_l' => 45, 'sources' => ['start']]));
+        file_put_contents("{$directory}/vehicles/toy.json", json_encode(['slug' => 'toy', 'powertrain' => 'ice', 'power_kw' => 97, 'mass_kg' => 1000, 'top_speed_kmh' => 175, 'clearance' => 20, 'tank_l' => 45, 'sources' => ['start']]));
         file_put_contents("{$directory}/parts/bare-tires.json", json_encode(['slug' => 'bare-tires', 'slot' => 'tires', 'tier' => 1, 'stats' => ['grip' => 90, 'handling' => 88, 'braking' => 90]]));
 
         try {

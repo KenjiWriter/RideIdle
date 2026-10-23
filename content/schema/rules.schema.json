@@ -63,9 +63,10 @@
             "top_speed": { "type": "number", "exclusiveMinimum": 0 },
             "grip": { "type": "number", "exclusiveMinimum": 0 },
             "handling": { "type": "number", "exclusiveMinimum": 0 },
-            "braking": { "type": "number", "exclusiveMinimum": 0 }
+            "braking": { "type": "number", "exclusiveMinimum": 0 },
+            "clearance": { "type": "number", "exclusiveMinimum": 0 }
           },
-          "required": ["accel", "top_speed", "grip", "handling", "braking"],
+          "required": ["accel", "top_speed", "grip", "handling", "braking", "clearance"],
           "additionalProperties": false
         }
       },

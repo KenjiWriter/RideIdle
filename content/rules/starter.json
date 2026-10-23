@@ -12,7 +12,7 @@
     "xp_per_lap": 10,
     "xp_per_level": 200,
     "max_level": 30,
-    "stat_ceiling": { "accel": 400, "top_speed": 450, "grip": 250, "handling": 250, "braking": 250 }
+    "stat_ceiling": { "accel": 400, "top_speed": 450, "grip": 250, "handling": 250, "braking": 250, "clearance": 200 }
   },
   "shop": { "parts": ["street-tires-t2", "sport-suspension-t1", "disc-brakes-t2", "sport-exhaust-t2"] },
   "workshop": {

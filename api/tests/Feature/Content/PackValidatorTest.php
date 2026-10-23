@@ -30,6 +30,7 @@ function validVehicle(array $overrides = []): array
         'power_kw' => 97,
         'mass_kg' => 1000,
         'top_speed_kmh' => 175,
+        'clearance' => 20,
         'cargo_kg' => 120,
         'seats' => 4,
         'tank_l' => 45,

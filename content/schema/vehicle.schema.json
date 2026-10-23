@@ -28,6 +28,12 @@
     "power_kw": { "type": "integer", "minimum": 20, "maximum": 1500 },
     "mass_kg": { "type": "integer", "minimum": 500, "maximum": 4000 },
     "top_speed_kmh": { "type": "integer", "minimum": 60, "maximum": 450 },
+    "clearance": {
+      "description": "Ground clearance and the ability to leave the road, on the scale of the Off-road statistic of the garage: the stock Rdzak is 20, a 4x4 pickup 80. The suspension is averaged with it.",
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 400
+    },
     "cargo_kg": { "type": "integer", "minimum": 0, "maximum": 3000 },
     "seats": { "type": "integer", "minimum": 1, "maximum": 9 },
     "tank_l": { "type": "number", "exclusiveMinimum": 0, "maximum": 200 },
@@ -46,7 +52,7 @@
   },
   "required": [
     "slug", "name", "class", "drivetrain", "powertrain", "engine", "power_kw", "mass_kg",
-    "top_speed_kmh", "cargo_kg", "seats", "tier", "min_player_level", "price_cents", "sources"
+    "top_speed_kmh", "clearance", "cargo_kg", "seats", "tier", "min_player_level", "price_cents", "sources"
   ],
   "additionalProperties": false,
   "allOf": [
