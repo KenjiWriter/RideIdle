@@ -306,7 +306,7 @@
     "needsLevel": "Needs car level {level}",
     "yourLevel": "Your car is level {level}.",
     "noCash": "Not enough cash.",
-    "bought": "{name} is in your inventory. Put it on in the workshop.",
+    "bought": "Added to your inventory: {name}. Put it on in the workshop.",
     "repeated": "That purchase was already made.",
     "loadError": "The shop could not be loaded.",
     "toWorkshop": "To the workshop",

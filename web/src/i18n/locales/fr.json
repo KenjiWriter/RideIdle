@@ -306,7 +306,7 @@
     "needsLevel": "Nécessite une voiture de niveau {level}",
     "yourLevel": "Votre voiture est de niveau {level}.",
     "noCash": "Pas assez d’argent.",
-    "bought": "{name} est dans votre inventaire. Montez-la à l’atelier.",
+    "bought": "Ajouté à votre inventaire : {name}. Montage possible à l’atelier.",
     "repeated": "Cet achat a déjà été fait.",
     "loadError": "La boutique n’a pas pu être chargée.",
     "toWorkshop": "À l’atelier",

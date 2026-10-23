@@ -71,7 +71,7 @@ describe('ShopView', () => {
     await flushPromises()
 
     expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ part: 'sport-exhaust-t2', request_id: expect.any(String) })
-    expect(wrapper.get('[data-test="done"]').text()).toContain('Sport exhaust is in your inventory. Put it on in the workshop.')
+    expect(wrapper.get('[data-test="done"]').text()).toContain('Added to your inventory: Sport exhaust. Put it on in the workshop.')
     expect(wrapper.get('[data-test="cash"]').text()).toBe('Cash: $425.00')
 
     await wrapper.get('[data-test="to-workshop"]').trigger('click')

@@ -306,7 +306,7 @@
     "needsLevel": "Wymaga poziomu auta {level}",
     "yourLevel": "Twoje auto ma poziom {level}.",
     "noCash": "Za mało gotówki.",
-    "bought": "{name} jest w Twoim inwentarzu. Załóż ją w warsztacie.",
+    "bought": "Do inwentarza trafiła część: {name}. Załóż ją w warsztacie.",
     "repeated": "Ten zakup już został zrobiony.",
     "loadError": "Nie udało się wczytać sklepu.",
     "toWorkshop": "Do warsztatu",

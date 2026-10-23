@@ -306,7 +306,7 @@
     "needsLevel": "Erfordert Autostufe {level}",
     "yourLevel": "Dein Auto hat Stufe {level}.",
     "noCash": "Nicht genug Geld.",
-    "bought": "{name} liegt in deinem Inventar. Baue es in der Werkstatt ein.",
+    "bought": "Zu deinem Inventar hinzugefügt: {name}. Baue es in der Werkstatt ein.",
     "repeated": "Dieser Kauf wurde bereits getätigt.",
     "loadError": "Der Shop konnte nicht geladen werden.",
     "toWorkshop": "Zur Werkstatt",

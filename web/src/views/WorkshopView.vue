@@ -179,7 +179,7 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
         </dl>
 
         <h3 class="mt-2 font-bold">{{ t('workshop.slots') }}</h3>
-        <ul class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <ul class="grid grid-cols-2 gap-2">
           <li v-for="slot in car.slots" :key="slot.slot" class="rounded-lg border border-line p-3" :data-test="`slot-${slot.slot}`">
             <p class="text-sm text-muted">{{ t(`slot.${slot.slot}`) }}</p>
             <template v-if="slot.part">

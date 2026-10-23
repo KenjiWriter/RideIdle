@@ -306,7 +306,7 @@
     "needsLevel": "Requer carro de nível {level}",
     "yourLevel": "Seu carro é de nível {level}.",
     "noCash": "Dinheiro insuficiente.",
-    "bought": "{name} está no seu inventário. Monte na oficina.",
+    "bought": "Adicionado ao seu inventário: {name}. Monte na oficina.",
     "repeated": "Essa compra já foi feita.",
     "loadError": "Não foi possível carregar a loja.",
     "toWorkshop": "Para a oficina",
