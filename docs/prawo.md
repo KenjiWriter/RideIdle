@@ -40,16 +40,28 @@ To jest podstawa polityki prywatności i lista, od której prawnik powinien zacz
 | Moment zgody na regulamin i potwierdzenia wieku, wersja regulaminu | `users` | wykazanie zgody | jak konto |
 | Sekrety jednorazowe: skrót, e-mail, cel, czas | `account_tokens` | linki i logowanie przez dostawcę | ważne 30 min (link), 10 min (stan), 5 min (bilet); sprzątane co godzinę, gdy wygasły albo zostały użyte ponad dobę temu |
 | Liczniki limitów: adres IP, skrót e-maila | cache | ograniczanie nadużyć | najwyżej godzina |
-| Kolejka maili: adres i treść | `jobs`, `failed_jobs` | wysyłka | do wysłania; **nieudane zadania zostają w `failed_jobs`, dopóki ktoś ich nie usunie** (`queue:prune-failed`), więc to trzeba ustawić |
+| Kolejka maili: adres i treść | `jobs`, `failed_jobs` | wysyłka | do wysłania; **nieudane zadania zostają w `failed_jobs`, dopóki ktoś ich nie usunie** (`queue:prune-failed`), więc to trzeba ustawić; `accounts:delete` usuwa te, które dotyczą adresów usuwanego konta (tylko przy kolejce w bazie) |
 | Dzienniki serwera i hostingu | poza aplikacją | bezpieczeństwo | **do ustalenia po wyborze hostingu**; tekst obiecuje tylko „tak długo, jak potrzebuje tego bezpieczeństwo” |
 
 Aplikacja **nie używa** cookies (token, język i kilka znaczników są w `localStorage`), reklam, analityki ani śledzenia, i nie sprzedaje danych. Tekst polityki to mówi, więc dodanie czegokolwiek z tej listy wymaga zmiany tekstu.
+
+## Prośby o kopię i o usunięcie danych (procedura operatora)
+
+Polityka prywatności obiecuje, że prośby o dostęp, kopię i usunięcie danych obsługuje się mailem, w ciągu miesiąca. Do wykonania ich służą dwa polecenia; oba działają na jednym koncie, wskazanym przez **dokładnie jedno** z `--id=`, `--email=` albo `--name=`.
+
+1. **Sprawdź, kto pyta.** Prośba powinna przyjść z adresu konta. Dla konta bez adresu (gość) zażądaj imienia kierowcy i kodu odzyskiwania. Przy wątpliwościach poproś, żeby osoba zalogowała się na koncie lub odpisała z adresu, na który konto ma e-mail. To zalecenie, nie wymóg prawny: jak daleko sięgać, ustal z prawnikiem.
+2. **Znajdź konto.** `php artisan accounts:export --email=adres@example.com` szuka adresu jako e-maila konta, jako logowania e-mailem i jako adresu, który zgłosił Google, Facebook albo Apple. Gdy adres prowadzi do kilku kont (adres od dostawcy nie jest unikalny), polecenie niczego nie robi i wypisuje kandydatów: wybierz po `--id`.
+3. **Kopia danych.** `php artisan accounts:export --id=12 --output=/bezpieczny/katalog/konto-12.json` zapisuje JSON z danymi konta: kim jest dla gry, jak się loguje, jakie urządzenia są zalogowane, jakie linki czekają oraz portfel, biegi z historią i księgę. Plik ma prawa tylko dla właściciela i nie nadpisuje istniejącego. Bez `--output` JSON idzie na ekran. W kopii **nie ma sekretów** (hasło, kod odzyskiwania, tokeny urządzeń i linków to skróty, które nic nie znaczą dla osoby, a mogłyby jej zaszkodzić). Plik wyślij kanałem szyfrowanym i usuń po wysłaniu.
+4. **Usunięcie.** Najpierw `php artisan accounts:delete --id=12 --dry-run` pokazuje, co zniknie. Potem `php artisan accounts:delete --id=12` pyta o potwierdzenie (bez odpowiedzi nie usuwa; `--force` pomija pytanie). Usuwa konto, logowania, urządzenia (urządzenia są od razu wylogowane), czekające linki, portfel, biegi, księgę, sesje, prośby o nowe hasło oraz maile do adresów konta, które czekają w kolejce albo się nie wysłały (kolejka w bazie). Wszystko w jednej transakcji: błąd zostawia konto, jak było. Ślad w logu to `Account erased.` z samym id konta.
+5. **Odpowiedz** osobie w ciągu miesiąca (RODO art. 12 ust. 3; w Brazylii LGPD ma krótszy termin: do sprawdzenia).
+
+**Czego te polecenia nie obejmują** (operator musi o tym pamiętać i ewentualnie dopisać do własnej procedury): kopie zapasowe bazy, dzienniki serwera i hostingu, kolejkę w Redisie (polecenie sprząta tylko tabele `jobs` i `failed_jobs`), kopie wysłanych maili u dostawcy poczty, liczniki limitów (znikają same w ciągu godziny) oraz dane u Google, Facebooka i Apple, bo usunięcie konta w grze nie usuwa konta u dostawcy logowania.
 
 ## Pytania do przeglądu prawnego
 
 1. **Próg wieku.** Czy 16 lat jest właściwe? RODO (art. 8) pozwala państwom ustalić 13–16 lat dla zgody dziecka na usługi społeczeństwa informacyjnego (Polska i Niemcy: 16, Francja: 15). W Brazylii dane dzieci i nastolatków podlegają LGPD. Dostawcy logowania mają własne limity wieku. Do tego trzeba zdecydować, czy wystarczy pole wyboru, czy potrzebna jest zgoda opiekuna poniżej progu.
 2. **Gość bez zgody.** Konto gościa powstaje od razu i nie ma pola wyboru: jest tylko informacja z linkami przy tworzeniu kierowcy, a zgody (z potwierdzeniem wieku) składa się dopiero przy zabezpieczaniu konta. Czy to wystarcza, czy pole wyboru ma być już przy tworzeniu? Gość podaje tylko imię kierowcy.
-3. **Prawa osób, których dane dotyczą.** Polityka mówi, że dostęp, sprostowanie, usunięcie i przeniesienie obsługuje się mailem. **Aplikacja nie ma narzędzia do usunięcia ani wyeksportowania konta zabezpieczonego** (jest tylko wygaszanie gości); operator musiałby robić to ręcznie w bazie. To luka do zamknięcia przed publikacją.
+3. **Prawa osób, których dane dotyczą.** Polityka mówi, że dostęp, sprostowanie, usunięcie i przeniesienie obsługuje się mailem. Operator ma do tego polecenia `accounts:export` i `accounts:delete` (procedura w następnej sekcji), ale **aplikacja nie ma samoobsługi** („pobierz moje dane”, „usuń konto”). Czy obsługa mailem wystarczy, to pytanie do prawnika i do planu produktu.
 4. **Administrator i umowy.** Kto jest administratorem (dane w `LEGAL_*`), rejestr czynności przetwarzania, umowy powierzenia z hostingiem i dostawcą poczty, podstawy prawne (dobrałem art. 6 ust. 1 lit. b i f).
 5. **Przekazywanie poza EOG.** Tekst mówi ogólnie o „zabezpieczeniach wymaganych przez prawo”. Trzeba je nazwać, gdy będzie wybrany hosting i poczta.
 6. **Odpowiedzialność, prawo właściwe, sąd.** Celowo ich nie wybrałem: regulamin mówi tylko, że bezwzględne przepisy konsumenckie kraju użytkownika nadal obowiązują, a odpowiedzialność ogranicza „w zakresie dozwolonym przez prawo”. To powinien sformułować prawnik.

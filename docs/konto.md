@@ -87,6 +87,7 @@ Uwagi:
 
 - Odłączania logowania i zmiany adresu e-mail. Zanim odłączanie powstanie, trzeba zdecydować, co z kontem, które odłączy ostatni sposób logowania (ostatniego nie wolno odłączyć), i czy odłączenie wymaga ponownego potwierdzenia.
 - Nagrody za zabezpieczenie konta (w makiecie 10 diamentów): diamentów jeszcze nie ma w grze.
+- Samoobsługowego pobierania i usuwania danych w aplikacji. Operator robi to poleceniami `accounts:export` i `accounts:delete` (procedura w `docs/prawo.md`).
 - Przeglądu prawnego regulaminu i polityki prywatności (`/terms`, `/privacy`, opis w `docs/prawo.md`). Teksty są roboczym projektem. **Próg wieku jest roboczy** (16 lat, `LEGAL_MIN_AGE`): ostateczną liczbę ma wskazać przegląd prawny (ryzyko R9 z roadmapy).
 - Samouczka. Okno otwiera się po pierwszym okrążeniu, bo na ekranie „krok 3” makiety („Zapisz swój garaż”) jest pierwszy zarobek; baner „dzień 2 i 3” z makiety jest tu banerem stałym, dopóki konto jest gościem.
 - Tłumaczenia francuskie, niemieckie i brazylijskie są robocze (mojego autorstwa) i warto, żeby przejrzała je osoba mówiąca w tych językach.
