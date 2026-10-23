@@ -31,11 +31,12 @@ it('freezes the lap time of every starter wreck in every weather', function (str
     'the Kuna 4x4 is slower' => ['kuna-4x4', ['dry' => 82_313, 'cloudy' => 82_313, 'rain' => 93_600, 'downpour' => 96_452, 'fog' => 83_454], 1_500, 70_000],
 ]);
 
-it('rounds the reward and the XP of wet laps like the settlement vector W5', function () {
+it('rounds the reward of wet laps like the settlement vector W5, and the XP of a lap to the whole', function () {
     $config = frozenConfig('rdzak-gt-4');
 
     expect($config['lap_cash_cents'])->toBe(['dry' => 1_550, 'cloudy' => 1_550, 'rain' => 1_442, 'downpour' => 1_442, 'fog' => 1_550])
-        ->and($config['lap_xp'])->toBe(['dry' => 25, 'cloudy' => 25, 'rain' => 23, 'downpour' => 23, 'fog' => 25]);
+        // A lap gives 2 XP, and 93% of 2 is 1.86: rounded, the rain takes nothing from it.
+        ->and($config['lap_xp'])->toBe(['dry' => 2, 'cloudy' => 2, 'rain' => 2, 'downpour' => 2, 'fog' => 2]);
 });
 
 it('takes the climate and the seed from the region of the track', function () {

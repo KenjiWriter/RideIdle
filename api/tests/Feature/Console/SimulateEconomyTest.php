@@ -127,17 +127,24 @@ describe('economy:simulate', function () {
     });
 
     it('sets the rules of the game against the anchors, and says so when a number is off, without failing', function () {
-        // A third more profit makes the reward the anchors give a quarter more than the game pays. The pace does not
-        // change, because it is the level that the players wait for.
-        $this->artisan('economy:simulate', ['--ruleset' => economyFile(['knobs', 'reward_mult'], 1.3)])
+        // Forty percent more profit makes the reward the anchors give a quarter more than the game pays. The pace does
+        // not change, because it is the level that the players wait for.
+        $this->artisan('economy:simulate', ['--ruleset' => economyFile(['knobs', 'reward_mult'], 1.4)])
             ->expectsOutputToContain('Pace gate: PASSED')
             ->expectsOutputToContain('numbers are off the anchors')
             ->assertExitCode(0);
     });
 
     it('fails on a number of the game that is off the anchors, when it is asked to be strict', function () {
-        $this->artisan('economy:simulate', ['--ruleset' => economyFile(['knobs', 'reward_mult'], 1.3), '--strict' => true])
+        $this->artisan('economy:simulate', ['--ruleset' => economyFile(['knobs', 'reward_mult'], 1.4), '--strict' => true])
             ->assertExitCode(1);
+    });
+
+    it('passes with --strict for the rules of the game as they are: every number agrees with the anchors', function () {
+        $this->artisan('economy:simulate', ['--strict' => true])
+            ->expectsOutputToContain('Pace gate: PASSED')
+            ->expectsOutputToContain('every number is within the anchors')
+            ->assertExitCode(0);
     });
 
     it('sets the numbers of the first track, the fuel and the parts of the pack against the anchors', function () {
@@ -150,8 +157,9 @@ describe('economy:simulate', function () {
             ->and($consistency['reward per lap'])->toMatchArray(['anchors' => 15.5, 'game' => 15.5, 'ok' => true])
             ->and($consistency['price of a liter of fuel']['ok'])->toBeTrue()
             ->and($consistency['price of street-tires-t2'])->toMatchArray(['anchors' => 570.0, 'game' => 570.0, 'ok' => true])
-            // The anchors say what a lap gives in experience; whether the game does is the report's business.
-            ->and($consistency['experience per lap']['anchors'])->toBe(1.875);
+            // The anchors give 90 XP an hour, which is 1.875 a lap, and the game gives 2, a whole number: a little more, and in order.
+            ->and($consistency['experience per lap'])->toMatchArray(['anchors' => 1.875, 'game' => 2.0, 'ok' => true])
+            ->and(collect($consistency)->every(static fn (array $number): bool => $number['ok']))->toBeTrue();
     });
 
     it('says plainly when the ruleset is not there', function () {

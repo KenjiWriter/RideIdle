@@ -64,7 +64,7 @@
       "base_lap_ms": 75000,
       "fuel_per_lap_ml": 1500,
       "reward_cents_per_lap": 1550,
-      "xp_per_lap": 25,
+      "xp_per_lap": 2,
       "demand": { "accel": 20, "top_speed": 15, "grip": 25, "handling": 25, "braking": 15 },
       "reference": { "accel": 97, "top_speed": 175, "grip": 90, "handling": 88, "braking": 90 }
     }

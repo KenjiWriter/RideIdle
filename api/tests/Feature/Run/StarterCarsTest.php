@@ -3,8 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use Illuminate\Testing\TestResponse;
 
-function getStarterCars(array $headers = []): Illuminate\Testing\TestResponse
+function getStarterCars(array $headers = []): TestResponse
 {
     return test()->getJson('/api/v1/starter-cars', [...bearerFor(User::factory()->guest()->create()), ...$headers]);
 }
@@ -32,7 +33,7 @@ it('describes a wreck and what it does on the starting track', function () {
         ->assertJsonPath('data.0.mass_kg', 1_000)
         ->assertJsonPath('data.0.top_speed_kmh', 175)
         ->assertJsonPath('data.0.tank_l', 45)
-        ->assertJsonPath('data.0.lap', ['weather' => 'dry', 'ms' => 75_000, 'cash_cents' => 1_550, 'xp' => 25, 'fuel_ml' => 1_500]);
+        ->assertJsonPath('data.0.lap', ['weather' => 'dry', 'ms' => 75_000, 'cash_cents' => 1_550, 'xp' => 2, 'fuel_ml' => 1_500]);
 });
 
 it('shows the numbers the car will drive, the same as when a run starts', function () {
