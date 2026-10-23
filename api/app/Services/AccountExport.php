@@ -11,6 +11,7 @@ use App\Models\LedgerEntry;
 use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\Settlement;
+use App\Models\TutorialProgress;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WorkshopJob;
@@ -99,6 +100,8 @@ final class AccountExport
                 ->map(fn (Part $part): array => $part->makeHidden(['user_id', 'car_id', 'mounted_slot'])->toArray())->all(),
             'workshop_jobs' => WorkshopJob::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (WorkshopJob $job): array => $job->makeHidden(['user_id'])->toArray())->all(),
+            'tutorial' => TutorialProgress::query()->where('user_id', $user->id)->orderBy('id')->get()
+                ->map(fn (TutorialProgress $step): array => $step->makeHidden(['id', 'user_id'])->toArray())->all(),
             'runs' => RaceRun::query()->where('user_id', $user->id)->orderBy('id')->get()->map(
                 fn (RaceRun $run): array => [
                     ...$run->makeHidden(['config', 'seed', 'user_id'])->toArray(),

@@ -12,6 +12,7 @@ use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
+use App\Models\TutorialProgress;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WorkshopJob;
@@ -304,6 +305,7 @@ function accountWithHistory(): User
     Part::factory()->state(['part_slug' => 'sport-exhaust-t2', 'slot' => 'exhaust'])->mountedOn($run->car)->create();
     $spare = Part::factory()->create(['user_id' => $user->id]);
     WorkshopJob::factory()->create(['user_id' => $user->id, 'car_id' => $run->car_id, 'part_id' => $spare->id]);
+    TutorialProgress::factory()->create(['user_id' => $user->id]);
 
     $settlement = Settlement::query()->create([
         'race_run_id' => $run->id,

@@ -49,7 +49,7 @@ describe('what is removed', function () {
         $removed = erasure()->erase($user);
 
         expect($removed)->toBe($before)
-            ->and($removed)->toMatchArray(['accounts' => 1, 'sign-ins' => 2, 'devices' => 1, 'wallets' => 1, 'cars' => 1, 'parts' => 2, 'workshop jobs' => 1, 'runs' => 1, 'settlements' => 1, 'settlement events' => 1, 'ledger entries' => 1]);
+            ->and($removed)->toMatchArray(['accounts' => 1, 'sign-ins' => 2, 'devices' => 1, 'wallets' => 1, 'cars' => 1, 'parts' => 2, 'workshop jobs' => 1, 'tutorial steps' => 1, 'runs' => 1, 'settlements' => 1, 'settlement events' => 1, 'ledger entries' => 1]);
     });
 
     it('leaves another account and everything of it as it was', function () {

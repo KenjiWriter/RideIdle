@@ -100,10 +100,18 @@ describe('what is exported', function () {
             ->and($game['workshop_jobs'][0])->toMatchArray(['kind' => 'mount', 'status' => 'queued']);
     });
 
+    it('has the steps of the tutorial that the driver reached', function () {
+        $game = (new AccountExport)->for(accountWithHistory())['game'];
+
+        expect($game['tutorial'])->toHaveCount(1)
+            ->and($game['tutorial'][0])->toMatchArray(['step_key' => 'first-lap', 'state' => 'active'])
+            ->and($game['tutorial'][0])->not->toHaveKeys(['id', 'user_id']);
+    });
+
     it('has an empty game for an account that never played', function () {
         $game = (new AccountExport)->for(User::factory()->guest()->create())['game'];
 
-        expect($game)->toBe(['wallet' => null, 'cars' => [], 'inventory' => [], 'workshop_jobs' => [], 'runs' => [], 'ledger' => []]);
+        expect($game)->toBe(['wallet' => null, 'cars' => [], 'inventory' => [], 'workshop_jobs' => [], 'tutorial' => [], 'runs' => [], 'ledger' => []]);
     });
 
     it('is only about the account, and never about another', function () {

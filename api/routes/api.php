@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\RunController;
 use App\Http\Controllers\Api\V1\ShopController;
 use App\Http\Controllers\Api\V1\SocialAuthController;
 use App\Http\Controllers\Api\V1\StarterCarController;
+use App\Http\Controllers\Api\V1\TutorialController;
 use App\Http\Middleware\TouchLastSeen;
 use App\Models\AccountIdentity;
 use Illuminate\Support\Facades\Route;
@@ -56,6 +57,10 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('/garage', [GarageController::class, 'show']);
         Route::post('/garage/jobs', [GarageController::class, 'queueJob']);
+
+        Route::get('/tutorial', [TutorialController::class, 'show']);
+        Route::post('/tutorial/reply', [TutorialController::class, 'reply']);
+        Route::post('/tutorial/skip', [TutorialController::class, 'skip']);
 
         Route::get('/shop', [ShopController::class, 'index']);
         Route::post('/shop/purchases', [ShopController::class, 'purchase']);
