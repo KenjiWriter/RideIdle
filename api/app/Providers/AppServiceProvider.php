@@ -7,8 +7,10 @@ use App\Content\Rules;
 use App\Services\Accounts;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -27,6 +29,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Apple is not one of the providers Socialite has built in.
+        Event::listen(function (SocialiteWasCalled $event): void {
+            $event->extendSocialite('apple', \SocialiteProviders\Apple\Provider::class);
+        });
+
         // Creating a guest is free, so it is limited per address.
         RateLimiter::for('guest-create', fn (Request $request) => Limit::perHour(10)->by((string) $request->ip()));
 

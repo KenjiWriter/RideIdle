@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AccountEmailController;
 use App\Http\Controllers\Api\V1\AccountRecoveryController;
+use App\Http\Controllers\Api\V1\AuthProviderController;
 use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PlayerController;
@@ -14,6 +15,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/meta/locales', [LocaleController::class, 'index']);
+
+    // The sign-ins with another service that are on.
+    Route::get('/auth/providers', [AuthProviderController::class, 'index']);
 
     // A new guest driver. Limited per address to make mass account creation expensive.
     Route::post('/players', [PlayerController::class, 'store'])->middleware('throttle:guest-create');
