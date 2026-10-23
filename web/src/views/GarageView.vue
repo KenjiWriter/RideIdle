@@ -79,7 +79,7 @@ const stopped = computed(() => run.run?.status === 'stopped')
     <template v-else>
       <AwaySummary v-if="run.away" :summary="run.away" :now-ms="run.run.server_time_ms" @dismiss="run.dismissAway()" />
 
-      <section class="card flex flex-col gap-4" aria-labelledby="run-title" data-test="run">
+      <section class="card" aria-labelledby="run-title" data-test="run">
         <div class="flex items-start justify-between gap-3">
           <div>
             <h1 id="run-title" class="text-3xl font-bold tracking-tight" data-test="car">{{ run.run.car.name }}</h1>
@@ -94,7 +94,7 @@ const stopped = computed(() => run.run?.status === 'stopped')
           </span>
         </div>
 
-        <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
+        <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
           <div>
             <dt class="text-sm text-muted">{{ t('run.stat.cash') }}</dt>
             <dd class="text-lg font-bold text-amber" data-test="cash">{{ money(run.wallet?.cash_cents ?? 0, 2) }}</dd>
@@ -119,7 +119,7 @@ const stopped = computed(() => run.run?.status === 'stopped')
 
         <p
           v-if="stopped && run.run.stop_reason"
-          class="rounded-lg border border-danger bg-surface-2 p-3 text-sm"
+          class="mt-4 rounded-lg border border-danger bg-surface-2 p-3 text-sm"
           role="status"
           data-test="banner"
         >
@@ -130,7 +130,7 @@ const stopped = computed(() => run.run?.status === 'stopped')
 
         <TowControl :run="run.run" />
 
-        <p v-if="towing" class="rounded-lg border border-amber bg-surface-2 p-3 text-sm" role="status" data-test="towing">
+        <p v-if="towing" class="mt-4 rounded-lg border border-amber bg-surface-2 p-3 text-sm" role="status" data-test="towing">
           {{ t('run.tow.underway', { time: formatDuration(towMs) }) }}
         </p>
       </section>

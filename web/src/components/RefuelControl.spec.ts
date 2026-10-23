@@ -90,7 +90,7 @@ describe('RefuelControl', () => {
     expect(wrapper.get('[data-test="refuel-done"]').text()).toBe('Added 30 l for $60.00.')
     expect(store.run?.fuel_ml).toBe(45_000)
     expect(store.wallet?.cash_cents).toBe(94_000)
-    expect(wrapper.get('[data-test="refuel-error"]').text()).toBe('')
+    expect(wrapper.find('[data-test="refuel-error"]').exists()).toBe(false)
   })
 
   it('lets the result go after a while, so it does not mislead later', async () => {
@@ -106,7 +106,7 @@ describe('RefuelControl', () => {
 
       await vi.advanceTimersByTimeAsync(FLASH_MS)
 
-      expect(wrapper.get('[data-test="refuel-done"]').text()).toBe('')
+      expect(wrapper.find('[data-test="refuel-done"]').exists()).toBe(false)
     } finally {
       vi.useRealTimers()
     }
@@ -152,7 +152,7 @@ describe('RefuelControl', () => {
     await flushPromises()
 
     expect(wrapper.get('[data-test="refuel-error"]').text()).toBe('Za mało gotówki.')
-    expect(wrapper.get('[data-test="refuel-done"]').text()).toBe('')
+    expect(wrapper.find('[data-test="refuel-done"]').exists()).toBe(false)
   })
 
   it('shows a general error when the server fails, and can try again', async () => {

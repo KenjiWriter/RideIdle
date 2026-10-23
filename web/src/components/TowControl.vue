@@ -49,8 +49,8 @@ async function tow(): Promise<void> {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3" data-test="tow">
-    <div v-if="offered && run.stop_reason" class="flex flex-col gap-3 rounded-lg border border-line bg-surface-2 p-3">
+  <div data-test="tow">
+    <div v-if="offered && run.stop_reason" class="mt-4 flex flex-col gap-3 rounded-lg border border-line bg-surface-2 p-3">
       <p class="text-sm" data-test="tow-offer">{{ t(`run.tow.${run.stop_reason}`, { time: wait }) }}</p>
       <div>
         <button type="button" class="btn btn-secondary" :disabled="busy" data-test="tow-button" @click="tow">
@@ -60,10 +60,10 @@ async function tow(): Promise<void> {
     </div>
 
     <div role="status" aria-live="polite">
-      <p v-if="notice" class="text-sm text-cyan" data-test="tow-notice">{{ notice }}</p>
+      <p v-if="notice" class="mt-3 text-sm text-cyan" data-test="tow-notice">{{ notice }}</p>
     </div>
     <div role="alert">
-      <p v-if="error" class="text-sm text-danger" data-test="tow-error">{{ error }}</p>
+      <p v-if="error" class="mt-3 text-sm text-danger" data-test="tow-error">{{ error }}</p>
     </div>
   </div>
 </template>

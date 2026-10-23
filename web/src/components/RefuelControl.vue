@@ -72,9 +72,9 @@ async function buy(amount: number | null): Promise<void> {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3" data-test="refuel">
+  <div data-test="refuel">
     <template v-if="missingMl > 0">
-      <div class="flex flex-wrap gap-3">
+      <div class="mt-3 flex flex-wrap gap-3">
         <button type="button" class="btn btn-primary" :disabled="busy || !canFill" data-test="refuel-full" @click="buy(null)">
           {{ busy ? t('run.refuel.busy') : t('run.refuel.full', { cost: money(fullCost, 2) }) }}
         </button>
@@ -89,12 +89,17 @@ async function buy(amount: number | null): Promise<void> {
           {{ t('run.refuel.partial', { liters: liters(affordableLiters), cost: money(affordableLiters * price, 2) }) }}
         </button>
       </div>
-      <p v-if="!canFill && affordableLiters < 1" class="text-sm text-muted" data-test="no-cash">{{ t('run.refuel.noCash') }}</p>
+      <p v-if="!canFill && affordableLiters < 1" class="mt-3 text-sm text-muted" data-test="no-cash">{{ t('run.refuel.noCash') }}</p>
     </template>
-    <p v-else class="text-sm text-muted" data-test="tank-full">{{ t('run.refuel.tankFull') }}</p>
+    <p v-else class="mt-3 text-sm text-muted" data-test="tank-full">{{ t('run.refuel.tankFull') }}</p>
 
-    <p class="text-xs text-muted" data-test="price">{{ t('run.refuel.price', { price: money(price, 2) }) }}</p>
-    <p class="min-h-5 text-sm text-cyan" role="status" data-test="refuel-done">{{ done }}</p>
-    <p class="min-h-5 text-sm text-danger" role="alert" data-test="refuel-error">{{ error }}</p>
+    <p class="mt-3 text-xs text-muted" data-test="price">{{ t('run.refuel.price', { price: money(price, 2) }) }}</p>
+    <!-- The regions stay in the page when empty, so what is put into them is announced. -->
+    <div role="status" aria-live="polite">
+      <p v-if="done" class="mt-3 text-sm text-cyan" data-test="refuel-done">{{ done }}</p>
+    </div>
+    <div role="alert">
+      <p v-if="error" class="mt-3 text-sm text-danger" data-test="refuel-error">{{ error }}</p>
+    </div>
   </div>
 </template>
