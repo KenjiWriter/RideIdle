@@ -12,17 +12,17 @@ import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
 import LinkAccountDialog from '@/components/LinkAccountDialog.vue'
 import LinkedAccounts from '@/components/LinkedAccounts.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
-import RepairControl from '@/components/RepairControl.vue'
-import TowControl from '@/components/TowControl.vue'
+import RunAlerts from '@/components/RunAlerts.vue'
 import TutorialOverlay from '@/components/TutorialOverlay.vue'
 import { carPicture } from '@/features/art'
 import { statFill } from '@/features/car/statFill'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { useFlash } from '@/features/run/useFlash'
+import { useRunStatus } from '@/features/run/useRunStatus'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
-import { formatDuration, formatLapTime } from '@/i18n/format'
+import { formatLapTime } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useGarageStore } from '@/stores/garage'
 import { useRunStore } from '@/stores/run'
@@ -97,16 +97,7 @@ watch(
   },
 )
 
-/**
- * A towed car is running, but its start is still in the future: the wait of the tow. Nothing else puts the cursor of
- * a run ahead of the clock of the server.
- */
-const towMs = computed(() => (run.run && run.run.status === 'running' ? Math.max(0, run.run.cursor_ms - run.run.server_time_ms) : 0))
-const towing = computed(() => towMs.value > 0)
-
-/** Why the car stands, that it is being towed, or that it is racing: the key of the status in the messages. */
-const statusKey = computed(() => (towing.value ? 'towed' : (run.run?.stop_reason ?? 'running')))
-const stopped = computed(() => run.run?.status === 'stopped')
+const { statusKey, chipClass } = useRunStatus()
 
 const car = computed(() => garage.garage?.car ?? null)
 const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking']
@@ -180,7 +171,7 @@ async function useCode(): Promise<void> {
           </div>
           <div class="flex flex-none flex-col items-end gap-1.5">
             <span v-if="car" class="chip chip-am" data-test="car-level">{{ t('garage.carLevel', { level: car.level }) }}</span>
-            <span class="chip" :class="stopped && run.run.stop_reason !== 'workshop' ? 'chip-bad' : stopped || towing ? 'chip-am' : 'chip-cy'" data-test="status">
+            <span class="chip" :class="chipClass" data-test="status">
               {{ t(`run.status.${statusKey}`) }}
             </span>
           </div>
@@ -215,17 +206,7 @@ async function useCode(): Promise<void> {
           </div>
         </dl>
 
-        <p v-if="stopped && run.run.stop_reason" class="card card-hi text-sm" role="status" data-test="banner">
-          {{ t(`run.banner.${run.run.stop_reason}`) }}
-        </p>
-
-        <RepairControl :run="run.run" />
-
-        <TowControl :run="run.run" />
-
-        <p v-if="towing" class="card card-hi text-sm" role="status" data-test="towing">
-          {{ t('run.tow.underway', { time: formatDuration(towMs) }) }}
-        </p>
+        <RunAlerts :run="run.run" />
       </section>
 
       <section v-if="car" class="flex flex-col gap-1" :aria-label="t('workshop.stats')" data-test="stats">
