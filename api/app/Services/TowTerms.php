@@ -39,8 +39,9 @@ final readonly class TowTerms
      */
     public function restartCostCents(RaceRun $run): ?int
     {
-        // A car that stands in the workshop is waiting for the mechanic, not for the driver: there is nothing to tow.
-        if ($run->status !== RaceRun::STATUS_STOPPED || $run->stop_reason === RaceRun::STOP_WORKSHOP) {
+        // A car that stands in the workshop or on the road is waiting for the mechanic or for the end of the journey, not for the driver:
+        // there is nothing to tow.
+        if ($run->status !== RaceRun::STATUS_STOPPED || in_array($run->stop_reason, RaceRun::SERVICE_STOPS, true)) {
             return null;
         }
 

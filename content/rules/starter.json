@@ -66,26 +66,73 @@
   },
   "regions": {
     "zlomowo": {
+      "name": {
+        "en": "Złomowo",
+        "pl": "Złomowo",
+        "fr": "Złomowo",
+        "de": "Złomowo",
+        "pt-BR": "Złomowo"
+      },
+      "map": { "x": 78, "y": 290 },
       "climate_seed": "region-zlomowo",
       "weather_ppm": { "dry": 500000, "cloudy": 250000, "rain": 170000, "downpour": 50000, "fog": 30000 }
     },
     "kruszyn": {
+      "name": {
+        "en": "Kruszyn",
+        "pl": "Kruszyn",
+        "fr": "Kruszyn",
+        "de": "Kruszyn",
+        "pt-BR": "Kruszyn"
+      },
+      "map": { "x": 196, "y": 185 },
       "climate_seed": "region-kruszyn",
       "weather_ppm": { "dry": 550000, "cloudy": 200000, "rain": 180000, "downpour": 50000, "fog": 20000 }
     },
     "suchy-pas": {
+      "name": {
+        "en": "Suchy Pas",
+        "pl": "Suchy Pas",
+        "fr": "Suchy Pas",
+        "de": "Suchy Pas",
+        "pt-BR": "Suchy Pas"
+      },
+      "map": { "x": 312, "y": 280 },
       "climate_seed": "region-suchy-pas",
       "weather_ppm": { "dry": 800000, "cloudy": 150000, "rain": 40000, "fog": 10000 }
     },
     "wilcza-przelecz": {
+      "name": {
+        "en": "Wilcza Pass",
+        "pl": "Wilcza Przełęcz",
+        "fr": "Col de Wilcza",
+        "de": "Wilcza-Pass",
+        "pt-BR": "Passo Wilcza"
+      },
+      "map": { "x": 292, "y": 104 },
       "climate_seed": "region-wilcza-przelecz",
       "weather_ppm": { "dry": 250000, "cloudy": 250000, "rain": 250000, "downpour": 80000, "fog": 120000, "snow": 50000 }
     },
     "autodrom": {
+      "name": {
+        "en": "Autodrome",
+        "pl": "Autodrom",
+        "fr": "Autodrome",
+        "de": "Autodrom",
+        "pt-BR": "Autódromo"
+      },
+      "map": { "x": 90, "y": 110 },
       "climate_seed": "region-autodrom",
       "weather_ppm": { "dry": 550000, "cloudy": 220000, "rain": 180000, "downpour": 50000 }
     }
   },
+  "roads": [
+    { "from": "zlomowo", "to": "kruszyn", "km": 38 },
+    { "from": "kruszyn", "to": "suchy-pas", "km": 23 },
+    { "from": "kruszyn", "to": "wilcza-przelecz", "km": 14 },
+    { "from": "kruszyn", "to": "autodrom", "km": 30 }
+  ],
+  "travel": { "speed_share_ppm": 500000, "fuel_ml_per_km": 60 },
   "tracks": {
     "zlomowo-street": {
       "name": {

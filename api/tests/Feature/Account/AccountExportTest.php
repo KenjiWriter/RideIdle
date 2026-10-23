@@ -111,7 +111,7 @@ describe('what is exported', function () {
     it('has an empty game for an account that never played', function () {
         $game = (new AccountExport)->for(User::factory()->guest()->create())['game'];
 
-        expect($game)->toBe(['wallet' => null, 'cars' => [], 'inventory' => [], 'workshop_jobs' => [], 'tutorial' => [], 'runs' => [], 'ledger' => []]);
+        expect($game)->toBe(['wallet' => null, 'cars' => [], 'inventory' => [], 'workshop_jobs' => [], 'travels' => [], 'tutorial' => [], 'runs' => [], 'ledger' => []]);
     });
 
     it('is only about the account, and never about another', function () {

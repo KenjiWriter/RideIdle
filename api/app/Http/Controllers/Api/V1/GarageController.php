@@ -61,6 +61,7 @@ final class GarageController extends Controller
         ]);
 
         $userId = (int) $request->user()->getAuthIdentifier();
+        $this->workshop->advance($userId);
         $this->workshop->queue($userId, $data['kind'], $data['part']);
 
         return $this->respond($userId, 201);

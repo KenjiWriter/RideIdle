@@ -40,6 +40,10 @@ function rulesSchemaErrors(array $rules): array
         $data->shop->parts = array_values((array) $data->shop->parts);
     }
 
+    if (isset($data->roads) && is_object($data->roads)) {
+        $data->roads = array_values((array) $data->roads);
+    }
+
     $outcome = $validator->validate($data, 'https://rideidle.local/schema/rules.schema.json');
 
     return $outcome->isValid() ? [] : (new ErrorFormatter)->formatKeyed($outcome->error());

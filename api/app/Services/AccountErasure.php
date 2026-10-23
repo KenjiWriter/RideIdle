@@ -12,6 +12,7 @@ use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
+use App\Models\Travel;
 use App\Models\TutorialProgress;
 use App\Models\User;
 use App\Models\Wallet;
@@ -56,6 +57,7 @@ final class AccountErasure
             'cars' => Car::query()->where('user_id', $user->id)->count(),
             'parts' => Part::query()->where('user_id', $user->id)->count(),
             'workshop jobs' => WorkshopJob::query()->where('user_id', $user->id)->count(),
+            'travels' => Travel::query()->where('user_id', $user->id)->count(),
             'tutorial steps' => TutorialProgress::query()->where('user_id', $user->id)->count(),
             'runs' => $runs->count(),
             'settlements' => $settlements->count(),
@@ -88,6 +90,7 @@ final class AccountErasure
             SettlementEvent::query()->whereIn('settlement_id', $settlements)->delete();
             LedgerEntry::query()->where('user_id', $user->id)->delete();
             Settlement::query()->whereIn('race_run_id', $runs)->delete();
+            Travel::query()->where('user_id', $user->id)->delete();
             RaceRun::query()->where('user_id', $user->id)->delete();
             WorkshopJob::query()->where('user_id', $user->id)->delete();
             TutorialProgress::query()->where('user_id', $user->id)->delete();

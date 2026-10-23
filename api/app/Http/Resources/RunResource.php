@@ -15,6 +15,7 @@ use App\Domain\Settlement\RunConfig;
 use App\Domain\Settlement\Settler;
 use App\Models\RaceRun;
 use App\Services\RunService;
+use App\Services\Travel;
 use App\Support\I18nText;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -46,10 +47,13 @@ final class RunResource extends JsonResource
             ],
             'track' => [
                 'slug' => $this->track_slug,
+                'region' => $track['region'] ?? null,
                 'name' => $track !== null ? I18nText::from($track['name'])->for() : $this->track_slug,
             ],
             'status' => $this->status,
             'stop_reason' => $this->stop_reason,
+            // The journey the car is on, when it stands on the road between two cities.
+            'travel' => $this->stop_reason === RaceRun::STOP_TRAVEL ? $this->travel() : null,
             'laps_done' => $this->laps_done,
             'fuel_ml' => $this->fuel_ml,
             'tank_ml' => $vehicle !== null ? app(RunInputsFactory::class)->tankMl($this->car_slug, $this->car?->mountedSlugs() ?? []) : null,
@@ -94,6 +98,19 @@ final class RunResource extends JsonResource
             'ends_ms' => ($segment + 1) * Settler::SEGMENT_MS,
             'next' => $config->weather->at($segment + 1),
             'forecast' => $this->forecast($config, $segment),
+        ];
+    }
+
+    /** @return array{from: string, to: string, start_ms: int, arrive_ms: int}|null */
+    private function travel(): ?array
+    {
+        $journey = app(Travel::class)->active($this->user_id);
+
+        return $journey === null ? null : [
+            'from' => $journey->from_region,
+            'to' => $journey->to_region,
+            'start_ms' => $journey->start_ms,
+            'arrive_ms' => $journey->arrive_ms,
         ];
     }
 

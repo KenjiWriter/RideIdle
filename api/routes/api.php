@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\ShopController;
 use App\Http\Controllers\Api\V1\SocialAuthController;
 use App\Http\Controllers\Api\V1\StarterCarController;
 use App\Http\Controllers\Api\V1\TutorialController;
+use App\Http\Controllers\Api\V1\WorldController;
 use App\Http\Middleware\TouchLastSeen;
 use App\Models\AccountIdentity;
 use Illuminate\Support\Facades\Route;
@@ -54,6 +55,9 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/account/identities/{provider}/start', [SocialAuthController::class, 'startLink'])->whereIn('provider', AccountIdentity::SOCIAL)->middleware('throttle:account-oauth-start');
 
         Route::get('/starter-cars', StarterCarController::class);
+
+        Route::get('/map', [WorldController::class, 'show']);
+        Route::post('/travel', [WorldController::class, 'travel']);
 
         Route::get('/garage', [GarageController::class, 'show']);
         Route::post('/garage/jobs', [GarageController::class, 'queueJob']);

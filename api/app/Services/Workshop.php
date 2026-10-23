@@ -37,6 +37,7 @@ final class Workshop
         private readonly Catalog $catalog,
         private readonly RunInputsFactory $inputs,
         private readonly Garage $garage,
+        private readonly Travel $travel,
     ) {}
 
     /**
@@ -45,6 +46,10 @@ final class Workshop
      */
     public function advance(int $userId, ?int $nowMs = null): void
     {
+        // Everything that is lazy about a car is brought up to date from here: an arrival that is due is carried out too, so that a
+        // car that has just come to a city is there before anything settles it or queues a job on it.
+        $this->travel->advance($userId, $nowMs);
+
         if (! $this->hasPendingJobs($userId)) {
             return;
         }
@@ -68,6 +73,10 @@ final class Workshop
         return $this->locked($userId, $nowMs, function (?RaceRun $run, int $now) use ($userId, $kind, $partId): array {
             // What is due comes first, so the parts and the car are as they are now.
             $this->advanceLocked($userId, $run, $now);
+
+            if ($run?->stop_reason === RaceRun::STOP_TRAVEL) {
+                throw new RuleRefusedException('car_travelling');
+            }
 
             $car = $this->garage->carOf($userId) ?? throw new RuleRefusedException('no_car');
             $part = Part::query()->where('user_id', $userId)->lockForUpdate()->find($partId) ?? throw new RuleRefusedException('part_not_found');

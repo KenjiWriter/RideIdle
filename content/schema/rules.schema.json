@@ -178,6 +178,14 @@
       "additionalProperties": {
         "type": "object",
         "properties": {
+          "name": { "description": "The name of the city of this region, as the map shows it.", "$ref": "common.schema.json#/$defs/i18n" },
+          "map": {
+            "description": "Where the city is on the map, in the 390 by 716 units of the board (Mapa).",
+            "type": "object",
+            "properties": { "x": { "type": "integer", "minimum": 0, "maximum": 390 }, "y": { "type": "integer", "minimum": 0, "maximum": 716 } },
+            "required": ["x", "y"],
+            "additionalProperties": false
+          },
           "climate_seed": { "type": "string", "minLength": 1 },
           "weather_ppm": {
             "description": "Chance of every weather in a 22.5 minute segment, adding up to 1 000 000.",
@@ -186,9 +194,34 @@
             "additionalProperties": { "type": "integer", "minimum": 1, "maximum": 1000000 }
           }
         },
-        "required": ["climate_seed", "weather_ppm"],
+        "required": ["name", "map", "climate_seed", "weather_ppm"],
         "additionalProperties": false
       }
+    },
+    "roads": {
+      "description": "The roads between the cities (the regions): a car travels along them, and the way is the shortest one.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "from": { "$ref": "common.schema.json#/$defs/slug" },
+          "to": { "$ref": "common.schema.json#/$defs/slug" },
+          "km": { "type": "integer", "minimum": 1 }
+        },
+        "required": ["from", "to", "km"],
+        "additionalProperties": false
+      }
+    },
+    "travel": {
+      "description": "What a journey costs a car: it drives a share of its top speed on average, and burns fuel by the kilometre (times the thirst of the car).",
+      "type": "object",
+      "properties": {
+        "speed_share_ppm": { "description": "The average speed on the road as a share of the top speed of the car.", "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "fuel_ml_per_km": { "description": "The fuel of a kilometre for a car of the thirst of the track fuel use (1.0).", "type": "integer", "minimum": 1 }
+      },
+      "required": ["speed_share_ppm", "fuel_ml_per_km"],
+      "additionalProperties": false
     },
     "tracks": {
       "type": "object",
@@ -226,7 +259,7 @@
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "tracks"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks"],
   "additionalProperties": false,
   "$defs": {
     "surfaces": {

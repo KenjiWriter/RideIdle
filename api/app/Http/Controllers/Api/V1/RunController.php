@@ -113,6 +113,11 @@ final class RunController extends Controller
 
         $this->assertTrackOpen((int) $request->user()->getAuthIdentifier(), $data['track']);
 
+        // Another city is reached by a journey, which takes time and fuel, not by a change of the track.
+        if ($this->rules->track($data['track'])['region'] !== $this->rules->track($found->track_slug)['region']) {
+            throw new RuleRefusedException('track_elsewhere');
+        }
+
         $changed = $this->runs->reconfigure($found->id, $this->inputs->make($found->car_slug, $data['track'], $this->mountedOn($found)), trackSlug: $data['track']);
 
         return $this->respond($changed);

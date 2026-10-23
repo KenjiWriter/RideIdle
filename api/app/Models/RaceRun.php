@@ -23,6 +23,12 @@ class RaceRun extends Model
     /** The car stands in the workshop while a job on it is in progress. The other stop reasons are events of settlement. */
     public const STOP_WORKSHOP = 'workshop';
 
+    /** The car is on the road between two cities. */
+    public const STOP_TRAVEL = 'travel';
+
+    /** The stops that a service puts on a car, not the road or the tank: nothing settles past them, and nothing but the service ends them. */
+    public const SERVICE_STOPS = [self::STOP_WORKSHOP, self::STOP_TRAVEL];
+
     protected $guarded = [];
 
     /** @return array<string, string> */

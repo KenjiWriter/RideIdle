@@ -157,6 +157,54 @@ final class Rules
         return $this->data['clock']['night_lap_ppm'];
     }
 
+    /** @return array<string, array<string, mixed>> the regions of the rules: the cities of the map, with their climate */
+    public function regions(): array
+    {
+        return $this->data['regions'];
+    }
+
+    /** The region of the first track of the rules: where a new driver starts, and where the map begins. */
+    public function homeRegion(): string
+    {
+        return (string) $this->track($this->startingTrack())['region'];
+    }
+
+    /**
+     * The tracks of a city, in the order of the rules: the first of them is the one a car drives on when it arrives.
+     *
+     * @return list<string>
+     */
+    public function tracksOf(string $region): array
+    {
+        return array_keys(array_filter($this->data['tracks'], static fn (array $track): bool => $track['region'] === $region));
+    }
+
+    /** The level of the driver from which a city is open: the lowest level of its tracks. */
+    public function cityMinPlayerLevel(string $region): int
+    {
+        $levels = array_map(fn (string $track): int => $this->trackMinPlayerLevel($track), $this->tracksOf($region));
+
+        return $levels === [] ? throw new \InvalidArgumentException("The city {$region} has no track.") : min($levels);
+    }
+
+    /** @return list<array{from: string, to: string, km: int}> */
+    public function roads(): array
+    {
+        return $this->data['roads'];
+    }
+
+    /** The average speed of a journey as a share of the top speed of the car, in ppm. */
+    public function travelSpeedSharePpm(): int
+    {
+        return $this->data['travel']['speed_share_ppm'];
+    }
+
+    /** The fuel a kilometre of the road takes from a car of the fuel use of the track, in ml. */
+    public function travelFuelMlPerKm(): int
+    {
+        return $this->data['travel']['fuel_ml_per_km'];
+    }
+
     /** The level of the driver from which a track is open. */
     public function trackMinPlayerLevel(string $slug): int
     {
