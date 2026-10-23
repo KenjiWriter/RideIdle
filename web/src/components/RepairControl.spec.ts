@@ -6,6 +6,7 @@ import { defineComponent, h } from 'vue'
 import type { Run } from '@/api/types'
 import { readToken, storeToken } from '@/auth/token'
 import { i18n, setLocale } from '@/i18n'
+import { FLASH_MS } from '@/features/run/useFlash'
 import { useRunStore } from '@/stores/run'
 import { respond } from '@/test/fetchServer'
 
@@ -106,6 +107,25 @@ describe('RepairControl', () => {
     expect(store.wallet?.cash_cents).toBe(97_000)
     expect(wrapper.find('[data-test="repair-button"]').exists()).toBe(false)
     expect(wrapper.get('[data-test="repair-done"]').text()).toBe('Repaired for $30.00. The car is back on the track.')
+  })
+
+  it('lets the result go after a while, so it does not mislead later', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+
+    try {
+      const { wrapper } = show(aRun(), 100_000)
+      fetchMock.mockResolvedValue(answer(aRun({ status: 'running', stop_reason: null, state_version: 3 }), 97_000, { repaired: true, cost_cents: 3_000, repeated: false }))
+
+      await wrapper.get('[data-test="repair-button"]').trigger('click')
+      await flushPromises()
+      expect(wrapper.find('[data-test="repair-done"]').exists()).toBe(true)
+
+      await vi.advanceTimersByTimeAsync(FLASH_MS)
+
+      expect(wrapper.find('[data-test="repair-done"]').exists()).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('does not claim the car is back on the track when the tank is empty', async () => {

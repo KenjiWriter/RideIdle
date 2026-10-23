@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
 import type { Run } from '@/api/types'
+import { useFlash } from '@/features/run/useFlash'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { useFormat } from '@/i18n/useFormat'
 import { useRunStore } from '@/stores/run'
@@ -15,7 +16,7 @@ const { money } = useFormat()
 const store = useRunStore()
 
 const busy = ref(false)
-const done = ref<string | null>(null)
+const { message: done, show: showDone, clear: clearDone } = useFlash()
 const error = ref<string | null>(null)
 
 const broken = computed(() => props.run.status === 'stopped' && props.run.stop_reason === 'breakdown')
@@ -28,17 +29,19 @@ async function repair(): Promise<void> {
   }
 
   busy.value = true
-  done.value = null
+  clearDone()
   error.value = null
 
   try {
     const result = await store.repair()
 
-    done.value = result.repeated
-      ? t('run.repair.repeated')
-      : !result.repaired
-        ? t('run.repair.notNeeded')
-        : t(store.run?.status === 'running' ? 'run.repair.doneRunning' : 'run.repair.done', { cost: money(result.cost_cents, 2) })
+    showDone(
+      result.repeated
+        ? t('run.repair.repeated')
+        : !result.repaired
+          ? t('run.repair.notNeeded')
+          : t(store.run?.status === 'running' ? 'run.repair.doneRunning' : 'run.repair.done', { cost: money(result.cost_cents, 2) }),
+    )
   } catch (failure) {
     if (endSessionIfUnauthorized(failure)) {
       return

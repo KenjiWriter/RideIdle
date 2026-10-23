@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Run } from '@/api/types'
 import { readToken, storeToken } from '@/auth/token'
 import { i18n, setLocale } from '@/i18n'
+import { FLASH_MS } from '@/features/run/useFlash'
 import { useRunStore } from '@/stores/run'
 import { respond } from '@/test/fetchServer'
 
@@ -90,6 +91,25 @@ describe('RefuelControl', () => {
     expect(store.run?.fuel_ml).toBe(45_000)
     expect(store.wallet?.cash_cents).toBe(94_000)
     expect(wrapper.get('[data-test="refuel-error"]').text()).toBe('')
+  })
+
+  it('lets the result go after a while, so it does not mislead later', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+
+    try {
+      const { wrapper } = show(aRun(), 100_000)
+      fetchMock.mockResolvedValue(answer(aRun({ fuel_ml: 45_000, state_version: 3 }), 94_000, { added_ml: 30_000, cost_cents: 6_000, repeated: false }))
+
+      await wrapper.get('[data-test="refuel-full"]').trigger('click')
+      await flushPromises()
+      expect(wrapper.get('[data-test="refuel-done"]').text()).toBe('Added 30 l for $60.00.')
+
+      await vi.advanceTimersByTimeAsync(FLASH_MS)
+
+      expect(wrapper.get('[data-test="refuel-done"]').text()).toBe('')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('offers what the driver can afford when a full tank is too dear', async () => {

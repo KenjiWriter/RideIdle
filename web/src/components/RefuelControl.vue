@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
 import type { Run } from '@/api/types'
+import { useFlash } from '@/features/run/useFlash'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { useFormat } from '@/i18n/useFormat'
 import { useRunStore } from '@/stores/run'
@@ -15,7 +16,7 @@ const { money, number } = useFormat()
 const store = useRunStore()
 
 const busy = ref(false)
-const done = ref<string | null>(null)
+const { message: done, show: showDone, clear: clearDone } = useFlash()
 const error = ref<string | null>(null)
 
 const price = computed(() => props.run.prices.fuel_cents_per_liter)
@@ -39,17 +40,19 @@ async function buy(amount: number | null): Promise<void> {
   }
 
   busy.value = true
-  done.value = null
+  clearDone()
   error.value = null
 
   try {
     const result = await store.refuel(amount)
 
-    done.value = result.repeated
-      ? t('run.refuel.repeated')
-      : result.added_ml > 0
-        ? t('run.refuel.done', { liters: liters(result.added_ml / 1000), cost: money(result.cost_cents, 2) })
-        : t('run.refuel.nothing')
+    showDone(
+      result.repeated
+        ? t('run.refuel.repeated')
+        : result.added_ml > 0
+          ? t('run.refuel.done', { liters: liters(result.added_ml / 1000), cost: money(result.cost_cents, 2) })
+          : t('run.refuel.nothing'),
+    )
   } catch (failure) {
     if (endSessionIfUnauthorized(failure)) {
       return
