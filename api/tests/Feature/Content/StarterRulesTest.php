@@ -202,3 +202,17 @@ it('is refused by the schema when the workshop lacks a time or the shop sells a 
     unset($rules['car']);
     expect(rulesSchemaErrors($rules))->not->toBe([]);
 });
+
+it('computes the time of a job of the workshop in whole milliseconds', function () {
+    $rules = Rules::fromArray(starterRules());
+
+    // Base time of the slot at tier 1, times the tier, cut by 2% for the mechanic of level 1.
+    expect($rules->workshopJobMs('tires', 3))->toBe(352_800)
+        ->and($rules->workshopJobMs('tires', 3, removal: true))->toBe(211_680)
+        ->and($rules->workshopJobMs('suspension', 1))->toBe(166_600)
+        ->and($rules->mechanic())->toBe(['level' => 1, 'time_cut_ppm' => 20_000])
+        ->and($rules->requiredCarLevel(1))->toBe(0)
+        ->and($rules->requiredCarLevel(2))->toBe(3)
+        ->and($rules->requiredCarLevel(3))->toBe(6)
+        ->and(fn () => $rules->workshopJobMs('wings', 1))->toThrow(InvalidArgumentException::class);
+});

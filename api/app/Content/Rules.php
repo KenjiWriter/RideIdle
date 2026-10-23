@@ -97,6 +97,21 @@ final class Rules
         return $this->data['shop']['parts'];
     }
 
+    /**
+     * The mechanic of the workshop: the level and how much of the time of every job it cuts, in ppm.
+     *
+     * @return array{level: int, time_cut_ppm: int}
+     */
+    public function mechanic(): array
+    {
+        $workshop = $this->data['workshop'];
+
+        return [
+            'level' => $workshop['mechanic_level'],
+            'time_cut_ppm' => min(Ppm::ONE - 1, $workshop['time_cut_ppm_per_level'] * $workshop['mechanic_level']),
+        ];
+    }
+
     /** How many jobs fit in the queue of the workshop, the one in progress included. */
     public function workshopMaxQueue(): int
     {
@@ -112,8 +127,7 @@ final class Rules
         $workshop = $this->data['workshop'];
         $base = $workshop['base_time_ms'][$slot] ?? throw new \InvalidArgumentException("The workshop has no time for the slot {$slot}.");
 
-        $cut = min(Ppm::ONE - 1, $workshop['time_cut_ppm_per_level'] * $workshop['mechanic_level']);
-        $ms = Ppm::mul($base * $tier, Ppm::ONE - $cut);
+        $ms = Ppm::mul($base * $tier, Ppm::ONE - $this->mechanic()['time_cut_ppm']);
 
         return max(1, $removal ? Ppm::mul($ms, $workshop['removal_ppm']) : $ms);
     }

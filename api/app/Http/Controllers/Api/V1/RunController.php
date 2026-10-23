@@ -15,6 +15,7 @@ use App\Models\Settlement;
 use App\Models\Wallet;
 use App\Services\RunService;
 use App\Services\TowTerms;
+use App\Services\Workshop;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -35,8 +36,8 @@ final class RunController extends Controller
         private readonly Catalog $catalog,
         private readonly Rules $rules,
         private readonly RunInputsFactory $inputs,
-    ) {
-    }
+        private readonly Workshop $workshop,
+    ) {}
 
     /** Starts the run of the driver: one of the starter wrecks on a track, with a full tank. */
     public function store(Request $request): JsonResponse
@@ -78,7 +79,7 @@ final class RunController extends Controller
         $refueled = $this->runs->refuel(
             $found->id,
             $data['request_id'],
-            $this->inputs->tankMl($found->car_slug),
+            $this->inputs->tankMl($found->car_slug, $this->mountedOn($found)),
             $this->rules->fuelPriceCentsPerLiter(),
             isset($data['liters']) ? $data['liters'] * 1000 : null,
         );
@@ -105,7 +106,7 @@ final class RunController extends Controller
             'track' => ['required', 'string', Rule::in(array_keys($this->rules->tracks()))],
         ]);
 
-        $changed = $this->runs->reconfigure($found->id, $this->inputs->make($found->car_slug, $data['track']), trackSlug: $data['track']);
+        $changed = $this->runs->reconfigure($found->id, $this->inputs->make($found->car_slug, $data['track'], $this->mountedOn($found)), trackSlug: $data['track']);
 
         return $this->respond($changed);
     }
@@ -130,7 +131,7 @@ final class RunController extends Controller
 
         $repaired = $this->runs->repair(
             $found->id,
-            $this->inputs->make($found->car_slug, $found->track_slug),
+            $this->inputs->make($found->car_slug, $found->track_slug, $this->mountedOn($found)),
             costCents: $this->rules->repairCostCents(),
             requestId: $data['request_id'],
         );
@@ -154,7 +155,7 @@ final class RunController extends Controller
             return $this->noRun();
         }
 
-        $towed = $this->runs->tow($found->id, $this->inputs->make($found->car_slug, $found->track_slug), TowTerms::fromRules($this->rules));
+        $towed = $this->runs->tow($found->id, $this->inputs->make($found->car_slug, $found->track_slug, $this->mountedOn($found)), TowTerms::fromRules($this->rules));
 
         return $this->respond($towed->run, 200, ['towed' => $towed->towed]);
     }
@@ -162,6 +163,8 @@ final class RunController extends Controller
     /** The run of the driver, settled up to now. */
     public function current(Request $request): JsonResponse
     {
+        $this->workshop->advance((int) $request->user()->getAuthIdentifier());
+
         $run = RaceRun::query()->where('user_id', $request->user()->getAuthIdentifier())->orderByDesc('id')->first();
 
         return $run === null ? $this->noRun() : $this->summary($request, $run);
@@ -175,10 +178,25 @@ final class RunController extends Controller
         return $found === null ? $this->noRun() : $this->summary($request, $found);
     }
 
-    /** A run by id, but only if it is the driver's own: another driver's run is as good as not there. */
+    /**
+     * A run by id, but only if it is the driver's own: another driver's run is as good as not there. What is due in the
+     * workshop is carried out first, so that nothing settles the run past the moment a job started.
+     */
     private function ownRun(Request $request, int $id): ?RaceRun
     {
+        $this->workshop->advance((int) $request->user()->getAuthIdentifier());
+
         return RaceRun::query()->where('user_id', $request->user()->getAuthIdentifier())->find($id);
+    }
+
+    /**
+     * The parts on the car of the run, by slot.
+     *
+     * @return array<string, string>
+     */
+    private function mountedOn(RaceRun $run): array
+    {
+        return $run->car?->mountedSlugs() ?? [];
     }
 
     /**

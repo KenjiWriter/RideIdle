@@ -41,7 +41,7 @@ final class RunResource extends JsonResource
             'stop_reason' => $this->stop_reason,
             'laps_done' => $this->laps_done,
             'fuel_ml' => $this->fuel_ml,
-            'tank_ml' => $vehicle !== null ? app(RunInputsFactory::class)->tankMl($this->car_slug) : null,
+            'tank_ml' => $vehicle !== null ? app(RunInputsFactory::class)->tankMl($this->car_slug, $this->car?->mountedSlugs() ?? []) : null,
             'cursor_ms' => $this->cursor_ms,
             'state_version' => $this->state_version,
             // What the actions of the run cost, so a button can say it before it is pressed.

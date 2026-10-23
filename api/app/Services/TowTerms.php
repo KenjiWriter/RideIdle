@@ -25,8 +25,7 @@ final readonly class TowTerms
         public int $delayMs,
         /** Laps of fuel left in a tank that was too empty for a lap. */
         public int $fuelLaps,
-    ) {
-    }
+    ) {}
 
     public static function fromRules(Rules $rules): self
     {
@@ -40,7 +39,8 @@ final readonly class TowTerms
      */
     public function restartCostCents(RaceRun $run): ?int
     {
-        if ($run->status !== RaceRun::STATUS_STOPPED) {
+        // A car that stands in the workshop is waiting for the mechanic, not for the driver: there is nothing to tow.
+        if ($run->status !== RaceRun::STATUS_STOPPED || $run->stop_reason === RaceRun::STOP_WORKSHOP) {
             return null;
         }
 

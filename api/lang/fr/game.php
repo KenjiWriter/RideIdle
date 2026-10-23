@@ -16,6 +16,7 @@ return [
         'part_mounted' => 'Cette pièce est déjà montée sur la voiture.',
         'part_not_mounted' => 'Cette pièce n’est pas montée sur la voiture.',
         'queue_full' => 'La file d’attente de l’atelier est pleine.',
+        'slot_busy' => 'Une autre pièce pour cet emplacement attend déjà à l’atelier.',
         'no_car' => 'Vous n’avez pas encore de voiture.',
         'request_reused' => 'Cette requête a déjà été utilisée pour autre chose.',
     ],

@@ -298,7 +298,8 @@ final class RunService
             $fuelPerLap = (int) $run->config['fuel_per_lap_ml'];
             $fuel = $run->fuel_ml + $added;
             $wasStanding = $run->status === RaceRun::STATUS_STOPPED || $run->fuel_ml < $fuelPerLap;
-            $drivesAgain = $wasStanding && $fuel >= $fuelPerLap && $run->stop_reason !== EventType::Breakdown->value;
+            $drivesAgain = $wasStanding && $fuel >= $fuelPerLap
+                && ! in_array($run->stop_reason, [EventType::Breakdown->value, RaceRun::STOP_WORKSHOP], true);
 
             $run->forceFill([
                 'fuel_ml' => $fuel,
@@ -313,6 +314,52 @@ final class RunService
     }
 
     /**
+     * The car goes into the workshop at `$atMs`, with the run already locked (see Workshop): what it earned until then is
+     * paid with the old configuration, and then it stands, stopped for the workshop, until the last job on it is done.
+     * A car that stands for another reason already (a breakdown, an empty tank) keeps that reason.
+     */
+    public function enterWorkshop(RaceRun $run, int $atMs): void
+    {
+        if ($run->status === RaceRun::STATUS_STOPPED) {
+            return;
+        }
+
+        $this->settleLocked($run, $atMs);
+
+        // The settlement may have stopped it (the tank ran out, it broke down) before the time came.
+        if ($run->status === RaceRun::STATUS_STOPPED) {
+            return;
+        }
+
+        $run->forceFill([
+            'status' => RaceRun::STATUS_STOPPED,
+            'stop_reason' => RaceRun::STOP_WORKSHOP,
+            'state_version' => $run->state_version + 1,
+        ])->save();
+    }
+
+    /**
+     * The last job on the car is done at `$atMs`, with the run already locked: the configuration is frozen again with the
+     * parts that are on it now (same seed, so the planned breakdown does not move) and a car that stood for the workshop
+     * drives again from `$atMs`. A car that stands for another reason is only reconfigured.
+     */
+    public function leaveWorkshop(RaceRun $run, RunInputs $inputs, int $atMs): void
+    {
+        $frozen = $this->freezer->freeze($inputs, $run->seed, $run->laps_done);
+        $resumes = $run->stop_reason === RaceRun::STOP_WORKSHOP;
+
+        $run->forceFill([
+            'config' => $frozen->config,
+            'break_after_laps' => $frozen->breakAfterLaps,
+            'ruleset_version' => $this->rulesetVersion(),
+            'status' => $resumes ? RaceRun::STATUS_RUNNING : $run->status,
+            'stop_reason' => $resumes ? null : $run->stop_reason,
+            'cursor_ms' => $resumes ? max($run->cursor_ms, $atMs) : $run->cursor_ms,
+            'state_version' => $run->state_version + 1,
+        ])->save();
+    }
+
+    /**
      * Settles a run that is already locked (the wallet of its driver first, then the run).
      * Other services that change a run call this before they touch it.
      */
@@ -321,7 +368,11 @@ final class RunService
         $state = new RunState($run->cursor_ms, $run->laps_done, $run->fuel_ml, $run->break_after_laps);
         $config = FrozenRun::configFromArray($run->config);
 
-        $result = $this->settler->settleInChunks($state, $nowMs, $config);
+        // A car in the workshop earns nothing: for settlement no time passes until it leaves, and then it drives from the
+        // moment it leaves. (A breakdown and an empty tank stop the run inside the settlement; this stop is not an event of it.)
+        $until = $run->stop_reason === RaceRun::STOP_WORKSHOP ? $run->cursor_ms : $nowMs;
+
+        $result = $this->settler->settleInChunks($state, $until, $config);
 
         if ($result->isEmpty()) {
             return new Settled($result, null);

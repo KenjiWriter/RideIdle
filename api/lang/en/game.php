@@ -16,6 +16,7 @@ return [
         'part_mounted' => 'This part is already on the car.',
         'part_not_mounted' => 'This part is not on the car.',
         'queue_full' => 'The workshop queue is full.',
+        'slot_busy' => 'Another part for this slot is already waiting in the workshop.',
         'no_car' => 'You have no car yet.',
         'request_reused' => 'This request was already used for something else.',
     ],

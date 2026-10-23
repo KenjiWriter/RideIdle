@@ -16,6 +16,7 @@ return [
         'part_mounted' => 'Esta peça já está montada no carro.',
         'part_not_mounted' => 'Esta peça não está montada no carro.',
         'queue_full' => 'A fila da oficina está cheia.',
+        'slot_busy' => 'Outra peça para este espaço já está aguardando na oficina.',
         'no_car' => 'Você ainda não tem um carro.',
         'request_reused' => 'Esta solicitação já foi usada para outra coisa.',
     ],

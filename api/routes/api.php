@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AccountDataController;
 use App\Http\Controllers\Api\V1\AccountEmailController;
 use App\Http\Controllers\Api\V1\AccountRecoveryController;
 use App\Http\Controllers\Api\V1\AuthProviderController;
+use App\Http\Controllers\Api\V1\GarageController;
 use App\Http\Controllers\Api\V1\LegalController;
 use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MeController;
@@ -52,6 +53,9 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/account/identities/{provider}/start', [SocialAuthController::class, 'startLink'])->whereIn('provider', AccountIdentity::SOCIAL)->middleware('throttle:account-oauth-start');
 
         Route::get('/starter-cars', StarterCarController::class);
+
+        Route::get('/garage', [GarageController::class, 'show']);
+        Route::post('/garage/jobs', [GarageController::class, 'queueJob']);
 
         Route::get('/shop', [ShopController::class, 'index']);
         Route::post('/shop/purchases', [ShopController::class, 'purchase']);
