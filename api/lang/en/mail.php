@@ -8,6 +8,11 @@ return [
             'intro' => 'Someone asked to secure the garage of :driver with this e-mail. If it was you, confirm it below.',
             'action' => 'Confirm e-mail',
         ],
+        'add' => [
+            'subject' => 'Confirm your e-mail to add it to your garage',
+            'intro' => 'Someone asked to add this e-mail as a way to sign in to the garage of :driver. If it was you, confirm it below.',
+            'action' => 'Confirm e-mail',
+        ],
         'login' => [
             'subject' => 'Your link to sign in to RideIdle',
             'intro' => 'Use the button below to sign in to the garage of :driver.',

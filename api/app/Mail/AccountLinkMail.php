@@ -11,15 +11,18 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
 /**
- * The e-mail with the one-time link of the account flows. It comes in three kinds: `claim` confirms the e-mail of
- * a guest that wants to secure its garage, `login` signs a driver in who asked for a link, and `existing` goes to
- * the owner of an e-mail that somebody tried to use for a new garage, with a link to the garage it already has.
+ * The e-mail with the one-time link of the account flows. It comes in four kinds: `claim` confirms the e-mail of
+ * a guest that wants to secure its garage, `add` confirms an e-mail that a secured account wants to add as one more
+ * way to sign in, `login` signs a driver in who asked for a link, and `existing` goes to the owner of an e-mail that
+ * somebody tried to use for a new garage, with a link to the garage it already has.
  */
 final class AccountLinkMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public const CLAIM = 'claim';
+
+    public const ADD = 'add';
 
     public const LOGIN = 'login';
 
@@ -30,8 +33,7 @@ final class AccountLinkMail extends Mailable
         public readonly string $url,
         public readonly string $driver,
         public readonly int $minutes,
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {

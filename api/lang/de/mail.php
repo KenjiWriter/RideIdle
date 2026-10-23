@@ -8,6 +8,11 @@ return [
             'intro' => 'Jemand hat darum gebeten, die Garage von :driver mit dieser E-Mail zu sichern. Wenn du das warst, bestätige es unten.',
             'action' => 'E-Mail bestätigen',
         ],
+        'add' => [
+            'subject' => 'Bestätige deine E-Mail, um sie deiner Garage hinzuzufügen',
+            'intro' => 'Jemand hat darum gebeten, diese E-Mail als Anmeldeart für die Garage von :driver hinzuzufügen. Wenn du das warst, bestätige es unten.',
+            'action' => 'E-Mail bestätigen',
+        ],
         'login' => [
             'subject' => 'Dein Link zur Anmeldung bei RideIdle',
             'intro' => 'Nutze die Schaltfläche unten, um dich bei der Garage von :driver anzumelden.',

@@ -178,8 +178,27 @@ describe('an account that accepted the terms and confirmed its age already', fun
 
         test()->postJson('/api/v1/account/email', ['email' => 'turbo@example.com'], bearerFor($user))->assertStatus(202);
 
-        Mail::assertQueued(AccountLinkMail::class, fn (AccountLinkMail $mail) => $mail->kind === 'claim');
+        // A garage that is secured already is not asked to be secured: the e-mail says it adds one more way in.
+        Mail::assertQueued(AccountLinkMail::class, fn (AccountLinkMail $mail) => $mail->kind === 'add');
     });
+
+    it('gets an e-mail in its own language that says it adds the address', function (string $locale, string $subject) {
+        $user = securedWithGoogle(['locale' => $locale]);
+
+        test()->postJson('/api/v1/account/email', ['email' => 'turbo@example.com'], bearerFor($user))->assertStatus(202);
+
+        $mail = Mail::queued(AccountLinkMail::class)->first();
+        app()->setLocale(Locale::toLaravel($locale));
+        expect($mail->kind)->toBe('add')
+            ->and($mail->envelope()->subject)->toBe($subject)
+            ->and($mail->render())->toContain($user->name)->toContain($mail->url);
+    })->with([
+        'polish' => ['pl', 'Potwierdź e-mail, żeby dodać go do garażu'],
+        'english' => ['en', 'Confirm your e-mail to add it to your garage'],
+        'french' => ['fr', 'Confirmez votre e-mail pour l’ajouter à votre garage'],
+        'german' => ['de', 'Bestätige deine E-Mail, um sie deiner Garage hinzuzufügen'],
+        'brazilian portuguese' => ['pt-BR', 'Confirme seu e-mail para adicioná-lo à sua garagem'],
+    ]);
 
     it('keeps the moments it accepted them when the e-mail is added', function () {
         $user = securedWithGoogle();

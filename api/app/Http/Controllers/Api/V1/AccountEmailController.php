@@ -45,7 +45,10 @@ final class AccountEmailController extends Controller
         $owner = $accounts->userFor(AccountIdentity::EMAIL, $email);
 
         if ($owner === null) {
-            $links->send(AccountLinkMail::CLAIM, AccountToken::CLAIM, $email, $user, $user->id, Accounts::consentAt($user));
+            // The link does the same either way; only what the e-mail says differs, for a garage that is secured already.
+            $kind = $user->isGuest() ? AccountLinkMail::CLAIM : AccountLinkMail::ADD;
+
+            $links->send($kind, AccountToken::CLAIM, $email, $user, $user->id, Accounts::consentAt($user));
         } else {
             $links->send(AccountLinkMail::EXISTING, AccountToken::LOGIN, $email, $owner, $owner->id);
         }

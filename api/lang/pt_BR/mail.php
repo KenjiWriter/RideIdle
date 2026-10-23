@@ -8,6 +8,11 @@ return [
             'intro' => 'Alguém pediu para proteger a garagem de :driver com este e-mail. Se foi você, confirme abaixo.',
             'action' => 'Confirmar e-mail',
         ],
+        'add' => [
+            'subject' => 'Confirme seu e-mail para adicioná-lo à sua garagem',
+            'intro' => 'Alguém pediu para adicionar este e-mail como forma de entrar na garagem de :driver. Se foi você, confirme abaixo.',
+            'action' => 'Confirmar e-mail',
+        ],
         'login' => [
             'subject' => 'Seu link para entrar no RideIdle',
             'intro' => 'Use o botão abaixo para entrar na garagem de :driver.',
