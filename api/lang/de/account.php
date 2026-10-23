@@ -8,12 +8,12 @@ return [
     ],
 
     'email' => [
-        'sent' => 'Wir haben einen Link an :email gesendet. Er funktioniert einmal und :minutes Minuten lang.',
-        'already_linked' => 'Dieses Konto hat bereits eine E-Mail.',
+        'sent' => 'Wir haben einen Link an :email gesendet. Er ist nur einmal und :minutes Minuten lang gültig.',
+        'already_linked' => 'Dieses Konto hat bereits eine E-Mail-Adresse.',
     ],
 
     'login_link' => [
-        'sent' => 'Wenn diese E-Mail zu einer Garage gehört, ist ein Link unterwegs. Er funktioniert einmal und :minutes Minuten lang.',
+        'sent' => 'Wenn diese E-Mail-Adresse zu einer Garage gehört, ist ein Link unterwegs. Er ist nur einmal und :minutes Minuten lang gültig.',
     ],
 
     'oauth' => [
@@ -28,7 +28,7 @@ return [
     ],
 
     'identity' => [
-        'taken' => 'Diese Anmeldung gehört bereits zu einer anderen Garage. Melde dich bei dieser Garage an oder nutze eine andere.',
+        'taken' => 'Diese Anmeldung gehört bereits zu einer anderen Garage. Melde dich bei dieser Garage an oder nutze eine andere Anmeldung.',
         'provider_linked' => 'Dieses Konto hat bereits eine Anmeldung dieser Art.',
     ],
 

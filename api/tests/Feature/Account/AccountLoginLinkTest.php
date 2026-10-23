@@ -99,7 +99,7 @@ it('needs a valid address', function (string $email) {
 it('says in the language of the request that a link is on its way', function () {
     askForLoginLink('anyone@example.com', ['X-Locale' => 'de'])
         ->assertStatus(202)
-        ->assertJsonPath('message', 'Wenn diese E-Mail zu einer Garage gehört, ist ein Link unterwegs. Er funktioniert einmal und 30 Minuten lang.');
+        ->assertJsonPath('message', 'Wenn diese E-Mail-Adresse zu einer Garage gehört, ist ein Link unterwegs. Er ist nur einmal und 30 Minuten lang gültig.');
 });
 
 describe('limits', function () {

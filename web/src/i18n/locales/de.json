@@ -29,7 +29,7 @@
   "create": {
     "title": "Fahrer erstellen",
     "nameLabel": "Fahrername",
-    "nameHint": "3–16 Zeichen: Buchstaben, Ziffern, _ oder -. Andere Fahrer sehen ihn.",
+    "nameHint": "3–16 Zeichen: Buchstaben, Ziffern, _ oder -. Andere Fahrer sehen diesen Namen.",
     "submit": "Los geht’s",
     "submitting": "Wird erstellt…",
     "back": "Zurück",
@@ -38,7 +38,7 @@
       "length": "Der Name braucht 3–16 Zeichen.",
       "characters": "Verwende nur Buchstaben, Ziffern, _ und -."
     },
-    "consent": "Mit dem Anlegen eines Fahrers akzeptierst du die {terms} und die {privacy}."
+    "consent": "Mit dem Erstellen eines Fahrers akzeptierst du die {terms} und die {privacy}."
   },
   "garage": {
     "welcome": "Willkommen, {name}",
@@ -48,7 +48,7 @@
     "step": "Schritt 2 von 2",
     "title": "Wähle dein Wrack",
     "subtitle": "Die übrigen Autos kaufst du später. Diese Wahl ist nicht endgültig.",
-    "track": "Du startest auf: {track}.",
+    "track": "Du startest auf der Strecke {track}.",
     "recommended": "Empfohlen für den Start",
     "choose": "{name} wählen",
     "starting": "Wird gestartet…",
@@ -60,7 +60,7 @@
       "topSpeed": "Höchstgeschwindigkeit",
       "mass": "Masse",
       "tank": "Tank",
-      "cargo": "Fracht"
+      "cargo": "Zuladung"
     }
   },
   "car": {
@@ -79,8 +79,8 @@
     "laps": "{n} Runde | {n} Runden",
     "status": {
       "running": "Im Rennen",
-      "fuel_empty": "Kein Sprit",
-      "breakdown": "Defekt",
+      "fuel_empty": "Kein Kraftstoff",
+      "breakdown": "Panne",
       "towed": "Abgeschleppt"
     },
     "stat": {
@@ -108,7 +108,7 @@
       "price": "Kraftstoff kostet {price} pro Liter.",
       "done": "{liters} für {cost} getankt.",
       "nothing": "Der Tank war schon voll.",
-      "repeated": "Dieses Tanken wurde schon erledigt."
+      "repeated": "Dieser Tankvorgang wurde schon durchgeführt."
     },
     "repair": {
       "button": "Reparieren · {cost}",
@@ -120,9 +120,9 @@
       "repeated": "Diese Reparatur wurde schon erledigt."
     },
     "tow": {
-      "breakdown": "Du kannst die Reparatur nicht bezahlen. Das Abschleppen ist kostenlos, aber das Auto wartet {time}, bevor es wieder fährt.",
-      "fuel_empty": "Du kannst den Kraftstoff für eine Runde nicht bezahlen. Das Abschleppen ist kostenlos: Das Auto wartet {time} und fährt mit etwas Kraftstoff los.",
-      "button": "Auto abschleppen · kostenlos",
+      "breakdown": "Die Reparatur kannst du dir nicht leisten. Das Abschleppen ist kostenlos, aber das Auto wartet {time}, bevor es wieder fährt.",
+      "fuel_empty": "Den Kraftstoff für eine Runde kannst du dir nicht leisten. Das Abschleppen ist kostenlos: Das Auto wartet {time} und fährt mit etwas Kraftstoff los.",
+      "button": "Auto abschleppen lassen · kostenlos",
       "busy": "Wird abgeschleppt…",
       "notNeeded": "Das Abschleppen war nicht nötig.",
       "underway": "Das Auto wird abgeschleppt. Es fährt in etwa {time} wieder."
@@ -131,7 +131,7 @@
       "title": "Während du weg warst",
       "duration": "Abwesenheit",
       "earned": "Verdient",
-      "fuel_empty": "Der Tank ist leer gefahren.",
+      "fuel_empty": "Der Kraftstoff ist ausgegangen.",
       "breakdown": "Das Auto hatte eine Panne.",
       "dismiss": "Verstanden"
     },
@@ -139,7 +139,7 @@
   },
   "recover": {
     "title": "Fahrer wiederherstellen",
-    "description": "Gib den gespeicherten Wiederherstellungscode ein. Du findest ihn in deiner Garage unter Garage sichern.",
+    "description": "Gib den gespeicherten Wiederherstellungscode ein. Du findest ihn in deiner Garage unter „Garage sichern“.",
     "codeLabel": "Wiederherstellungscode",
     "submit": "Wiederherstellen",
     "submitting": "Wird wiederhergestellt…",
@@ -149,13 +149,13 @@
     },
     "intro": "Melde dich mit dem Konto an, das mit deiner Garage verknüpft ist, oder nutze den gespeicherten Wiederherstellungscode.",
     "accountTitle": "Mit deinem Konto anmelden",
-    "accountDescription": "Nutze die Anmeldeart, die du mit deiner Garage verknüpft hast. Ein Link aus einer E-Mail funktioniert nur einmal und nur kurze Zeit.",
+    "accountDescription": "Nutze die Anmeldemethode, die du mit deiner Garage verknüpft hast. Ein Link aus einer E-Mail ist nur einmal und nur kurz gültig.",
     "codeTitle": "Wiederherstellungscode verwenden"
   },
   "recovery": {
     "title": "Garage sichern",
     "description": "Wenn du Browserdaten löschst oder das Gerät wechselst, bringt dieser Code deinen Fahrer zurück. Ohne ihn ist ein Gastkonto verloren.",
-    "generate": "Meinen Wiederherstellungscode anzeigen",
+    "generate": "Wiederherstellungscode anzeigen",
     "regenerate": "Neuen Code erstellen",
     "regenerateHint": "Du hast bereits einen Code. Ein neuer macht den alten ungültig.",
     "generating": "Wird erstellt…",
@@ -202,9 +202,9 @@
     "consentRequired": "Akzeptiere die Bedingungen und bestätige dein Alter, um fortzufahren.",
     "continueWith": "Weiter mit {provider}",
     "opening": "{provider} wird geöffnet…",
-    "or": "oder mit einer E-Mail",
+    "or": "oder per E-Mail",
     "emailLabel": "E-Mail",
-    "sendLink": "Link an mich senden",
+    "sendLink": "Link zusenden",
     "sending": "Wird gesendet…",
     "another": "Andere Adresse verwenden",
     "errors": {
@@ -215,8 +215,8 @@
   },
   "linkAccount": {
     "title": "Garage sichern",
-    "description": "Verknüpfe ein Konto, um deine Garage auf einem anderen Gerät oder nach dem Löschen des Browsers zurückzubekommen. Ein Gastkonto ohne Verknüpfung kann verloren gehen.",
-    "useCode": "Ich nehme lieber einen Wiederherstellungscode",
+    "description": "Verknüpfe ein Konto, um deine Garage auf einem anderen Gerät oder nach dem Löschen der Browserdaten zurückzubekommen. Ein Gastkonto ohne Verknüpfung kann verloren gehen.",
+    "useCode": "Lieber mit Wiederherstellungscode",
     "later": "Später"
   },
   "linkBanner": {
@@ -224,9 +224,9 @@
     "action": "Jetzt sichern"
   },
   "linked": {
-    "title": "Deine Anmeldearten",
-    "add": "Weitere Anmeldeart hinzufügen",
-    "addDescription": "Verknüpfe eine weitere Möglichkeit, in diese Garage zu kommen, damit der Verlust einer dich nicht aussperrt.",
+    "title": "Deine Anmeldemethoden",
+    "add": "Weitere Anmeldemethode hinzufügen",
+    "addDescription": "Verknüpfe eine weitere Möglichkeit, in diese Garage zu kommen, damit du nicht ausgesperrt bist, wenn du eine davon verlierst.",
     "close": "Schließen"
   },
   "legal": {

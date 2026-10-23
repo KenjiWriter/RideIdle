@@ -70,7 +70,7 @@ it('names the car and the track in the language of the request', function (strin
 })->with([
     'polish' => ['pl', 'Sprint uliczny Złomowo'],
     'english' => ['en', 'Złomowo Street Sprint'],
-    'german' => ['de', 'Złomowo Stadtsprint'],
+    'german' => ['de', 'Stadtsprint Złomowo'],
     'brazilian portuguese' => ['pt-BR', 'Sprint urbano de Złomowo'],
 ]);
 

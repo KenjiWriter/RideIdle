@@ -155,7 +155,7 @@ describe('LinkedAccounts', () => {
     await setLocale('de')
     const { wrapper } = await show([google])
 
-    expect(wrapper.get('[data-test="add-toggle"]').text()).toBe('Weitere Anmeldeart hinzufügen')
+    expect(wrapper.get('[data-test="add-toggle"]').text()).toBe('Weitere Anmeldemethode hinzufügen')
 
     await setLocale('en')
   })
