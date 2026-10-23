@@ -12,7 +12,7 @@
 
 set -Eeuo pipefail
 
-APP_DIR="${APP_DIR:-/var/www/idlerace}"
+APP_DIR="${APP_DIR:-/var/www/rideidle}"
 COMMAND="${1:-}"
 TARGET="${2:-}"
 

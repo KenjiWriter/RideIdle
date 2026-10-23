@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Puts a release of RideIdle live on the server. provision.sh installs this as /var/www/idlerace/bin/deploy.sh, and it is run
+# Puts a release of RideIdle live on the server. provision.sh installs this as /var/www/rideidle/bin/deploy.sh, and it is run
 # as the user that deploys (deploy), usually by deploy/upload.sh from your computer:
 #
-#   deploy.sh --source DIR [--label NAME]    a release from the files in DIR (upload.sh puts them in /var/www/idlerace/incoming)
+#   deploy.sh --source DIR [--label NAME]    a release from the files in DIR (upload.sh puts them in /var/www/rideidle/incoming)
 #   deploy.sh --repo URL [--ref BRANCH]      a release from a git repository (BRANCH defaults to main)
 #   deploy.sh --rollback                     back to the release that was live before the current one
 #
@@ -134,7 +134,7 @@ if ((ROLLBACK)); then
     echo "    from $(basename "$(live_release)") to $(basename "$PREVIOUS")"
     switch_to "$PREVIOUS"
     restart_services
-    healthy || die "Went back to $(basename "$PREVIOUS"), but the site is not well. Look at /var/log/nginx/idlerace.error.log and ${APP_DIR}/shared/storage/logs."
+    healthy || die "Went back to $(basename "$PREVIOUS"), but the site is not well. Look at /var/log/nginx/rideidle.error.log and ${APP_DIR}/shared/storage/logs."
     echo "    the site is well. The migrations were not undone."
     exit 0
 fi
@@ -235,7 +235,7 @@ else
     else
         echo "    there is no previous release." >&2
     fi
-    echo "    Look at /var/log/nginx/idlerace.error.log and ${APP_DIR}/shared/storage/logs. The failed release is kept as $NAME." >&2
+    echo "    Look at /var/log/nginx/rideidle.error.log and ${APP_DIR}/shared/storage/logs. The failed release is kept as $NAME." >&2
     exit 1
 fi
 

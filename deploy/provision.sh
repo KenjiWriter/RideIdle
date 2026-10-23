@@ -22,7 +22,7 @@
 #   LEGAL_OPERATOR_NAME LEGAL_OPERATOR_ADDRESS LEGAL_CONTACT_EMAIL   who runs the game (can be set later in the .env)
 #   SSH_PORT            the port of SSH, which the firewall keeps open. Default: 22
 #   DEPLOY_USER         the user that deploys. Default: deploy
-#   APP_DIR             where the game lives. Default: /var/www/idlerace
+#   APP_DIR             where the game lives. Default: /var/www/rideidle
 #   PHP_VERSION         Default: 8.4        NODE_MAJOR  Default: 24
 #   SKIP_DNS_CHECK=1    do not check that the domain points here (do not, unless you know why)
 #   CERTBOT_STAGING=1   ask Let's Encrypt for a test certificate (for trying this out without using up its limits)
@@ -42,7 +42,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 DOMAIN="${DOMAIN:-}"
 ADMIN_EMAIL="${ADMIN_EMAIL:-}"
-APP_DIR="${APP_DIR:-/var/www/idlerace}"
+APP_DIR="${APP_DIR:-/var/www/rideidle}"
 PHP_VERSION="${PHP_VERSION:-8.4}"
 NODE_MAJOR="${NODE_MAJOR:-24}"
 DEPLOY_USER="${DEPLOY_USER:-deploy}"
@@ -115,7 +115,7 @@ nginx_check_or_undo() {
     if log="$(nginx -t 2>&1)"; then
         return
     fi
-    rm -f /etc/nginx/sites-enabled/idlerace.conf /etc/nginx/conf.d/rideidle-global.conf
+    rm -f /etc/nginx/sites-enabled/rideidle.conf /etc/nginx/conf.d/rideidle-global.conf
     printf '%s\n' "$log" >&2
     fail "nginx did not accept the configuration of the game. The files of the game were taken out of /etc/nginx again, so the other sites are as they were."
 }
@@ -147,7 +147,7 @@ check_system() {
         *) fail "Ubuntu 22.04 or 24.04 is what this was written for. This is ${VERSION_ID:-unknown}." ;;
     esac
 
-    for file in nginx/idlerace.conf.template nginx/rideidle-global.conf nginx/rideidle-security.conf \
+    for file in nginx/rideidle.conf.template nginx/rideidle-global.conf nginx/rideidle-security.conf \
         systemd/rideidle-queue.service.template env.production.example bin/rideidle-backup deploy.sh; do
         [[ -f "$HERE/$file" ]] || fail "Run this from the deploy/ folder of the repository: $file is missing next to it."
     done
@@ -171,7 +171,7 @@ check_shared() {
     nginx -t >/dev/null 2>&1 || fail "nginx does not accept its configuration as it is (nginx -t). Fix that first. Nothing was changed."
 
     # No other site may answer for this domain.
-    clash="$(grep -rlE --exclude=idlerace.conf --exclude=rideidle-global.conf "server_name[^;]*[[:space:]]${DOMAIN//./\\.}[[:space:];]" /etc/nginx 2>/dev/null || true)"
+    clash="$(grep -rlE --exclude=rideidle.conf --exclude=rideidle-global.conf "server_name[^;]*[[:space:]]${DOMAIN//./\\.}[[:space:];]" /etc/nginx 2>/dev/null || true)"
     [[ -z "$clash" ]] || fail "A site of nginx already answers for ${DOMAIN} (${clash}). Nothing was changed."
 
     # The user that deploys gets rights (sudo as www-data, a group): it must be a user made for the game, not one that is used for other things.
@@ -215,7 +215,7 @@ check_fresh() {
     for site in /etc/nginx/sites-enabled/*; do
         if [[ -e "$site" ]]; then
             name="$(basename "$site")"
-            if [[ "$name" != "default" && "$name" != "idlerace.conf" ]]; then
+            if [[ "$name" != "default" && "$name" != "rideidle.conf" ]]; then
                 found+=("nginx already serves a site: ${name}")
             fi
         fi
@@ -645,7 +645,7 @@ setup_tls() {
 
     if [[ ! -f "$cert" ]]; then
         # Until there is a certificate, the site only answers the check of Let's Encrypt.
-        cat > /etc/nginx/sites-available/idlerace.conf <<EOF
+        cat > /etc/nginx/sites-available/rideidle.conf <<EOF
 server {
     listen 80;
     listen [::]:80;
@@ -654,7 +654,7 @@ server {
     location / { return 404; }
 }
 EOF
-        ln -sf /etc/nginx/sites-available/idlerace.conf /etc/nginx/sites-enabled/idlerace.conf
+        ln -sf /etc/nginx/sites-available/rideidle.conf /etc/nginx/sites-enabled/rideidle.conf
         nginx_check_or_undo
         systemctl enable --now nginx >/dev/null
         systemctl reload nginx
@@ -670,8 +670,8 @@ EOF
     fi
 
     # Now the whole site, with HTTPS.
-    render "$HERE/nginx/idlerace.conf.template" > /etc/nginx/sites-available/idlerace.conf
-    ln -sf /etc/nginx/sites-available/idlerace.conf /etc/nginx/sites-enabled/idlerace.conf
+    render "$HERE/nginx/rideidle.conf.template" > /etc/nginx/sites-available/rideidle.conf
+    ln -sf /etc/nginx/sites-available/rideidle.conf /etc/nginx/sites-enabled/rideidle.conf
     nginx_check_or_undo
     systemctl reload nginx
 

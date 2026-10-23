@@ -12,7 +12,7 @@ PostgreSQL (baza)   Redis (tylko liczniki limitów)   rideidle-queue (systemd, w
 ```
 
 ```
-/var/www/idlerace/
+/var/www/rideidle/
 ├── releases/20261023-141500-ab12cd3/   jedno wydanie = jeden folder (zostaje pięć ostatnich)
 ├── current -> releases/...             wydanie, które działa; zmienia się jednym przełączeniem linku
 ├── shared/.env                         ustawienia API; poza wydaniami, więc nowe wydanie je zastaje
@@ -125,7 +125,7 @@ Przed pierwszym uruchomieniem sprawdź, czy dotychczasowe strony nie używają b
 
 ```bash
 ssh deploy@raceidle.cerasusdigital.pl
-nano /var/www/idlerace/shared/.env
+nano /var/www/rideidle/shared/.env
 ```
 
 Do uzupełnienia, jeśli nie podałeś tego w kroku 2:
@@ -138,7 +138,7 @@ Do uzupełnienia, jeśli nie podałeś tego w kroku 2:
 Zmiana w `.env` działa od następnego wydania. Żeby zadziałała od razu (konfiguracja jest zapisana w pamięci podręcznej Laravela):
 
 ```bash
-cd /var/www/idlerace/current/api
+cd /var/www/rideidle/current/api
 sudo -u www-data php8.4 artisan config:cache
 sudo systemctl reload php8.4-fpm
 sudo systemctl restart rideidle-queue
@@ -155,7 +155,7 @@ deploy/upload.sh release deploy@raceidle.cerasusdigital.pl
 Bez klucza SSH na komputerze (droga B z kroku 2) wydanie zrobisz na samym serwerze, jako użytkownik `deploy`; serwer pobierze kod z GitHuba (musi być wypchnięty):
 
 ```bash
-sudo -iu deploy /var/www/idlerace/bin/deploy.sh --repo https://github.com/KenjiWriter/RideIdle.git --ref main
+sudo -iu deploy /var/www/rideidle/bin/deploy.sh --repo https://github.com/KenjiWriter/RideIdle.git --ref main
 ```
 
 Wysyłany przez `upload.sh` jest **zatwierdzony** stan (`HEAD`), nie to, co leży w katalogu roboczym; skrypt ostrzega, jeśli masz niezatwierdzone zmiany. Inny commit lub tag: `deploy/upload.sh release deploy@... v1.0`. Pierwsze wydanie trwa kilka minut (Composer, `npm ci`, budowanie). Kroki: źródła → `composer install --no-dev` → `npm ci` i `npm run build` → `.env` i `storage` z `shared/` → `content:validate` → migracje → pamięci podręczne Laravela → przełączenie linku `current` → przeładowanie PHP-FPM i restart kolejki → **sprawdzenie** (`/up`, `/api/v1/meta/locales` i strona główna z serwera na samego siebie). Jeśli sprawdzenie nie przejdzie, poprzednie wydanie wraca, a skrypt kończy się błędem; nieudane wydanie zostaje w `releases/` do obejrzenia.
@@ -171,7 +171,7 @@ Linki do logowania i zabezpieczenia konta idą mailem, więc dostarczalność je
 3. Sprawdź wysyłkę (idzie od razu, bez kolejki, więc błąd widać na ekranie):
 
 ```bash
-cd /var/www/idlerace/current/api
+cd /var/www/rideidle/current/api
 sudo -u www-data php8.4 artisan tinker --execute='Mail::raw("test", fn ($m) => $m->to("twoj@adres.pl")->subject("RideIdle: test poczty"));'
 ```
 
@@ -205,8 +205,8 @@ Po zmianie `.env` zastosuj ją poleceniem z kroku 3. **Przepływ z prawdziwymi d
 
 ```bash
 journalctl -u rideidle-queue -n 100               # kolejka
-tail -n 100 /var/www/idlerace/shared/storage/logs/laravel-$(date +%F).log
-tail -n 100 /var/log/nginx/idlerace.error.log
+tail -n 100 /var/www/rideidle/shared/storage/logs/laravel-$(date +%F).log
+tail -n 100 /var/log/nginx/rideidle.error.log
 ```
 
 (Na serwerze współdzielonym użytkownik `deploy` nie czyta dziennika systemu ani logów nginx: `journalctl` i `tail` na logu nginx uruchom z `sudo` jako użytkownik z pełnym `sudo`, np. `ubuntu`. Log Laravela `deploy` czyta sam.)
@@ -216,7 +216,7 @@ Logi Laravela są codzienne i kasowane po 14 dniach (`LOG_DAILY_DAYS`), poziom `
 **Polecenia operatora** (prośby o kopię i usunięcie danych, `docs/prawo.md`) uruchamiasz jako `www-data`:
 
 ```bash
-cd /var/www/idlerace/current/api
+cd /var/www/rideidle/current/api
 (umask 077; sudo -u www-data php8.4 artisan accounts:export --email=adres@example.com > ~/konto.json)
 sudo -u www-data php8.4 artisan accounts:delete --email=adres@example.com --dry-run
 ```
@@ -272,7 +272,7 @@ Sprawdzone:
 | `provision.sh` zatrzymuje się na DNS | rekord A jeszcze się nie rozszedł albo wskazuje inny adres; poczekaj (`nslookup`) |
 | certbot odmawia | port 80 zamknięty u dostawcy serwera, błędny rekord AAAA, albo limit Let's Encrypt (użyj `CERTBOT_STAGING=1`) |
 | `composer` lub `npm` kończy się „Killed” | brak pamięci; sprawdź `swapon --show`, rozważ większy serwer |
-| 502 Bad Gateway | `systemctl status php8.4-fpm`, `/var/log/nginx/idlerace.error.log` |
+| 502 Bad Gateway | `systemctl status php8.4-fpm`, `/var/log/nginx/rideidle.error.log` |
 | wydanie „is not well”, poprzednie wraca | `.../shared/storage/logs/`, błąd nginx, `.env` (np. hasło bazy); nieudane wydanie zostało w `releases/` |
 | maile nie wychodzą | `queue:failed`, `journalctl -u rideidle-queue`, test z sekcji „Poczta” |
 | po zmianie `.env` nic się nie zmieniło | `config:cache` i restart (krok 3) |
