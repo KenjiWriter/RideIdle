@@ -12,6 +12,15 @@ return [
         'already_linked' => 'Ce compte a déjà un e-mail.',
     ],
 
+    'token' => [
+        'invalid' => 'Ce lien n’est pas valide ou a expiré.',
+    ],
+
+    'identity' => [
+        'taken' => 'Cette connexion appartient déjà à un autre garage. Connectez-vous à ce garage ou utilisez-en une autre.',
+        'provider_linked' => 'Ce compte a déjà une connexion de ce type.',
+    ],
+
     'name' => [
         'attribute' => 'nom du pilote',
         'taken' => 'Ce nom de pilote est déjà pris.',

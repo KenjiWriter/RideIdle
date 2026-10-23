@@ -36,6 +36,9 @@ class AppServiceProvider extends ServiceProvider
 
         // An e-mail with a link can be sent to anybody, so it is limited per account, per address (hashed, so the
         // address is not kept) and per network address.
+        // The secret of a link has 256 bits, so it cannot be guessed; the limit only keeps a flood of requests away.
+        RateLimiter::for('account-confirm', fn (Request $request) => Limit::perHour(30)->by((string) $request->ip()));
+
         RateLimiter::for('account-email', fn (Request $request) => [
             Limit::perHour(5)->by('user:'.$request->user()?->getAuthIdentifier()),
             Limit::perHour(3)->by('address:'.sha1(Accounts::normalizeEmail($request->string('email')->toString()))),

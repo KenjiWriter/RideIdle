@@ -1,6 +1,8 @@
 <?php
 
+use App\Exceptions\IdentityTakenException;
 use App\Exceptions\InsufficientFundsException;
+use App\Exceptions\ProviderAlreadyLinkedException;
 use App\Exceptions\RunAlreadyExistsException;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -30,6 +32,16 @@ return Application::configure(basePath: dirname(__DIR__))
             'message' => __('game.errors.run_exists'),
             'code' => 'run_exists',
             'run_id' => $e->runId,
+        ], 409));
+
+        $exceptions->render(fn (IdentityTakenException $e) => response()->json([
+            'message' => __('account.identity.taken'),
+            'code' => 'identity_taken',
+        ], 409));
+
+        $exceptions->render(fn (ProviderAlreadyLinkedException $e) => response()->json([
+            'message' => __('account.identity.provider_linked'),
+            'code' => 'provider_already_linked',
         ], 409));
 
         $exceptions->render(fn (InsufficientFundsException $e) => response()->json([

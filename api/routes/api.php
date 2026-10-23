@@ -21,6 +21,9 @@ Route::prefix('v1')->group(function (): void {
     // Sign in on a new device with a recovery code.
     Route::post('/account/recover', [AccountRecoveryController::class, 'recover'])->middleware('throttle:recovery-attempts');
 
+    // Use the link of an e-mail: it secures an account or signs a driver in. The secret in it cannot be guessed.
+    Route::post('/account/email/confirm', [AccountEmailController::class, 'confirm'])->middleware('throttle:account-confirm');
+
     Route::middleware(['auth:sanctum', TouchLastSeen::class])->group(function (): void {
         Route::get('/me', [MeController::class, 'show']);
         Route::patch('/me/locale', [MeController::class, 'updateLocale']);
