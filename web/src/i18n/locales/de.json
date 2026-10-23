@@ -105,7 +105,8 @@
       "fuel_empty": "Kein Kraftstoff",
       "breakdown": "Panne",
       "towed": "Abgeschleppt",
-      "workshop": "In der Werkstatt"
+      "workshop": "In der Werkstatt",
+      "travel": "Unterwegs"
     },
     "stat": {
       "cash": "Geld",
@@ -117,7 +118,8 @@
     "banner": {
       "fuel_empty": "Der Tank ist leer. Das Auto steht, bis du tankst.",
       "breakdown": "Das Auto hat eine Panne. Es steht, bis es repariert ist.",
-      "workshop": "Das Auto steht in der Werkstatt, solange der Mechaniker arbeitet. Es fährt wieder, wenn der letzte Auftrag erledigt ist."
+      "workshop": "Das Auto steht in der Werkstatt, solange der Mechaniker arbeitet. Es fährt wieder, wenn der letzte Auftrag erledigt ist.",
+      "travel": "Das Auto ist nach {city} unterwegs und kommt in {time} an. Unterwegs verdient es nichts."
     },
     "fuel": {
       "title": "Kraftstoff",
@@ -466,5 +468,31 @@
       "night": "Nacht"
     },
     "label": "Spielzeit: {time}, {phase}"
+  },
+  "map": {
+    "title": "Karte",
+    "sub": "Städte, Straßen und Strecken. Das Auto verdient auf der Strecke der Stadt, in der es steht.",
+    "label": "Karte der Städte",
+    "loadError": "Die Karte konnte nicht geladen werden.",
+    "noCar": "Wähle zuerst ein Auto, dann kannst du losfahren.",
+    "here": "Du bist hier",
+    "target": "Ziel",
+    "onTheWay": "Unterwegs: {from} → {to}",
+    "eta": "in {time}",
+    "go": "Hierhin fahren",
+    "started": "Das Auto ist nach {city} unterwegs.",
+    "requires": "Was die Strecke verlangt",
+    "fit": "Eignung von {car}",
+    "fitLow": "Reifen oder Auto wechseln",
+    "route": "{km} km · {time} · {fuel} l Kraftstoff",
+    "locked": "Erfordert Spielerstufe {required} (du bist auf Stufe {level}). XP bekommst du durch Fahren.",
+    "level": "LV {level}+",
+    "surface": {
+      "asphalt": "Asphalt",
+      "gravel": "Schotter"
+    },
+    "lit": "Beleuchtet",
+    "unlit": "Ohne Licht",
+    "node": "{name}, Spielerstufe {level}"
   }
 }

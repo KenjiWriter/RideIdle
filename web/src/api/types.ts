@@ -36,8 +36,8 @@ export interface RecoveryCodeResponse extends MeResponse {
 
 export type RunStatus = 'running' | 'stopped'
 
-/** Why a run stopped: the tank is empty, the car broke down, or it stands in the workshop while a job is done. */
-export type StopReason = 'fuel_empty' | 'breakdown' | 'workshop'
+/** Why a run stopped: the tank is empty, the car broke down, it stands in the workshop while a job is done, or it is on the road to another city. */
+export type StopReason = 'fuel_empty' | 'breakdown' | 'workshop' | 'travel'
 
 /** A run: a car driving laps on a track (GET /api/v1/runs/current). Times are ms of the server clock, fuel is in ml. */
 export interface Run {
@@ -65,6 +65,8 @@ export interface Run {
     /** How much of its time a lap takes when it starts at night, in ppm: 1 000 000 on a track that is lit, 1 030 000 on one that is not. */
     night_ppm: number
   }
+  /** The journey the car is on, while it stands on the road between two cities. */
+  travel: RunTravel | null
   /** The clock of the game: a day is `day_ms` of the clock of the server, and each phase of it begins at an hour of the game. */
   clock: { day_ms: number; phases: { key: string; from_hour: number }[] }
   /** The weather of the region now, when this segment of 22.5 minutes ends, what comes next, and a forecast of this segment and the four after it. */
@@ -72,6 +74,16 @@ export interface Run {
   /** The lap in progress, in ms of the clock of the server; null for a car that stands or waits for a tow. */
   current_lap: { start_ms: number; finish_ms: number; ms: number; weather: string } | null
   server_time_ms: number
+}
+
+/** The journey of a car between two cities, with the names in the language of the driver. */
+export interface RunTravel {
+  from: string
+  from_name: string
+  to: string
+  to_name: string
+  start_ms: number
+  arrive_ms: number
 }
 
 /** One stretch of 22.5 minutes of the weather, with the surface it makes of the track (a column of the tire matrix). */
@@ -347,4 +359,34 @@ export interface TutorialResponse {
     /** What the steps completed by this very call paid. */
     rewarded: { key: string; cash_cents: number; car_xp: number }[]
   }
+}
+
+/** A city of the map: where it is, what its track asks of a car, and what the way there costs from the city the car is in. */
+export interface MapCity {
+  slug: string
+  name: string
+  /** Where it is on the board of the map, 390 by 716 units. */
+  x: number
+  y: number
+  home: boolean
+  here: boolean
+  level_required: number
+  open: boolean
+  track: { slug: string; name: string; surface: 'asphalt' | 'gravel'; lit: boolean; base_lap_ms: number; demand: Record<string, number> }
+  /** How well the car, with its parts, runs the track in the dry: 100 is the lap of a car that matches what the track asks. Null without a car. */
+  fit_percent: number | null
+  /** The way from the city the car is in: null for that city, without a car and while the car is on the road. */
+  route: { km: number; ms: number; fuel_ml: number } | null
+}
+
+/** GET /api/v1/map, and the answer of POST /api/v1/travel. `now_ms` is the clock of the server. */
+export interface MapResponse {
+  data: {
+    here: string
+    level: number
+    cities: MapCity[]
+    roads: { from: string; to: string; km: number }[]
+    travel: { from: string; to: string; distance_km: number; start_ms: number; arrive_ms: number } | null
+  }
+  now_ms: number
 }

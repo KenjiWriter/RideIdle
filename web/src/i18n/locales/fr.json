@@ -105,7 +105,8 @@
       "fuel_empty": "Panne sèche",
       "breakdown": "En panne",
       "towed": "Remorquée",
-      "workshop": "À l’atelier"
+      "workshop": "À l’atelier",
+      "travel": "En route"
     },
     "stat": {
       "cash": "Argent",
@@ -117,7 +118,8 @@
     "banner": {
       "fuel_empty": "Le réservoir est vide. La voiture reste arrêtée tant que vous ne faites pas le plein.",
       "breakdown": "La voiture est tombée en panne. Elle reste arrêtée tant qu’elle n’est pas réparée.",
-      "workshop": "La voiture reste à l’atelier pendant que le mécanicien travaille. Elle repart quand le dernier travail est terminé."
+      "workshop": "La voiture reste à l’atelier pendant que le mécanicien travaille. Elle repart quand le dernier travail est terminé.",
+      "travel": "La voiture roule vers {city}, arrivée dans {time}. Elle ne gagne rien en route."
     },
     "fuel": {
       "title": "Carburant",
@@ -466,5 +468,31 @@
       "night": "Nuit"
     },
     "label": "Heure du jeu : {time}, {phase}"
+  },
+  "map": {
+    "title": "Carte",
+    "sub": "Villes, routes et pistes. La voiture gagne sur la piste de la ville où elle se trouve.",
+    "label": "Carte des villes",
+    "loadError": "Impossible de charger la carte.",
+    "noCar": "Choisissez d’abord une voiture, puis prenez la route.",
+    "here": "Vous êtes ici",
+    "target": "Destination",
+    "onTheWay": "En route · {from} → {to}",
+    "eta": "dans {time}",
+    "go": "Aller ici",
+    "started": "La voiture est partie pour {city}.",
+    "requires": "Ce que demande la piste",
+    "fit": "Adéquation de {car}",
+    "fitLow": "Changez de pneus ou de voiture",
+    "route": "{km} km · {time} · {fuel} l de carburant",
+    "locked": "Niveau de joueur {required} requis (vous êtes niveau {level}). Vous gagnez de l’XP en conduisant.",
+    "level": "LV {level}+",
+    "surface": {
+      "asphalt": "Asphalte",
+      "gravel": "Gravier"
+    },
+    "lit": "Éclairée",
+    "unlit": "Sans éclairage",
+    "node": "{name}, niveau de joueur {level}"
   }
 }

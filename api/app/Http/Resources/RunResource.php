@@ -101,14 +101,18 @@ final class RunResource extends JsonResource
         ];
     }
 
-    /** @return array{from: string, to: string, start_ms: int, arrive_ms: int}|null */
+    /** @return array{from: string, from_name: string, to: string, to_name: string, start_ms: int, arrive_ms: int}|null */
     private function travel(): ?array
     {
         $journey = app(Travel::class)->active($this->user_id);
 
+        $rules = app(Rules::class);
+
         return $journey === null ? null : [
             'from' => $journey->from_region,
+            'from_name' => I18nText::from($rules->region($journey->from_region)['name'])->for(),
             'to' => $journey->to_region,
+            'to_name' => I18nText::from($rules->region($journey->to_region)['name'])->for(),
             'start_ms' => $journey->start_ms,
             'arrive_ms' => $journey->arrive_ms,
         ];

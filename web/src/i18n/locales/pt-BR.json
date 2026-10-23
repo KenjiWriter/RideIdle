@@ -105,7 +105,8 @@
       "fuel_empty": "Sem combustível",
       "breakdown": "Quebrado",
       "towed": "Rebocado",
-      "workshop": "Na oficina"
+      "workshop": "Na oficina",
+      "travel": "Na estrada"
     },
     "stat": {
       "cash": "Dinheiro",
@@ -117,7 +118,8 @@
     "banner": {
       "fuel_empty": "O tanque está vazio. O carro fica parado até você abastecer.",
       "breakdown": "O carro quebrou. Ele fica parado até ser consertado.",
-      "workshop": "O carro fica parado na oficina enquanto o mecânico trabalha. Volta a andar quando o último serviço terminar."
+      "workshop": "O carro fica parado na oficina enquanto o mecânico trabalha. Volta a andar quando o último serviço terminar.",
+      "travel": "O carro está a caminho de {city}, chegando em {time}. Na estrada ele não ganha nada."
     },
     "fuel": {
       "title": "Combustível",
@@ -466,5 +468,31 @@
       "night": "Noite"
     },
     "label": "Hora do jogo: {time}, {phase}"
+  },
+  "map": {
+    "title": "Mapa",
+    "sub": "Cidades, estradas e pistas. O carro ganha na pista da cidade em que está.",
+    "label": "Mapa das cidades",
+    "loadError": "Não foi possível carregar o mapa.",
+    "noCar": "Escolha um carro primeiro, depois é só pegar a estrada.",
+    "here": "Você está aqui",
+    "target": "Destino",
+    "onTheWay": "Na estrada: {from} → {to}",
+    "eta": "em {time}",
+    "go": "Ir para cá",
+    "started": "O carro está a caminho de {city}.",
+    "requires": "O que a pista exige",
+    "fit": "Adequação de {car}",
+    "fitLow": "Troque os pneus ou o carro",
+    "route": "{km} km · {time} · {fuel} l de combustível",
+    "locked": "Requer nível de jogador {required} (você está no nível {level}). Você ganha XP dirigindo.",
+    "level": "LV {level}+",
+    "surface": {
+      "asphalt": "Asfalto",
+      "gravel": "Cascalho"
+    },
+    "lit": "Iluminada",
+    "unlit": "Sem iluminação",
+    "node": "{name}, nível de jogador {level}"
   }
 }

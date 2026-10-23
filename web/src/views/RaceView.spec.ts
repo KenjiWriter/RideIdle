@@ -202,6 +202,25 @@ describe('RaceView', () => {
     })
   })
 
+  it('says that the car is on the road, to which city and for how long, and that it earns nothing on the way', async () => {
+    const { wrapper } = await show(
+      aRun({
+        status: 'stopped',
+        stop_reason: 'travel',
+        current_lap: null,
+        travel: { from: 'zlomowo', from_name: 'Złomowo', to: 'kruszyn', to_name: 'Kruszyn', start_ms: NOW, arrive_ms: NOW + 10_000 + 90_000 },
+      }),
+    )
+
+    expect(wrapper.get('[data-test="banner"]').text()).toBe('The car is on its way to Kruszyn, arriving in 1 min 30 s. It earns nothing on the road.')
+    expect(wrapper.get('[data-test="status"]').text()).toBe('On the road')
+    expect(wrapper.get('[data-test="status"]').classes()).toContain('chip-am')
+
+    await vi.advanceTimersByTimeAsync(30_000)
+
+    expect(wrapper.get('[data-test="banner"]').text()).toContain('arriving in 1 min 00 s')
+  })
+
   it('says that the weather stays, when the next segment is the same', async () => {
     const { wrapper } = await show(aRun({ weather: { now: 'dry', ends_ms: NOW + 10_000 + 60_000, next: 'dry', forecast: [] } }))
 

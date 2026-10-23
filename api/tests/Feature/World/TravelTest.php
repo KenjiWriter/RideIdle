@@ -120,6 +120,8 @@ describe('leaving', function () {
             ->assertJsonPath('data.laps_done', 0)
             ->assertJsonPath('data.current_lap', null)
             ->assertJsonPath('data.travel.to', 'kruszyn')
+            ->assertJsonPath('data.travel.to_name', 'Kruszyn')
+            ->assertJsonPath('data.travel.from_name', 'Złomowo')
             ->assertJsonPath('tow.available', false);
 
         test()->postJson("/api/v1/runs/{$run->id}/refuel", ['request_id' => 'r1'], bearerFor($driver))

@@ -105,7 +105,8 @@
       "fuel_empty": "Brak paliwa",
       "breakdown": "Awaria",
       "towed": "Holowane",
-      "workshop": "W warsztacie"
+      "workshop": "W warsztacie",
+      "travel": "W drodze"
     },
     "stat": {
       "cash": "Gotówka",
@@ -117,7 +118,8 @@
     "banner": {
       "fuel_empty": "Bak jest pusty. Auto stoi, dopóki go nie zatankujesz.",
       "breakdown": "Auto się zepsuło. Stoi, dopóki go nie naprawisz.",
-      "workshop": "Auto stoi w warsztacie, dopóki mechanik pracuje. Pojedzie dalej, gdy skończy się ostatnie zlecenie."
+      "workshop": "Auto stoi w warsztacie, dopóki mechanik pracuje. Pojedzie dalej, gdy skończy się ostatnie zlecenie.",
+      "travel": "Auto jedzie do miasta {city}, dojazd za {time}. W drodze nic nie zarabia."
     },
     "fuel": {
       "title": "Paliwo",
@@ -466,5 +468,31 @@
       "night": "Noc"
     },
     "label": "Czas w grze: {time}, {phase}"
+  },
+  "map": {
+    "title": "Mapa",
+    "sub": "Miasta, drogi i tory. Auto zarabia na torze miasta, w którym stoi.",
+    "label": "Mapa miast",
+    "loadError": "Nie udało się wczytać mapy.",
+    "noCar": "Najpierw wybierz auto, potem ruszysz w drogę.",
+    "here": "Tu jesteś",
+    "target": "Cel podróży",
+    "onTheWay": "W drodze: {from} → {to}",
+    "eta": "za {time}",
+    "go": "Jedź tutaj",
+    "started": "Auto ruszyło do miasta {city}.",
+    "requires": "Czego wymaga tor",
+    "fit": "Dopasowanie {car}",
+    "fitLow": "Zmień opony albo auto",
+    "route": "{km} km · {time} · {fuel} l paliwa",
+    "locked": "Wymaga poziomu gracza {required} (masz {level}). Zdobywasz XP, jeżdżąc.",
+    "level": "LV {level}+",
+    "surface": {
+      "asphalt": "Asfalt",
+      "gravel": "Żwir"
+    },
+    "lit": "Oświetlony",
+    "unlit": "Bez świateł",
+    "node": "{name}, poziom gracza {level}"
   }
 }

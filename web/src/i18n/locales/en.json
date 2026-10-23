@@ -105,7 +105,8 @@
       "fuel_empty": "Out of fuel",
       "breakdown": "Broken down",
       "towed": "Towed",
-      "workshop": "In the workshop"
+      "workshop": "In the workshop",
+      "travel": "On the road"
     },
     "stat": {
       "cash": "Cash",
@@ -117,7 +118,8 @@
     "banner": {
       "fuel_empty": "The tank is empty. The car stands until you refuel it.",
       "breakdown": "The car broke down. It stands until it is repaired.",
-      "workshop": "The car stands in the workshop while the mechanic works. It drives again when the last job is done."
+      "workshop": "The car stands in the workshop while the mechanic works. It drives again when the last job is done.",
+      "travel": "The car is on its way to {city}, arriving in {time}. It earns nothing on the road."
     },
     "fuel": {
       "title": "Fuel",
@@ -466,5 +468,31 @@
       "night": "Night"
     },
     "label": "Game time: {time}, {phase}"
+  },
+  "map": {
+    "title": "Map",
+    "sub": "Cities, roads and tracks. The car earns on the track of the city it stands in.",
+    "label": "Map of the cities",
+    "loadError": "The map could not be loaded.",
+    "noCar": "Choose a car first, then you can hit the road.",
+    "here": "You are here",
+    "target": "Destination",
+    "onTheWay": "On the road: {from} → {to}",
+    "eta": "in {time}",
+    "go": "Drive here",
+    "started": "The car is on its way to {city}.",
+    "requires": "What the track asks for",
+    "fit": "Fit for {car}",
+    "fitLow": "Change the tires or the car",
+    "route": "{km} km · {time} · {fuel} l of fuel",
+    "locked": "Requires player level {required} (you are level {level}). You get XP by driving.",
+    "level": "LV {level}+",
+    "surface": {
+      "asphalt": "Asphalt",
+      "gravel": "Gravel"
+    },
+    "lit": "Lit",
+    "unlit": "No lights",
+    "node": "{name}, player level {level}"
   }
 }
