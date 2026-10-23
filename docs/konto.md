@@ -5,7 +5,7 @@ Kierowca zaczyna jako **gość**: konto powstaje od razu, bez e-maila, a urządz
 ## Zasady
 
 - **Tożsamości.** Sposób logowania to wiersz w `account_identities`: dostawca (`email`, `google`, `facebook`, `apple`), `subject` (adres zapisany małymi literami albo stały identyfikator nadany przez dostawcę) i adres do wyświetlenia. Jedna tożsamość należy do jednego konta (`unique(provider, subject)`), a konto ma najwyżej jedną tożsamość każdego dostawcy (`unique(user_id, provider)`).
-- **Połączenie pierwszej tożsamości zabezpiecza gościa** (`claimed_at`), od tego momentu konto nie wygasa. Zgody (regulamin, wiek) zapisują się wtedy jako `terms_accepted_at` i `age_confirmed_at`. Adres konta (`users.email`) ustawia tylko tożsamość e-mail, bo tylko ją gracz udowodnił linkiem.
+- **Połączenie pierwszej tożsamości zabezpiecza gościa** (`claimed_at`), od tego momentu konto nie wygasa. Zgody (regulamin, wiek) zapisują się wtedy jako `terms_accepted_at` i `age_confirmed_at`. **Zgody składa się raz**: konto, które ma obie na koncie, nie jest pytane o nie przy dodawaniu drugiego sposobu logowania, a zapisane momenty zostają bez zmian. Konto, które ma tylko jedną z nich, jest pytane nadal. Adres konta (`users.email`) ustawia tylko tożsamość e-mail, bo tylko ją gracz udowodnił linkiem.
 - **Nigdy nie szukamy konta po adresie, który podaje dostawca.** Cudze konto Google, które twierdzi, że ma adres właściciela, nie wpuszcza do jego garażu. Tożsamość znajdujemy po `(dostawca, subject)` i tylko tak.
 - **Dwóch kont nie łączymy.** Jeśli tożsamość należy już do innego garażu, odpowiedź to 409 `identity_taken` i nic się nie zmienia; gracz wybiera, na którym gra. Łączenie walut i aut z dwóch kont otworzyłoby drogę do nadużyć.
 - **Logowanie nieznanym dostawcą nie zakłada konta.** Odpowiedź to 404 `no_account`. Konto powstaje tylko przy „Utwórz kierowcę”.
@@ -17,7 +17,7 @@ Kierowca zaczyna jako **gość**: konto powstaje od razu, bez e-maila, a urządz
 - To okno dialogowe: fokus przechodzi do środka i tam zostaje, `Esc` i kliknięcie poza oknem odkładają sprawę, fokus wraca tam, skąd przyszedł.
 - Zawiera dwie zgody (regulamin i polityka prywatności, wiek), przyciski dostawców, którzy są włączeni na serwerze, i pole e-mail. Bez obu zgód nic się nie wysyła.
 - „Później” zapamiętuje to w `localStorage` (`ride.linkPrompt`) i zostawia cichy baner, dopóki konto jest gościem. „Wolę kod odzyskiwania” zamyka okno i przewija do panelu z kodem. Wylogowanie i zalogowanie kogoś innego kasuje zapamiętane „później”.
-- Kierowca, który ma już konto, widzi w garażu listę swoich sposobów logowania (adres zamaskowany: `t***@example.com`).
+- Kierowca, który ma już konto, widzi w garażu kartę „Twoje sposoby logowania” (adres zamaskowany: `t***@example.com`) z przyciskiem „Dodaj kolejny sposób logowania”. Przycisk rozwija to, co zostało do dodania: dostawców włączonych na serwerze, których konto jeszcze nie ma, i e-mail, jeśli konta go nie ma. Bez pytania o zgody, bo złożono je przy pierwszym sposobie. Gdy konto ma już wszystko, przycisku nie ma. Dzięki temu utrata jednego sposobu (np. konta Google) nie zamyka drogi do garażu.
 
 ## Ekran „Mam już konto” (`/recover`)
 
@@ -27,7 +27,7 @@ Na górze logowanie kontem (dostawcy i link e-mailem, bez zgód, bo konto już i
 
 | Punkt końcowy | Opis |
 |---|---|
-| `POST /account/email` (token) | Prosi o link, który zabezpiecza konto. Wymaga `email`, `accept_terms`, `confirm_age`. |
+| `POST /account/email` (token) | Prosi o link, który zabezpiecza konto albo dodaje do niego e-mail. Wymaga `email`, a od konta, które nie złożyło jeszcze zgód, także `accept_terms` i `confirm_age`. |
 | `POST /account/login-link` | Prosi o link, który loguje na nowym urządzeniu. Tylko `email`. |
 | `POST /account/email/confirm` | Używa linku (`token`). Link zabezpieczający nie loguje nikogo, link logujący zwraca token urządzenia. |
 
@@ -40,7 +40,7 @@ Na górze logowanie kontem (dostawcy i link e-mailem, bez zgód, bo konto już i
 
 Socialite (`laravel/socialite`) i `socialiteproviders/apple`. Przepływ jest rozbity na trzy kroki, bo samo „callback łączy konto” byłoby podatne na **login CSRF**: napastnik zaczyna własne logowanie Google, podsuwa ofierze adres powrotu, a konto Google ofiary łączy się z garażem napastnika.
 
-1. **Start** (`POST /account/identities/{dostawca}/start` z tokenem, żeby połączyć, albo `POST /auth/{dostawca}/start` bez konta, żeby się zalogować). Serwer zapisuje stan (`oauth`, 10 minut) z kontem, zgodą i **skrótem weryfikatora**, a przeglądarce oddaje adres dostawcy i sam **weryfikator**. Przeglądarka zapamiętuje go w `localStorage` (`ride.oauth`, do 15 minut) i idzie do dostawcy. Apple dostaje też nonce wyliczony ze stanu.
+1. **Start** (`POST /account/identities/{dostawca}/start` z tokenem, żeby połączyć albo dodać kolejnego dostawcę, albo `POST /auth/{dostawca}/start` bez konta, żeby się zalogować). Serwer zapisuje stan (`oauth`, 10 minut) z kontem, zgodą i **skrótem weryfikatora**, a przeglądarce oddaje adres dostawcy i sam **weryfikator**. Przeglądarka zapamiętuje go w `localStorage` (`ride.oauth`, do 15 minut) i idzie do dostawcy. Apple dostaje też nonce wyliczony ze stanu.
 2. **Callback** (`GET` albo `POST` na `/auth/{dostawca}/callback`; Apple wraca formularzem). Serwer zużywa stan (raz, i tylko dla dostawcy, dla którego powstał), pyta dostawcę, kim jest osoba, i zapisuje **bilet** (`oauth_result`, 5 minut). **Niczego nie zmienia na koncie.** Przeglądarka dostaje przekierowanie na `{WEB_URL}/auth/callback#result=ready&provider=…&ticket=…`. Wynik jest we fragmencie adresu, którego nie widzi żaden serwer ani log; `cancelled` oznacza „nie” u dostawcy, `error` każdą inną porażkę.
 3. **Zakończenie** (`POST /auth/complete` z `ticket` i `verifier`). Bilet można odebrać tylko z weryfikatorem tej przeglądarki, która zaczęła; zły weryfikator nie zużywa biletu. Intencja `link` wymaga zalogowanego kierowcy, **tego samego**, dla którego zaczęto (inaczej 403 `wrong_account`), i dodaje dostawcę do konta. Intencja `login` zwraca token urządzenia albo 404 `no_account`.
 
@@ -82,7 +82,7 @@ Uwagi:
 
 ## Czego jeszcze nie ma
 
-- Odłączania logowania, dodawania kolejnego dostawcy z poziomu garażu dla konta, które już jest zabezpieczone (API to umożliwia, ekran pokazuje na razie tylko listę) i zmiany adresu e-mail.
+- Odłączania logowania i zmiany adresu e-mail. Zanim odłączanie powstanie, trzeba zdecydować, co z kontem, które odłączy ostatni sposób logowania (ostatniego nie wolno odłączyć), i czy odłączenie wymaga ponownego potwierdzenia.
 - Nagrody za zabezpieczenie konta (w makiecie 10 diamentów): diamentów jeszcze nie ma w grze.
 - Stron regulaminu i polityki prywatności. Zgody są polami wyboru z tekstem i znacznikami czasu. **Brakuje też progu wieku**: tekst mówi „mam wiek wymagany do założenia konta”, a liczbę ma wskazać przegląd prawny (ryzyko R9 z roadmapy).
 - Samouczka. Okno otwiera się po pierwszym okrążeniu, bo na ekranie „krok 3” makiety („Zapisz swój garaż”) jest pierwszy zarobek; baner „dzień 2 i 3” z makiety jest tu banerem stałym, dopóki konto jest gościem.
