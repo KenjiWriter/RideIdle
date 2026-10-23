@@ -14,9 +14,11 @@ import LinkedAccounts from '@/components/LinkedAccounts.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RepairControl from '@/components/RepairControl.vue'
 import TowControl from '@/components/TowControl.vue'
+import TutorialOverlay from '@/components/TutorialOverlay.vue'
 import { carPicture } from '@/features/art'
 import { statFill } from '@/features/car/statFill'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
+import { useFlash } from '@/features/run/useFlash'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
@@ -25,12 +27,14 @@ import { useFormat } from '@/i18n/useFormat'
 import { useGarageStore } from '@/stores/garage'
 import { useRunStore } from '@/stores/run'
 import { useSessionStore } from '@/stores/session'
+import { useTutorialStore } from '@/stores/tutorial'
 
 const { t } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
 const run = useRunStore()
 const garage = useGarageStore()
+const tutorial = useTutorialStore()
 const { money, number } = useFormat()
 
 useLeaveOnSignOut()
@@ -57,6 +61,9 @@ async function open(): Promise<void> {
 
     // The parts and the statistics are not worth an error of their own: the car and its run are on the screen without them.
     await garage.loadGarage().catch(() => undefined)
+
+    // The tutorial is no reason for an error either: without it the garage is the garage.
+    await tutorial.load().catch(() => undefined)
   } catch (failure) {
     if (!endSessionIfUnauthorized(failure)) {
       loadError.value = true
@@ -66,12 +73,26 @@ async function open(): Promise<void> {
 
 onMounted(open)
 
+/** What the mentor paid for a step is said once, for a while, and then it is gone: the cash is in the HUD. */
+const { message: rewardMessage, show: showReward } = useFlash()
+
+watch(
+  () => tutorial.reward,
+  (cents) => {
+    if (cents !== null) {
+      showReward(t('tutorial.reward', { cash: money(cents, 2) }))
+      tutorial.acknowledgeReward()
+    }
+  },
+)
+
 /** The server carries out the jobs of the workshop whenever it settles the run, so a new version of the run may mean new parts. */
 watch(
   () => run.run?.state_version,
   (version, before) => {
     if (before !== undefined && version !== before) {
       void garage.loadGarage().catch(() => undefined)
+      void tutorial.load().catch(() => undefined)
     }
   },
 )
@@ -106,9 +127,12 @@ const recoveryPanel = ref<InstanceType<typeof RecoveryPanel> | null>(null)
 const offerLinking = computed(() => session.me?.is_guest === true && (run.run?.laps_done ?? 0) > 0)
 
 watch(
-  () => [offerLinking.value, session.linkPromptDismissed, run.away] as const,
-  ([offer, dismissed, away]) => {
-    if (offer && !dismissed && away === null) {
+  () => [offerLinking.value, session.linkPromptDismissed, run.away, tutorial.asked, tutorial.current !== null] as const,
+  ([offer, dismissed, away, tutorialKnown, stepWaits]) => {
+    // Not over the tutorial: the message of the mentor about saving the garage comes first, and this window after it.
+    // So it waits until the tutorial has been asked about, and for as long as a step waits, with the phone out or put away:
+    // the lap that earns the offer is also the one that brings the next message, and the run is known a moment before the tutorial.
+    if (offer && !dismissed && away === null && tutorialKnown && !stepWaits) {
       linkOpen.value = true
     }
   },
@@ -133,6 +157,8 @@ async function useCode(): Promise<void> {
     <p class="sub" data-test="welcome">
       {{ session.me ? t('garage.welcome', { name: session.me.name }) : t('common.loading') }}
     </p>
+
+    <p v-if="rewardMessage" class="card card-hi text-sm" role="status" data-test="tutorial-reward">{{ rewardMessage }}</p>
 
     <LinkAccountBanner v-if="offerLinking && session.linkPromptDismissed && !linkOpen" @open="linkOpen = true" />
 
@@ -175,7 +201,7 @@ async function useCode(): Promise<void> {
         </div>
 
         <dl class="grid grid-cols-3 gap-2" data-test="run-stats">
-          <div class="card !p-2.5">
+          <div class="card !p-2.5" data-tutorial="laps">
             <dt class="kick !mb-0.5 !text-[10px] !tracking-[0.06em]">{{ t('run.stat.laps') }}</dt>
             <dd class="font-display text-xl font-bold" data-test="laps">{{ number(run.run.laps_done) }}</dd>
           </div>
@@ -238,6 +264,8 @@ async function useCode(): Promise<void> {
     <AccountData />
 
     <LinkAccountDialog v-if="linkOpen && offerLinking" @later="later" @recovery="useCode" />
+
+    <TutorialOverlay />
 
     <div>
       <button type="button" class="btn btn-secondary" data-test="sign-out" @click="session.signOut()">

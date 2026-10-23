@@ -37,6 +37,6 @@ const cash = computed(() => run.wallet?.cash_cents ?? garage.cash?.cash_cents ??
       </div>
     </div>
 
-    <span v-if="cash !== null" class="chip chip-am chip-coin" data-test="cash-chip">{{ money(cash, 2) }}</span>
+    <span v-if="cash !== null" class="chip chip-am chip-coin" data-tutorial="cash" data-test="cash-chip">{{ money(cash, 2) }}</span>
   </div>
 </template>

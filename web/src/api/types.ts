@@ -285,3 +285,34 @@ export interface GarageResponse {
   }
   now_ms: number
 }
+
+export type TutorialStatus = 'in_progress' | 'finished' | 'skipped'
+
+/** The thing on the garage screen that a step of the tutorial points at. */
+export type TutorialTarget = 'laps' | 'cash' | 'refuel' | 'repair'
+
+/** The step that waits: the messages of the mentor, in the language of the driver, and what to highlight. */
+export interface TutorialStep {
+  key: string
+  /** The place of the step in the tutorial, from 1. */
+  number: number
+  sender: string
+  sms: string[]
+  /** The words of the button that answers the messages. */
+  reply: string
+  target: TutorialTarget | null
+  /** The driver answered the messages: the phone is put away, but the step may still wait for them to do the thing. */
+  acknowledged: boolean
+}
+
+/** GET /api/v1/tutorial, and the answer of POST /api/v1/tutorial/reply and /skip. */
+export interface TutorialResponse {
+  data: {
+    status: TutorialStatus
+    total: number
+    done: number
+    current: TutorialStep | null
+    /** What the steps completed by this very call paid. */
+    rewarded: { key: string; cash_cents: number }[]
+  }
+}

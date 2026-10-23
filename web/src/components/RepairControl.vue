@@ -62,7 +62,7 @@ async function repair(): Promise<void> {
 
 <template>
   <div data-test="repair">
-    <div v-if="broken" class="mt-4 flex flex-col gap-2">
+    <div v-if="broken" class="mt-4 flex flex-col gap-2" data-tutorial="repair">
       <div>
         <button type="button" class="btn btn-primary" :disabled="busy || !canPay" data-test="repair-button" @click="repair">
           {{ busy ? t('run.repair.busy') : t('run.repair.button', { cost: money(cost, 2) }) }}

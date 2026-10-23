@@ -361,5 +361,22 @@
   },
   "onboarding": {
     "step": "Etapa {step} de {total}"
+  },
+  "tutorial": {
+    "network": "REDE 3G",
+    "messages": "Mensagens",
+    "step": "Etapa {number}/{total}",
+    "today": "Hoje {time}",
+    "who": "Quem é?",
+    "deflect": "Não pergunte. — K.",
+    "input": "Responder…",
+    "send": "Enviar",
+    "skip": "Pular",
+    "skipTitle": "Pular o tutorial?",
+    "skipText": "Você perde as recompensas das etapas que ainda vêm, e K. para de escrever.",
+    "keep": "Voltar ao tutorial",
+    "skipConfirm": "Pular o tutorial",
+    "from": "Mensagem de {sender}",
+    "reward": "K. enviou {cash} para você."
   }
 }

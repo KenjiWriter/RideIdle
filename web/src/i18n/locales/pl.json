@@ -361,5 +361,22 @@
   },
   "onboarding": {
     "step": "Krok {step} z {total}"
+  },
+  "tutorial": {
+    "network": "SIEĆ 3G",
+    "messages": "Wiadomości",
+    "step": "Krok {number}/{total}",
+    "today": "Dziś {time}",
+    "who": "Kto to?",
+    "deflect": "Nie pytaj. — K.",
+    "input": "Odpowiedz…",
+    "send": "Wyślij",
+    "skip": "Pomiń",
+    "skipTitle": "Pominąć samouczek?",
+    "skipText": "Stracisz nagrody z kroków, które Cię jeszcze czekają, a Kuba przestanie pisać.",
+    "keep": "Wróć do samouczka",
+    "skipConfirm": "Pomiń samouczek",
+    "from": "Wiadomość od {sender}",
+    "reward": "K. przesłał Ci {cash}."
   }
 }

@@ -8,6 +8,7 @@ import { readSeen, storeSeen } from '@/features/run/seen'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { mountView } from '@/test/mountView'
+import { aStep, aTutorial } from '@/test/tutorialFixtures'
 
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 
@@ -649,6 +650,103 @@ describe('GarageView', () => {
       await flushPromises()
 
       expect(wrapper.find('[data-test="linked"]').exists()).toBe(false)
+    })
+  })
+
+  describe('the tutorial', () => {
+    function openWithTutorial(tutorial: () => Response, overrides: Partial<Run> = {}) {
+      const calls = serve(() => respond(200, runAnswer(aRun(overrides))), undefined, { 'GET /api/v1/tutorial': tutorial })
+
+      return { calls, mounted: show() }
+    }
+
+    it('takes the phone of the mentor out over the garage when a step waits, and points at what it names', async () => {
+      const { mounted } = openWithTutorial(() => respond(200, aTutorial(aStep({ key: 'first-lap', number: 2, target: 'laps' }))))
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="tutorial-phone"]').exists()).toBe(true)
+      expect(wrapper.get('[data-test="tutorial-step"]').text()).toBe('Step 2/5')
+      // The laps are what the step points at: the card of them carries the mark the ring is found by.
+      expect(wrapper.find('[data-tutorial="laps"] [data-test="laps"]').exists()).toBe(true)
+      expect(wrapper.find('[data-tutorial="cash"]').exists()).toBe(true)
+    })
+
+    it('shows no phone once the tutorial is over', async () => {
+      const { mounted } = openWithTutorial(() => respond(200, aTutorial(null, { status: 'finished', done: 5 })))
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="tutorial"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="run"]').exists()).toBe(true)
+    })
+
+    it('is no reason for an error: a garage whose tutorial cannot be loaded is still the garage', async () => {
+      const { mounted } = openWithTutorial(() => respond(500, { message: 'Server error' }))
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="load-error"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="tutorial"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="car"]').text()).toBe('Rdzak GT-4')
+    })
+
+    it('asks the tutorial again when the run has moved on, so that a step is done as soon as it is', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+      let answer = aTutorial(aStep({ key: 'first-lap', number: 2, target: 'laps', acknowledged: true }))
+      const { mounted, calls } = openWithTutorial(() => respond(200, answer))
+      const { wrapper } = await mounted
+      await flushPromises()
+      expect(calls.filter((call) => call.url === '/api/v1/tutorial')).toHaveLength(1)
+
+      // The first lap is done: the run has a new version, and the step after the one that was done is waiting.
+      answer = aTutorial(aStep({ key: 'rewards', number: 3, target: 'cash' }), { done: 2 })
+      serve(() => respond(200, runAnswer(aRun({ laps_done: 313, state_version: 5 }))), undefined, { 'GET /api/v1/tutorial': () => respond(200, answer) })
+      await vi.advanceTimersByTimeAsync(POLL_MS)
+
+      expect(wrapper.get('[data-test="tutorial-step"]').text()).toBe('Step 3/5')
+    })
+
+    it('says what the mentor paid, for a while', async () => {
+      const paid = aTutorial(aStep({ key: 'rewards', number: 3, target: 'cash' }), { rewarded: [{ key: 'first-lap', cash_cents: 20_000 }] })
+      const { mounted } = openWithTutorial(() => respond(200, paid))
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="tutorial-reward"]').text()).toBe('K. sent you $200.00.')
+    })
+
+    describe('and the window "Save your garage"', () => {
+      beforeEach(() => {
+        localStorage.removeItem('ride.linkPrompt')
+      })
+
+      it('keeps the window under the phone, and opens it when the driver has answered the mentor', async () => {
+        const { mounted } = openWithTutorial(() => respond(200, aTutorial(aStep({ key: 'rewards', number: 3, target: 'cash' }))), { laps_done: 1 })
+        const { wrapper } = await mounted
+        await flushPromises()
+
+        expect(wrapper.find('[data-test="tutorial-phone"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
+
+        serve(() => respond(200, runAnswer(aRun({ laps_done: 1 }))), undefined, {
+          'POST /api/v1/tutorial/reply': () => respond(200, aTutorial(null, { done: 3 })),
+        })
+        await wrapper.get('[data-test="tutorial-reply"]').trigger('click')
+        await flushPromises()
+
+        expect(wrapper.find('[data-test="tutorial-phone"]').exists()).toBe(false)
+        expect(wrapper.get('[data-test="dialog"]').text()).toContain('Save your garage')
+      })
+
+      it('keeps waiting while a step waits for the driver, though the phone is put away', async () => {
+        const { mounted } = openWithTutorial(() => respond(200, aTutorial(aStep({ key: 'first-lap', number: 2, target: 'laps', acknowledged: true }))), { laps_done: 1 })
+        const { wrapper } = await mounted
+        await flushPromises()
+
+        expect(wrapper.find('[data-test="tutorial-phone"]').exists()).toBe(false)
+        expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
+      })
     })
   })
 })

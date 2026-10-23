@@ -361,5 +361,22 @@
   },
   "onboarding": {
     "step": "Étape {step} sur {total}"
+  },
+  "tutorial": {
+    "network": "RÉSEAU 3G",
+    "messages": "Messages",
+    "step": "Étape {number}/{total}",
+    "today": "Aujourd’hui {time}",
+    "who": "C’est qui ?",
+    "deflect": "Ne pose pas de questions. — K.",
+    "input": "Répondre…",
+    "send": "Envoyer",
+    "skip": "Passer",
+    "skipTitle": "Passer le tutoriel ?",
+    "skipText": "Vous perdrez les récompenses des étapes à venir, et K. cessera d’écrire.",
+    "keep": "Revenir au tutoriel",
+    "skipConfirm": "Passer le tutoriel",
+    "from": "Message de {sender}",
+    "reward": "K. vous a envoyé {cash}."
   }
 }

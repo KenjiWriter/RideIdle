@@ -10,6 +10,7 @@ import { normalizeLocale } from '@/i18n/locales'
 
 import { useRunStore } from './run'
 import { useSettingsStore } from './settings'
+import { useTutorialStore } from './tutorial'
 
 /** Who is playing on this device: the profile of the driver and the device token. */
 export const useSessionStore = defineStore('session', () => {
@@ -113,6 +114,7 @@ export const useSessionStore = defineStore('session', () => {
     resetLinkPrompt()
     // The next driver on this device must not see this driver's run, or the summary of their absence.
     useRunStore().reset()
+    useTutorialStore().reset()
   }
 
   return {

@@ -407,4 +407,174 @@ body {
       0 3px 0 #06070a,
       0 0 12px rgba(106, 212, 135, 0.22);
   }
+
+  /* ---------- the tutorial: the mentor writes from an old touch phone ---------- */
+  .phone {
+    @apply relative flex flex-col gap-2.5;
+    background: linear-gradient(#2b2d32, #0b0c0e);
+    border-radius: 38px;
+    padding: 16px 11px 20px;
+    box-shadow:
+      inset 0 0 0 2px #4a4d55,
+      inset 0 0 0 5px #08090b,
+      0 14px 40px rgba(0, 0, 0, 0.7);
+  }
+
+  .phone .spk {
+    flex: 0 0 auto;
+    width: 56px;
+    height: 6px;
+    margin: 0 auto;
+    border-radius: 3px;
+    background: #050506;
+    box-shadow:
+      inset 0 1px 2px #000,
+      0 1px 0 #4a4d55;
+  }
+
+  .phone .scr2 {
+    @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+    border-radius: 6px;
+    background: repeating-linear-gradient(90deg, #dce2ec 0 6px, #e7ebf3 6px 12px);
+    color: #16181d;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  .phone .home {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #2f3137, #0a0a0c);
+    box-shadow:
+      0 0 0 2px #3a3d44,
+      inset 0 1px 0 #555;
+  }
+
+  .phone .home::after {
+    content: '';
+    display: block;
+    width: 14px;
+    height: 14px;
+    margin: 11px auto;
+    border: 2px solid #6c707a;
+    border-radius: 3px;
+  }
+
+  .ps {
+    @apply flex h-5 flex-none items-center justify-between px-2;
+    background: linear-gradient(#3b3f46, #17181b);
+    color: #e8eaf0;
+    font: 600 11px Arial, sans-serif;
+  }
+
+  .ph-hd {
+    @apply flex min-h-[42px] flex-none items-center justify-between gap-1.5 px-2;
+    background: linear-gradient(#a9b9d2, #6f86a6);
+    border-bottom: 1px solid #4c5f7c;
+    color: #fff;
+    font: 700 14px Arial, sans-serif;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  .ph-btn,
+  .ph-send {
+    @apply inline-flex h-7 cursor-pointer items-center whitespace-nowrap px-2.5 text-white;
+    border-radius: 5px;
+    font: 700 12px Arial, sans-serif;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.4);
+  }
+
+  .ph-btn {
+    border: 1px solid #3f5373;
+    background: linear-gradient(#8da2c2, #5b7396);
+  }
+
+  .ph-send {
+    border: 1px solid #3f8f25;
+    background: linear-gradient(#8ee05e, #4bb52a);
+  }
+
+  .sms-in,
+  .sms-out {
+    max-width: 80%;
+    padding: 7px 11px;
+    border-radius: 14px;
+    font: 14px/1.3 Arial, sans-serif;
+    color: #16181d;
+  }
+
+  .sms-in {
+    align-self: flex-start;
+    background: #fff;
+    border: 1px solid #aeb6c4;
+    border-bottom-left-radius: 3px;
+  }
+
+  .sms-out {
+    align-self: flex-end;
+    background: linear-gradient(#b7f08a, #78d448);
+    border: 1px solid #5ba838;
+    border-bottom-right-radius: 3px;
+  }
+
+  .sms-t {
+    align-self: center;
+    font: 11px Arial, sans-serif;
+    color: #6b7487;
+    text-shadow: 0 1px 0 #fff;
+  }
+
+  .ph-input {
+    @apply flex flex-none items-center gap-1.5 p-1.5;
+    background: linear-gradient(#c5cdda, #9ea9bd);
+    border-top: 1px solid #7b879c;
+  }
+
+  .ph-input .fx {
+    @apply flex h-7 flex-1 items-center px-2.5;
+    border-radius: 14px;
+    border: 1px solid #7b879c;
+    background: #fff;
+    font: 13px Arial, sans-serif;
+    color: #8a93a5;
+  }
+
+  /* The phone slides up from the bottom of the screen, unless the driver asked for less motion. */
+  @keyframes phone-in {
+    from {
+      transform: translateY(70%) rotate(-2deg);
+    }
+
+    to {
+      transform: rotate(-2deg);
+    }
+  }
+
+  /** The ring round what a step of the tutorial points at: soft while the step only waits. */
+  .ring-hl {
+    border: 3px solid var(--color-amber);
+    box-shadow: 0 0 16px rgba(255, 178, 36, 0.65);
+  }
+
+  .ring-hl.ring-soft {
+    border-width: 2px;
+    box-shadow: 0 0 10px rgba(255, 178, 36, 0.4);
+  }
+
+  .phone-in {
+    animation: phone-in 0.45s ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .phone-in {
+      animation: none;
+    }
+  }
+}
+
+/* What the tutorial points at is scrolled to under the HUD and under the button that skips, and above the phone. */
+[data-tutorial] {
+  scroll-margin-top: 132px;
 }

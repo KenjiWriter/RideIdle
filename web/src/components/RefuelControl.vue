@@ -74,7 +74,7 @@ async function buy(amount: number | null): Promise<void> {
 <template>
   <div data-test="refuel">
     <template v-if="missingMl > 0">
-      <div class="mt-3 flex flex-wrap gap-3">
+      <div class="mt-3 flex flex-wrap gap-3" data-tutorial="refuel">
         <button type="button" class="btn btn-primary" :disabled="busy || !canFill" data-test="refuel-full" @click="buy(null)">
           {{ busy ? t('run.refuel.busy') : t('run.refuel.full', { cost: money(fullCost, 2) }) }}
         </button>

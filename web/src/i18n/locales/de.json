@@ -361,5 +361,22 @@
   },
   "onboarding": {
     "step": "Schritt {step} von {total}"
+  },
+  "tutorial": {
+    "network": "3G-NETZ",
+    "messages": "Nachrichten",
+    "step": "Schritt {number}/{total}",
+    "today": "Heute {time}",
+    "who": "Wer ist das?",
+    "deflect": "Frag nicht. — K.",
+    "input": "Antworten…",
+    "send": "Senden",
+    "skip": "Überspringen",
+    "skipTitle": "Tutorial überspringen?",
+    "skipText": "Du verlierst die Belohnungen der Schritte, die noch kommen, und K. schreibt nicht mehr.",
+    "keep": "Zurück zum Tutorial",
+    "skipConfirm": "Tutorial überspringen",
+    "from": "Nachricht von {sender}",
+    "reward": "K. hat dir {cash} geschickt."
   }
 }
