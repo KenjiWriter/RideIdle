@@ -272,7 +272,8 @@ create_users_and_folders() {
     if ! id "$DEPLOY_USER" >/dev/null 2>&1; then
         adduser --disabled-password --gecos "" "$DEPLOY_USER" >/dev/null
     fi
-    usermod -aG www-data "$DEPLOY_USER"
+    # www-data: the files of the game. adm and systemd-journal: reading the logs of nginx and of the queue worker.
+    usermod -aG www-data,adm,systemd-journal "$DEPLOY_USER"
 
     # The same key that lets you in as root lets you in as the user that deploys.
     install -d -m 700 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "/home/${DEPLOY_USER}/.ssh"
