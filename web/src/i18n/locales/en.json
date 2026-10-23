@@ -45,7 +45,8 @@
   },
   "garage": {
     "welcome": "Welcome, {name}",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "carLevel": "Car LV {level}"
   },
   "choose": {
     "step": "Step 2 of 2",
@@ -310,7 +311,8 @@
     "repeated": "That purchase was already made.",
     "loadError": "The shop could not be loaded.",
     "toWorkshop": "To the workshop",
-    "noCar": "You have no car yet."
+    "noCar": "You have no car yet.",
+    "last": "Last purchase"
   },
   "workshop": {
     "title": "Workshop",
@@ -334,6 +336,14 @@
     "inventoryEmpty": "No spare parts. Buy some in the shop.",
     "putOn": "Put on",
     "takeOff": "Take off",
-    "loadError": "The workshop could not be loaded."
+    "loadError": "The workshop could not be loaded.",
+    "idle": "The mechanic is free.",
+    "eta": "about {time}",
+    "mechanicTitle": "Mechanic"
+  },
+  "hud": {
+    "level": "LV",
+    "progress": "{into} / {needed} XP",
+    "xp": "Experience in this level"
   }
 }

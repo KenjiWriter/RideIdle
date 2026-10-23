@@ -251,10 +251,12 @@ export interface GarageSlot {
 export interface GarageCar {
   id: number
   level: number
-  vehicle: { slug: string; name: string; engine: string | null; power_kw: number | null }
+  vehicle: { slug: string; name: string; engine: string | null; power_kw: number | null; drivetrain: 'fwd' | 'rwd' | 'awd' | null }
   /** With the parts that are on the car, and without them. */
   stats: Record<CarStatKey, number>
   base_stats: Record<CarStatKey, number>
+  /** What counts as normal on the track of the car: a bar of a statistic is full at 1.6 times it. */
+  references: Record<CarStatKey, number>
   tank_ml: number
   slots: GarageSlot[]
   lap_ms: Record<string, number> | null

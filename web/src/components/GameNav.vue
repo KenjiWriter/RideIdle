@@ -4,23 +4,24 @@ import { RouterLink } from 'vue-router'
 
 const { t } = useI18n()
 
+/** The icons are the ones of the design canvas (24 x 24, drawn with a line). */
 const links = [
-  { name: 'garage', label: 'nav.garage' },
-  { name: 'workshop', label: 'nav.workshop' },
-  { name: 'shop', label: 'nav.shop' },
+  { name: 'garage', label: 'nav.garage', icon: 'M3 20V9l9-5 9 5v11M7 20v-7h10v7M7 16h10' },
+  {
+    name: 'workshop',
+    label: 'nav.workshop',
+    icon: 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z',
+  },
+  { name: 'shop', label: 'nav.shop', icon: 'M3 21h18M5 21V9l5-3v15M10 21V4l6 3v14M16 21V11l4 2v8' },
 ] as const
 </script>
 
 <template>
-  <nav class="grid grid-cols-3 gap-1 rounded-xl border border-line bg-surface p-1 text-center text-sm font-bold" :aria-label="t('nav.label')" data-test="game-nav">
-    <RouterLink
-      v-for="link in links"
-      :key="link.name"
-      :to="{ name: link.name }"
-      class="rounded-lg px-3 py-3 text-muted"
-      active-class="bg-surface-2 text-amber"
-      :data-test="`nav-${link.name}`"
-    >
+  <nav class="navb" :aria-label="t('nav.label')" data-test="game-nav">
+    <RouterLink v-for="link in links" :key="link.name" :to="{ name: link.name }" active-class="on" :data-test="`nav-${link.name}`">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path :d="link.icon" />
+      </svg>
       {{ t(link.label) }}
     </RouterLink>
   </nav>

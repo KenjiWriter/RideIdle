@@ -45,7 +45,8 @@
   },
   "garage": {
     "welcome": "Witaj, {name}",
-    "signOut": "Wyloguj"
+    "signOut": "Wyloguj",
+    "carLevel": "Auto LV {level}"
   },
   "choose": {
     "step": "Krok 2 z 2",
@@ -276,7 +277,7 @@
   },
   "carStat": {
     "accel": "Przyspieszenie",
-    "top_speed": "Prędkość maksymalna",
+    "top_speed": "Prędkość maks.",
     "grip": "Przyczepność",
     "handling": "Prowadzenie",
     "braking": "Hamowanie"
@@ -310,7 +311,8 @@
     "repeated": "Ten zakup już został zrobiony.",
     "loadError": "Nie udało się wczytać sklepu.",
     "toWorkshop": "Do warsztatu",
-    "noCar": "Nie masz jeszcze auta."
+    "noCar": "Nie masz jeszcze auta.",
+    "last": "Ostatni zakup"
   },
   "workshop": {
     "title": "Warsztat",
@@ -334,6 +336,14 @@
     "inventoryEmpty": "Nie masz części zapasowych. Kup je w sklepie.",
     "putOn": "Załóż",
     "takeOff": "Zdejmij",
-    "loadError": "Nie udało się wczytać warsztatu."
+    "loadError": "Nie udało się wczytać warsztatu.",
+    "idle": "Mechanik jest wolny.",
+    "eta": "ok. {time}",
+    "mechanicTitle": "Mechanik"
+  },
+  "hud": {
+    "level": "LV",
+    "progress": "{into} / {needed} XP",
+    "xp": "Doświadczenie na tym poziomie"
   }
 }

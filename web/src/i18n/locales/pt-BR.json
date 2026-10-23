@@ -45,7 +45,8 @@
   },
   "garage": {
     "welcome": "Boas-vindas, {name}",
-    "signOut": "Sair"
+    "signOut": "Sair",
+    "carLevel": "Carro LV {level}"
   },
   "choose": {
     "step": "Etapa 2 de 2",
@@ -276,7 +277,7 @@
   },
   "carStat": {
     "accel": "Aceleração",
-    "top_speed": "Velocidade máxima",
+    "top_speed": "Vel. máxima",
     "grip": "Aderência",
     "handling": "Dirigibilidade",
     "braking": "Frenagem"
@@ -310,7 +311,8 @@
     "repeated": "Essa compra já foi feita.",
     "loadError": "Não foi possível carregar a loja.",
     "toWorkshop": "Para a oficina",
-    "noCar": "Você ainda não tem um carro."
+    "noCar": "Você ainda não tem um carro.",
+    "last": "Última compra"
   },
   "workshop": {
     "title": "Oficina",
@@ -334,6 +336,14 @@
     "inventoryEmpty": "Sem peças de reposição. Compre algumas na loja.",
     "putOn": "Montar",
     "takeOff": "Desmontar",
-    "loadError": "Não foi possível carregar a oficina."
+    "loadError": "Não foi possível carregar a oficina.",
+    "idle": "O mecânico está livre.",
+    "eta": "cerca de {time}",
+    "mechanicTitle": "Mecânico"
+  },
+  "hud": {
+    "level": "LV",
+    "progress": "{into} / {needed} XP",
+    "xp": "Experiência neste nível"
   }
 }
