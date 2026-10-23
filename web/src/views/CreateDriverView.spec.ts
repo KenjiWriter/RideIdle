@@ -48,6 +48,38 @@ describe('CreateDriverView', () => {
     expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false)
   })
 
+  it('is the first of the two steps, and asks for the name as the canvas does', async () => {
+    const { wrapper } = await open()
+
+    expect(wrapper.get('[data-test="step"]').text()).toBe('Step 1 of 2')
+    expect(wrapper.get('[role="progressbar"]').attributes('aria-valuenow')).toBe('50')
+    expect(wrapper.get('h1').text()).toBe('What should we call you, driver?')
+    expect(wrapper.text()).toContain('You need no account and no e-mail.')
+    expect(wrapper.get('[data-test="submit"]').text()).toBe('Next')
+  })
+
+  it('says that the name has the right shape once it has, and says nothing about it being free', async () => {
+    const { wrapper } = await open()
+
+    expect(wrapper.find('[data-test="well-formed"]').exists()).toBe(false)
+
+    await wrapper.get('[data-test="name"]').setValue('ab')
+    expect(wrapper.find('[data-test="well-formed"]').exists()).toBe(false)
+
+    await wrapper.get('[data-test="name"]').setValue('Maciek_Turbo')
+    expect(wrapper.get('[data-test="well-formed"]').text()).toBe('Name looks good')
+    expect(wrapper.text()).not.toMatch(/free|available/i)
+  })
+
+  it('takes the mark back when the server says the name is taken', async () => {
+    fetchMock.mockResolvedValue(respond(422, { message: 'taken', errors: { name: ['taken'] } }))
+    const { submit, wrapper } = await open()
+
+    await submit('Turbo')
+
+    expect(wrapper.find('[data-test="well-formed"]').exists()).toBe(false)
+  })
+
   it('does not scold before the first submit', async () => {
     const { wrapper, error } = await open()
 

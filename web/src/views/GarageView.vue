@@ -171,7 +171,7 @@ async function useCode(): Promise<void> {
           <img :src="carPicture(run.run.car.slug) ?? ''" :alt="run.run.car.name" class="h-[86px] w-[130px] flex-none object-cover" />
           <div class="flex min-w-0 flex-col justify-center gap-1.5 px-3 py-2">
             <div class="flex flex-wrap gap-1.5">
-              <span v-if="car?.vehicle.drivetrain" class="tag border-amber bg-amber text-amber-ink" data-test="drivetrain">{{ car.vehicle.drivetrain.toUpperCase() }}</span>
+              <span v-if="car?.vehicle.drivetrain" class="tag tag-am" data-test="drivetrain">{{ car.vehicle.drivetrain.toUpperCase() }}</span>
               <span v-if="car?.vehicle.engine" class="chip h-6">{{ car.vehicle.engine }}</span>
               <span v-if="car?.vehicle.power_kw" class="chip h-6">{{ t('car.power', { value: car.vehicle.power_kw }) }}</span>
             </div>

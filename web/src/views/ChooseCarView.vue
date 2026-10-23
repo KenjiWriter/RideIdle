@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import StarterCarCard from '@/components/StarterCarCard.vue'
+import StepShell from '@/components/StepShell.vue'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { useRunStore } from '@/stores/run'
@@ -78,15 +79,14 @@ async function choose(slug: string): Promise<void> {
 </script>
 
 <template>
-  <main class="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-12">
-    <header class="flex flex-col gap-2">
-      <p class="text-sm font-semibold uppercase tracking-wider text-amber" data-test="step">{{ t('choose.step') }}</p>
-      <h1 class="text-3xl font-bold tracking-tight" data-test="title">{{ t('choose.title') }}</h1>
-      <p class="text-muted">{{ t('choose.subtitle') }}</p>
-      <p v-if="run.startTrack" class="text-sm text-muted" data-test="track">
+  <StepShell :step="2" dense>
+    <div class="mt-1.5">
+      <h1 class="ttl !text-[34px] !leading-[0.95]" data-test="title">{{ t('choose.title') }}</h1>
+      <p class="mt-1.5 text-sm text-muted">{{ t('choose.subtitle') }}</p>
+      <p v-if="run.startTrack" class="sub mt-1" data-test="track">
         {{ t('choose.track', { track: run.startTrack.name }) }}
       </p>
-    </header>
+    </div>
 
     <p v-if="loading" class="text-muted" data-test="loading">{{ t('common.loading') }}</p>
 
@@ -95,7 +95,7 @@ async function choose(slug: string): Promise<void> {
       <button type="button" class="btn btn-secondary" data-test="retry" @click="open">{{ t('common.retry') }}</button>
     </div>
 
-    <div v-else class="grid gap-4 md:grid-cols-3">
+    <template v-else>
       <StarterCarCard
         v-for="(car, index) in run.starters"
         :key="car.slug"
@@ -105,8 +105,8 @@ async function choose(slug: string): Promise<void> {
         :disabled="starting !== null"
         @choose="choose"
       />
-    </div>
+    </template>
 
     <p class="min-h-5 text-sm text-danger" role="alert" data-test="error">{{ error }}</p>
-  </main>
+  </StepShell>
 </template>

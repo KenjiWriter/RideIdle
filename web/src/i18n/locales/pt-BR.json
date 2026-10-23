@@ -21,19 +21,39 @@
     "tooManyRequests": "Muitas tentativas. Tente novamente mais tarde."
   },
   "landing": {
-    "title": "Sua oficina está esperando",
-    "subtitle": "Reconstrua carcaças, compre carros melhores e corra mesmo quando você estiver longe.",
+    "title": "Uma oficina que corre quando você não está",
+    "subtitle": "Reconstrua carcaças, escolha o carro certo para a pista e volte para buscar as recompensas. Comece em um minuto, sem cadastro.",
     "create": "Criar seu piloto",
     "continue": "Continuar como {name}",
     "continueGeneric": "Continuar",
-    "haveDriver": "Já tenho um piloto",
-    "accountDeleted": "Sua conta foi excluída, com tudo o que havia nela."
+    "haveDriver": "Já tenho uma conta",
+    "accountDeleted": "Sua conta foi excluída, com tudo o que havia nela.",
+    "eyebrow": "Jogo de navegador · idle · corridas",
+    "noEmail": "Sem e-mail. Você protege a conta depois.",
+    "imageAlt": "A oficina em Złomowo ao entardecer e três carcaças no pátio",
+    "features": {
+      "match": {
+        "kicker": "Escolha",
+        "title": "O carro certo para a pista",
+        "text": "Terra, arrancada, serpentinas, chuva. Cada cidade exige um carro e pneus diferentes."
+      },
+      "grow": {
+        "kicker": "Evolução",
+        "title": "Uma garagem que cresce",
+        "text": "Peças, raridade, oficina, mecânicos e novas cidades. O progresso anda por temporizadores."
+      },
+      "idle": {
+        "kicker": "Idle",
+        "title": "As corridas continuam sem você",
+        "text": "Volte depois de uma hora ou de um dia e pegue as recompensas. Os carros andam enquanto houver combustível."
+      }
+    }
   },
   "create": {
-    "title": "Criar seu piloto",
+    "title": "Qual é o seu nome, piloto?",
     "nameLabel": "Nome do piloto",
-    "nameHint": "3 a 16 caracteres: letras, números, _ ou -. Os outros pilotos vão ver esse nome.",
-    "submit": "Vamos lá",
+    "nameHint": "3 a 16 caracteres: letras, números, _ ou -",
+    "submit": "Avançar",
     "submitting": "Criando…",
     "back": "Voltar",
     "errors": {
@@ -41,7 +61,10 @@
       "length": "O nome precisa ter de 3 a 16 caracteres.",
       "characters": "Use apenas letras, números, _ e -."
     },
-    "consent": "Ao criar um piloto, você aceita os {terms} e a {privacy}."
+    "consent": "Ao criar um piloto, você aceita os {terms} e a {privacy}.",
+    "intro": "Os outros pilotos vão ver esse nome nos rankings e na placa da sua oficina.",
+    "valid": "Nome válido",
+    "noAccount": "Você não precisa de conta nem de e-mail. Você protege o perfil depois, quando ganhar o primeiro dinheiro."
   },
   "garage": {
     "welcome": "Boas-vindas, {name}",
@@ -49,23 +72,13 @@
     "carLevel": "Carro LV {level}"
   },
   "choose": {
-    "step": "Etapa 2 de 2",
     "title": "Escolha sua carcaça",
     "subtitle": "Você vai comprar os outros carros depois. Esta escolha não é definitiva.",
     "track": "Você começa em: {track}.",
-    "recommended": "Recomendado para começar",
-    "choose": "Escolher {name}",
+    "choose": "Escolher",
     "starting": "Iniciando…",
     "loadError": "Não foi possível carregar as carcaças.",
-    "stat": {
-      "lap": "Tempo de volta",
-      "reward": "Ganho por volta",
-      "fuel": "Consumo por volta",
-      "topSpeed": "Velocidade máxima",
-      "mass": "Massa",
-      "tank": "Tanque",
-      "cargo": "Carga"
-    }
+    "chooseNamed": "Escolher {name}"
   },
   "car": {
     "drivetrain": {
@@ -345,5 +358,8 @@
     "level": "LV",
     "progress": "{into} / {needed} XP",
     "xp": "Experiência neste nível"
+  },
+  "onboarding": {
+    "step": "Etapa {step} de {total}"
   }
 }

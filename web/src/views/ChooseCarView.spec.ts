@@ -31,7 +31,7 @@ function car(overrides: Partial<StarterCar>): StarterCar {
 const starters = {
   data: [
     car({}),
-    car({ slug: 'kuna-4x4', name: 'Kuna 4x4', description: 'Off-road and cargo.', drivetrain: 'awd', power_kw: 97, mass_kg: 1480, tank_l: 70, cargo_kg: 520, lap: { weather: 'dry', ms: 82_313, cash_cents: 1_550, xp: 25, fuel_ml: 1_500 } }),
+    car({ slug: 'kuna-4x4', name: 'Kuna 4x4', description: 'Off-road and cargo.', drivetrain: 'awd', engine: { layout: 'R4', displacement_l: 2 }, power_kw: 97, mass_kg: 1480, tank_l: 70, cargo_kg: 520, lap: { weather: 'dry', ms: 82_313, cash_cents: 1_550, xp: 25, fuel_ml: 1_500 } }),
     car({ slug: 'bizon-m-2', name: 'Bizon M-2', description: 'Plenty of power.', drivetrain: 'rwd', engine: { layout: 'V6', displacement_l: 3.2 }, power_kw: 202, mass_kg: 1480, tank_l: 60, lap: { weather: 'dry', ms: 67_015, cash_cents: 1_550, xp: 25, fuel_ml: 2_109 } }),
   ],
   track: { slug: 'zlomowo-street', name: 'Złomowo Street Sprint' },
@@ -77,32 +77,48 @@ describe('ChooseCarView', () => {
     await flushPromises()
 
     expect(wrapper.get('[data-test="step"]').text()).toBe('Step 2 of 2')
+    expect(wrapper.get('[role="progressbar"]').attributes('aria-valuenow')).toBe('100')
     expect(wrapper.get('[data-test="title"]').text()).toBe('Choose your wreck')
     expect(wrapper.get('[data-test="track"]').text()).toBe('You start on Złomowo Street Sprint.')
 
     const cards = wrapper.findAll('article')
     expect(cards.map((card) => card.get('h2').text())).toEqual(['Rdzak GT-4', 'Kuna 4x4', 'Bizon M-2'])
-    expect(wrapper.findAll('[data-test="recommended"]')).toHaveLength(1)
-    expect(cards[0]?.find('[data-test="recommended"]').exists()).toBe(true)
+    // The recommended one is the highlighted card, and only that one.
+    expect(cards.map((card) => card.classes().includes('card-hi'))).toEqual([true, false, false])
+    expect(cards.map((card) => card.attributes('data-recommended'))).toEqual(['true', 'false', 'false'])
   })
 
-  it('shows what a wreck does on the track', async () => {
+  it('shows a wreck as the canvas does: the picture, the drivetrain, the engine and what it is good for', async () => {
     serve({ 'GET /api/v1/runs/current': noRun, 'GET /api/v1/starter-cars': () => respond(200, starters) })
 
     const { wrapper } = await mountView(ChooseCarView, '/choose')
     await flushPromises()
 
     const rdzak = wrapper.get('[data-test="car-rdzak-gt-4"]')
-    expect(rdzak.get('[data-test="spec"]').text()).toBe('Front-wheel drive · R4 1.8 · 97 kW')
+    expect(rdzak.get('[data-test="picture"]').attributes('alt')).toBe('Rdzak GT-4')
+    expect(rdzak.get('[data-test="drivetrain"]').text()).toBe('FWD')
+    expect(rdzak.get('[data-test="drivetrain"]').attributes('title')).toBe('Front-wheel drive')
+    expect(rdzak.findAll('[data-test="spec"] .chip').map((chip) => chip.text())).toEqual(['R4 1.8', '97 kW'])
     expect(rdzak.get('[data-test="description"]').text()).toBe('City streets and low running costs.')
-    expect(rdzak.get('[data-test="lap"]').text()).toBe('1:15.0')
-    expect(rdzak.get('[data-test="reward"]').text()).toBe('$15.50 · 25 XP')
-    expect(rdzak.get('[data-test="fuel"]').text()).toBe('1.5 l')
 
     const bizon = wrapper.get('[data-test="car-bizon-m-2"]')
-    expect(bizon.get('[data-test="spec"]').text()).toBe('Rear-wheel drive · V6 3.2 · 202 kW')
-    expect(bizon.get('[data-test="lap"]').text()).toBe('1:07.0')
-    expect(bizon.get('[data-test="fuel"]').text()).toBe('2.1 l')
+    expect(bizon.get('[data-test="drivetrain"]').text()).toBe('RWD')
+    expect(bizon.findAll('[data-test="spec"] .chip').map((chip) => chip.text())).toEqual(['V6 3.2', '202 kW'])
+
+    // A displacement is written with its decimal, whole or not.
+    const kuna = wrapper.get('[data-test="car-kuna-4x4"]')
+    expect(kuna.findAll('[data-test="spec"] .chip').map((chip) => chip.text())).toEqual(['R4 2.0', '97 kW'])
+  })
+
+  it('names the button after the wreck for a screen reader, while it shows only "Choose"', async () => {
+    serve({ 'GET /api/v1/runs/current': noRun, 'GET /api/v1/starter-cars': () => respond(200, starters) })
+
+    const { wrapper } = await mountView(ChooseCarView, '/choose')
+    await flushPromises()
+
+    const button = wrapper.get('[data-test="car-kuna-4x4"] [data-test="choose"]')
+    expect(button.text()).toBe('Choose')
+    expect(button.attributes('aria-label')).toBe('Choose Kuna 4x4')
   })
 
   it('speaks the language of the driver', async () => {
@@ -113,8 +129,10 @@ describe('ChooseCarView', () => {
     await flushPromises()
 
     expect(wrapper.get('[data-test="step"]').text()).toBe('Krok 2 z 2')
-    expect(wrapper.get('[data-test="car-rdzak-gt-4"] [data-test="spec"]').text()).toBe('Napęd przedni · R4 1,8 · 97 kW')
-    expect(wrapper.get('[data-test="car-rdzak-gt-4"] [data-test="choose"]').text()).toBe('Wybierz: Rdzak GT-4')
+    expect(wrapper.findAll('[data-test="car-rdzak-gt-4"] [data-test="spec"] .chip').map((chip) => chip.text())).toEqual(['R4 1,8', '97 kW'])
+    expect(wrapper.get('[data-test="car-rdzak-gt-4"] [data-test="drivetrain"]').attributes('title')).toBe('Napęd przedni')
+    expect(wrapper.get('[data-test="car-rdzak-gt-4"] [data-test="choose"]').text()).toBe('Wybierz')
+    expect(wrapper.get('[data-test="car-rdzak-gt-4"] [data-test="choose"]').attributes('aria-label')).toBe('Wybierz: Rdzak GT-4')
   })
 
   it('starts the chosen wreck on the starting track and opens the garage', async () => {

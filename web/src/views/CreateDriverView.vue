@@ -5,6 +5,7 @@ import { RouterLink, useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import LegalLinks from '@/components/LegalLinks.vue'
+import StepShell from '@/components/StepShell.vue'
 import { NAME_MAX, validateName } from '@/features/driver/validateName'
 import { useSessionStore } from '@/stores/session'
 
@@ -25,6 +26,9 @@ const clientError = computed(() => {
 })
 
 const error = computed(() => serverError.value ?? (touched.value ? clientError.value : null))
+
+/** The name has the right shape: it is not yet known whether somebody else has it. */
+const wellFormed = computed(() => name.value !== '' && clientError.value === null && serverError.value === null)
 
 // A new attempt clears the message the server gave for the previous name.
 watch(name, () => {
@@ -68,16 +72,19 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <main class="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
-    <h1 class="text-3xl font-bold tracking-tight">{{ t('create.title') }}</h1>
+  <StepShell :step="1">
+    <form class="flex flex-1 flex-col gap-4" novalidate @submit.prevent="submit">
+      <div class="mt-7">
+        <h1 class="ttl !text-[40px] !leading-[0.95]">{{ t('create.title') }}</h1>
+        <p class="mt-2.5 text-[15px] text-muted">{{ t('create.intro') }}</p>
+      </div>
 
-    <form class="card flex flex-col gap-4" novalidate @submit.prevent="submit">
-      <div class="flex flex-col gap-2">
-        <label for="driver-name" class="font-semibold">{{ t('create.nameLabel') }}</label>
+      <div class="flex flex-col gap-1.5">
+        <label for="driver-name" class="fld-label">{{ t('create.nameLabel') }}</label>
         <input
           id="driver-name"
           v-model="name"
-          class="field"
+          class="field !min-h-14 !text-xl"
           type="text"
           name="name"
           autocomplete="off"
@@ -88,18 +95,29 @@ async function submit(): Promise<void> {
           aria-describedby="driver-name-hint driver-name-error"
           data-test="name"
         />
-        <p id="driver-name-hint" class="text-sm text-muted">{{ t('create.nameHint') }}</p>
-        <p id="driver-name-error" class="min-h-5 text-sm text-danger" role="alert" data-test="error">{{ error }}</p>
       </div>
 
-      <button type="submit" class="btn btn-primary" :disabled="submitting" data-test="submit">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- The server settles whether the name is free, when the driver goes on: this one says only that it is well formed. -->
+        <span v-if="wellFormed" class="tag tag-ok" data-test="well-formed">{{ t('create.valid') }}</span>
+        <span id="driver-name-hint" class="sub">{{ t('create.nameHint') }}</span>
+      </div>
+      <p id="driver-name-error" class="min-h-5 text-sm text-danger" role="alert" data-test="error">{{ error }}</p>
+
+      <div class="card flex flex-col gap-2 !px-3.5 !py-3">
+        <p class="sub !leading-[1.45]">{{ t('create.noAccount') }}</p>
+        <!-- A guest asks for no account and gives no personal data, so there is no box to tick: the way in says what it means. -->
+        <p class="sub !leading-[1.45]" data-test="consent"><LegalLinks keypath="create.consent" /></p>
+      </div>
+
+      <div class="flex-1" />
+
+      <button type="submit" class="btn btn-primary !min-h-14 !text-2xl" :disabled="submitting" data-test="submit">
         {{ submitting ? t('create.submitting') : t('create.submit') }}
       </button>
-
-      <!-- A guest asks for no account and gives no personal data, so there is no box to tick: the way in says what it means. -->
-      <p class="text-sm text-muted" data-test="consent"><LegalLinks keypath="create.consent" /></p>
+      <RouterLink to="/" class="flex min-h-11 items-center justify-center text-sm text-faint no-underline hover:text-ink" data-test="back">
+        {{ t('create.back') }}
+      </RouterLink>
     </form>
-
-    <RouterLink to="/" class="text-muted underline" data-test="back">{{ t('create.back') }}</RouterLink>
-  </main>
+  </StepShell>
 </template>

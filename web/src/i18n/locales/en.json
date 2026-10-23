@@ -21,19 +21,39 @@
     "tooManyRequests": "Too many attempts. Try again later."
   },
   "landing": {
-    "title": "Your workshop is waiting",
-    "subtitle": "Rebuild wrecks, buy better cars and race even when you are away.",
+    "title": "A workshop that races while you’re away",
+    "subtitle": "Rebuild wrecks, match the car to the track and come back for the rewards. Start in a minute, no sign-up.",
     "create": "Create your driver",
     "continue": "Continue as {name}",
     "continueGeneric": "Continue",
-    "haveDriver": "I already have a driver",
-    "accountDeleted": "Your account was deleted, with everything in it."
+    "haveDriver": "I already have an account",
+    "accountDeleted": "Your account was deleted, with everything in it.",
+    "eyebrow": "Browser game · idle · racing",
+    "noEmail": "No e-mail needed. Secure your account later.",
+    "imageAlt": "The workshop in Złomowo at dusk and three wrecks in the yard",
+    "features": {
+      "match": {
+        "kicker": "Matching",
+        "title": "The right car for the track",
+        "text": "Off-road, drag, hairpins, rain. Every city asks for a different car and different tires."
+      },
+      "grow": {
+        "kicker": "Growth",
+        "title": "A garage that grows",
+        "text": "Parts, rarity, a workshop, mechanics and more cities. Progress runs on timers."
+      },
+      "idle": {
+        "kicker": "Idle",
+        "title": "Races go on without you",
+        "text": "Come back after an hour or after a day and collect your rewards. The cars keep driving as long as they have fuel."
+      }
+    }
   },
   "create": {
-    "title": "Create your driver",
+    "title": "What should we call you, driver?",
     "nameLabel": "Driver name",
-    "nameHint": "3–16 characters: letters, digits, _ or -. Other drivers will see it.",
-    "submit": "Let’s go",
+    "nameHint": "3–16 characters: letters, digits, _ or -",
+    "submit": "Next",
     "submitting": "Creating…",
     "back": "Back",
     "errors": {
@@ -41,7 +61,10 @@
       "length": "The name needs 3–16 characters.",
       "characters": "Use only letters, digits, _ and -."
     },
-    "consent": "By creating a driver you accept the {terms} and the {privacy}."
+    "consent": "By creating a driver you accept the {terms} and the {privacy}.",
+    "intro": "Other drivers will see this name in the rankings and on the sign of your workshop.",
+    "valid": "Name looks good",
+    "noAccount": "You need no account and no e-mail. You can secure your profile later, once you have earned your first money."
   },
   "garage": {
     "welcome": "Welcome, {name}",
@@ -49,23 +72,13 @@
     "carLevel": "Car LV {level}"
   },
   "choose": {
-    "step": "Step 2 of 2",
     "title": "Choose your wreck",
     "subtitle": "You will buy the rest of your cars later. This choice is not final.",
     "track": "You start on {track}.",
-    "recommended": "Recommended to start",
-    "choose": "Choose {name}",
+    "choose": "Choose",
     "starting": "Starting…",
     "loadError": "The wrecks could not be loaded.",
-    "stat": {
-      "lap": "Lap time",
-      "reward": "Reward per lap",
-      "fuel": "Fuel per lap",
-      "topSpeed": "Top speed",
-      "mass": "Mass",
-      "tank": "Tank",
-      "cargo": "Cargo"
-    }
+    "chooseNamed": "Choose {name}"
   },
   "car": {
     "drivetrain": {
@@ -345,5 +358,8 @@
     "level": "LV",
     "progress": "{into} / {needed} XP",
     "xp": "Experience in this level"
+  },
+  "onboarding": {
+    "step": "Step {step} of {total}"
   }
 }

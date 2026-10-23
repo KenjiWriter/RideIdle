@@ -21,19 +21,39 @@
     "tooManyRequests": "Trop de tentatives. Réessayez plus tard."
   },
   "landing": {
-    "title": "Votre atelier vous attend",
-    "subtitle": "Retapez des épaves, achetez de meilleures voitures et courez même en votre absence.",
+    "title": "Un atelier qui fait la course quand vous n’êtes pas là",
+    "subtitle": "Retapez des épaves, choisissez la voiture adaptée au circuit et revenez chercher vos gains. Démarrez en une minute, sans inscription.",
     "create": "Créer votre pilote",
     "continue": "Continuer en tant que {name}",
     "continueGeneric": "Continuer",
-    "haveDriver": "J’ai déjà un pilote",
-    "accountDeleted": "Votre compte a été supprimé, avec tout son contenu."
+    "haveDriver": "J’ai déjà un compte",
+    "accountDeleted": "Votre compte a été supprimé, avec tout son contenu.",
+    "eyebrow": "Jeu de navigateur · idle · courses",
+    "noEmail": "Pas d’e-mail requis. Vous sécuriserez votre compte plus tard.",
+    "imageAlt": "L’atelier de Złomowo au crépuscule et trois épaves dans la cour",
+    "features": {
+      "match": {
+        "kicker": "Choix",
+        "title": "La bonne voiture pour la piste",
+        "text": "Tout-terrain, drag, épingles, pluie. Chaque ville demande une autre voiture et d’autres pneus."
+      },
+      "grow": {
+        "kicker": "Évolution",
+        "title": "Un garage qui grandit",
+        "text": "Pièces, rareté, atelier, mécaniciens et nouvelles villes. La progression suit des minuteurs."
+      },
+      "idle": {
+        "kicker": "Idle",
+        "title": "Les courses continuent sans vous",
+        "text": "Revenez après une heure ou après un jour et récupérez vos gains. Les voitures roulent tant qu’elles ont du carburant."
+      }
+    }
   },
   "create": {
-    "title": "Créer votre pilote",
+    "title": "Comment vous appelez-vous, pilote ?",
     "nameLabel": "Nom du pilote",
-    "nameHint": "3 à 16 caractères : lettres, chiffres, _ ou -. Les autres pilotes le verront.",
-    "submit": "C’est parti",
+    "nameHint": "3 à 16 caractères : lettres, chiffres, _ ou -",
+    "submit": "Suivant",
     "submitting": "Création…",
     "back": "Retour",
     "errors": {
@@ -41,7 +61,10 @@
       "length": "Le nom doit comporter 3 à 16 caractères.",
       "characters": "Utilisez uniquement des lettres, des chiffres, _ et -."
     },
-    "consent": "En créant un pilote, vous acceptez {terms} et {privacy}."
+    "consent": "En créant un pilote, vous acceptez {terms} et {privacy}.",
+    "intro": "Les autres pilotes verront ce nom dans les classements et sur l’enseigne de votre atelier.",
+    "valid": "Nom valide",
+    "noAccount": "Pas besoin de compte ni d’e-mail. Vous sécuriserez votre profil plus tard, une fois vos premiers gains encaissés."
   },
   "garage": {
     "welcome": "Bienvenue, {name}",
@@ -49,23 +72,13 @@
     "carLevel": "Voiture LV {level}"
   },
   "choose": {
-    "step": "Étape 2 sur 2",
     "title": "Choisissez votre épave",
     "subtitle": "Vous achèterez les autres voitures plus tard. Ce choix n’est pas définitif.",
     "track": "Vous commencez sur : {track}.",
-    "recommended": "Conseillée pour débuter",
-    "choose": "Choisir {name}",
+    "choose": "Choisir",
     "starting": "Démarrage…",
     "loadError": "Impossible de charger les épaves.",
-    "stat": {
-      "lap": "Temps au tour",
-      "reward": "Gain par tour",
-      "fuel": "Carburant par tour",
-      "topSpeed": "Vitesse maximale",
-      "mass": "Masse",
-      "tank": "Réservoir",
-      "cargo": "Charge utile"
-    }
+    "chooseNamed": "Choisir {name}"
   },
   "car": {
     "drivetrain": {
@@ -345,5 +358,8 @@
     "level": "LV",
     "progress": "{into} / {needed} XP",
     "xp": "Expérience de ce niveau"
+  },
+  "onboarding": {
+    "step": "Étape {step} sur {total}"
   }
 }

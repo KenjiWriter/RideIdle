@@ -48,12 +48,31 @@ describe('LandingView', () => {
   it('invites a new visitor to create a driver or restore one', async () => {
     const { wrapper } = await mountView(LandingView)
 
-    expect(wrapper.get('h1').text()).toBe('Your workshop is waiting')
+    expect(wrapper.get('h1').text()).toBe('A workshop that races while you’re away')
     expect(wrapper.get('[data-test="create"]').text()).toBe('Create your driver')
     expect(wrapper.get('[data-test="create"]').attributes('href')).toBe('/create')
+    expect(wrapper.get('[data-test="have-driver"]').text()).toBe('I already have an account')
     expect(wrapper.get('[data-test="have-driver"]').attributes('href')).toBe('/recover')
     expect(wrapper.find('[data-test="continue"]').exists()).toBe(false)
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('promises a start without an e-mail, under the button', async () => {
+    const { wrapper } = await mountView(LandingView)
+
+    expect(wrapper.text()).toContain('No e-mail needed. Secure your account later.')
+  })
+
+  it('draws the brand, the picture of the workshop and the three reasons to play', async () => {
+    const { wrapper } = await mountView(LandingView)
+
+    expect(wrapper.get('[data-test="brand"]').text()).toBe('RideIdle')
+    expect(wrapper.get('[data-test="hero"]').attributes('alt')).toBe('The workshop in Złomowo at dusk and three wrecks in the yard')
+    expect(wrapper.findAll('[data-test="features"] section h2').map((title) => title.text())).toEqual([
+      'The right car for the track',
+      'A garage that grows',
+      'Races go on without you',
+    ])
   })
 
   it('greets a returning driver by name', async () => {
@@ -71,6 +90,8 @@ describe('LandingView', () => {
     expect(wrapper.get('[data-test="continue"]').text()).toBe('Continue as Maciek_Turbo')
     expect(wrapper.get('[data-test="continue"]').attributes('href')).toBe('/garage')
     expect(wrapper.find('[data-test="create"]').exists()).toBe(false)
+    // A driver who is signed in has no use for the way to restore one.
+    expect(wrapper.find('[data-test="have-driver"]').exists()).toBe(false)
   })
 
   it('still lets the driver continue when the profile cannot be loaded', async () => {

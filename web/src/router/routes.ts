@@ -6,6 +6,8 @@ declare module 'vue-router' {
     requiresAuth?: boolean
     /** For visitors only: a signed-in driver is sent to the garage. */
     guestOnly?: boolean
+    /** Draws its own top bar with the name of the game, as the canvas does: the header of the application is left out. */
+    bare?: boolean
   }
 }
 
@@ -14,8 +16,8 @@ declare module 'vue-router' {
  * with in-memory history from the same list.
  */
 export const routes: RouteRecordRaw[] = [
-  { path: '/', name: 'landing', component: () => import('@/views/LandingView.vue') },
-  { path: '/create', name: 'create', component: () => import('@/views/CreateDriverView.vue'), meta: { guestOnly: true } },
+  { path: '/', name: 'landing', component: () => import('@/views/LandingView.vue'), meta: { bare: true } },
+  { path: '/create', name: 'create', component: () => import('@/views/CreateDriverView.vue'), meta: { guestOnly: true, bare: true } },
   { path: '/recover', name: 'recover', component: () => import('@/views/RecoverView.vue'), meta: { guestOnly: true } },
   // The link of an e-mail is opened in any browser, by a driver or not: it is open to everybody.
   { path: '/account/confirm', name: 'account-confirm', component: () => import('@/views/ConfirmEmailView.vue') },
@@ -25,7 +27,7 @@ export const routes: RouteRecordRaw[] = [
   // The terms and the privacy policy are read before there is an account, and from the window that asks for consent.
   { path: '/terms', name: 'terms', component: () => import('@/views/LegalView.vue'), props: { document: 'terms' } },
   { path: '/privacy', name: 'privacy', component: () => import('@/views/LegalView.vue'), props: { document: 'privacy' } },
-  { path: '/choose', name: 'choose', component: () => import('@/views/ChooseCarView.vue'), meta: { requiresAuth: true } },
+  { path: '/choose', name: 'choose', component: () => import('@/views/ChooseCarView.vue'), meta: { requiresAuth: true, bare: true } },
   { path: '/garage', name: 'garage', component: () => import('@/views/GarageView.vue'), meta: { requiresAuth: true } },
   { path: '/workshop', name: 'workshop', component: () => import('@/views/WorkshopView.vue'), meta: { requiresAuth: true } },
   { path: '/shop', name: 'shop', component: () => import('@/views/ShopView.vue'), meta: { requiresAuth: true } },

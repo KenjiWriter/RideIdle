@@ -21,19 +21,39 @@
     "tooManyRequests": "Zu viele Versuche. Versuche es später erneut."
   },
   "landing": {
-    "title": "Deine Werkstatt wartet",
-    "subtitle": "Baue Wracks wieder auf, kaufe bessere Autos und fahre Rennen, auch wenn du nicht da bist.",
+    "title": "Eine Werkstatt, die Rennen fährt, wenn du nicht da bist",
+    "subtitle": "Baue Wracks wieder auf, wähle das Auto für die Strecke und hol dir deine Belohnungen ab. In einer Minute startklar, ohne Registrierung.",
     "create": "Fahrer erstellen",
     "continue": "Weiter als {name}",
     "continueGeneric": "Weiter",
-    "haveDriver": "Ich habe schon einen Fahrer",
-    "accountDeleted": "Dein Konto wurde mit allem, was darin war, gelöscht."
+    "haveDriver": "Ich habe schon ein Konto",
+    "accountDeleted": "Dein Konto wurde mit allem, was darin war, gelöscht.",
+    "eyebrow": "Browserspiel · Idle · Rennen",
+    "noEmail": "Keine E-Mail nötig. Sichere dein Konto später.",
+    "imageAlt": "Die Werkstatt in Złomowo in der Dämmerung und drei Wracks auf dem Hof",
+    "features": {
+      "match": {
+        "kicker": "Auswahl",
+        "title": "Das richtige Auto für die Strecke",
+        "text": "Gelände, Drag, Serpentinen, Regen. Jede Stadt verlangt ein anderes Auto und andere Reifen."
+      },
+      "grow": {
+        "kicker": "Entwicklung",
+        "title": "Eine Garage, die wächst",
+        "text": "Teile, Seltenheit, Werkstatt, Mechaniker und weitere Städte. Der Fortschritt läuft über Timer."
+      },
+      "idle": {
+        "kicker": "Idle",
+        "title": "Rennen laufen ohne dich weiter",
+        "text": "Komm nach einer Stunde oder nach einem Tag wieder und hol dir die Belohnungen ab. Die Autos fahren, solange sie Sprit haben."
+      }
+    }
   },
   "create": {
-    "title": "Fahrer erstellen",
+    "title": "Wie heißt du, Fahrer?",
     "nameLabel": "Fahrername",
-    "nameHint": "3–16 Zeichen: Buchstaben, Ziffern, _ oder -. Andere Fahrer sehen diesen Namen.",
-    "submit": "Los geht’s",
+    "nameHint": "3–16 Zeichen: Buchstaben, Ziffern, _ oder -",
+    "submit": "Weiter",
     "submitting": "Wird erstellt…",
     "back": "Zurück",
     "errors": {
@@ -41,7 +61,10 @@
       "length": "Der Name braucht 3–16 Zeichen.",
       "characters": "Verwende nur Buchstaben, Ziffern, _ und -."
     },
-    "consent": "Mit dem Erstellen eines Fahrers akzeptierst du die {terms} und die {privacy}."
+    "consent": "Mit dem Erstellen eines Fahrers akzeptierst du die {terms} und die {privacy}.",
+    "intro": "Andere Fahrer sehen diesen Namen in den Ranglisten und auf dem Schild deiner Werkstatt.",
+    "valid": "Name gültig",
+    "noAccount": "Du brauchst weder Konto noch E-Mail. Dein Profil sicherst du später, wenn du das erste Geld verdient hast."
   },
   "garage": {
     "welcome": "Willkommen, {name}",
@@ -49,23 +72,13 @@
     "carLevel": "Auto LV {level}"
   },
   "choose": {
-    "step": "Schritt 2 von 2",
     "title": "Wähle dein Wrack",
     "subtitle": "Die übrigen Autos kaufst du später. Diese Wahl ist nicht endgültig.",
     "track": "Du startest auf der Strecke {track}.",
-    "recommended": "Empfohlen für den Start",
-    "choose": "{name} wählen",
+    "choose": "Wählen",
     "starting": "Wird gestartet…",
     "loadError": "Die Wracks konnten nicht geladen werden.",
-    "stat": {
-      "lap": "Rundenzeit",
-      "reward": "Belohnung pro Runde",
-      "fuel": "Kraftstoff pro Runde",
-      "topSpeed": "Höchstgeschwindigkeit",
-      "mass": "Masse",
-      "tank": "Tank",
-      "cargo": "Zuladung"
-    }
+    "chooseNamed": "{name} wählen"
   },
   "car": {
     "drivetrain": {
@@ -345,5 +358,8 @@
     "level": "LV",
     "progress": "{into} / {needed} XP",
     "xp": "Erfahrung in dieser Stufe"
+  },
+  "onboarding": {
+    "step": "Schritt {step} von {total}"
   }
 }

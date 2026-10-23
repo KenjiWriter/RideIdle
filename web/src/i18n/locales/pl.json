@@ -21,27 +21,50 @@
     "tooManyRequests": "Zbyt wiele prób. Spróbuj ponownie później."
   },
   "landing": {
-    "title": "Twoja dziupla czeka",
-    "subtitle": "Odbuduj wraki, kupuj coraz lepsze auta i ścigaj się, nawet gdy Cię nie ma.",
+    "title": "Dziupla, która ściga się, gdy Cię nie ma",
+    "subtitle": "Odbuduj wraki, dobierz auto do toru i wracaj po nagrody. Zacznij w minutę, bez rejestracji.",
     "create": "Utwórz kierowcę",
     "continue": "Kontynuuj jako {name}",
     "continueGeneric": "Kontynuuj",
-    "haveDriver": "Mam już kierowcę",
-    "accountDeleted": "Twoje konto zostało usunięte razem z całą zawartością."
+    "haveDriver": "Mam już konto",
+    "accountDeleted": "Twoje konto zostało usunięte razem z całą zawartością.",
+    "eyebrow": "Gra przeglądarkowa · idle · wyścigi",
+    "noEmail": "Bez e-maila. Konto zabezpieczysz później.",
+    "imageAlt": "Dziupla w Złomowie o zmierzchu i trzy wraki na podwórku",
+    "features": {
+      "match": {
+        "kicker": "Dobór",
+        "title": "Auto pod tor",
+        "text": "Teren, drag, serpentyny, deszcz. Każde miasto wymaga innego auta i innych opon."
+      },
+      "grow": {
+        "kicker": "Rozwój",
+        "title": "Garaż, który rośnie",
+        "text": "Części, rzadkość, warsztat, mechanicy i kolejne miasta. Postęp na timerach."
+      },
+      "idle": {
+        "kicker": "Idle",
+        "title": "Wyścigi trwają bez Ciebie",
+        "text": "Wróć po godzinie albo po dniu i odbierz nagrody. Auta jeżdżą, dopóki mają paliwo."
+      }
+    }
   },
   "create": {
-    "title": "Utwórz kierowcę",
-    "nameLabel": "Imię kierowcy",
-    "nameHint": "3–16 znaków: litery, cyfry, _ lub -. Zobaczą je inni kierowcy.",
-    "submit": "Jedziemy",
+    "title": "Jak masz na imię, kierowco?",
+    "nameLabel": "Nazwa kierowcy",
+    "nameHint": "3–16 znaków: litery, cyfry, _ lub -",
+    "submit": "Dalej",
     "submitting": "Tworzenie…",
-    "back": "Wstecz",
+    "back": "Wróć",
     "errors": {
       "required": "Wpisz imię.",
       "length": "Imię musi mieć 3–16 znaków.",
       "characters": "Użyj tylko liter, cyfr, _ i -."
     },
-    "consent": "Tworząc kierowcę, akceptujesz {terms} i {privacy}."
+    "consent": "Tworząc kierowcę, akceptujesz {terms} i {privacy}.",
+    "intro": "To imię zobaczą inni kierowcy w rankingach i na szyldzie Twojego warsztatu.",
+    "valid": "Nazwa poprawna",
+    "noAccount": "Nie potrzebujesz konta ani e-maila. Zabezpieczysz profil później, gdy zarobisz pierwsze pieniądze."
   },
   "garage": {
     "welcome": "Witaj, {name}",
@@ -49,23 +72,13 @@
     "carLevel": "Auto LV {level}"
   },
   "choose": {
-    "step": "Krok 2 z 2",
     "title": "Wybierz swój wrak",
     "subtitle": "Resztę aut kupisz później. Ten wybór nie jest ostateczny.",
     "track": "Zaczynasz na torze: {track}.",
-    "recommended": "Polecany na start",
-    "choose": "Wybierz: {name}",
+    "choose": "Wybierz",
     "starting": "Uruchamianie…",
     "loadError": "Nie udało się wczytać wraków.",
-    "stat": {
-      "lap": "Czas okrążenia",
-      "reward": "Nagroda za okrążenie",
-      "fuel": "Paliwo na okrążenie",
-      "topSpeed": "Prędkość maksymalna",
-      "mass": "Masa",
-      "tank": "Bak",
-      "cargo": "Ładunek"
-    }
+    "chooseNamed": "Wybierz: {name}"
   },
   "car": {
     "drivetrain": {
@@ -345,5 +358,8 @@
     "level": "LV",
     "progress": "{into} / {needed} XP",
     "xp": "Doświadczenie na tym poziomie"
+  },
+  "onboarding": {
+    "step": "Krok {step} z {total}"
   }
 }
