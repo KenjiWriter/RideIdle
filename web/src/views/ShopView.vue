@@ -5,7 +5,7 @@ import { RouterLink } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import type { ShopOffer } from '@/api/types'
-import GameNav from '@/components/GameNav.vue'
+import GameShell from '@/components/GameShell.vue'
 import PartStats from '@/components/PartStats.vue'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -75,13 +75,11 @@ async function buy(offer: ShopOffer): Promise<void> {
 </script>
 
 <template>
-  <main class="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8">
-    <GameNav />
-
+  <GameShell>
     <header class="flex flex-col gap-1">
-      <h1 class="text-3xl font-bold tracking-tight">{{ t('shop.title') }}</h1>
-      <p class="text-muted">{{ t('shop.intro') }}</p>
-      <p v-if="store.cash" class="font-semibold text-amber" data-test="cash">{{ t('shop.cash', { money: money(store.cash.cash_cents, 2) }) }}</p>
+      <h1 class="ttl">{{ t('shop.title') }}</h1>
+      <p class="sub">{{ t('shop.intro') }}</p>
+      <p v-if="store.cash" class="sr-only" data-test="cash">{{ t('shop.cash', { money: money(store.cash.cash_cents, 2) }) }}</p>
     </header>
 
     <div v-if="loadError" class="flex flex-col items-start gap-3" data-test="load-error">
@@ -92,27 +90,28 @@ async function buy(offer: ShopOffer): Promise<void> {
     <p v-else-if="!store.shopLoaded" class="text-muted" data-test="loading">{{ t('common.loading') }}</p>
 
     <template v-else>
-      <p v-if="done" class="rounded-lg border border-cyan bg-surface-2 p-3 text-sm" role="status" data-test="done">
-        {{ done }}
-        <RouterLink :to="{ name: 'workshop' }" class="ml-1 font-bold text-cyan underline" data-test="to-workshop">{{ t('shop.toWorkshop') }}</RouterLink>
-      </p>
+      <div v-if="done" class="card card-cy flex flex-col gap-2 !p-3" role="status" data-test="done">
+        <p class="kick !mb-0">{{ t('shop.last') }}</p>
+        <p class="font-semibold">{{ done }}</p>
+        <RouterLink :to="{ name: 'workshop' }" class="btn btn-primary btn-sm" data-test="to-workshop">{{ t('shop.toWorkshop') }}</RouterLink>
+      </div>
       <p v-if="error" class="text-danger" role="alert" data-test="error">{{ error }}</p>
 
       <p v-if="!store.shopCar" class="text-muted" data-test="no-car">{{ t('shop.noCar') }}</p>
 
-      <ul class="flex flex-col gap-3">
-        <li v-for="offer in store.offers" :key="offer.slug" class="card flex flex-col gap-2" :data-test="`offer-${offer.slug}`">
-          <div class="flex items-start justify-between gap-3">
-            <div>
-              <h2 class="text-lg font-bold">{{ offer.name }}</h2>
-              <p class="text-sm text-muted">
-                {{ t(`slot.${offer.slot}`) }}
-                <span class="ml-1 rounded border border-line px-1 font-mono text-xs">{{ t('part.tier', { tier: offer.tier ?? 0 }) }}</span>
-              </p>
+      <ul class="flex flex-col gap-2.5">
+        <li v-for="offer in store.offers" :key="offer.slug" class="card flex flex-col gap-1.5 !p-3" :data-test="`offer-${offer.slug}`">
+          <div class="flex items-center justify-between gap-2.5">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h2 class="text-[15px] font-bold text-ink">{{ offer.name }}</h2>
+                <span class="tag">{{ t('part.tier', { tier: offer.tier ?? 0 }) }}</span>
+              </div>
+              <p class="sub">{{ t(`slot.${offer.slot}`) }}</p>
             </div>
             <button
               type="button"
-              class="btn btn-primary shrink-0"
+              class="btn btn-primary btn-sm shrink-0"
               :disabled="buying !== null || !affordable(offer)"
               :data-test="`buy-${offer.slug}`"
               @click="buy(offer)"
@@ -123,12 +122,12 @@ async function buy(offer: ShopOffer): Promise<void> {
 
           <PartStats :part="offer" />
 
-          <p v-if="!affordable(offer)" class="text-sm text-muted" data-test="no-cash">{{ t('shop.noCash') }}</p>
-          <p v-if="store.shopCar && !offer.mountable" class="text-sm text-amber" data-test="needs-level">
+          <p v-if="!affordable(offer)" class="sub" data-test="no-cash">{{ t('shop.noCash') }}</p>
+          <p v-if="store.shopCar && !offer.mountable" class="text-sm text-danger" data-test="needs-level">
             {{ t('shop.needsLevel', { level: offer.required_car_level }) }} {{ t('shop.yourLevel', { level: store.shopCar.level }) }}
           </p>
         </li>
       </ul>
     </template>
-  </main>
+  </GameShell>
 </template>

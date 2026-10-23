@@ -1,24 +1,27 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
+import type { CarStatKey } from '@/api/types'
 import AccountData from '@/components/AccountData.vue'
 import AwaySummary from '@/components/AwaySummary.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
-import GameNav from '@/components/GameNav.vue'
+import GameShell from '@/components/GameShell.vue'
 import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
 import LinkAccountDialog from '@/components/LinkAccountDialog.vue'
 import LinkedAccounts from '@/components/LinkedAccounts.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RepairControl from '@/components/RepairControl.vue'
 import TowControl from '@/components/TowControl.vue'
+import { carPicture } from '@/features/art'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatDuration, formatLapTime } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
+import { useGarageStore } from '@/stores/garage'
 import { useRunStore } from '@/stores/run'
 import { useSessionStore } from '@/stores/session'
 
@@ -26,6 +29,7 @@ const { t } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
 const run = useRunStore()
+const garage = useGarageStore()
 const { money, number } = useFormat()
 
 useLeaveOnSignOut()
@@ -46,7 +50,12 @@ async function open(): Promise<void> {
     // A driver without a car on the track has not chosen a wreck yet.
     if (!run.run) {
       await router.replace({ name: 'choose' })
+
+      return
     }
+
+    // The parts and the statistics are not worth an error of their own: the car and its run are on the screen without them.
+    await garage.loadGarage().catch(() => undefined)
   } catch (failure) {
     if (!endSessionIfUnauthorized(failure)) {
       loadError.value = true
@@ -55,6 +64,16 @@ async function open(): Promise<void> {
 }
 
 onMounted(open)
+
+/** The server carries out the jobs of the workshop whenever it settles the run, so a new version of the run may mean new parts. */
+watch(
+  () => run.run?.state_version,
+  (version, before) => {
+    if (before !== undefined && version !== before) {
+      void garage.loadGarage().catch(() => undefined)
+    }
+  },
+)
 
 /**
  * A towed car is running, but its start is still in the future: the wait of the tow. Nothing else puts the cursor of
@@ -66,6 +85,23 @@ const towing = computed(() => towMs.value > 0)
 /** Why the car stands, that it is being towed, or that it is racing: the key of the status in the messages. */
 const statusKey = computed(() => (towing.value ? 'towed' : (run.run?.stop_reason ?? 'running')))
 const stopped = computed(() => run.run?.status === 'stopped')
+
+const car = computed(() => garage.garage?.car ?? null)
+const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking']
+
+/** How full the bar of a statistic is: 1.6 times what counts as normal on the track, the cap of the lap formula, fills it. */
+function fill(stat: CarStatKey): number {
+  const current = car.value
+  const reference = current?.references[stat] ?? 0
+
+  return current && reference > 0 ? Math.min(100, Math.round((current.stats[stat] / (reference * 1.6)) * 100)) : 0
+}
+
+function delta(stat: CarStatKey): number {
+  const value = (car.value?.stats[stat] ?? 0) - (car.value?.base_stats[stat] ?? 0)
+
+  return Math.abs(value) < 0.005 ? 0 : value
+}
 
 /**
  * A guest who has earned something has a garage worth saving: the window "Save your garage" opens once, and when the
@@ -100,10 +136,8 @@ async function useCode(): Promise<void> {
 </script>
 
 <template>
-  <main class="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8">
-    <GameNav />
-
-    <p class="text-sm text-muted" data-test="welcome">
+  <GameShell :load-run="false">
+    <p class="sub" data-test="welcome">
       {{ session.me ? t('garage.welcome', { name: session.me.name }) : t('common.loading') }}
     </p>
 
@@ -119,50 +153,50 @@ async function useCode(): Promise<void> {
     <template v-else>
       <AwaySummary v-if="run.away" :summary="run.away" :now-ms="run.run.server_time_ms" @dismiss="run.dismissAway()" />
 
-      <section class="card" aria-labelledby="run-title" data-test="run">
+      <section class="flex flex-col gap-3" aria-labelledby="run-title" data-test="run">
         <div class="flex items-start justify-between gap-3">
-          <div>
-            <h1 id="run-title" class="text-3xl font-bold tracking-tight" data-test="car">{{ run.run.car.name }}</h1>
-            <p class="text-muted" data-test="track">{{ run.run.track.name }}</p>
+          <div class="min-w-0">
+            <h1 id="run-title" class="ttl" data-test="car">{{ run.run.car.name }}</h1>
+            <p class="sub mt-1" data-test="track">{{ run.run.track.name }}</p>
           </div>
-          <span
-            class="shrink-0 rounded-full border px-3 py-1 text-sm font-bold"
-            :class="stopped ? 'border-danger text-danger' : towing ? 'border-amber text-amber' : 'border-cyan text-cyan'"
-            data-test="status"
-          >
-            {{ t(`run.status.${statusKey}`) }}
-          </span>
+          <div class="flex flex-none flex-col items-end gap-1.5">
+            <span v-if="car" class="chip chip-am" data-test="car-level">{{ t('garage.carLevel', { level: car.level }) }}</span>
+            <span class="chip" :class="stopped && run.run.stop_reason !== 'workshop' ? 'chip-bad' : stopped || towing ? 'chip-am' : 'chip-cy'" data-test="status">
+              {{ t(`run.status.${statusKey}`) }}
+            </span>
+          </div>
         </div>
 
-        <dl class="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3">
-          <div>
-            <dt class="text-sm text-muted">{{ t('run.stat.cash') }}</dt>
-            <dd class="text-lg font-bold text-amber" data-test="cash">{{ money(run.wallet?.cash_cents ?? 0, 2) }}</dd>
+        <div v-if="carPicture(run.run.car.slug)" class="card flex items-stretch overflow-hidden !p-0" data-test="picture">
+          <img :src="carPicture(run.run.car.slug) ?? ''" :alt="run.run.car.name" class="h-[86px] w-[130px] flex-none object-cover" />
+          <div class="flex min-w-0 flex-col justify-center gap-1.5 px-3 py-2">
+            <div class="flex flex-wrap gap-1.5">
+              <span v-if="car?.vehicle.drivetrain" class="tag border-amber bg-amber text-amber-ink" data-test="drivetrain">{{ car.vehicle.drivetrain.toUpperCase() }}</span>
+              <span v-if="car?.vehicle.engine" class="chip h-6">{{ car.vehicle.engine }}</span>
+              <span v-if="car?.vehicle.power_kw" class="chip h-6">{{ t('car.power', { value: car.vehicle.power_kw }) }}</span>
+            </div>
+            <p class="text-xs text-muted">
+              {{ t('run.stat.lapTime') }} <b class="mono text-ink" data-test="lap-time">{{ formatLapTime(baseLapMs(run.run)) }}</b>
+            </p>
           </div>
-          <div>
-            <dt class="text-sm text-muted">{{ t('run.stat.xp') }}</dt>
-            <dd class="text-lg font-bold" data-test="xp">{{ t('car.xp', { value: number(run.wallet?.xp ?? 0) }) }}</dd>
+        </div>
+
+        <dl class="grid grid-cols-3 gap-2" data-test="run-stats">
+          <div class="card !p-2.5">
+            <dt class="kick !mb-0.5 !text-[10px] !tracking-[0.06em]">{{ t('run.stat.laps') }}</dt>
+            <dd class="font-display text-xl font-bold" data-test="laps">{{ number(run.run.laps_done) }}</dd>
           </div>
-          <div>
-            <dt class="text-sm text-muted">{{ t('run.stat.laps') }}</dt>
-            <dd class="text-lg font-bold" data-test="laps">{{ number(run.run.laps_done) }}</dd>
+          <div class="card !p-2.5">
+            <dt class="kick !mb-0.5 !text-[10px] !tracking-[0.06em]">{{ t('run.stat.reward') }}</dt>
+            <dd class="font-display text-xl font-bold text-amber" data-test="reward">{{ money(baseRewardCents(run.run), 2) }}</dd>
           </div>
-          <div>
-            <dt class="text-sm text-muted">{{ t('run.stat.reward') }}</dt>
-            <dd class="font-semibold" data-test="reward">{{ money(baseRewardCents(run.run), 2) }}</dd>
-          </div>
-          <div>
-            <dt class="text-sm text-muted">{{ t('run.stat.lapTime') }}</dt>
-            <dd class="font-semibold" data-test="lap-time">{{ formatLapTime(baseLapMs(run.run)) }}</dd>
+          <div class="card !p-2.5">
+            <dt class="kick !mb-0.5 !text-[10px] !tracking-[0.06em]">{{ t('run.stat.xp') }}</dt>
+            <dd class="font-display text-xl font-bold" data-test="xp">{{ t('car.xp', { value: number(run.wallet?.xp ?? 0) }) }}</dd>
           </div>
         </dl>
 
-        <p
-          v-if="stopped && run.run.stop_reason"
-          class="mt-4 rounded-lg border border-danger bg-surface-2 p-3 text-sm"
-          role="status"
-          data-test="banner"
-        >
+        <p v-if="stopped && run.run.stop_reason" class="card card-hi text-sm" role="status" data-test="banner">
           {{ t(`run.banner.${run.run.stop_reason}`) }}
         </p>
 
@@ -170,9 +204,35 @@ async function useCode(): Promise<void> {
 
         <TowControl :run="run.run" />
 
-        <p v-if="towing" class="mt-4 rounded-lg border border-amber bg-surface-2 p-3 text-sm" role="status" data-test="towing">
+        <p v-if="towing" class="card card-hi text-sm" role="status" data-test="towing">
           {{ t('run.tow.underway', { time: formatDuration(towMs) }) }}
         </p>
+      </section>
+
+      <section v-if="car" class="flex flex-col gap-1" :aria-label="t('workshop.stats')" data-test="stats">
+        <div v-for="stat in STATS" :key="stat" class="st" :data-test="`stat-${stat}`">
+          <span>{{ t(`carStat.${stat}`) }}</span>
+          <div class="bar"><i :style="{ width: `${fill(stat)}%` }" /></div>
+          <span>
+            {{ number(car.stats[stat], 0) }}
+            <em v-if="delta(stat) !== 0" :class="{ dn: delta(stat) < 0 }" :data-test="`delta-${stat}`">{{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 0) }}</em>
+          </span>
+        </div>
+      </section>
+
+      <section v-if="car" class="grid grid-cols-3 gap-2" :aria-label="t('workshop.slots')" data-test="slots">
+        <RouterLink
+          v-for="slot in car.slots"
+          :key="slot.slot"
+          :to="{ name: 'workshop' }"
+          class="tile no-underline"
+          :class="{ on: slot.part }"
+          :data-test="`slot-${slot.slot}`"
+        >
+          <span class="sl">{{ t(`slot.${slot.slot}`) }}</span>
+          <span class="nm">{{ slot.part ? slot.part.name : slot.built_in ? (car.vehicle.engine ?? t('workshop.builtIn')) : t('workshop.empty') }}</span>
+          <span v-if="slot.part" class="mono text-[10px] text-faint">{{ t('part.tier', { tier: slot.part.tier ?? 0 }) }}</span>
+        </RouterLink>
       </section>
 
       <FuelGauge :run="run.run" />
@@ -191,5 +251,5 @@ async function useCode(): Promise<void> {
         {{ t('garage.signOut') }}
       </button>
     </div>
-  </main>
+  </GameShell>
 </template>

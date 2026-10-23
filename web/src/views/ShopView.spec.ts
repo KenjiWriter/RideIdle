@@ -45,7 +45,7 @@ describe('ShopView', () => {
     await flushPromises()
 
     expect(wrapper.get('h1').text()).toBe('Shop')
-    expect(wrapper.get('[data-test="cash"]').text()).toBe('Cash: $900.00')
+    expect(wrapper.get('[data-test="cash-chip"]').text()).toBe('$900.00')
 
     const exhaust = wrapper.get('[data-test="offer-sport-exhaust-t2"]')
     expect(exhaust.get('h2').text()).toBe('Sport exhaust')
@@ -72,7 +72,7 @@ describe('ShopView', () => {
 
     expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ part: 'sport-exhaust-t2', request_id: expect.any(String) })
     expect(wrapper.get('[data-test="done"]').text()).toContain('Added to your inventory: Sport exhaust. Put it on in the workshop.')
-    expect(wrapper.get('[data-test="cash"]').text()).toBe('Cash: $425.00')
+    expect(wrapper.get('[data-test="cash-chip"]').text()).toBe('$425.00')
 
     await wrapper.get('[data-test="to-workshop"]').trigger('click')
     await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('workshop'))
@@ -188,7 +188,7 @@ describe('ShopView', () => {
     await flushPromises()
 
     expect(wrapper.get('[data-test="game-nav"]').attributes('aria-label')).toBe('Game navigation')
-    expect(wrapper.get('[data-test="nav-shop"]').classes()).toContain('text-amber')
-    expect(wrapper.get('[data-test="nav-workshop"]').classes()).not.toContain('text-amber')
+    expect(wrapper.get('[data-test="nav-shop"]').classes()).toContain('on')
+    expect(wrapper.get('[data-test="nav-workshop"]').classes()).not.toContain('on')
   })
 })

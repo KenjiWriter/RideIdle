@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
 import type { CarStatKey, JobKind, OwnedPart, WorkshopJob } from '@/api/types'
-import GameNav from '@/components/GameNav.vue'
+import GameShell from '@/components/GameShell.vue'
 import PartStats from '@/components/PartStats.vue'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
@@ -33,10 +33,13 @@ const error = ref<string | null>(null)
 /** What time it is for the server, to the second: the clock of the countdown. */
 const now = ref(store.serverNow())
 let ticker: ReturnType<typeof setInterval> | undefined
+let poller: ReturnType<typeof setInterval> | undefined
 let lastAsk = 0
 
 const car = computed(() => store.garage?.car ?? null)
 const jobs = computed(() => store.garage?.workshop.jobs ?? [])
+const working = computed(() => jobs.value.find((job) => job.status === 'working') ?? null)
+const waiting = computed(() => jobs.value.filter((job) => job.status === 'queued'))
 const inventory = computed(() => store.garage?.inventory ?? [])
 const standing = computed(() => car.value?.run?.stop_reason === 'workshop')
 const busyPartIds = computed(() => new Set(jobs.value.map((job) => job.part.id)))
@@ -64,8 +67,6 @@ function tick(): void {
   }
 }
 
-let poller: ReturnType<typeof setInterval> | undefined
-
 onMounted(() => {
   void load()
   ticker = setInterval(tick, 1_000)
@@ -77,15 +78,36 @@ onBeforeUnmount(() => {
   clearInterval(poller)
 })
 
+/** Minutes and seconds, "3:55". */
+function clock(ms: number): string {
+  const seconds = Math.max(0, Math.floor(ms / 1000))
+
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
+}
+
 function left(job: WorkshopJob): string {
   return formatDuration(job.finish_ms - now.value)
 }
 
-/** What a statistic changed by, as the part makes it: nothing for a change too small to see. */
+/** How far the job in progress is, in percent. */
+function progress(job: WorkshopJob): number {
+  const total = job.finish_ms - job.start_ms
+
+  return total > 0 ? Math.min(100, Math.max(0, Math.round(((now.value - job.start_ms) / total) * 100))) : 100
+}
+
+/** What a statistic changed by, as the parts make it: nothing for a change too small to see. */
 function delta(stat: CarStatKey): number {
   const value = (car.value?.stats[stat] ?? 0) - (car.value?.base_stats[stat] ?? 0)
 
   return Math.abs(value) < 0.005 ? 0 : value
+}
+
+function fill(stat: CarStatKey): number {
+  const current = car.value
+  const reference = current?.references[stat] ?? 0
+
+  return current && reference > 0 ? Math.min(100, Math.round((current.stats[stat] / (reference * 1.6)) * 100)) : 0
 }
 
 async function act(kind: JobKind, part: OwnedPart): Promise<void> {
@@ -118,12 +140,10 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
 </script>
 
 <template>
-  <main class="mx-auto flex max-w-xl flex-col gap-6 px-4 py-8">
-    <GameNav />
-
+  <GameShell>
     <header class="flex flex-col gap-1">
-      <h1 class="text-3xl font-bold tracking-tight">{{ t('workshop.title') }}</h1>
-      <p v-if="store.garage" class="text-muted" data-test="mechanic">
+      <h1 class="ttl">{{ t('workshop.title') }}</h1>
+      <p v-if="store.garage" class="sub" data-test="mechanic">
         {{ t('workshop.mechanic', { level: store.garage.workshop.mechanic.level, cut }) }}
       </p>
     </header>
@@ -138,58 +158,82 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
     <p v-else-if="!car" class="text-muted" data-test="no-car">{{ t('workshop.noCar') }}</p>
 
     <template v-else>
-      <p v-if="standing" class="rounded-lg border border-amber bg-surface-2 p-3 text-sm" role="status" data-test="standing">
+      <p v-if="standing" class="card card-hi text-sm" role="status" data-test="standing">
         {{ t('workshop.standing') }}
       </p>
       <p v-if="error" class="text-danger" role="alert" data-test="error">{{ error }}</p>
 
-      <section class="card flex flex-col gap-3" aria-labelledby="queue-title" data-test="queue">
-        <div class="flex items-baseline justify-between gap-3">
-          <h2 id="queue-title" class="text-xl font-bold">{{ t('workshop.queue', { count: jobs.length, max: store.garage.workshop.queue_max }) }}</h2>
+      <section class="card flex flex-col gap-1.5 !p-3" aria-labelledby="mechanic-title" data-test="mechanic-card">
+        <div class="flex items-center justify-between gap-2">
+          <p id="mechanic-title" class="text-[15px] font-bold text-ink">
+            {{ t('workshop.mechanicTitle') }}
+            <span class="sub font-normal">{{ t('workshop.level', { level: store.garage.workshop.mechanic.level }) }} · −{{ cut }}%</span>
+          </p>
         </div>
 
-        <p v-if="jobs.length === 0" class="text-muted" data-test="queue-empty">{{ t('workshop.queueEmpty') }}</p>
+        <template v-if="working">
+          <p class="text-[13px] text-ink" :data-test="`job-${working.id}`">{{ t(`workshop.${working.kind}`, { part: working.part.name }) }}</p>
+          <div class="bar bar-cy" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="progress(working)" data-test="job-bar">
+            <i :style="{ width: `${progress(working)}%` }" />
+          </div>
+          <p class="flex justify-between text-xs text-muted" :data-test="`job-${working.id}-state`">
+            <span class="mono text-ink">{{ clock(now - working.start_ms) }} / {{ clock(working.finish_ms - working.start_ms) }}</span>
+            <span>{{ `${t('workshop.working')}: ${t('workshop.left', { time: left(working) })}` }}</span>
+          </p>
+        </template>
+        <p v-else class="sub" data-test="mechanic-idle">{{ t('workshop.idle') }}</p>
+      </section>
+
+      <section class="flex flex-col gap-2" aria-labelledby="queue-title" data-test="queue">
+        <h2 id="queue-title" class="kick !mb-0">{{ t('workshop.queue', { count: jobs.length, max: store.garage.workshop.queue_max }) }}</h2>
+
+        <p v-if="jobs.length === 0" class="sub" data-test="queue-empty">{{ t('workshop.queueEmpty') }}</p>
 
         <ol v-else class="flex flex-col gap-2">
-          <li v-for="job in jobs" :key="job.id" class="rounded-lg border border-line bg-surface-2 p-3" :data-test="`job-${job.id}`">
-            <p class="font-semibold">{{ t(`workshop.${job.kind}`, { part: job.part.name }) }}</p>
-            <p class="text-sm" :class="job.status === 'working' ? 'text-cyan' : 'text-muted'" :data-test="`job-${job.id}-state`">
-              {{ job.status === 'working' ? `${t('workshop.working')}: ${t('workshop.left', { time: left(job) })}` : t('workshop.waiting') }}
-            </p>
+          <li
+            v-for="job in waiting"
+            :key="job.id"
+            class="card flex items-center justify-between gap-2.5 !p-2.5"
+            :data-test="`job-${job.id}`"
+          >
+            <div class="min-w-0">
+              <p class="text-[13px] text-ink">{{ t(`workshop.${job.kind}`, { part: job.part.name }) }}</p>
+              <p class="sub" :data-test="`job-${job.id}-state`">{{ t('workshop.waiting') }}</p>
+            </div>
+            <span class="chip">{{ t('workshop.eta', { time: clock(job.finish_ms - now) }) }}</span>
           </li>
         </ol>
       </section>
 
-      <section class="card flex flex-col gap-3" aria-labelledby="car-title" data-test="car">
+      <section class="flex flex-col gap-3" aria-labelledby="car-title" data-test="car">
         <div class="flex items-start justify-between gap-3">
-          <h2 id="car-title" class="text-xl font-bold">{{ car.vehicle.name }}</h2>
-          <span class="rounded-full border border-line px-3 py-1 text-sm font-bold text-amber" data-test="car-level">{{ t('workshop.level', { level: car.level }) }}</span>
+          <h2 id="car-title" class="ttl text-2xl">{{ car.vehicle.name }}</h2>
+          <span class="chip chip-am" data-test="car-level">{{ t('workshop.level', { level: car.level }) }}</span>
         </div>
 
-        <dl class="grid grid-cols-1 gap-2" :aria-label="t('workshop.stats')">
-          <div v-for="stat in STATS" :key="stat" class="flex items-baseline justify-between gap-3" :data-test="`stat-${stat}`">
-            <dt class="text-muted">{{ t(`carStat.${stat}`) }}</dt>
-            <dd class="font-semibold">
+        <div class="flex flex-col gap-1" :aria-label="t('workshop.stats')">
+          <div v-for="stat in STATS" :key="stat" class="st" :data-test="`stat-${stat}`">
+            <span>{{ t(`carStat.${stat}`) }}</span>
+            <div class="bar"><i :style="{ width: `${fill(stat)}%` }" /></div>
+            <span>
               {{ number(car.stats[stat], 1) }}
-              <span v-if="delta(stat) !== 0" class="ml-1 text-sm" :class="delta(stat) > 0 ? 'text-cyan' : 'text-danger'" :data-test="`delta-${stat}`">
-                {{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 1) }}
-              </span>
-            </dd>
+              <em v-if="delta(stat) !== 0" :class="{ dn: delta(stat) < 0 }" :data-test="`delta-${stat}`">{{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 1) }}</em>
+            </span>
           </div>
-        </dl>
+        </div>
 
-        <h3 class="mt-2 font-bold">{{ t('workshop.slots') }}</h3>
+        <h3 class="kick !mb-0 mt-1">{{ t('workshop.slots') }}</h3>
         <ul class="grid grid-cols-2 gap-2">
-          <li v-for="slot in car.slots" :key="slot.slot" class="rounded-lg border border-line p-3" :data-test="`slot-${slot.slot}`">
-            <p class="text-sm text-muted">{{ t(`slot.${slot.slot}`) }}</p>
+          <li v-for="slot in car.slots" :key="slot.slot" class="tile" :class="{ on: slot.part }" :data-test="`slot-${slot.slot}`">
+            <span class="sl">{{ t(`slot.${slot.slot}`) }}</span>
             <template v-if="slot.part">
-              <p class="font-semibold">
+              <span class="nm">
                 {{ slot.part.name }}
-                <span class="ml-1 rounded border border-line px-1 font-mono text-xs">{{ t('part.tier', { tier: slot.part.tier ?? 0 }) }}</span>
-              </p>
+                <span class="mono ml-1 text-[10px] text-faint">{{ t('part.tier', { tier: slot.part.tier ?? 0 }) }}</span>
+              </span>
               <button
                 type="button"
-                class="btn btn-secondary mt-2"
+                class="btn btn-secondary btn-sm mt-1.5 !min-h-9 !text-base"
                 :disabled="busy || busyPartIds.has(slot.part.id)"
                 :data-test="`take-off-${slot.part.id}`"
                 @click="act('unmount', slot.part)"
@@ -197,30 +241,30 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
                 {{ t('workshop.takeOff') }}
               </button>
             </template>
-            <p v-else-if="slot.built_in" class="font-semibold">{{ car.vehicle.engine ?? t('workshop.builtIn') }}</p>
-            <p v-else class="text-muted">{{ t('workshop.empty') }}</p>
+            <span v-else-if="slot.built_in" class="nm">{{ car.vehicle.engine ?? t('workshop.builtIn') }}</span>
+            <span v-else class="nm text-faint">{{ t('workshop.empty') }}</span>
           </li>
         </ul>
       </section>
 
-      <section class="card flex flex-col gap-3" aria-labelledby="inventory-title" data-test="inventory">
-        <h2 id="inventory-title" class="text-xl font-bold">{{ t('workshop.inventory') }}</h2>
+      <section class="flex flex-col gap-2" aria-labelledby="inventory-title" data-test="inventory">
+        <h2 id="inventory-title" class="kick !mb-0">{{ t('workshop.inventory') }}</h2>
 
-        <p v-if="inventory.length === 0" class="text-muted" data-test="inventory-empty">{{ t('workshop.inventoryEmpty') }}</p>
+        <p v-if="inventory.length === 0" class="sub" data-test="inventory-empty">{{ t('workshop.inventoryEmpty') }}</p>
 
-        <ul v-else class="flex flex-col gap-3">
-          <li v-for="part in inventory" :key="part.id" class="flex items-start justify-between gap-3" :data-test="`part-${part.id}`">
-            <div>
-              <p class="font-semibold">
+        <ul v-else class="flex flex-col gap-2">
+          <li v-for="part in inventory" :key="part.id" class="card flex items-start justify-between gap-2.5 !p-3" :data-test="`part-${part.id}`">
+            <div class="min-w-0">
+              <p class="flex items-center gap-2 text-[15px] font-bold text-ink">
                 {{ part.name }}
-                <span class="ml-1 rounded border border-line px-1 font-mono text-xs">{{ t('part.tier', { tier: part.tier ?? 0 }) }}</span>
+                <span class="tag">{{ t('part.tier', { tier: part.tier ?? 0 }) }}</span>
               </p>
-              <p class="text-sm text-muted">{{ t(`slot.${part.slot}`) }}</p>
+              <p class="sub">{{ t(`slot.${part.slot}`) }}</p>
               <PartStats :part="part" />
             </div>
             <button
               type="button"
-              class="btn btn-primary shrink-0"
+              class="btn btn-primary btn-sm shrink-0"
               :disabled="busy || busyPartIds.has(part.id)"
               :data-test="`put-on-${part.id}`"
               @click="act('mount', part)"
@@ -231,5 +275,5 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
         </ul>
       </section>
     </template>
-  </main>
+  </GameShell>
 </template>

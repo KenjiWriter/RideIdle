@@ -52,8 +52,8 @@ describe('WorkshopView', () => {
     expect(wrapper.get('[data-test="car"] h2').text()).toBe('Rdzak GT-4')
     expect(wrapper.get('[data-test="car-level"]').text()).toBe('Level 3')
 
-    expect(wrapper.get('[data-test="stat-accel"] dt').text()).toBe('Acceleration')
-    expect(wrapper.get('[data-test="stat-accel"] dd').text()).toBe('98.9 +1.9')
+    expect(wrapper.get('[data-test="stat-accel"] > span:first-child').text()).toBe('Acceleration')
+    expect(wrapper.get('[data-test="stat-accel"] > span:last-child').text()).toBe('98.9 +1.9')
     expect(wrapper.get('[data-test="delta-top_speed"]').text()).toBe('+1.2')
     expect(wrapper.find('[data-test="delta-grip"]').exists()).toBe(false)
 
@@ -91,7 +91,8 @@ describe('WorkshopView', () => {
     expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ kind: 'mount', part: 21 })
     expect(wrapper.get('[data-test="queue"] h2').text()).toBe('Queue 1 of 4')
     expect(wrapper.get('[data-test="job-3"]').text()).toContain('Putting on: Street tires T2')
-    expect(wrapper.get('[data-test="job-3-state"]').text()).toBe('In progress: 3 min 55 s left')
+    expect(wrapper.get('[data-test="job-3-state"]').text()).toContain('In progress: 3 min 55 s left')
+    expect(wrapper.get('[data-test="job-bar"]').attributes('aria-valuenow')).toBe('20')
     expect(wrapper.get('[data-test="standing"]').text()).toBe('The car stands in the workshop and earns nothing until the last job is done.')
     // The part that waits for the mechanic cannot be queued twice.
     expect(wrapper.get('[data-test="put-on-21"]').attributes('disabled')).toBeDefined()
@@ -132,12 +133,12 @@ describe('WorkshopView', () => {
     const { wrapper } = await mountView(WorkshopView, '/workshop')
     await flushPromises()
 
-    expect(wrapper.get('[data-test="job-1-state"]').text()).toBe('In progress: 1 min 05 s left')
+    expect(wrapper.get('[data-test="job-1-state"]').text()).toContain('In progress: 1 min 05 s left')
     expect(wrapper.get('[data-test="job-2-state"]').text()).toBe('Waiting')
 
     await vi.advanceTimersByTimeAsync(5_000)
 
-    expect(wrapper.get('[data-test="job-1-state"]').text()).toBe('In progress: 1 min 00 s left')
+    expect(wrapper.get('[data-test="job-1-state"]').text()).toContain('In progress: 1 min 00 s left')
   })
 
   it('asks the server again when a job is due, and shows what became of it', async () => {

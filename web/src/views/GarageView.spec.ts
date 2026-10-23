@@ -111,7 +111,7 @@ describe('GarageView', () => {
     const { wrapper } = await mounted
     await flushPromises()
 
-    expect(wrapper.get('[data-test="cash"]').text()).toBe('$3,124.50')
+    expect(wrapper.get('[data-test="cash-chip"]').text()).toBe('$3,124.50')
     expect(wrapper.get('[data-test="xp"]').text()).toBe('7,800 XP')
     expect(wrapper.get('[data-test="laps"]').text()).toBe('312')
     expect(wrapper.get('[data-test="reward"]').text()).toBe('$15.50')
@@ -126,7 +126,9 @@ describe('GarageView', () => {
 
     expect(wrapper.get('[data-test="fuel-level"]').text()).toBe('12 l / 45 l')
     expect(wrapper.get('[data-test="fuel-range"]').text()).toBe('Enough for 8 laps (about 10 min 00 s)')
-    expect(wrapper.get('[role="progressbar"]').attributes('aria-valuenow')).toBe('27')
+    expect(wrapper.get('[data-test="fuel-bar"]').attributes('aria-valuenow')).toBe('27')
+    // Three of the ten cells of the tank are full.
+    expect(wrapper.findAll('[data-test="fuel-bar"] i.on')).toHaveLength(3)
   })
 
   it('says one lap in the singular', async () => {
@@ -189,7 +191,7 @@ describe('GarageView', () => {
     const { wrapper } = await mounted
     await flushPromises()
 
-    expect(wrapper.get('[data-test="nav-garage"]').classes()).toContain('text-amber')
+    expect(wrapper.get('[data-test="nav-garage"]').classes()).toContain('on')
     expect(wrapper.get('[data-test="nav-workshop"]').text()).toBe('Workshop')
     expect(wrapper.get('[data-test="nav-shop"]').text()).toBe('Shop')
   })
