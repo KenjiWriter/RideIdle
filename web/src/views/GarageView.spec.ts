@@ -173,6 +173,27 @@ describe('GarageView', () => {
     expect(wrapper.get('[data-test="banner"]').text()).toBe('The car broke down. It stands until it is repaired.')
   })
 
+  it('tells that the car stands in the workshop, and offers neither the repair nor the tow', async () => {
+    const { mounted } = open({ status: 'stopped', stop_reason: 'workshop' })
+    const { wrapper } = await mounted
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="status"]').text()).toBe('In the workshop')
+    expect(wrapper.get('[data-test="banner"]').text()).toBe('The car stands in the workshop while the mechanic works. It drives again when the last job is done.')
+    expect(wrapper.find('[data-test="repair-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="tow-button"]').exists()).toBe(false)
+  })
+
+  it('has the navigation of the game, with the garage marked', async () => {
+    const { mounted } = open()
+    const { wrapper } = await mounted
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="nav-garage"]').classes()).toContain('text-amber')
+    expect(wrapper.get('[data-test="nav-workshop"]').text()).toBe('Workshop')
+    expect(wrapper.get('[data-test="nav-shop"]').text()).toBe('Shop')
+  })
+
   it('offers the repair only to a car that broke down', async () => {
     const racing = open()
     const { wrapper } = await racing.mounted
