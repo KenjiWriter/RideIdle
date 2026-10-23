@@ -172,6 +172,23 @@ Anuluje zlecenie, które czeka na mechanika albo które mechanik właśnie robi.
 
 Odpowiedź 200 to cały garaż, jak przy ustawianiu w kolejce, z dodatkowym `cancelled`. Błędy 422 z kodem: `job_not_found`, `job_done`.
 
+### Zegar gry, pory dnia i noc
+
+Zegar gry (Systemy II, „Pogoda i pora dnia”) jest wspólny dla wszystkich i wynika wyłącznie z czasu serwera, więc nie ma żadnego zapisu, a rozliczenie liczy go wstecz, tak jak prognoza w przód: **trzy godziny realne to doba gry**, czyli godzina gry trwa 7,5 minuty, a minuta 7,5 sekundy. Doba zaczyna się co trzy godziny od początku epoki Unixa (`GameClock`, czysta klasa domeny, na liczbach całkowitych). Pory dnia: świt 5–8, dzień 8–18, zmierzch 18–22 i noc 22–5.
+
+**Noc zmienia okrążenie tylko na torze bez świateł**: okrążenie, które zaczyna się w nocy, trwa o 3% dłużej (`clock.night_lap_ppm` w `rules/starter.json`, 1 030 000 ppm). Tor ma flagę `lit`: Złomowo i Autodrom mają światła (moja decyzja, projekt mówi tylko „na torach nieoświetlonych”), a kamieniołom, drag na Suchym Pasie i serpentyny nie. Nagroda i XP okrążenia się nie zmieniają, więc noc kosztuje okrążenia, nie wypłatę. Mgła, zmierzch i świt nie zmieniają okrążenia, bo projekt nie podaje liczb.
+
+W rozliczeniu (`Settler`) przedział okrążeń jest cięty w chwilach, w których noc się zaczyna i kończy (22:00 i 5:00 gry), ale **tylko gdy konfiguracja ma noc** (`night_lap_ppm` ≠ 1 000 000), więc bieg na torze z światłami jest rozliczany dokładnie tak jak przedtem, a wektory testowe się nie zmieniły. Okrążenie zaczęte tuż przed nocą zachowuje czas dzienny. Test własności zostaje: rozliczenie w kawałkach daje to samo co jedno rozliczenie, także przez całą dobę gry z oboma brzegami nocy. Zamrożona konfiguracja ma `night_lap_ppm` (bieg zamrożony przed tą zmianą go nie ma i jest taki sam przez całą dobę).
+
+Odpowiedź biegu (`GET /runs/current`, `GET /runs/{id}` i reszta) ma teraz:
+
+- `clock`: `day_ms` (10 800 000) i `phases` (klucz i godzina gry, od której zaczyna się pora), z których klient liczy godzinę gry z zegara serwera, nic więcej nie pytając;
+- `lap.night_ppm`: ile czasu okrążenia trwa nocne okrążenie (1 000 000 na torze ze światłami);
+- `weather.forecast`: ten odcinek pogody (22,5 min) i cztery następne, czyli półtorej godziny naprzód, każdy z `weather`, `starts_ms`, `ends_ms` i `surface` (nawierzchnia, jaką pogoda robi z toru: kolumna macierzy opon). `weather.now`, `ends_ms` i `next` zostają jak były;
+- `current_lap.ms`: okrążenie w toku ma już czas nocny, gdy zaczęło się w nocy.
+
+Tabela `lap.ms` to czasy dzienne po pogodach, nocnych nie ma osobno.
+
 ### Nawierzchnie, opony i tory
 
 Tor ma nawierzchnię (asfalt albo żwir), a pogoda ma grunt (sucho, mokro, śnieg): razem to jedna z pięciu nawierzchni, czyli kolumn **macierzy opon**. Rodzaj opon z definicji części (`tire_kind`) wybiera jej wiersz, a liczba mnoży przyczepność, prowadzenie i hamowanie auta w okrążeniu tej pogody, więc **zamrożona konfiguracja biegu zależy od zamontowanych opon**: `lap_ms`, `lap_cash_cents` i `lap_xp` mają wpis na każdą pogodę regionu (w górach także `snow`), policzony dla opon, które auto ma teraz. Zmiana opon w warsztacie zamraża bieg od nowa jak każda inna część. Opony uliczne dają te same liczby, co płaskie mnożniki pogody sprzed macierzy, więc okrążenia fabrycznych aut się nie zmieniły. Macierz, pięć torów (poziomy 1, 3, 5, 8 i 12), klimaty i moje decyzje z tym związane są w `content/README.md` (część „Tory, nawierzchnie i macierz opon”), a sprawdza je polecenie `php artisan tracks:simulate`.
