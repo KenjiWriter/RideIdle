@@ -673,6 +673,12 @@ EOF
         # nginx has to read the new certificate when it is renewed: the hook belongs to this certificate alone.
         certbot certonly --webroot -w /var/www/certbot -d "$DOMAIN" -m "$ADMIN_EMAIL" \
             --agree-tos --no-eff-email --non-interactive --deploy-hook "systemctl reload nginx" "${staging[@]}"
+    elif [[ "$CERTBOT_STAGING" != "1" && "$(openssl x509 -in "$cert" -noout -issuer 2>/dev/null || true)" == *"(STAGING)"* ]]; then
+        # A test certificate is there and a real one is wanted. It is replaced IN PLACE: the files that the site points to are
+        # never missing. (certbot delete first would leave nginx with a certificate that is not there, and every reload of
+        # nginx, those for the other sites of a shared server too, would fail until the new one was issued.)
+        note "The certificate is a test one. Replacing it with a real one."
+        certbot certonly --webroot -w /var/www/certbot -d "$DOMAIN" --cert-name "$DOMAIN" -m "$ADMIN_EMAIL"             --agree-tos --no-eff-email --non-interactive --force-renewal --deploy-hook "systemctl reload nginx"
     else
         note "There is a certificate already."
     fi
