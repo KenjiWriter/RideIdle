@@ -56,6 +56,16 @@ describe('the shop', function () {
             ]);
     });
 
+    it('tells how the tires grip on every surface, and nothing of the sort for the other parts', function () {
+        $driver = driverWithMoney(0);
+
+        $parts = collect($this->getJson('/api/v1/shop', bearerFor($driver))->assertOk()->json('data.parts'))->keyBy('slug');
+
+        expect($parts['rain-tires-t3']['surfaces'])->toBe(['asphalt_dry' => 0.9, 'asphalt_wet' => 1.05, 'gravel_dry' => 0.55, 'mud' => 0.5, 'snow' => 0.55])
+            ->and($parts['offroad-tires-t2']['surfaces']['gravel_dry'])->toEqual(1.0)
+            ->and($parts['sport-exhaust-t2']['surfaces'])->toBeNull();
+    });
+
     it('says that a part cannot be mounted by a car of too low a level', function () {
         $car = Car::factory()->create(['level' => 2]);
 

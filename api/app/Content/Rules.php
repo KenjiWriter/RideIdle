@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Content;
 
+use App\Domain\Run\Surface;
 use App\Domain\Settlement\Ppm;
 
 /**
@@ -224,6 +225,22 @@ final class Rules
     public function tireGripPpm(string $kind, string $surface): int
     {
         return $this->data['tire_matrix'][$kind][$surface] ?? throw new \InvalidArgumentException("The tire matrix has no {$kind} tires on {$surface}.");
+    }
+
+    /**
+     * What a kind of tires multiplies on every surface, as numbers to show (1.0 is the grip of the tires on dry asphalt).
+     *
+     * @return array<string, float> by surface, in the order of `Surface::ALL`
+     */
+    public function tireSurfaces(string $kind): array
+    {
+        $surfaces = [];
+
+        foreach (Surface::ALL as $surface) {
+            $surfaces[$surface] = $this->tireGripPpm($kind, $surface) / Ppm::ONE;
+        }
+
+        return $surfaces;
     }
 
     /** @return list<string> the kinds of tires of the matrix */

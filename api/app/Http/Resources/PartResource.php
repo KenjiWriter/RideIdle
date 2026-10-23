@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Content\Catalog;
+use App\Content\Rules;
 use App\Models\Part;
 use App\Support\I18nText;
 use Illuminate\Http\Request;
@@ -32,7 +33,8 @@ final class PartResource extends JsonResource
     }
 
     /**
-     * What a definition of the pack says about a part, as the client shows it.
+     * What a definition of the pack says about a part, as the client shows it. A tire also says how it grips on every surface
+     * (`surfaces`), the column of the tire matrix its kind picks.
      *
      * @param  array<string, mixed>  $definition
      * @return array<string, mixed>
@@ -46,6 +48,8 @@ final class PartResource extends JsonResource
             'tier' => $definition['tier'] ?? null,
             'price_cents' => $definition['price_cents'] ?? null,
             'stats' => $definition['stats'] ?? [],
+            // Tires only: how they grip on every surface, which is what tells one kind from another.
+            'surfaces' => isset($definition['tire_kind']) ? app(Rules::class)->tireSurfaces($definition['tire_kind']) : null,
         ];
     }
 }
