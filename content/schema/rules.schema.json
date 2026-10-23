@@ -46,6 +46,49 @@
       "description": "Slug of the tires every car drives on until tires can be chosen. The weather effects below assume them.",
       "$ref": "common.schema.json#/$defs/slug"
     },
+    "car": {
+      "description": "Owned cars. A part of tier T can be mounted in a car whose level is at least levels_per_tier * (T - 1): tier <= 1 + floor(level / levels_per_tier).",
+      "type": "object",
+      "properties": {
+        "start_level": { "description": "The level of a car when the driver gets it.", "type": "integer", "minimum": 1, "maximum": 100 },
+        "levels_per_tier": { "type": "integer", "minimum": 1, "maximum": 20 }
+      },
+      "required": ["start_level", "levels_per_tier"],
+      "additionalProperties": false
+    },
+    "shop": {
+      "description": "What the shop of the city sells. Without rarity every part has the price of its definition.",
+      "type": "object",
+      "properties": {
+        "parts": {
+          "description": "Slugs of the parts for sale, all in the core pack.",
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/slug" },
+          "uniqueItems": true
+        }
+      },
+      "required": ["parts"],
+      "additionalProperties": false
+    },
+    "workshop": {
+      "description": "Jobs of the workshop: putting a part on a car and taking it off. One mechanic, and no equipment yet, so a job takes base_time_ms of the slot times the tier, cut by the level of the mechanic.",
+      "type": "object",
+      "properties": {
+        "mechanic_level": { "type": "integer", "minimum": 1, "maximum": 50 },
+        "time_cut_ppm_per_level": { "description": "How much of the time every level of the mechanic cuts.", "type": "integer", "minimum": 0, "maximum": 20000 },
+        "removal_ppm": { "description": "Taking a part off takes this share of the time of putting it on.", "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "max_queue": { "description": "How many jobs can wait in the queue, the one that is done included.", "type": "integer", "minimum": 1, "maximum": 20 },
+        "base_time_ms": {
+          "description": "Time of putting on a part of tier 1, per slot. A part of tier T takes T times as long.",
+          "type": "object",
+          "propertyNames": { "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"] },
+          "additionalProperties": { "type": "integer", "minimum": 1000 },
+          "minProperties": 1
+        }
+      },
+      "required": ["mechanic_level", "time_cut_ppm_per_level", "removal_ppm", "max_queue", "base_time_ms"],
+      "additionalProperties": false
+    },
     "weather": {
       "description": "Effect of every weather. Statistics are multiplied by stat_ppm / 1 000 000, the lap reward and XP by reward_ppm and xp_ppm.",
       "type": "object",
@@ -118,7 +161,7 @@
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "weather", "regions", "tracks"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "shop", "workshop", "weather", "regions", "tracks"],
   "additionalProperties": false,
   "$defs": {
     "stat": { "enum": ["accel", "top_speed", "grip", "handling", "braking", "clearance"] }

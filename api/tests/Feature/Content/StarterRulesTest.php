@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Content\Rules;
 use App\Support\Locale;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
@@ -25,12 +26,19 @@ function starterRules(): array
  */
 function rulesSchemaErrors(array $rules): array
 {
-    $validator = new Validator();
+    $validator = new Validator;
     $validator->resolver()?->registerPrefix('https://rideidle.local/schema/', config('ride.content_path').'/schema');
 
-    $outcome = $validator->validate(json_decode(json_encode($rules, JSON_THROW_ON_ERROR | JSON_FORCE_OBJECT)), 'https://rideidle.local/schema/rules.schema.json');
+    // JSON_FORCE_OBJECT keeps the empty objects of the rules (stat_ppm) objects, and it makes the one list of them an object too.
+    $data = json_decode(json_encode($rules, JSON_THROW_ON_ERROR | JSON_FORCE_OBJECT));
 
-    return $outcome->isValid() ? [] : (new ErrorFormatter())->formatKeyed($outcome->error());
+    if (isset($data->shop->parts) && is_object($data->shop->parts)) {
+        $data->shop->parts = array_values((array) $data->shop->parts);
+    }
+
+    $outcome = $validator->validate($data, 'https://rideidle.local/schema/rules.schema.json');
+
+    return $outcome->isValid() ? [] : (new ErrorFormatter)->formatKeyed($outcome->error());
 }
 
 it('matches its schema', function () {
@@ -142,4 +150,55 @@ it('makes waiting for a tow cost more than the repair and the fuel it saves', fu
     }
 
     expect($problems)->toBe([]);
+});
+
+it('sells only parts of the core pack that a new car can mount', function () {
+    $rules = starterRules();
+    $maxTier = Rules::fromArray($rules)->maxMountableTier($rules['car']['start_level']);
+    $problems = [];
+
+    foreach ($rules['shop']['parts'] as $slug) {
+        $path = config('ride.content_path').'/packs/core/parts/'.$slug.'.json';
+
+        if (! is_file($path)) {
+            $problems[] = "{$slug} is not in the core pack";
+
+            continue;
+        }
+
+        $part = json_decode((string) file_get_contents($path), true);
+
+        if ($part['tier'] > $maxTier) {
+            $problems[] = "{$slug} is tier {$part['tier']}, and a new car mounts up to tier {$maxTier}";
+        }
+    }
+
+    expect($problems)->toBe([]);
+});
+
+it('gives the workshop a time for the slot of every part of the shop and makes taking a part off quicker', function () {
+    $rules = Rules::fromArray(starterRules());
+
+    foreach ($rules->shopParts() as $slug) {
+        $part = json_decode((string) file_get_contents(config('ride.content_path').'/packs/core/parts/'.$slug.'.json'), true);
+
+        $mounting = $rules->workshopJobMs($part['slot'], $part['tier']);
+
+        expect($mounting)->toBeGreaterThan(0, $slug)
+            ->and($rules->workshopJobMs($part['slot'], $part['tier'], removal: true))->toBeLessThan($mounting);
+    }
+});
+
+it('is refused by the schema when the workshop lacks a time or the shop sells a part twice', function () {
+    $rules = starterRules();
+    unset($rules['workshop']['base_time_ms']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    $rules['shop']['parts'][] = $rules['shop']['parts'][0];
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    unset($rules['car']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
 });

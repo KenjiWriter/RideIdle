@@ -6,6 +6,26 @@
   "breakdown": { "chance_per_lap_ppm": 3000 },
   "tow": { "delay_ms": 300000, "fuel_laps": 2 },
   "stock_tires": "street-tires-t1",
+  "car": { "start_level": 3, "levels_per_tier": 3 },
+  "shop": { "parts": ["street-tires-t2", "sport-suspension-t1", "disc-brakes-t2", "sport-exhaust-t2"] },
+  "workshop": {
+    "mechanic_level": 1,
+    "time_cut_ppm_per_level": 20000,
+    "removal_ppm": 600000,
+    "max_queue": 4,
+    "base_time_ms": {
+      "tires": 120000,
+      "suspension": 170000,
+      "brakes": 150000,
+      "exhaust": 120000,
+      "cooling": 120000,
+      "gearbox": 300000,
+      "tank": 120000,
+      "engine": 600000,
+      "boost": 480000,
+      "ecu": 240000
+    }
+  },
   "weather": {
     "dry": { "reward_ppm": 1000000, "xp_ppm": 1000000, "stat_ppm": {} },
     "cloudy": { "reward_ppm": 1000000, "xp_ppm": 1000000, "stat_ppm": {} },

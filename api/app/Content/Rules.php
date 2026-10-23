@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Content;
 
+use App\Domain\Settlement\Ppm;
+
 /**
  * The rules of a run (content/rules/starter.json): tracks, regional climate, weather effects and prices.
  * The shape is guaranteed by the schema and by StarterRulesTest, so this class only reads.
@@ -11,9 +13,7 @@ namespace App\Content;
 final class Rules
 {
     /** @param array<string, mixed> $data */
-    private function __construct(private readonly array $data)
-    {
-    }
+    private function __construct(private readonly array $data) {}
 
     public static function fromConfig(): self
     {
@@ -71,6 +71,45 @@ final class Rules
     public function stockTires(): string
     {
         return $this->data['stock_tires'];
+    }
+
+    /** The level a car has when the driver gets it. */
+    public function carStartLevel(): int
+    {
+        return $this->data['car']['start_level'];
+    }
+
+    /** The highest tier of a part that a car of this level can have mounted: 1 + floor(level / levels per tier). */
+    public function maxMountableTier(int $carLevel): int
+    {
+        return 1 + intdiv($carLevel, $this->data['car']['levels_per_tier']);
+    }
+
+    /** @return list<string> slugs of the parts the shop sells */
+    public function shopParts(): array
+    {
+        return $this->data['shop']['parts'];
+    }
+
+    /** How many jobs fit in the queue of the workshop, the one in progress included. */
+    public function workshopMaxQueue(): int
+    {
+        return $this->data['workshop']['max_queue'];
+    }
+
+    /**
+     * How long a job of the workshop takes, in ms: the time of the slot at tier 1 times the tier, cut by the level of the
+     * mechanic, and a share of that for taking a part off. Whole numbers all the way, so the end of a job never depends on a machine.
+     */
+    public function workshopJobMs(string $slot, int $tier, bool $removal = false): int
+    {
+        $workshop = $this->data['workshop'];
+        $base = $workshop['base_time_ms'][$slot] ?? throw new \InvalidArgumentException("The workshop has no time for the slot {$slot}.");
+
+        $cut = min(Ppm::ONE - 1, $workshop['time_cut_ppm_per_level'] * $workshop['mechanic_level']);
+        $ms = Ppm::mul($base * $tier, Ppm::ONE - $cut);
+
+        return max(1, $removal ? Ppm::mul($ms, $workshop['removal_ppm']) : $ms);
     }
 
     /** @return array<string, array<string, mixed>> effect of every weather */
