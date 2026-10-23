@@ -7,6 +7,10 @@
 #
 #   sudo env DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=you@example.com bash provision.sh
 #
+# It is written for a server that has nothing else on it. It changes things for the whole server (the firewall, the default
+# site of nginx, the default PHP, Redis, the automatic updates), so it stops when it sees that the server is in use (see
+# ALLOW_EXISTING below).
+#
 # It can be run again: what is there is kept (the .env is never overwritten, the database and its user are not made twice),
 # and what changed in the templates is put in place. It does not deploy the application: that is deploy/deploy.sh.
 #
@@ -22,6 +26,8 @@
 #   PHP_VERSION         Default: 8.4        NODE_MAJOR  Default: 24
 #   SKIP_DNS_CHECK=1    do not check that the domain points here (do not, unless you know why)
 #   CERTBOT_STAGING=1   ask Let's Encrypt for a test certificate (for trying this out without using up its limits)
+#   ALLOW_EXISTING=1    go on although something else already runs here (another web server, other sites of nginx, Docker).
+#                       Read deploy/README.md ("A server that is already in use") first: this changes the server for all of it.
 
 set -Eeuo pipefail
 trap 'echo "provision: failed at line ${LINENO} (exit code $?)" >&2' ERR
@@ -51,6 +57,7 @@ LEGAL_OPERATOR_ADDRESS="${LEGAL_OPERATOR_ADDRESS:-}"
 LEGAL_CONTACT_EMAIL="${LEGAL_CONTACT_EMAIL:-}"
 SKIP_DNS_CHECK="${SKIP_DNS_CHECK:-0}"
 CERTBOT_STAGING="${CERTBOT_STAGING:-0}"
+ALLOW_EXISTING="${ALLOW_EXISTING:-0}"
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -116,6 +123,65 @@ check_system() {
         systemd/rideidle-queue.service.template env.production.example bin/rideidle-backup deploy.sh; do
         [[ -f "$HERE/$file" ]] || fail "Run this from the deploy/ folder of the repository: $file is missing next to it."
     done
+}
+
+# Is something else already running here? This script takes over ports 80 and 443, removes the default site of nginx, turns
+# the firewall on with "deny incoming", makes the new PHP the default one and rewrites the settings of Redis. On a server
+# that has other sites or services that would break them, so it stops and says what it found. A server that this script
+# set up before is not "in use": its own site is recognised.
+check_fresh() {
+    say "Checking that nothing else runs on this server"
+
+    if [[ "$ALLOW_EXISTING" == "1" ]]; then
+        note "Skipped (ALLOW_EXISTING=1)."
+        return
+    fi
+
+    local found=() site name others
+    local own_folder
+    own_folder="$(basename "$APP_DIR")"
+
+    # Anything on 80 or 443 that is not nginx (nginx alone is what a rerun of this script finds, or a fresh install).
+    others="$(ss -H -ltnp 2>/dev/null | awk '$4 ~ /:(80|443)$/' | grep -v '"nginx"' | awk '{print $4, $NF}' | head -n 3 | tr '\n' ';' || true)"
+    if [[ -n "$others" ]]; then
+        found+=("something that is not nginx listens on port 80 or 443: ${others}")
+    fi
+
+    if systemctl is-active --quiet apache2 2>/dev/null; then
+        found+=("Apache is running")
+    fi
+
+    # The sites of nginx other than the default one and this game's own.
+    for site in /etc/nginx/sites-enabled/*; do
+        if [[ -e "$site" ]]; then
+            name="$(basename "$site")"
+            if [[ "$name" != "default" && "$name" != "idlerace.conf" ]]; then
+                found+=("nginx already serves a site: ${name}")
+            fi
+        fi
+    done
+
+    if command -v docker >/dev/null 2>&1 && [[ -n "$(docker ps -q 2>/dev/null || true)" ]]; then
+        found+=("Docker containers are running")
+    fi
+
+    # Folders in /var/www other than the ones nginx and this script make.
+    for site in /var/www/*; do
+        if [[ -d "$site" ]]; then
+            name="$(basename "$site")"
+            if [[ "$name" != "html" && "$name" != "certbot" && "$name" != "$own_folder" ]]; then
+                found+=("/var/www has a folder of its own: ${name}")
+            fi
+        fi
+    done
+
+    if ((${#found[@]} > 0)); then
+        printf '\nprovision: this server is already in use:\n' >&2
+        printf '  - %s\n' "${found[@]}" >&2
+        fail "Nothing was changed. Use a server of its own for the game, or read \"A server that is already in use\" in deploy/README.md and run again with ALLOW_EXISTING=1."
+    fi
+
+    note "Nothing else found."
 }
 
 check_dns() {
@@ -510,6 +576,7 @@ EOF
 }
 
 check_system
+check_fresh
 check_dns
 ensure_swap
 install_base
