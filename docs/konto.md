@@ -50,6 +50,10 @@ Strona `/auth/callback` czyta fragment, od razu go usuwa, pokazuje serwerowi wer
 
 Limity na godzinę: start 20 na konto i 60 na IP; zakończenie 30 na IP.
 
+## Twoje dane (kopia i usunięcie konta)
+
+W garażu każdy kierowca, także gość, ma sekcję „Twoje dane”. „Pobierz moje dane” pobiera plik JSON (`GET /account/export`), a „Usuń moje konto” (`DELETE /account` z `confirm_name`) usuwa konto, gdy kierowca wpisze swoje imię. Po usunięciu urządzenie zapomina konto, a strona startowa raz mówi, że konto usunięto. Operator ma te same możliwości jako polecenia `accounts:export` i `accounts:delete`. Szczegóły i ograniczenia w `docs/prawo.md`.
+
 ## Konfiguracja
 
 Klucze zakłada się u dostawców, w swoich kontach deweloperskich; w repozytorium ich nie ma. W każdym trzeba zarejestrować **adres powrotu** `APP_URL/api/v1/auth/{google|facebook|apple}/callback`.
@@ -87,7 +91,6 @@ Uwagi:
 
 - Odłączania logowania i zmiany adresu e-mail. Zanim odłączanie powstanie, trzeba zdecydować, co z kontem, które odłączy ostatni sposób logowania (ostatniego nie wolno odłączyć), i czy odłączenie wymaga ponownego potwierdzenia.
 - Nagrody za zabezpieczenie konta (w makiecie 10 diamentów): diamentów jeszcze nie ma w grze.
-- Samoobsługowego pobierania i usuwania danych w aplikacji. Operator robi to poleceniami `accounts:export` i `accounts:delete` (procedura w `docs/prawo.md`).
 - Przeglądu prawnego regulaminu i polityki prywatności (`/terms`, `/privacy`, opis w `docs/prawo.md`). Teksty są roboczym projektem. **Próg wieku jest roboczy** (16 lat, `LEGAL_MIN_AGE`): ostateczną liczbę ma wskazać przegląd prawny (ryzyko R9 z roadmapy).
 - Samouczka. Okno otwiera się po pierwszym okrążeniu, bo na ekranie „krok 3” makiety („Zapisz swój garaż”) jest pierwszy zarobek; baner „dzień 2 i 3” z makiety jest tu banerem stałym, dopóki konto jest gościem.
 - Tłumaczenia francuskie, niemieckie i brazylijskie są robocze (mojego autorstwa) i warto, żeby przejrzała je osoba mówiąca w tych językach.
