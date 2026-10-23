@@ -15,7 +15,7 @@ function runInputsFactory(): RunInputsFactory
 /** @return array<string, mixed> what the run is frozen into */
 function frozenConfig(string $car, string $track = 'zlomowo-street'): array
 {
-    return (new RunFreezer())->freeze(runInputsFactory()->make($car, $track), 'seed', 0)->config;
+    return (new RunFreezer)->freeze(runInputsFactory()->make($car, $track), 'seed', 0)->config;
 }
 
 // The expected numbers were computed apart from the code, from the formula of the design (Systemy I).
@@ -81,4 +81,81 @@ it('refuses a track that asks for a statistic cars do not have yet', function ()
     $factory = new RunInputsFactory(app(Catalog::class), Rules::fromArray($data));
 
     expect(fn () => $factory->make('rdzak-gt-4', 'zlomowo-street'))->toThrow(InvalidArgumentException::class, 'clearance');
+});
+
+describe('the statistics of a car with parts on it', function () {
+    it('is the stock car when nothing is mounted', function () {
+        $stock = runInputsFactory()->stats('rdzak-gt-4');
+
+        expect($stock->stats)->toBe(['accel' => 97.0, 'top_speed' => 175.0, 'grip' => 90.0, 'handling' => 88.0, 'braking' => 90.0])
+            ->and(runInputsFactory()->stats('rdzak-gt-4', [])->stats)->toBe($stock->stats);
+    });
+
+    it('takes grip, handling and braking from the tires that are mounted', function () {
+        $stats = runInputsFactory()->stats('rdzak-gt-4', ['tires' => 'street-tires-t2'])->stats;
+
+        expect($stats)->toMatchArray(['grip' => 100.0, 'handling' => 98.0, 'braking' => 100.0, 'accel' => 97.0, 'top_speed' => 175.0]);
+    });
+
+    it('averages the suspension with the handling of the tires and the brakes with their braking', function () {
+        $stats = runInputsFactory()->stats('rdzak-gt-4', ['suspension' => 'sport-suspension-t1', 'brakes' => 'disc-brakes-t2'])->stats;
+
+        expect($stats['handling'])->toBe(94.0)
+            ->and($stats['braking'])->toBe(97.5)
+            ->and($stats['grip'])->toBe(90.0);
+    });
+
+    it('turns the power multiplier of the exhaust into acceleration, a little top speed and a thirstier car', function () {
+        $stock = runInputsFactory()->stats('rdzak-gt-4');
+        $tuned = runInputsFactory()->stats('rdzak-gt-4', ['exhaust' => 'sport-exhaust-t2']);
+
+        expect($tuned->get('accel'))->toEqualWithDelta(97 * 1.02, 1e-9)
+            ->and($tuned->get('top_speed'))->toEqualWithDelta(175 * 1.02 ** (1 / 3), 1e-9)
+            ->and($tuned->fuelUseMultiplier)->toBeGreaterThan($stock->fuelUseMultiplier);
+    });
+
+    it('never lets the top speed go above the cap of the gearbox', function () {
+        $capped = runInputsFactory()->stats('bizon-m-2', ['gearbox' => 'manual-5-gearbox-t2']);
+
+        expect(runInputsFactory()->stats('bizon-m-2')->get('top_speed'))->toBe(200.0)
+            ->and($capped->get('top_speed'))->toBe(190.0);
+    });
+
+    it('takes the size of the tank from the tank that is mounted', function () {
+        expect(runInputsFactory()->tankMl('bizon-m-2'))->toBe(60_000)
+            ->and(runInputsFactory()->tankMl('bizon-m-2', ['tank' => 'fuel-tank-45l-t1']))->toBe(45_000);
+    });
+
+    it('makes every part of the shop change something about the stock car, so that nothing is sold for nothing', function () {
+        $stock = runInputsFactory()->stats('rdzak-gt-4');
+        $catalog = app(Catalog::class);
+        $rules = Rules::fromConfig();
+        $useless = [];
+
+        foreach ($rules->shopParts() as $slug) {
+            $slot = $catalog->part($slug)['slot'];
+            $with = runInputsFactory()->stats('rdzak-gt-4', [$slot => $slug]);
+
+            if ($with->stats === $stock->stats && $with->fuelUseMultiplier === $stock->fuelUseMultiplier) {
+                $useless[] = $slug;
+            }
+        }
+
+        expect($useless)->toBe([]);
+    });
+
+    it('drives a faster lap with every part of the shop on the car than with none', function () {
+        $mounted = ['tires' => 'street-tires-t2', 'suspension' => 'sport-suspension-t1', 'brakes' => 'disc-brakes-t2', 'exhaust' => 'sport-exhaust-t2'];
+
+        $stock = (new RunFreezer)->freeze(runInputsFactory()->make('rdzak-gt-4', 'zlomowo-street'), 'seed', 0)->config;
+        $tuned = (new RunFreezer)->freeze(runInputsFactory()->make('rdzak-gt-4', 'zlomowo-street', $mounted), 'seed', 0)->config;
+
+        expect($tuned['lap_ms']['dry'])->toBeLessThan($stock['lap_ms']['dry'])
+            ->and($tuned['lap_ms']['rain'])->toBeLessThan($stock['lap_ms']['rain']);
+    });
+
+    it('refuses a part that is not in the pack or sits in a slot that is not its own', function () {
+        expect(fn () => runInputsFactory()->stats('rdzak-gt-4', ['exhaust' => 'no-such-part']))->toThrow(InvalidArgumentException::class, 'Unknown part')
+            ->and(fn () => runInputsFactory()->stats('rdzak-gt-4', ['brakes' => 'sport-exhaust-t2']))->toThrow(InvalidArgumentException::class, 'belongs to the slot exhaust');
+    });
 });
