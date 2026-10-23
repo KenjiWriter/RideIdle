@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# A copy of the database of RideIdle. provision.sh installs this as /usr/local/sbin/rideidle-backup and runs it every
+# night from /etc/cron.d/rideidle-backup.
+#
+# The copies stay on this server, so they do not save the game from the loss of the server: copy /var/backups/rideidle
+# to another place (see deploy/README.md). They are removed after KEEP_DAYS days, which is also how long a person who
+# asked for the deletion of their account can still be in a copy.
+#
+# Restore: runuser -u postgres -- pg_restore --clean --if-exists --no-owner -d rideidle /var/backups/rideidle/FILE.dump
+
+set -Eeuo pipefail
+
+DIR="${BACKUP_DIR:-/var/backups/rideidle}"
+KEEP_DAYS="${KEEP_DAYS:-14}"
+DB_NAME="${DB_NAME:-rideidle}"
+
+install -d -m 700 "$DIR"
+
+file="$DIR/${DB_NAME}-$(date +%Y-%m-%d-%H%M).dump"
+umask 077
+
+# The redirect is done by this shell, which is root's, so the folder can stay closed to everybody else.
+runuser -u postgres -- pg_dump --format=custom "$DB_NAME" > "$file.partial"
+mv "$file.partial" "$file"
+
+find "$DIR" -maxdepth 1 -name "${DB_NAME}-*.dump" -mtime "+$KEEP_DAYS" -delete
+
+echo "rideidle-backup: wrote $file ($(du -h "$file" | cut -f1)), kept the last $KEEP_DAYS days"
