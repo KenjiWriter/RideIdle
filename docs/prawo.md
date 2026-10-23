@@ -45,8 +45,6 @@ To jest podstawa polityki prywatności i lista, od której prawnik powinien zacz
 
 Aplikacja **nie używa** cookies (token, język i kilka znaczników są w `localStorage`), reklam, analityki ani śledzenia, i nie sprzedaje danych. Tekst polityki to mówi, więc dodanie czegokolwiek z tej listy wymaga zmiany tekstu.
 
-## Prośby o kopię i o usunięcie danych (procedura operatora)
-
 ## Kopia i usunięcie danych
 
 **W aplikacji.** Zalogowany kierowca (gość też) ma w garażu sekcję „Twoje dane”: „Pobierz moje dane” zapisuje plik JSON z tym samym eksportem, który daje polecenie operatora (`GET /account/export`, do 10 razy na godzinę, bez sekretów, bez pamięci podręcznej), a „Usuń moje konto” (`DELETE /account`) usuwa konto i wszystko, co go dotyczy, tak samo jak polecenie. Usunięcie to osobny krok: kierowca czyta, co zniknie, i wpisuje imię kierowcy (wielkość liter i spacje nie mają znaczenia), a serwer sprawdza je jeszcze raz; próby są ograniczone do pięciu na godzinę. Token urządzenia znika razem z kontem, więc aplikacja wraca na stronę startową i mówi, że konto usunięto. To zabezpiecza przed przypadkowym kliknięciem, **nie** przed kimś, kto ma token urządzenia: taka osoba i tak może zrobić z kontem wszystko (np. wystawić nowy kod odzyskiwania). Jeśli ma to być ochrona także przed tym, trzeba dodać ponowne potwierdzenie (np. linkiem na e-mail konta).
