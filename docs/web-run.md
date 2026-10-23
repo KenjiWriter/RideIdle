@@ -28,6 +28,12 @@ Przycisk „Zatankuj do pełna · $118,11” podaje koszt przed naciśnięciem, 
 
 Po awarii pojawia się przycisk „Napraw · $30,00”. Kierowca, którego nie stać, widzi komunikat zamiast przycisku, który by zawiódł. Wynik zostaje na ekranie po zniknięciu przycisku: auto znów jedzie albo, gdy bak jest pusty, jest naprawione i czeka na paliwo.
 
+### Holowanie
+
+Stojące auto nie zarabia, więc kierowca, którego nie stać na jego uruchomienie (naprawa po awarii, paliwo na okrążenie), nigdy by nie zdobył pieniędzy. Dlatego, gdy serwer mówi `tow.available`, pod przyciskiem naprawy jest wyjście: „Holuj auto · za darmo”. Opis mówi, co to kosztuje: nie pieniądze, tylko czas, bo auto czeka 5 minut, zanim znów pojedzie, a z pustym bakiem rusza z odrobiną paliwa. Czekanie kosztuje więcej utraconego zarobku niż naprawa z paliwem, więc nie opłaca się go wybierać, gdy można zapłacić.
+
+Ekran nie decyduje sam, czy holowanie przysługuje: czyta `tow.available`, który serwer liczy tą samą regułą co sama akcja. Holowane auto ma `status` `running` i start w przyszłości, więc garaż pokazuje je jako „Holowane” z odliczaniem do ruszenia, a po upływie czasu samo wraca do jazdy.
+
 ### Wspólne zasady akcji
 
 - Każda akcja płatna ma `request_id`, który zostaje ten sam, dopóki nie ma odpowiedzi, więc ponowne naciśnięcie po zgubionej odpowiedzi nie obciąży dwa razy. Po minucie identyfikator jest porzucany, bo wtedy kierowca ma na myśli nowe tankowanie. Tam, gdzie nie ma `crypto.randomUUID` (zwykłe http w sieci lokalnej), identyfikator powstaje z losowych bajtów.
@@ -39,3 +45,5 @@ Po awarii pojawia się przycisk „Napraw · $30,00”. Kierowca, którego nie s
 ## Sprawdzenie
 
 Testy komponentów i sklepów: `cd web && npm test`. Dodatkowo ścieżka została sprawdzona ręcznie w przeglądarce na lokalnym API (tymczasowa baza SQLite): wybór wraku na telefonie po polsku i na szerokim ekranie po angielsku, start, nieobecność dwóch godzin (28 okrążeń, 434 $, 700 XP, koniec paliwa), tankowanie, awaria wykryta przez odpytywanie bez odświeżania strony i naprawa. To sprawdzenie ujawniło jedną wadę, poprawioną osobnym commitem: wynik tankowania zostawał pod licznikiem bez końca.
+
+Holowanie sprawdzone tak samo, w najgorszym przypadku: awaria na pierwszym okrążeniu, 15,50 $ w kieszeni przy naprawie za 30 $. Przycisk naprawy jest wtedy nieaktywny, a pod nim pojawia się holowanie; po kliknięciu auto ma status „Holowane”, gotówka się nie zmienia, a po upływie czasu auto samo jedzie dalej i zarabia. Ujawniło to wadę kosmetyczną (puste kontrolki zostawiały przerwy w karcie), poprawioną osobnym commitem.

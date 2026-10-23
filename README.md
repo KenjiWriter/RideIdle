@@ -90,6 +90,6 @@ Zapis w bazie (`api/app/Services/`, też w `docs/settlement.md`): zamrażanie ko
 
 Punkty końcowe biegu (`api/app/Http/Controllers/Api/V1/RunController.php`, opis w `docs/api-runs.md`): start, podsumowanie z `since_version`, tankowanie, zmiana toru i naprawa. Dane toru, klimatu, pogody i cen są w `content/rules/starter.json`, a auto z paczki `core`.
 
-Ekrany biegu w `web` (opis w `docs/web-run.md`): wybór wraku startowego („krok 2 z 2”), garaż z biegiem, licznik paliwa i zasięg, podsumowanie nieobecności, tankowanie i naprawa. Całość sprawdzona ręcznie w przeglądarce na lokalnym API.
+Ekrany biegu w `web` (opis w `docs/web-run.md`): wybór wraku startowego („krok 2 z 2”), garaż z biegiem, licznik paliwa i zasięg, podsumowanie nieobecności, tankowanie, naprawa i holowanie (wyjście dla kierowcy, którego nie stać na ruszenie stojącego auta: darmowe, ale auto czeka). Całość sprawdzona ręcznie w przeglądarce na lokalnym API.
 
 Dalej: tabele definicji i instancji z paczek treści (garaż, części, więcej aut i torów), zabezpieczenie konta e-mailem i historia wprowadzająca.
