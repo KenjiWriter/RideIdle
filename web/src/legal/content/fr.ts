@@ -61,7 +61,7 @@ const texts: LegalTexts = {
         id: 'ending',
         heading: 'Fin de l’utilisation',
         paragraphs: [
-          'Vous pouvez arrêter de jouer à tout moment. Pour faire supprimer votre compte, écrivez à l’adresse de contact indiquée en haut de cette page.',
+          'Vous pouvez arrêter de jouer à tout moment. Vous pouvez supprimer votre compte vous-même dans votre garage, sous « Vos données », ou écrire à l’adresse de contact indiquée en haut de cette page.',
           'Nous pouvons suspendre ou supprimer un compte qui enfreint ces conditions. Nous supprimons les comptes invités inactifs depuis {guestDays} jours.',
         ],
       },
@@ -146,7 +146,7 @@ const texts: LegalTexts = {
         heading: 'Combien de temps nous les gardons',
         paragraphs: [
           'Un compte invité, avec ses données de jeu, est supprimé après {guestDays} jours sans activité.',
-          'Un compte sécurisé est conservé tant qu’il existe. Vous pouvez nous demander de le supprimer à tout moment.',
+          'Un compte sécurisé est conservé tant qu’il existe. Vous pouvez le supprimer à tout moment, dans votre garage ou en nous le demandant.',
           'Les liens de connexion et les enregistrements de connexion sont supprimés peu après leur expiration ou leur utilisation. Les compteurs de requêtes servant à prévenir les abus durent une heure au plus. Les journaux techniques ne sont conservés que le temps nécessaire à la sécurité.',
         ],
       },
@@ -155,7 +155,7 @@ const texts: LegalTexts = {
         heading: 'Vos droits',
         paragraphs: [
           'Vous pouvez nous demander l’accès à vos données, leur rectification, leur effacement, la limitation de leur utilisation et leur portabilité. Vous pouvez aussi vous opposer à l’utilisation fondée sur notre intérêt légitime.',
-          'Écrivez à l’adresse de contact indiquée en haut de cette page. Nous répondons dans un délai d’un mois. Pour protéger votre compte, nous pouvons vous demander de prouver qu’il est bien le vôtre, par exemple par un lien envoyé à l’adresse e-mail du compte. Pour l’instant, les demandes sont traitées par e-mail.',
+          'Dans votre garage, sous « Vos données », vous pouvez télécharger une copie de vos données et supprimer votre compte. Pour tout autre sujet, écrivez à l’adresse de contact indiquée en haut de cette page. Nous répondons dans un délai d’un mois. Pour protéger votre compte, nous pouvons vous demander de prouver qu’il est bien le vôtre, par exemple par un lien envoyé à l’adresse e-mail du compte.',
           'Vous pouvez aussi introduire une réclamation auprès de l’autorité de contrôle de votre pays.',
         ],
       },

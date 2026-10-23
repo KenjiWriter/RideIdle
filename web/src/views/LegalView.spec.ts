@@ -93,6 +93,19 @@ describe('LegalView', () => {
       expect(wrapper.get('[data-test="other"]').attributes('href')).toBe('/terms')
     })
 
+    it('says that the copy of the data and the deletion of the account are in the garage, where they are', async () => {
+      const { wrapper } = await open('privacy')
+
+      expect(wrapper.get('section[id="rights"]').text()).toContain('In your garage, under “Your data”, you can download a copy of your data and delete your account.')
+      expect(wrapper.get('section[id="retention"]').text()).toContain('You can delete it at any time, in your garage or by asking us.')
+    })
+
+    it('says in the terms that the account can be deleted in the garage', async () => {
+      const { wrapper } = await open('terms')
+
+      expect(wrapper.get('section[id="ending"]').text()).toContain('You can delete your account yourself in your garage, under “Your data”')
+    })
+
     it('says that other drivers see the driver name, as the form where it is chosen says too', async () => {
       const { wrapper } = await open('privacy')
 

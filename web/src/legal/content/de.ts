@@ -61,7 +61,7 @@ const texts: LegalTexts = {
         id: 'ending',
         heading: 'Ende der Nutzung',
         paragraphs: [
-          'Du kannst jederzeit aufhören zu spielen. Wenn du dein Konto löschen lassen möchtest, schreibe an die Kontaktadresse oben auf dieser Seite.',
+          'Du kannst jederzeit aufhören zu spielen. Dein Konto kannst du in deiner Garage unter „Deine Daten“ selbst löschen oder du schreibst an die Kontaktadresse oben auf dieser Seite.',
           'Wir können ein Konto sperren oder löschen, das gegen diese Bedingungen verstößt. Gastkonten, die {guestDays} Tage lang inaktiv sind, löschen wir.',
         ],
       },
@@ -146,7 +146,7 @@ const texts: LegalTexts = {
         heading: 'Wie lange wir sie speichern',
         paragraphs: [
           'Ein Gastkonto wird mit seinen Spieldaten nach {guestDays} Tagen ohne Aktivität gelöscht.',
-          'Ein gesichertes Konto wird gespeichert, solange es besteht. Du kannst uns jederzeit bitten, es zu löschen.',
+          'Ein gesichertes Konto wird gespeichert, solange es besteht. Du kannst es jederzeit löschen, in deiner Garage oder indem du uns darum bittest.',
           'Anmeldelinks und Anmeldeeinträge werden kurz nach Ablauf oder Verwendung gelöscht. Anfragezähler zur Missbrauchsvermeidung bestehen höchstens eine Stunde. Technische Protokolle bewahren wir nur so lange auf, wie die Sicherheit es erfordert.',
         ],
       },
@@ -155,7 +155,7 @@ const texts: LegalTexts = {
         heading: 'Deine Rechte',
         paragraphs: [
           'Du kannst Auskunft über deine Daten verlangen, ihre Berichtigung, ihre Löschung, die Einschränkung ihrer Verarbeitung und ihre Herausgabe in einem strukturierten, gängigen, maschinenlesbaren Format. Du kannst außerdem der Verwendung widersprechen, die auf unserem berechtigten Interesse beruht.',
-          'Schreibe an die Kontaktadresse oben auf dieser Seite. Wir antworten innerhalb eines Monats. Um dein Konto zu schützen, können wir dich bitten nachzuweisen, dass es deins ist, zum Beispiel durch einen Link, der an die E-Mail-Adresse des Kontos gesendet wird. Derzeit werden Anfragen per E-Mail bearbeitet.',
+          'In deiner Garage kannst du unter „Deine Daten“ eine Kopie deiner Daten herunterladen und dein Konto löschen. Für alles andere schreibe an die Kontaktadresse oben auf dieser Seite. Wir antworten innerhalb eines Monats. Um dein Konto zu schützen, können wir dich bitten nachzuweisen, dass es deins ist, zum Beispiel durch einen Link, der an die E-Mail-Adresse des Kontos gesendet wird.',
           'Du kannst dich außerdem bei einer Datenschutz-Aufsichtsbehörde deines Landes beschweren.',
         ],
       },

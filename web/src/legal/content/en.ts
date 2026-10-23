@@ -61,7 +61,7 @@ const texts: LegalTexts = {
         id: 'ending',
         heading: 'Ending your use',
         paragraphs: [
-          'You can stop playing at any time. To have your account deleted, write to the contact address at the top of this page.',
+          'You can stop playing at any time. You can delete your account yourself in your garage, under “Your data”, or write to the contact address at the top of this page.',
           'We may suspend or delete an account that breaks these terms. We delete guest accounts that are inactive for {guestDays} days.',
         ],
       },
@@ -146,7 +146,7 @@ const texts: LegalTexts = {
         heading: 'How long we keep it',
         paragraphs: [
           'A guest account, with its game data, is deleted after {guestDays} days without activity.',
-          'A secured account is kept while it exists. You can ask us to delete it at any time.',
+          'A secured account is kept while it exists. You can delete it at any time, in your garage or by asking us.',
           'Sign-in links and sign-in records are deleted soon after they expire or are used. Request counters for abuse prevention last up to an hour. Technical logs are kept only as long as security needs them.',
         ],
       },
@@ -155,7 +155,7 @@ const texts: LegalTexts = {
         heading: 'Your rights',
         paragraphs: [
           'You can ask us for access to your data, to correct it, to delete it, to limit its use and to receive it in a portable format. You can also object to the use that is based on our legitimate interest.',
-          'Write to the contact address at the top of this page. We answer within one month. To protect your account we may ask you to prove that it is yours, for example by a link sent to the e-mail address of the account. For now, requests are handled by e-mail.',
+          'In your garage, under “Your data”, you can download a copy of your data and delete your account. For anything else, write to the contact address at the top of this page. We answer within one month. To protect your account we may ask you to prove that it is yours, for example by a link sent to the e-mail address of the account.',
           'You can also complain to the data protection authority in your country.',
         ],
       },

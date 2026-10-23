@@ -61,7 +61,7 @@ const texts: LegalTexts = {
         id: 'ending',
         heading: 'Zakończenie korzystania',
         paragraphs: [
-          'Możesz przestać grać w każdej chwili. Aby usunąć konto, napisz na adres kontaktowy podany na górze tej strony.',
+          'Możesz przestać grać w każdej chwili. Konto usuniesz w garażu, w sekcji „Twoje dane”, albo możesz napisać na adres kontaktowy podany na górze tej strony.',
           'Możemy zawiesić lub usunąć konto, które łamie ten regulamin. Konta gości nieaktywne przez {guestDays} dni usuwamy.',
         ],
       },
@@ -146,7 +146,7 @@ const texts: LegalTexts = {
         heading: 'Jak długo przechowujemy dane',
         paragraphs: [
           'Konto gościa wraz z danymi z gry jest usuwane po {guestDays} dniach bez aktywności.',
-          'Zabezpieczone konto jest przechowywane, dopóki istnieje. Możesz w każdej chwili poprosić nas o jego usunięcie.',
+          'Zabezpieczone konto jest przechowywane, dopóki istnieje. Możesz je usunąć w każdej chwili, w garażu albo prosząc nas o to.',
           'Linki do logowania i zapisy logowań są usuwane wkrótce po wygaśnięciu lub użyciu. Liczniki żądań służące do zapobiegania nadużyciom działają najwyżej godzinę. Dzienniki techniczne przechowujemy tylko tak długo, jak potrzebuje tego bezpieczeństwo.',
         ],
       },
@@ -155,7 +155,7 @@ const texts: LegalTexts = {
         heading: 'Twoje prawa',
         paragraphs: [
           'Możesz zażądać dostępu do swoich danych, ich sprostowania, usunięcia, ograniczenia przetwarzania i przeniesienia, a także sprzeciwić się przetwarzaniu opartemu na naszym prawnie uzasadnionym interesie.',
-          'Napisz na adres kontaktowy podany na górze tej strony. Odpowiadamy w ciągu miesiąca. Aby chronić Twoje konto, możemy poprosić o potwierdzenie, że jest Twoje, na przykład linkiem wysłanym na adres e-mail konta. Na razie takie prośby obsługujemy mailowo.',
+          'W garażu, w sekcji „Twoje dane”, możesz pobrać kopię swoich danych i usunąć konto. W pozostałych sprawach napisz na adres kontaktowy podany na górze tej strony. Odpowiadamy w ciągu miesiąca. Aby chronić Twoje konto, możemy poprosić o potwierdzenie, że jest Twoje, na przykład linkiem wysłanym na adres e-mail konta.',
           'Możesz też złożyć skargę do organu ochrony danych w swoim kraju.',
         ],
       },

@@ -61,7 +61,7 @@ const texts: LegalTexts = {
         id: 'ending',
         heading: 'Fim do uso',
         paragraphs: [
-          'Você pode parar de jogar a qualquer momento. Para excluir sua conta, escreva para o endereço de contato indicado no topo desta página.',
+          'Você pode parar de jogar a qualquer momento. Você pode excluir sua conta na sua garagem, em “Seus dados”, ou escrever para o endereço de contato indicado no topo desta página.',
           'Podemos suspender ou excluir uma conta que viole estes termos. Excluímos contas de convidado inativas por {guestDays} dias.',
         ],
       },
@@ -146,7 +146,7 @@ const texts: LegalTexts = {
         heading: 'Por quanto tempo guardamos',
         paragraphs: [
           'Uma conta de convidado, com seus dados de jogo, é excluída após {guestDays} dias sem atividade.',
-          'Uma conta vinculada é mantida enquanto existir. Você pode pedir a qualquer momento que a excluamos.',
+          'Uma conta vinculada é mantida enquanto existir. Você pode excluí-la a qualquer momento, na sua garagem ou pedindo a nós.',
           'Links de login e registros de login são excluídos logo depois de expirar ou ser usados. Os contadores de requisições para evitar abusos duram no máximo uma hora. Os registros técnicos são guardados só pelo tempo que a segurança exigir.',
         ],
       },
@@ -155,7 +155,7 @@ const texts: LegalTexts = {
         heading: 'Seus direitos',
         paragraphs: [
           'Você pode pedir acesso aos seus dados, a correção, a exclusão, a limitação do uso e a portabilidade deles. Também pode se opor ao uso baseado no nosso interesse legítimo.',
-          'Escreva para o endereço de contato indicado no topo desta página. Respondemos em até um mês. Para proteger sua conta, podemos pedir que você comprove que ela é sua, por exemplo por um link enviado ao e-mail da conta. Por enquanto, os pedidos são atendidos por e-mail.',
+          'Na sua garagem, em “Seus dados”, você pode baixar uma cópia dos seus dados e excluir sua conta. Para qualquer outro assunto, escreva para o endereço de contato indicado no topo desta página. Respondemos em até um mês. Para proteger sua conta, podemos pedir que você comprove que ela é sua, por exemplo por um link enviado ao e-mail da conta.',
           'Você também pode fazer uma reclamação à autoridade de proteção de dados do seu país.',
         ],
       },
