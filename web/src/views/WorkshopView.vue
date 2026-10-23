@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client'
 import type { CarStatKey, JobKind, OwnedPart, WorkshopJob } from '@/api/types'
 import GameShell from '@/components/GameShell.vue'
 import PartStats from '@/components/PartStats.vue'
+import { statFill } from '@/features/car/statFill'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatDuration } from '@/i18n/format'
@@ -101,13 +102,6 @@ function delta(stat: CarStatKey): number {
   const value = (car.value?.stats[stat] ?? 0) - (car.value?.base_stats[stat] ?? 0)
 
   return Math.abs(value) < 0.005 ? 0 : value
-}
-
-function fill(stat: CarStatKey): number {
-  const current = car.value
-  const reference = current?.references[stat] ?? 0
-
-  return current && reference > 0 ? Math.min(100, Math.round((current.stats[stat] / (reference * 1.6)) * 100)) : 0
 }
 
 async function act(kind: JobKind, part: OwnedPart): Promise<void> {
@@ -214,7 +208,7 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
         <div class="flex flex-col gap-1" :aria-label="t('workshop.stats')">
           <div v-for="stat in STATS" :key="stat" class="st" :data-test="`stat-${stat}`">
             <span>{{ t(`carStat.${stat}`) }}</span>
-            <div class="bar"><i :style="{ width: `${fill(stat)}%` }" /></div>
+            <div class="bar"><i :style="{ width: `${statFill(car, stat)}%` }" /></div>
             <span>
               {{ number(car.stats[stat], 1) }}
               <em v-if="delta(stat) !== 0" :class="{ dn: delta(stat) < 0 }" :data-test="`delta-${stat}`">{{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 1) }}</em>

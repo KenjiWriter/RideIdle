@@ -15,6 +15,7 @@ import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RepairControl from '@/components/RepairControl.vue'
 import TowControl from '@/components/TowControl.vue'
 import { carPicture } from '@/features/art'
+import { statFill } from '@/features/car/statFill'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -88,14 +89,6 @@ const stopped = computed(() => run.run?.status === 'stopped')
 
 const car = computed(() => garage.garage?.car ?? null)
 const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking']
-
-/** How full the bar of a statistic is: 1.6 times what counts as normal on the track, the cap of the lap formula, fills it. */
-function fill(stat: CarStatKey): number {
-  const current = car.value
-  const reference = current?.references[stat] ?? 0
-
-  return current && reference > 0 ? Math.min(100, Math.round((current.stats[stat] / (reference * 1.6)) * 100)) : 0
-}
 
 function delta(stat: CarStatKey): number {
   const value = (car.value?.stats[stat] ?? 0) - (car.value?.base_stats[stat] ?? 0)
@@ -212,7 +205,7 @@ async function useCode(): Promise<void> {
       <section v-if="car" class="flex flex-col gap-1" :aria-label="t('workshop.stats')" data-test="stats">
         <div v-for="stat in STATS" :key="stat" class="st" :data-test="`stat-${stat}`">
           <span>{{ t(`carStat.${stat}`) }}</span>
-          <div class="bar"><i :style="{ width: `${fill(stat)}%` }" /></div>
+          <div class="bar"><i :style="{ width: `${statFill(car, stat)}%` }" /></div>
           <span>
             {{ number(car.stats[stat], 0) }}
             <em v-if="delta(stat) !== 0" :class="{ dn: delta(stat) < 0 }" :data-test="`delta-${stat}`">{{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 0) }}</em>

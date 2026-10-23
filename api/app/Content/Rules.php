@@ -79,6 +79,16 @@ final class Rules
         return $this->data['car']['start_level'];
     }
 
+    /**
+     * The value of each statistic at which its bar is full: what the best car of the game is meant to reach.
+     *
+     * @return array<string, float>
+     */
+    public function statCeilings(): array
+    {
+        return array_map('floatval', $this->data['car']['stat_ceiling']);
+    }
+
     /** The highest tier of a part that a car of this level can have mounted: 1 + floor(level / levels per tier). */
     public function maxMountableTier(int $carLevel): int
     {

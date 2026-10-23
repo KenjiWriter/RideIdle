@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Content\Catalog;
 use App\Content\Rules;
+use App\Content\RunInputsFactory;
 use App\Support\Locale;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
@@ -146,6 +148,29 @@ it('makes waiting for a tow cost more than the repair and the fuel it saves', fu
 
         if ($lostCents <= $savedCents) {
             $problems[] = "{$slug}: waiting costs {$lostCents} cents of earnings but the tow saves {$savedCents}, so it would be a way to avoid paying";
+        }
+    }
+
+    expect($problems)->toBe([]);
+});
+
+it('is refused by the schema when the ceiling of a statistic is missing', function () {
+    $rules = starterRules();
+    unset($rules['car']['stat_ceiling']['grip']);
+
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+});
+
+it('keeps every wreck a driver can start with at no more than half of the ceiling of any statistic', function () {
+    $inputs = app(RunInputsFactory::class);
+    $ceilings = Rules::fromArray(starterRules())->statCeilings();
+    $problems = [];
+
+    foreach (array_keys(app(Catalog::class)->startingVehicles()) as $slug) {
+        foreach ($inputs->stats($slug)->stats as $stat => $value) {
+            if ($value > $ceilings[$stat] / 2) {
+                $problems[] = "{$slug}: {$stat} is {$value} of a ceiling of {$ceilings[$stat]}";
+            }
         }
     }
 

@@ -51,9 +51,22 @@
       "type": "object",
       "properties": {
         "start_level": { "description": "The level of a car when the driver gets it.", "type": "integer", "minimum": 1, "maximum": 100 },
-        "levels_per_tier": { "type": "integer", "minimum": 1, "maximum": 20 }
+        "levels_per_tier": { "type": "integer", "minimum": 1, "maximum": 20 },
+        "stat_ceiling": {
+          "description": "The value of a statistic at which its bar in the garage is full: what the best car of the whole game is meant to reach, not what a track asks for. A car that has only just left the wreck yard stands well below it.",
+          "type": "object",
+          "properties": {
+            "accel": { "type": "number", "exclusiveMinimum": 0 },
+            "top_speed": { "type": "number", "exclusiveMinimum": 0 },
+            "grip": { "type": "number", "exclusiveMinimum": 0 },
+            "handling": { "type": "number", "exclusiveMinimum": 0 },
+            "braking": { "type": "number", "exclusiveMinimum": 0 }
+          },
+          "required": ["accel", "top_speed", "grip", "handling", "braking"],
+          "additionalProperties": false
+        }
       },
-      "required": ["start_level", "levels_per_tier"],
+      "required": ["start_level", "levels_per_tier", "stat_ceiling"],
       "additionalProperties": false
     },
     "shop": {

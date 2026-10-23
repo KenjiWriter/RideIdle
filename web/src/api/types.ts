@@ -255,8 +255,8 @@ export interface GarageCar {
   /** With the parts that are on the car, and without them. */
   stats: Record<CarStatKey, number>
   base_stats: Record<CarStatKey, number>
-  /** What counts as normal on the track of the car: a bar of a statistic is full at 1.6 times it. */
-  references: Record<CarStatKey, number>
+  /** The value of a statistic at which its bar is full: what the best car of the whole game reaches. */
+  ceilings: Record<CarStatKey, number>
   tank_ml: number
   slots: GarageSlot[]
   lap_ms: Record<string, number> | null
