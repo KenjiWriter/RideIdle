@@ -1,3 +1,15 @@
+/** The ways to sign in to an account. */
+export type AccountProvider = 'email' | 'google' | 'facebook' | 'apple'
+
+/** The providers of another service. The server offers the ones it has keys for. */
+export type SocialProvider = Exclude<AccountProvider, 'email'>
+
+/** A way the account can be signed in to. The e-mail address is masked (t***@example.com): enough to tell which one it is. */
+export interface AccountIdentity {
+  provider: AccountProvider
+  email: string | null
+}
+
 /** Profile of the signed-in driver (GET /api/v1/me). */
 export interface Me {
   id: number
@@ -5,6 +17,7 @@ export interface Me {
   locale: string | null
   is_guest: boolean
   has_recovery_code: boolean
+  identities: AccountIdentity[]
 }
 
 export interface MeResponse {
@@ -140,4 +153,36 @@ export interface StarterCar {
 export interface StarterCarsResponse {
   data: StarterCar[]
   track: { slug: string; name: string }
+}
+
+/** The sign-ins with another service that the server has set up (GET /api/v1/auth/providers). */
+export interface ProvidersResponse {
+  data: SocialProvider[]
+}
+
+/** The answer to asking for a link by e-mail: what to tell the driver, and how long the link works. */
+export interface EmailLinkResponse {
+  message: string
+  expires_in: number
+}
+
+/**
+ * Starting a sign-in with a provider: where to send the browser, and the verifier it must keep until it comes back.
+ * Only the browser that holds the verifier can finish the sign-in.
+ */
+export interface ProviderStart {
+  url: string
+  verifier: string
+}
+
+/** Finishing a sign-in with a provider. A `login` carries a token for this device, a `link` does not. */
+export interface ProviderFinish extends MeResponse {
+  purpose: 'link' | 'login'
+  token?: string
+}
+
+/** Using the link of an e-mail. A `claim` secures the account the link was asked for, a `login` signs in. */
+export interface EmailConfirmation extends MeResponse {
+  purpose: 'claim' | 'login'
+  token?: string
 }

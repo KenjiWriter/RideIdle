@@ -8,7 +8,7 @@ import { currentLocale, setLocale } from '@/i18n'
 
 import { useSessionStore } from './session'
 
-const profile: Me = { id: 1, name: 'Maciek_Turbo', locale: 'en', is_guest: true, has_recovery_code: false }
+const profile: Me = { id: 1, name: 'Maciek_Turbo', locale: 'en', is_guest: true, has_recovery_code: false, identities: [] }
 
 function respond(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -140,5 +140,58 @@ describe('session store', () => {
     expect(session.isAuthenticated).toBe(false)
     expect(session.me).toBeNull()
     expect(readToken()).toBeNull()
+  })
+
+  describe('the window "Save your garage"', () => {
+    it('is not dismissed at first', () => {
+      expect(useSessionStore().linkPromptDismissed).toBe(false)
+    })
+
+    it('stays dismissed over a reload', () => {
+      useSessionStore().dismissLinkPrompt()
+
+      setActivePinia(createPinia())
+
+      expect(useSessionStore().linkPromptDismissed).toBe(true)
+    })
+
+    it('is asked again of the next driver on this device', () => {
+      const session = useSessionStore()
+      session.dismissLinkPrompt()
+
+      session.signOut()
+
+      expect(session.linkPromptDismissed).toBe(false)
+      expect(localStorage.getItem('ride.linkPrompt')).toBeNull()
+    })
+
+    it('is asked again when somebody else signs in', async () => {
+      const session = useSessionStore()
+      session.dismissLinkPrompt()
+
+      await session.acceptLogin(profile, 'another-token')
+
+      expect(session.linkPromptDismissed).toBe(false)
+    })
+  })
+
+  describe('signing in with a token from the server', () => {
+    it('starts the session and remembers the token', async () => {
+      const session = useSessionStore()
+
+      await session.acceptLogin({ ...profile, is_guest: false }, 'from-a-link')
+
+      expect(session.isAuthenticated).toBe(true)
+      expect(session.me?.is_guest).toBe(false)
+      expect(readToken()).toBe('from-a-link')
+    })
+
+    it('switches the interface to the language of the account', async () => {
+      await useSessionStore().acceptLogin({ ...profile, locale: 'fr' }, 'from-a-link')
+
+      expect(currentLocale()).toBe('fr')
+
+      await setLocale('en')
+    })
   })
 })

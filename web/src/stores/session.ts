@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import { ApiError, api } from '@/api/client'
 import type { Me, MeResponse, RecoveryCodeResponse, SessionResponse } from '@/api/types'
 import { clearToken, readToken, storeToken } from '@/auth/token'
+import { clearLinkPromptDismissed, readLinkPromptDismissed, storeLinkPromptDismissed } from '@/features/account/linkPrompt'
 import { currentLocale } from '@/i18n'
 import { normalizeLocale } from '@/i18n/locales'
 
@@ -14,6 +15,8 @@ import { useSettingsStore } from './settings'
 export const useSessionStore = defineStore('session', () => {
   const me = ref<Me | null>(null)
   const token = ref<string | null>(readToken())
+  /** The driver told the window "Save your garage" to wait. It belongs to the driver on this device, not to the device. */
+  const linkPromptDismissed = ref(readLinkPromptDismissed())
 
   const isAuthenticated = computed(() => token.value !== null)
 
@@ -21,6 +24,28 @@ export const useSessionStore = defineStore('session', () => {
     storeToken(deviceToken)
     token.value = deviceToken
     me.value = profile
+    resetLinkPrompt()
+  }
+
+  function resetLinkPrompt(): void {
+    clearLinkPromptDismissed()
+    linkPromptDismissed.value = false
+  }
+
+  function dismissLinkPrompt(): void {
+    storeLinkPromptDismissed()
+    linkPromptDismissed.value = true
+  }
+
+  /** Signs in on this device with a token the server gave. The interface switches to the language of the account. */
+  async function acceptLogin(profile: Me, deviceToken: string): Promise<void> {
+    start(profile, deviceToken)
+
+    const accountLocale = normalizeLocale(profile.locale)
+
+    if (accountLocale && accountLocale !== currentLocale()) {
+      await useSettingsStore().applyLocale(accountLocale)
+    }
   }
 
   /** Creates a guest driver. The language of the interface becomes the language of the account. */
@@ -33,20 +58,14 @@ export const useSessionStore = defineStore('session', () => {
     start(response.data, response.token)
   }
 
-  /** Signs in on this device with a recovery code. The interface switches to the language of the account. */
+  /** Signs in on this device with a recovery code. */
   async function recover(code: string): Promise<void> {
     const response = await api<SessionResponse>('/v1/account/recover', {
       method: 'POST',
       body: JSON.stringify({ code }),
     })
 
-    start(response.data, response.token)
-
-    const accountLocale = normalizeLocale(response.data.locale)
-
-    if (accountLocale && accountLocale !== currentLocale()) {
-      await useSettingsStore().applyLocale(accountLocale)
-    }
+    await acceptLogin(response.data, response.token)
   }
 
   /** Loads the profile. A token the server no longer knows ends the session. */
@@ -77,9 +96,22 @@ export const useSessionStore = defineStore('session', () => {
     clearToken()
     token.value = null
     me.value = null
+    resetLinkPrompt()
     // The next driver on this device must not see this driver's run, or the summary of their absence.
     useRunStore().reset()
   }
 
-  return { me, token, isAuthenticated, createDriver, recover, fetchMe, issueRecoveryCode, signOut }
+  return {
+    me,
+    token,
+    isAuthenticated,
+    linkPromptDismissed,
+    createDriver,
+    recover,
+    acceptLogin,
+    fetchMe,
+    issueRecoveryCode,
+    dismissLinkPrompt,
+    signOut,
+  }
 })

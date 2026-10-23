@@ -9,7 +9,7 @@ import { mountView } from '@/test/mountView'
 
 import RecoveryPanel from './RecoveryPanel.vue'
 
-const guest: Me = { id: 1, name: 'Maciek_Turbo', locale: 'en', is_guest: true, has_recovery_code: false }
+const guest: Me = { id: 1, name: 'Maciek_Turbo', locale: 'en', is_guest: true, has_recovery_code: false, identities: [] }
 
 function respond(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
