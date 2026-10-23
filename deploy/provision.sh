@@ -7,9 +7,9 @@
 #
 #   sudo env DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=you@example.com bash provision.sh
 #
-# It is written for a server that has nothing else on it. It changes things for the whole server (the firewall, the default
-# site of nginx, the default PHP, Redis, the automatic updates), so it stops when it sees that the server is in use (see
-# ALLOW_EXISTING below).
+# It is written for a server that has nothing else on it, and then it sets up the whole server (the firewall, the default
+# site of nginx, the default PHP, Redis, the automatic updates). When it sees that the server is in use it stops. A server
+# that runs other sites on nginx can take the game too, without the rest being touched: SHARED_SERVER=1 (see below).
 #
 # It can be run again: what is there is kept (the .env is never overwritten, the database and its user are not made twice),
 # and what changed in the templates is put in place. It does not deploy the application: that is deploy/deploy.sh.
@@ -26,8 +26,11 @@
 #   PHP_VERSION         Default: 8.4        NODE_MAJOR  Default: 24
 #   SKIP_DNS_CHECK=1    do not check that the domain points here (do not, unless you know why)
 #   CERTBOT_STAGING=1   ask Let's Encrypt for a test certificate (for trying this out without using up its limits)
-#   ALLOW_EXISTING=1    go on although something else already runs here (another web server, other sites of nginx, Docker).
-#                       Read deploy/README.md ("A server that is already in use") first: this changes the server for all of it.
+#   SHARED_SERVER=1     the server already runs other sites on nginx: add this one and leave the rest as it is. Not changed:
+#                       the firewall, fail2ban, the automatic updates, the default PHP, the Node of the system, the settings
+#                       and the restarts of Redis, the default site of nginx. nginx only gets one more site, and is never left
+#                       with a configuration it rejects. It stops if anything but nginx is on ports 80 and 443.
+#                       Read deploy/README.md ("A server that is already in use") first.
 
 set -Eeuo pipefail
 trap 'echo "provision: failed at line ${LINENO} (exit code $?)" >&2' ERR
@@ -57,7 +60,10 @@ LEGAL_OPERATOR_ADDRESS="${LEGAL_OPERATOR_ADDRESS:-}"
 LEGAL_CONTACT_EMAIL="${LEGAL_CONTACT_EMAIL:-}"
 SKIP_DNS_CHECK="${SKIP_DNS_CHECK:-0}"
 CERTBOT_STAGING="${CERTBOT_STAGING:-0}"
-ALLOW_EXISTING="${ALLOW_EXISTING:-0}"
+SHARED_SERVER="${SHARED_SERVER:-0}"
+NODE_DIR="/opt/rideidle/node"
+# Where the game keeps its counters: redis, or the database when the Redis of a shared server cannot be used.
+CACHE_STORE_VALUE="redis"
 
 export DEBIAN_FRONTEND=noninteractive
 
@@ -90,6 +96,28 @@ env_value() {
 # Is the setting in the .env given a value? (The values are in double quotes, so `KEY=""` is no value.)
 env_is_set() {
     grep -Eq "^${1}=\"?[^\"[:space:]]" "$2"
+}
+
+# The listeners on the given ports ("80|443"), as "address process", but without nginx.
+listeners_but_nginx() {
+    ss -H -ltnp 2>/dev/null | awk -v ports="$1" '$4 ~ (":(" ports ")$")' | { grep -v '"nginx"' || true; } | awk '{print $4, $NF}' | head -n 3 | tr '\n' ';' || true
+}
+
+# Is anything listening on the port?
+port_in_use() {
+    ss -H -ltn 2>/dev/null | awk -v port="$1" '$4 ~ (":" port "$") {found = 1} END {exit !found}'
+}
+
+# Tests the configuration of nginx, and if it is not accepted takes the files of the game out again, so that a reload of
+# nginx (by this script, or later by anything else on the server) is never left with a configuration that fails.
+nginx_check_or_undo() {
+    local log
+    if log="$(nginx -t 2>&1)"; then
+        return
+    fi
+    rm -f /etc/nginx/sites-enabled/idlerace.conf /etc/nginx/conf.d/rideidle-global.conf
+    printf '%s\n' "$log" >&2
+    fail "nginx did not accept the configuration of the game. The files of the game were taken out of /etc/nginx again, so the other sites are as they were."
 }
 
 # A folder whose new files belong to its group, which is what the web server and the user that deploys share.
@@ -125,6 +153,38 @@ check_system() {
     done
 }
 
+# SHARED_SERVER=1: the server runs other sites on nginx. The game is added to that nginx, and this checks that it can be,
+# before anything is changed.
+check_shared() {
+    say "Checking that the game can be added to this server (SHARED_SERVER=1)"
+
+    command -v nginx >/dev/null 2>&1 || fail "SHARED_SERVER=1 adds the game to an nginx that is already here, and there is none. Run without it."
+
+    local others clash backup
+    others="$(listeners_but_nginx '80|443')"
+    [[ -z "$others" ]] || fail "Something that is not nginx listens on port 80 or 443 (${others}). The game needs those ports for nginx."
+    if systemctl is-active --quiet apache2 2>/dev/null; then
+        fail "Apache is running. The game needs ports 80 and 443 for nginx."
+    fi
+
+    # What is there must work now: the game must not be blamed for a configuration that is broken already.
+    nginx -t >/dev/null 2>&1 || fail "nginx does not accept its configuration as it is (nginx -t). Fix that first. Nothing was changed."
+
+    # No other site may answer for this domain.
+    clash="$(grep -rlE --exclude=idlerace.conf --exclude=rideidle-global.conf "server_name[^;]*[[:space:]]${DOMAIN//./\\.}[[:space:];]" /etc/nginx 2>/dev/null || true)"
+    [[ -z "$clash" ]] || fail "A site of nginx already answers for ${DOMAIN} (${clash}). Nothing was changed."
+
+    # The user that deploys gets rights (sudo as www-data, a group): it must be a user made for the game, not one that is used for other things.
+    if id "$DEPLOY_USER" >/dev/null 2>&1 && [[ ! -f /etc/sudoers.d/rideidle-deploy ]]; then
+        fail "A user named ${DEPLOY_USER} exists already and was not made for the game. Choose another name (DEPLOY_USER=rideidle-deploy, for example), so that no rights go to a user that other things use. Nothing was changed."
+    fi
+
+    backup="/var/backups/etc-nginx-before-rideidle-$(date +%Y%m%d-%H%M%S).tgz"
+    (umask 077 && tar czf "$backup" -C / etc/nginx)
+    note "A copy of /etc/nginx is in $backup"
+    note "Left alone: the firewall, fail2ban, the automatic updates, the default PHP and Node, the settings of Redis, the default site of nginx."
+}
+
 # Is something else already running here? This script takes over ports 80 and 443, removes the default site of nginx, turns
 # the firewall on with "deny incoming", makes the new PHP the default one and rewrites the settings of Redis. On a server
 # that has other sites or services that would break them, so it stops and says what it found. A server that this script
@@ -132,8 +192,8 @@ check_system() {
 check_fresh() {
     say "Checking that nothing else runs on this server"
 
-    if [[ "$ALLOW_EXISTING" == "1" ]]; then
-        note "Skipped (ALLOW_EXISTING=1)."
+    if [[ "$SHARED_SERVER" == "1" ]]; then
+        check_shared
         return
     fi
 
@@ -142,7 +202,7 @@ check_fresh() {
     own_folder="$(basename "$APP_DIR")"
 
     # Anything on 80 or 443 that is not nginx (nginx alone is what a rerun of this script finds, or a fresh install).
-    others="$(ss -H -ltnp 2>/dev/null | awk '$4 ~ /:(80|443)$/' | grep -v '"nginx"' | awk '{print $4, $NF}' | head -n 3 | tr '\n' ';' || true)"
+    others="$(listeners_but_nginx '80|443')"
     if [[ -n "$others" ]]; then
         found+=("something that is not nginx listens on port 80 or 443: ${others}")
     fi
@@ -178,7 +238,7 @@ check_fresh() {
     if ((${#found[@]} > 0)); then
         printf '\nprovision: this server is already in use:\n' >&2
         printf '  - %s\n' "${found[@]}" >&2
-        fail "Nothing was changed. Use a server of its own for the game, or read \"A server that is already in use\" in deploy/README.md and run again with ALLOW_EXISTING=1."
+        fail "Nothing was changed. Use a server of its own for the game. If what runs here is other sites on nginx, read \"A server that is already in use\" in deploy/README.md and run again with SHARED_SERVER=1."
     fi
 
     note "Nothing else found."
@@ -227,9 +287,14 @@ ensure_swap() {
 install_base() {
     say "Installing the basic packages"
     apt-get update -qq
-    apt-get install -y -qq ca-certificates curl gnupg lsb-release software-properties-common git unzip rsync \
-        ufw fail2ban unattended-upgrades cron logrotate >/dev/null
+    apt-get install -y -qq ca-certificates curl gnupg lsb-release software-properties-common git unzip rsync cron logrotate >/dev/null
 
+    if [[ "$SHARED_SERVER" == "1" ]]; then
+        note "The firewall, fail2ban and the automatic updates of this server are left as they are."
+        return
+    fi
+
+    apt-get install -y -qq ufw fail2ban unattended-upgrades >/dev/null
     # Security updates of the system are installed by themselves.
     cat > /etc/apt/apt.conf.d/20auto-upgrades <<'EOF'
 APT::Periodic::Update-Package-Lists "1";
@@ -239,6 +304,17 @@ EOF
 
 install_php() {
     say "Installing PHP ${PHP_VERSION}"
+
+    # The packages of a newer PHP make it the default one, and the other sites and scripts of a shared server call `php`.
+    local previous=() name target pair
+    if [[ "$SHARED_SERVER" == "1" ]]; then
+        for name in php php-cgi php-config phpdbg phpize; do
+            target="$(readlink -f "/usr/bin/${name}" 2>/dev/null || true)"
+            if [[ -n "$target" ]]; then
+                previous+=("${name}=${target}")
+            fi
+        done
+    fi
 
     if ! grep -rqs 'ondrej/php' /etc/apt/sources.list.d/; then
         add-apt-repository -y ppa:ondrej/php >/dev/null
@@ -251,7 +327,14 @@ install_php() {
     # Where PHP has opcache as a package of its own, it is there; where it is built in, there is nothing to install.
     apt-get install -y -qq "php${PHP_VERSION}-opcache" >/dev/null 2>&1 || true
 
-    update-alternatives --set php "/usr/bin/php${PHP_VERSION}" >/dev/null
+    if ((${#previous[@]} > 0)); then
+        for pair in "${previous[@]}"; do
+            update-alternatives --set "${pair%%=*}" "${pair#*=}" >/dev/null 2>&1 || true
+        done
+        note "The PHP of the server stays ${previous[0]#*=}. The game uses /usr/bin/php${PHP_VERSION}, by name."
+    else
+        update-alternatives --set php "/usr/bin/php${PHP_VERSION}" >/dev/null
+    fi
 
     # Opcache keeps the compiled code and never looks at the files again: the deploy script reloads PHP-FPM after a release.
     cat > "/etc/php/${PHP_VERSION}/fpm/conf.d/99-rideidle.ini" <<'EOF'
@@ -288,7 +371,44 @@ install_composer() {
     rm -f /tmp/composer-setup.php
 }
 
+# Node for the build, in a folder of its own: the Node of a shared server belongs to its other sites and is not changed.
+# deploy.sh puts this folder first in the PATH when it exists.
+install_private_node() {
+    say "Installing Node ${NODE_MAJOR} for the build, apart from the Node of the server"
+
+    if [[ -x "$NODE_DIR/bin/node" && "$("$NODE_DIR/bin/node" -p 'process.versions.node.split(".")[0]')" == "$NODE_MAJOR" ]]; then
+        note "Node is there: $("$NODE_DIR/bin/node" --version), in $NODE_DIR"
+        return
+    fi
+
+    local arch base file tmp
+    case "$(uname -m)" in
+        x86_64) arch="linux-x64" ;;
+        aarch64) arch="linux-arm64" ;;
+        *) fail "I do not know the processor $(uname -m) (for Node)." ;;
+    esac
+
+    base="https://nodejs.org/dist/latest-v${NODE_MAJOR}.x"
+    tmp="$(mktemp -d)"
+    curl -fsSL "$base/SHASUMS256.txt" -o "$tmp/SHASUMS256.txt"
+    file="$(awk -v a="$arch" '$2 ~ ("^node-v[0-9.]+-" a "\\.tar\\.xz$") {print $2}' "$tmp/SHASUMS256.txt")"
+    [[ -n "$file" ]] || fail "Could not find Node ${NODE_MAJOR} for ${arch} at nodejs.org."
+    curl -fsSL "$base/$file" -o "$tmp/$file"
+    (cd "$tmp" && grep " ${file}\$" SHASUMS256.txt | sha256sum -c - >/dev/null) || fail "The download of Node does not match its checksum. Nothing was installed."
+
+    rm -rf "$NODE_DIR"
+    install -d -m 755 "$NODE_DIR"
+    tar -xJf "$tmp/$file" -C "$NODE_DIR" --strip-components=1
+    rm -rf "$tmp"
+    note "Node $("$NODE_DIR/bin/node" --version) is in $NODE_DIR"
+}
+
 install_node() {
+    if [[ "$SHARED_SERVER" == "1" ]]; then
+        install_private_node
+        return
+    fi
+
     say "Installing Node ${NODE_MAJOR} (it builds the web app)"
 
     if command -v node >/dev/null && [[ "$(node -p 'process.versions.node.split(".")[0]')" == "$NODE_MAJOR" ]]; then
@@ -320,7 +440,31 @@ install_postgres() {
     fi
 }
 
+# The Redis that a shared server already has belongs to its other sites: its settings and data are not touched and it is not
+# restarted. The game keeps its counters in a database number of its own (REDIS_DB and REDIS_CACHE_DB in the .env), because
+# `artisan cache:clear` empties the whole database of the cache and must not reach the data of another site.
+use_existing_redis() {
+    say "Using the Redis that is already here"
+
+    local answer=""
+    if command -v redis-cli >/dev/null 2>&1; then
+        answer="$(redis-cli -h 127.0.0.1 ping 2>&1 || true)"
+    fi
+
+    if [[ "$answer" == "PONG" ]]; then
+        note "Redis answers. The game uses its database number 5."
+    else
+        CACHE_STORE_VALUE="database"
+        note "Redis here asks for a password or does not answer (${answer:-no redis-cli}), so the game keeps its counters in the database instead."
+    fi
+}
+
 install_redis() {
+    if [[ "$SHARED_SERVER" == "1" ]] && port_in_use 6379; then
+        use_existing_redis
+        return
+    fi
+
     say "Installing Redis (it only listens on this server)"
     apt-get install -y -qq redis-server >/dev/null
 
@@ -339,8 +483,13 @@ create_users_and_folders() {
     if ! id "$DEPLOY_USER" >/dev/null 2>&1; then
         adduser --disabled-password --gecos "" "$DEPLOY_USER" >/dev/null
     fi
-    # www-data: the files of the game. adm and systemd-journal: reading the logs of nginx and of the queue worker.
-    usermod -aG www-data,adm,systemd-journal "$DEPLOY_USER"
+    # www-data: the files of the game. adm and systemd-journal: reading the logs of nginx and of the queue worker. On a shared
+    # server that would be the logs of its other sites too, so there the user that deploys only gets the first.
+    if [[ "$SHARED_SERVER" == "1" ]]; then
+        usermod -aG www-data "$DEPLOY_USER"
+    else
+        usermod -aG www-data,adm,systemd-journal "$DEPLOY_USER"
+    fi
 
     # The key that lets you in lets you in as the user that deploys too: the keys of the user that ran sudo (on many servers
     # root cannot log in, and you are "ubuntu"), or else the keys of root.
@@ -407,6 +556,7 @@ write_env() {
     content="${content//__DOMAIN__/$DOMAIN}"
     content="${content//__APP_KEY__/$app_key}"
     content="${content//__DB_PASSWORD__/$db_password}"
+    content="${content//__CACHE_STORE__/$CACHE_STORE_VALUE}"
     content="${content//__MAIL_HOST__/$(env_value "$MAIL_HOST")}"
     content="${content//__MAIL_PORT__/$(env_value "$MAIL_PORT")}"
     content="${content//__MAIL_SCHEME__/$(env_value "$MAIL_SCHEME")}"
@@ -474,13 +624,18 @@ EOF
 }
 
 install_nginx() {
-    say "Installing nginx"
-    apt-get install -y -qq nginx certbot >/dev/null
+    if [[ "$SHARED_SERVER" == "1" ]]; then
+        say "Adding the game to the nginx that is already here"
+        command -v certbot >/dev/null 2>&1 || apt-get install -y -qq certbot >/dev/null
+    else
+        say "Installing nginx"
+        apt-get install -y -qq nginx certbot >/dev/null
+        rm -f /etc/nginx/sites-enabled/default
+    fi
 
     install -m 644 "$HERE/nginx/rideidle-global.conf" /etc/nginx/conf.d/rideidle-global.conf
     install -d -m 755 /etc/nginx/snippets
     install -m 644 "$HERE/nginx/rideidle-security.conf" /etc/nginx/snippets/rideidle-security.conf
-    rm -f /etc/nginx/sites-enabled/default
 }
 
 setup_tls() {
@@ -500,31 +655,24 @@ server {
 }
 EOF
         ln -sf /etc/nginx/sites-available/idlerace.conf /etc/nginx/sites-enabled/idlerace.conf
-        nginx -t
+        nginx_check_or_undo
         systemctl enable --now nginx >/dev/null
         systemctl reload nginx
 
         local staging=()
         [[ "$CERTBOT_STAGING" == "1" ]] && staging=(--test-cert)
 
+        # nginx has to read the new certificate when it is renewed: the hook belongs to this certificate alone.
         certbot certonly --webroot -w /var/www/certbot -d "$DOMAIN" -m "$ADMIN_EMAIL" \
-            --agree-tos --no-eff-email --non-interactive "${staging[@]}"
+            --agree-tos --no-eff-email --non-interactive --deploy-hook "systemctl reload nginx" "${staging[@]}"
     else
         note "There is a certificate already."
     fi
 
-    # nginx has to read the new certificate when it is renewed.
-    install -d -m 755 /etc/letsencrypt/renewal-hooks/deploy
-    cat > /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh <<'EOF'
-#!/bin/sh
-systemctl reload nginx
-EOF
-    chmod 755 /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
-
     # Now the whole site, with HTTPS.
     render "$HERE/nginx/idlerace.conf.template" > /etc/nginx/sites-available/idlerace.conf
     ln -sf /etc/nginx/sites-available/idlerace.conf /etc/nginx/sites-enabled/idlerace.conf
-    nginx -t
+    nginx_check_or_undo
     systemctl reload nginx
 
     if systemctl list-timers --no-pager 2>/dev/null | grep -q certbot; then
@@ -535,6 +683,18 @@ EOF
 }
 
 setup_firewall() {
+    if [[ "$SHARED_SERVER" == "1" ]]; then
+        say "The firewall and fail2ban are left as they are"
+        local rules=""
+        if command -v ufw >/dev/null 2>&1; then
+            rules="$(ufw status 2>/dev/null || true)"
+        fi
+        if [[ "$rules" == *"Status: active"* ]] && ! grep -Eq '(^|[[:space:]])(80|443)(/tcp)?[[:space:]]|Nginx (Full|HTTP|HTTPS)' <<<"$rules"; then
+            note "WARNING: ufw is on and shows no rule for ports 80 and 443. Without them the certificate cannot be issued and the game cannot be reached."
+        fi
+        return
+    fi
+
     say "Setting up the firewall (SSH on port ${SSH_PORT}, HTTP and HTTPS)"
     ufw default deny incoming >/dev/null
     ufw default allow outgoing >/dev/null
