@@ -30,6 +30,11 @@ KEEP_RELEASES="${KEEP_RELEASES:-5}"
 RELEASES="$APP_DIR/releases"
 CURRENT="$APP_DIR/current"
 PHP="/usr/bin/php${PHP_VERSION}"
+# The Node of the build: the one provision.sh put in its own folder when the server is shared with other sites (SHARED_SERVER),
+# otherwise the one of the system.
+if [[ -x /opt/rideidle/node/bin/node ]]; then
+    PATH="/opt/rideidle/node/bin:$PATH"
+fi
 # Options for the check of the site: for a test certificate (CERTBOT_STAGING) that no browser trusts, add -k here.
 HEALTH_CURL_OPTS="${HEALTH_CURL_OPTS:-}"
 
@@ -176,7 +181,8 @@ fi
     || die "This is not the RideIdle repository: api/, web/ and content/ are not all there."
 
 say "Installing the packages of the API (composer)"
-(cd "$RELEASE/api" && composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader)
+# Composer is run by this PHP by name: on a server whose default `php` is another version it would check the packages against that.
+(cd "$RELEASE/api" && "$PHP" "$(command -v composer)" install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader)
 
 say "Linking the .env and the storage"
 ln -sfn "$APP_DIR/shared/.env" "$RELEASE/api/.env"
