@@ -87,7 +87,7 @@ sudo env DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=twoj@adres.pl bash provis
 | `DEPLOY_USER`, `APP_DIR`, `PHP_VERSION`, `NODE_MAJOR` | użytkownik wydań (`deploy`), folder gry, wersje |
 | `CERTBOT_STAGING=1` | testowy certyfikat, który nie zużywa limitów Let's Encrypt |
 | `SKIP_DNS_CHECK=1` | pomija sprawdzenie DNS (nie używaj bez powodu) |
-| `ALLOW_EXISTING=1` | idzie dalej mimo że na serwerze coś już działa (przeczytaj najpierw następną sekcję) |
+| `SHARED_SERVER=1` | serwer już obsługuje inne strony przez nginx: dodaj grę i nie ruszaj reszty (przeczytaj najpierw następną sekcję) |
 
 **Hasła nie wpisuj w poleceniu** (zostaje w historii powłoki): `MAIL_PASSWORD` uzupełnij w `.env` (krok 3). Wartości ze znakami `$`, `\`, `"`, `&` są zapisywane do `.env` poprawnie.
 
@@ -99,9 +99,27 @@ SSH nie jest utwardzany (hasła nadal mogą działać), żeby skrypt nie mógł 
 
 ### Serwer, który już jest w użyciu
 
-`provision.sh` jest napisany dla serwera, na którym nie ma nic innego, bo zmienia go **dla wszystkiego, co na nim działa**: zajmuje porty 80 i 443, usuwa domyślną stronę nginx, włącza zaporę `ufw` z blokadą ruchu przychodzącego (poza SSH, 80 i 443), ustawia PHP 8.4 jako domyślne PHP w systemie (`update-alternatives`), przepisuje ustawienia Redisa (`bind`, `protected-mode`) i restartuje go, nadpisuje `/etc/apt/apt.conf.d/20auto-upgrades`, dodaje PPA ondrej/php i włącza `fail2ban`.
+Domyślnie `provision.sh` jest napisany dla serwera, na którym nie ma nic innego, i ustawia go **dla wszystkiego, co na nim działa**: zajmuje porty 80 i 443, usuwa domyślną stronę nginx, włącza zaporę `ufw` z blokadą ruchu przychodzącego, ustawia PHP 8.4 jako domyślne PHP w systemie, przepisuje ustawienia Redisa i restartuje go, instaluje Node 24 w systemie, nadpisuje `/etc/apt/apt.conf.d/20auto-upgrades` i włącza `fail2ban`. Dlatego **zatrzymuje się, zanim cokolwiek zmieni**, gdy widzi, że serwer jest w użyciu (coś innego niż nginx na 80 lub 443, Apache, inna strona w nginx, kontenery Docker, inna aplikacja w `/var/www`), i wypisuje, co znalazł.
 
-Dlatego skrypt zatrzymuje się, zanim cokolwiek zmieni, gdy widzi, że serwer jest w użyciu: coś innego niż nginx słucha na 80 lub 443, działa Apache, nginx obsługuje już inną stronę, działają kontenery Docker albo w `/var/www` jest folder innej aplikacji. Wypisuje, co znalazł. Jeśli to nie pomyłka, wybierz serwer tylko dla gry. `ALLOW_EXISTING=1` jest dla kogoś, kto przeczytał listę powyżej i wie, że nic z tego nie zepsuje innych usług; wtedy i tak zrób najpierw kopię (`/etc/nginx`, `/etc/redis`, `ufw status verbose`).
+**Tryb `SHARED_SERVER=1`** jest dla serwera, który obsługuje już inne strony przez **nginx** (tak jest na VPS z kilkoma projektami). Dodaje grę jako jeszcze jedną stronę i nic z tej listy nie rusza:
+
+| Zostaje jak było | Jak to robi |
+|---|---|
+| zapora `ufw`, `fail2ban`, automatyczne aktualizacje | nic nie instaluje ani nie zmienia; tylko ostrzega, jeśli `ufw` jest włączony i nie widzi reguł dla 80 i 443 |
+| domyślne PHP (`php`) | PHP 8.4 instaluje obok, a po instalacji przywraca poprzednie PHP jako domyślne; gra wywołuje `/usr/bin/php8.4` po nazwie (kolejka, cron, FPM, Composer) |
+| Node systemu | Node 24 pobiera z nodejs.org (suma kontrolna) do `/opt/rideidle/node`, a `deploy.sh` używa go tylko do budowania gry |
+| Redis (ustawienia, dane, restart) | używa go bez zmian, w bazie numer 5 (`artisan cache:clear` opróżnia całą bazę, więc inna numeracja chroni dane innych stron). Gdy Redis wymaga hasła, gra trzyma liczniki w bazie danych |
+| nginx | dodaje jeden plik strony i definicje o własnych nazwach; przed pierwszą zmianą robi kopię `/etc/nginx` w `/var/backups`, a po każdej zmianie sprawdza `nginx -t` i **jeśli nginx jej nie przyjmie, usuwa własne pliki**, żeby reload innych stron nie został z błędną konfiguracją |
+| domyślna strona nginx i cudze strony | nie usuwa; zatrzymuje się, jeśli inna strona już odpowiada na tę domenę |
+| logi innych stron | użytkownik `deploy` dostaje tylko grupę `www-data` (bez `adm` i `systemd-journal`), więc logi czytasz przez `sudo` |
+
+Zostaje to, co wspólne dla całego serwera i czego tryb nie zmienia:
+
+- **Wszystkie strony działają jako `www-data`** (tak jak na serwerze, na którym uruchomiono tryb). Proces PHP innej strony może więc czytać pliki gry, w tym `.env` z hasłem bazy, kluczem aplikacji i hasłem SMTP (grupa `www-data`, prawa 640), a gra może czytać cudze. Pełne oddzielenie wymaga osobnego użytkownika i osobnej puli PHP-FPM dla gry; nie jest tu zrobione.
+- PostgreSQL i Redis są wspólne: gra ma własną rolę i bazę (`rideidle`), ale jedna awaria dotyka wszystkich. PHP 8.4 pochodzi z PPA ondrej, a jego instalacja może zaktualizować wspólny pakiet `php-common`.
+- Wydanie (Composer, `npm ci`, budowanie) obciąża procesor i pamięć serwera; nie rób go w godzinach największego ruchu innych stron.
+
+Przed pierwszym uruchomieniem sprawdź, czy dotychczasowe strony nie używają bazy `rideidle` ani roli `rideidle` w PostgreSQL (skrypt jej nie nadpisze, ale wykorzysta istniejącą).
 
 ## Krok 3. Uzupełnij `.env`
 
@@ -190,6 +208,8 @@ journalctl -u rideidle-queue -n 100               # kolejka
 tail -n 100 /var/www/idlerace/shared/storage/logs/laravel-$(date +%F).log
 tail -n 100 /var/log/nginx/idlerace.error.log
 ```
+
+(Na serwerze współdzielonym użytkownik `deploy` nie czyta dziennika systemu ani logów nginx: `journalctl` i `tail` na logu nginx uruchom z `sudo` jako użytkownik z pełnym `sudo`, np. `ubuntu`. Log Laravela `deploy` czyta sam.)
 
 Logi Laravela są codzienne i kasowane po 14 dniach (`LOG_DAILY_DAYS`), poziom `warning`.
 
