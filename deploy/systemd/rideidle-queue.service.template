@@ -1,0 +1,27 @@
+# The worker of the queue of RideIdle: it sends the e-mails (the links to sign in and to secure an account).
+# provision.sh puts the folder of the application and the version of PHP in place of __APP_DIR__ and __PHP_VERSION__ and
+# installs this as /etc/systemd/system/rideidle-queue.service. The deploy script restarts it after every release.
+
+[Unit]
+Description=RideIdle queue worker
+After=network.target postgresql.service redis-server.service
+Wants=postgresql.service
+
+[Service]
+User=www-data
+Group=www-data
+# `current` is a link to the release that is live. A restart starts the worker in the new one.
+WorkingDirectory=__APP_DIR__/current/api
+ExecStart=/usr/bin/php__PHP_VERSION__ artisan queue:work --sleep=3 --tries=3 --timeout=60 --max-time=3600
+Restart=always
+RestartSec=5
+UMask=0027
+
+# It needs to read the application and write to storage, and nothing else.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

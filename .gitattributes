@@ -4,3 +4,7 @@
 *.jpeg binary
 *.webp binary
 *.woff2 binary
+
+# The files of the deployment run on Linux: a carriage return in a script breaks it, wherever it was written.
+deploy/** text eol=lf
+*.sh text eol=lf

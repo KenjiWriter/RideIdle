@@ -1,0 +1,106 @@
+# RideIdle: one domain for the web app and the API.
+#
+#   /          the web app (Vue, built to web/dist), with the pages of the app answered by index.html
+#   /api/      the Laravel API, through PHP-FPM
+#   /up        the health check of Laravel
+#
+# This is a template: provision.sh puts the domain, the folder of the application and the version of PHP in place of
+# __DOMAIN__, __APP_DIR__ and __PHP_VERSION__ and writes it to /etc/nginx/sites-available/idlerace.conf.
+
+# Plain HTTP only answers the check of Let's Encrypt and sends everything else to HTTPS.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __DOMAIN__;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    # "http2" on the listen line works on every nginx; newer ones only warn that "http2 on;" is the new way.
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name __DOMAIN__;
+
+    ssl_certificate     /etc/letsencrypt/live/__DOMAIN__/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/__DOMAIN__/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers off;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+
+    include /etc/nginx/snippets/rideidle-security.conf;
+
+    # The root of the web app. `current` is a link to the release that is live; the API has its own root below.
+    root __APP_DIR__/current/web/dist;
+    index index.html;
+
+    client_max_body_size 1m;
+
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/css application/javascript application/json image/svg+xml;
+
+    access_log /var/log/nginx/idlerace.access.log;
+    error_log  /var/log/nginx/idlerace.error.log warn;
+
+    # The API. Laravel is told what path was asked for (/api/v1/...), and the file that runs is always index.php of the
+    # release that is live. $realpath_root follows the link `current`, so PHP's opcache sees a new release as new files.
+    location ^~ /api/ {
+        root __APP_DIR__/current/api/public;
+
+        limit_req zone=rideidle_api burst=40 nodelay;
+
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_pass unix:/run/php/php__PHP_VERSION__-fpm.sock;
+        fastcgi_read_timeout 30s;
+    }
+
+    # The health check of Laravel, for the deploy script and for a monitor.
+    location = /up {
+        root __APP_DIR__/current/api/public;
+
+        access_log off;
+
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_pass unix:/run/php/php__PHP_VERSION__-fpm.sock;
+    }
+
+    # The files of the build have a hash in their names, so they never change under the same name. There is no `always`
+    # on purpose: a 404 for a file that is not there (yet) must not be kept for a year as well.
+    location /assets/ {
+        include /etc/nginx/snippets/rideidle-security.conf;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+        try_files $uri =404;
+    }
+
+    # The page that starts the app is never kept, so a new release is seen at once.
+    location = /index.html {
+        include /etc/nginx/snippets/rideidle-security.conf;
+        add_header Cache-Control "no-cache" always;
+    }
+
+    # Every other address is a page of the app (/garage, /terms, /account/confirm, /auth/callback ...): the app routes it.
+    location / {
+        try_files $uri /index.html;
+    }
+
+    # Nothing that starts with a dot is for the world, but the proof for Let's Encrypt.
+    location ~ /\.(?!well-known) {
+        deny all;
+    }
+}
