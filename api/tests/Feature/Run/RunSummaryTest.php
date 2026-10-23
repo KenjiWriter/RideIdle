@@ -6,11 +6,6 @@ use App\Models\RaceRun;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 
-function getRun(User $driver, string $path = 'current', array $headers = []): Illuminate\Testing\TestResponse
-{
-    return test()->getJson("/api/v1/runs/{$path}", [...bearerFor($driver), ...$headers]);
-}
-
 afterEach(fn () => Carbon::setTestNow());
 
 it('requires a token', function () {

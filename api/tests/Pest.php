@@ -114,6 +114,11 @@ function driverWithRun(array $attributes = []): array
     return [$driver, $run];
 }
 
+function getRun(User $driver, string $path = 'current', array $headers = []): Illuminate\Testing\TestResponse
+{
+    return test()->getJson("/api/v1/runs/{$path}", [...bearerFor($driver), ...$headers]);
+}
+
 function cashOf(RaceRun $run): int
 {
     return (new Ledger())->balance($run->user_id);
