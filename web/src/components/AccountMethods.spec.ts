@@ -174,6 +174,38 @@ describe('AccountMethods', () => {
       expect(wrapper.find('[data-test="email"]').exists()).toBe(true)
     })
 
+    it('selects the old address when the driver wants another one, so that typing replaces it', async () => {
+      const host = document.createElement('div')
+      document.body.appendChild(host)
+      serveApi(fetchMock, {
+        'GET /api/v1/auth/providers': () => respond(200, { data: [] }),
+        'POST /api/v1/account/email': () => respond(202, { message: 'Sent.', expires_in: 1800 }),
+      })
+      const { wrapper } = await mountView(AccountMethods, '/', { props: { mode: 'link' }, attachTo: host })
+      await flushPromises()
+      await wrapper.get('[data-test="terms"]').setValue(true)
+      await wrapper.get('[data-test="age"]').setValue(true)
+      await wrapper.get('[data-test="email"]').setValue('turbo@example.com')
+      await wrapper.get('form').trigger('submit')
+      await flushPromises()
+
+      // An e-mail field has no selection range to read back (the specification says so), but select() works on it.
+      const select = vi.spyOn(HTMLInputElement.prototype, 'select')
+
+      await wrapper.get('[data-test="another"]').trigger('click')
+      await flushPromises()
+
+      const field = wrapper.get('[data-test="email"]').element as HTMLInputElement
+      expect(field.value).toBe('turbo@example.com')
+      expect(document.activeElement).toBe(field)
+      expect(select).toHaveBeenCalledTimes(1)
+      expect(select.mock.contexts[0]).toBe(field)
+
+      select.mockRestore()
+      wrapper.unmount()
+      host.remove()
+    })
+
     it('says so when the account has an e-mail already', async () => {
       const { wrapper } = await show('link', {
         'POST /api/v1/account/email': () => respond(409, { message: 'This account already has an e-mail.', code: 'email_already_linked' }),

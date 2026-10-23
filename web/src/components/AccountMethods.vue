@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
@@ -30,6 +30,7 @@ const offersEmail = computed(() => props.mode !== 'add' || !linked.value.has('em
 const terms = ref(false)
 const age = ref(false)
 const email = ref('')
+const emailField = ref<HTMLInputElement | null>(null)
 const busy = ref(false)
 const opening = ref<SocialProvider | null>(null)
 const sent = ref<string | null>(null)
@@ -129,9 +130,17 @@ async function sendLink(): Promise<void> {
   }
 }
 
-function another(): void {
+/**
+ * Back to the form for another address. The old one stays in the field, so a typo can be fixed, but it is selected:
+ * typing replaces it instead of being added to it.
+ */
+async function another(): Promise<void> {
   sent.value = null
   error.value = null
+
+  await nextTick()
+  emailField.value?.focus()
+  emailField.value?.select()
 }
 </script>
 
@@ -179,6 +188,7 @@ function another(): void {
       <label :for="`account-email-${mode}`" class="font-semibold">{{ t('account.emailLabel') }}</label>
       <input
         :id="`account-email-${mode}`"
+        ref="emailField"
         v-model="email"
         class="field"
         type="email"
