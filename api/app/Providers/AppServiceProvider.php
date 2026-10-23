@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Content\Catalog;
 use App\Content\Rules;
+use App\Services\Accounts;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -32,5 +33,13 @@ class AppServiceProvider extends ServiceProvider
         // Recovery codes can be guessed, so attempts are limited per address; issuing is limited per account.
         RateLimiter::for('recovery-attempts', fn (Request $request) => Limit::perHour(5)->by((string) $request->ip()));
         RateLimiter::for('recovery-issue', fn (Request $request) => Limit::perHour(5)->by((string) $request->user()?->getAuthIdentifier()));
+
+        // An e-mail with a link can be sent to anybody, so it is limited per account, per address (hashed, so the
+        // address is not kept) and per network address.
+        RateLimiter::for('account-email', fn (Request $request) => [
+            Limit::perHour(5)->by('user:'.$request->user()?->getAuthIdentifier()),
+            Limit::perHour(3)->by('address:'.sha1(Accounts::normalizeEmail($request->string('email')->toString()))),
+            Limit::perHour(30)->by('ip:'.$request->ip()),
+        ]);
     }
 }

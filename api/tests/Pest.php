@@ -3,6 +3,7 @@
 use App\Domain\Run\CarStats;
 use App\Domain\Run\RunInputs;
 use App\Domain\Run\TrackProfile;
+use App\Mail\AccountLinkMail;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\RaceRun;
@@ -134,6 +135,21 @@ function tokenWith(array $attributes = []): AccountToken
         'expires_at' => now()->addMinutes(30),
         ...$attributes,
     ]);
+}
+
+function askForEmailLink(User $driver, array $body = [], array $headers = []): Illuminate\Testing\TestResponse
+{
+    $body = ['email' => 'turbo@example.com', 'accept_terms' => true, 'confirm_age' => true, ...$body];
+
+    return test()->postJson('/api/v1/account/email', $body, [...bearerFor($driver), ...$headers]);
+}
+
+/** The secret in the link of the e-mail that was sent. */
+function secretOf(AccountLinkMail $mail): string
+{
+    parse_str((string) parse_url($mail->url, PHP_URL_QUERY), $query);
+
+    return $query['token'];
 }
 
 function cashOf(RaceRun $run): int

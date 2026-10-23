@@ -71,4 +71,21 @@ return [
     // Version of the set of rules (prices, rewards, anchors) that runs are frozen with.
     'ruleset_version' => env('RIDE_RULESET_VERSION', 'dev'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Konta: linki w e-mailach i powrót z logowania przez dostawcę
+    |--------------------------------------------------------------------------
+    |
+    | Linki z e-maili i przekierowania po logowaniu prowadzą do aplikacji web,
+    | więc API musi znać jej adres (WEB_URL, bez ukośnika na końcu).
+    |
+    */
+
+    'web_url' => rtrim((string) env('WEB_URL', 'http://localhost:5173'), '/'),
+
+    'account' => [
+        // How long the link of an e-mail works, in seconds. It works once.
+        'link_ttl_seconds' => 1800,
+    ],
+
 ];

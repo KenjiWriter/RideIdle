@@ -6,7 +6,7 @@ use App\Support\Locale;
 use Illuminate\Support\Arr;
 
 /** Game-specific translation files that every language must provide (framework files come from laravel-lang). */
-const GAME_LANG_FILES = ['game', 'account'];
+const GAME_LANG_FILES = ['game', 'account', 'mail'];
 
 /** @return array<string, string> */
 function langStrings(string $laravelLocale, string $file): array
