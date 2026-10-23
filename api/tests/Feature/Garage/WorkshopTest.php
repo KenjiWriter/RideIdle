@@ -46,10 +46,15 @@ function msAfterT0(): int
     return (int) Carbon::now()->getTimestampMs() - RUN_T0;
 }
 
-/** Wallet, run and the car at level 3: a driver at T0 with a constant 75 s lap that pays $15.50. */
+/**
+ * Wallet, run and the car at level 3: a driver at T0 with a constant 75 s lap that pays $15.50.
+ *
+ * The seed is fixed: the jobs freeze the run again, and with a random seed the car breaks down on about one lap of
+ * twelve, which would stop it in the middle of a test that counts its laps.
+ */
 function garageDriver(array $run = []): array
 {
-    [$driver, $race] = driverWithRun($run);
+    [$driver, $race] = driverWithRun(['seed' => str_repeat('0', 32), ...$run]);
 
     return [$driver, $race, $race->car];
 }
@@ -179,8 +184,7 @@ describe('queueing a job', function () {
     });
 
     it('carries out every job that is due when the driver comes back after a long time', function () {
-        // A fixed seed: the jobs freeze the run again, and a random one breaks the car down on one lap of twelve.
-        [$driver, $run, $car] = garageDriver(['seed' => str_repeat('0', 32)]);
+        [$driver, $run, $car] = garageDriver();
         queueJob($driver, 'mount', inventoryPart($driver)->id)->assertCreated();
         queueJob($driver, 'mount', inventoryPart($driver, 'sport-exhaust-t2', 'exhaust')->id)->assertCreated();
 
