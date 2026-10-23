@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\Api\V1\AccountEmailController;
 use App\Http\Controllers\Api\V1\AccountRecoveryController;
 use App\Http\Controllers\Api\V1\AuthProviderController;
+use App\Http\Controllers\Api\V1\LegalController;
 use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PlayerController;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/meta/locales', [LocaleController::class, 'index']);
+    Route::get('/meta/legal', [LegalController::class, 'show']);
 
     // The sign-ins with another service that are on, and the way in and out of each of them. The providers are
     // Google, Facebook and Apple; the callback is where the provider sends the person back (Apple with a form post).

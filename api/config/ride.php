@@ -88,4 +88,32 @@ return [
         'link_ttl_seconds' => 1800,
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Regulamin i polityka prywatności
+    |--------------------------------------------------------------------------
+    |
+    | Teksty są w aplikacji web, a stąd biorą się liczby i dane, które się w nich
+    | zmieniają. Próg wieku to decyzja prawna, nie techniczna: 16 lat to
+    | ostrożna wartość robocza (najwyższy próg zgody cyfrowej w RODO), do
+    | potwierdzenia po przeglądzie prawnym. Dane operatora uzupełnia wdrażający;
+    | puste pola strony pokazują jako brakujące.
+    |
+    */
+
+    'legal' => [
+        // The age a driver confirms to have reached to have an account.
+        'min_age' => (int) env('LEGAL_MIN_AGE', 16),
+
+        // The day the texts were last changed. Bump it together with them: it is saved with the consent.
+        'version' => env('LEGAL_VERSION', '2026-10-23'),
+
+        // Who runs the game. The terms and the privacy policy name them and say where to write to.
+        'operator' => [
+            'name' => env('LEGAL_OPERATOR_NAME'),
+            'address' => env('LEGAL_OPERATOR_ADDRESS'),
+            'email' => env('LEGAL_CONTACT_EMAIL'),
+        ],
+    ],
+
 ];
