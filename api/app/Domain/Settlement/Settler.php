@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Domain\Settlement;
 
+use App\Domain\Run\GameClock;
+
 /**
  * Pure settlement of a race run: what happened between the last settled moment
  * and `now`. It reads no clock, no database and no randomness, and uses integers only.
  *
  * Rules (see the settlement specification):
- * - A lap takes the lap time of the weather segment in which it starts and is never split.
+ * - A lap takes the lap time of the weather segment in which it starts and is never split. On a track that is not lit it is longer
+ *   when it starts at night, and the stretches of laps are cut at the moments the night begins and ends.
  * - A lap counts when it finishes no later than `now`; the lap in progress is neither paid nor lost
  *   (the cursor stays at its start).
  * - Fuel, and the lap after which the car breaks down, limit the number of laps. The lap after
@@ -83,8 +86,13 @@ final class Settler
             $segment = intdiv($cursor, self::SEGMENT_MS);
             $segmentEnd = ($segment + 1) * self::SEGMENT_MS;
 
+            // A track that is not lit has longer laps at night, so the stretch is cut where the night begins and ends.
+            if ($config->hasDarkness()) {
+                $segmentEnd = min($segmentEnd, GameClock::nextNightChangeMs($cursor));
+            }
+
             $weather = $config->weather->at($segment);
-            $lapMs = $config->lapMsFor($weather);
+            $lapMs = $config->lapMsAt($weather, $cursor);
 
             // Laps that start in this segment (the last one may end in the next), and laps that end by `now`.
             $startingHere = intdiv($segmentEnd - $cursor + $lapMs - 1, $lapMs);

@@ -47,6 +47,7 @@ final class RunFreezer
             'lap_xp' => $lapXp,
             'fuel_per_lap_ml' => max(1, (int) round($inputs->track->fuelPerLapMl * $inputs->car->fuelUseMultiplier)),
             'weather' => ['seed' => $inputs->climateSeed, 'chances_ppm' => $inputs->weatherChancesPpm],
+            'night_lap_ppm' => $inputs->nightLapPpm,
         ], $this->breakdownLap($runSeed, $lapsDone, $inputs->breakChancePerLapPpm));
     }
 

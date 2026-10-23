@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Domain\Run\GameClock;
 use App\Domain\Run\SeededWeather;
 use App\Domain\Settlement\Settler;
 use App\Models\RaceRun;
@@ -77,11 +78,61 @@ describe('the live view of a run', function () {
         $segment = intdiv(RUN_T0 + 10_000, Settler::SEGMENT_MS);
         $climate = new SeededWeather('region-test', $chances);
 
-        getRun($driver)->assertOk()->assertJsonPath('data.weather', [
-            'now' => $climate->at($segment),
-            'ends_ms' => ($segment + 1) * Settler::SEGMENT_MS,
-            'next' => $climate->at($segment + 1),
-        ]);
+        $response = getRun($driver)->assertOk()
+            ->assertJsonPath('data.weather.now', $climate->at($segment))
+            ->assertJsonPath('data.weather.ends_ms', ($segment + 1) * Settler::SEGMENT_MS)
+            ->assertJsonPath('data.weather.next', $climate->at($segment + 1));
+
+        // The forecast is this segment and the four after it, drawn from the same seed, each with the surface it makes of the track.
+        $forecast = $response->json('data.weather.forecast');
+
+        expect($forecast)->toHaveCount(5)
+            ->and($forecast[0])->toBe(['weather' => $climate->at($segment), 'starts_ms' => $segment * Settler::SEGMENT_MS, 'ends_ms' => ($segment + 1) * Settler::SEGMENT_MS, 'surface' => $climate->at($segment) === 'rain' ? 'asphalt_wet' : 'asphalt_dry'])
+            ->and(array_column($forecast, 'weather'))->toBe(array_map(fn (int $ahead): string => $climate->at($segment + $ahead), range(0, 4)));
+
+        foreach ($forecast as $index => $entry) {
+            expect($entry['surface'])->toBe($entry['weather'] === 'rain' ? 'asphalt_wet' : 'asphalt_dry')
+                ->and($entry['ends_ms'] - $entry['starts_ms'])->toBe(Settler::SEGMENT_MS);
+
+            if ($index > 0) {
+                expect($entry['starts_ms'])->toBe($forecast[$index - 1]['ends_ms']);
+            }
+        }
+    });
+
+    it('tells the clock of the game: three hours for a day, and where its phases begin', function () {
+        [$driver] = driverWithRun();
+
+        getRun($driver)->assertOk()
+            ->assertJsonPath('data.clock.day_ms', 10_800_000)
+            ->assertJsonPath('data.clock.phases', [
+                ['key' => 'dawn', 'from_hour' => 5],
+                ['key' => 'day', 'from_hour' => 8],
+                ['key' => 'dusk', 'from_hour' => 18],
+                ['key' => 'night', 'from_hour' => 22],
+            ]);
+    });
+
+    it('takes a lap that starts at night on a track that is not lit 3% longer, and says by how much a night lap differs', function () {
+        // The day of the game begins every 3 hours of the epoch, so T0 + 23 hours of the game is night.
+        $night = intdiv(RUN_T0, GameClock::DAY_MS) * GameClock::DAY_MS + 23 * GameClock::HOUR_MS;
+        [$driver] = driverWithRun(['cursor_ms' => $night, 'config' => [...RaceRunFactory::constantConfig(), 'night_lap_ppm' => 1_030_000]]);
+        Carbon::setTestNow(Carbon::createFromTimestampMs($night + 10_000));
+
+        getRun($driver)->assertOk()
+            ->assertJsonPath('data.lap.night_ppm', 1_030_000)
+            ->assertJsonPath('data.current_lap.ms', 77_250)
+            ->assertJsonPath('data.current_lap.finish_ms', $night + 77_250);
+    });
+
+    it('keeps the day lap on a track that is lit, and for a run frozen before the night', function () {
+        $night = intdiv(RUN_T0, GameClock::DAY_MS) * GameClock::DAY_MS + 23 * GameClock::HOUR_MS;
+        [$driver] = driverWithRun(['cursor_ms' => $night]);
+        Carbon::setTestNow(Carbon::createFromTimestampMs($night + 10_000));
+
+        getRun($driver)->assertOk()
+            ->assertJsonPath('data.lap.night_ppm', 1_000_000)
+            ->assertJsonPath('data.current_lap.ms', 75_000);
     });
 
     it('takes the lap time of the weather the lap started in', function () {

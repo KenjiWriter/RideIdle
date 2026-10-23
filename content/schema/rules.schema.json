@@ -83,6 +83,15 @@
       "required": ["start_level", "levels_per_tier", "xp_per_lap", "xp_per_level", "max_level", "mass", "stat_ceiling"],
       "additionalProperties": false
     },
+    "clock": {
+      "description": "The clock of the game: three real hours are a day of the game (Systemy II). Only the night changes the laps.",
+      "type": "object",
+      "properties": {
+        "night_lap_ppm": { "description": "The lap of a track that is not lit takes this much of its time at night (1 030 000 is 3% longer).", "type": "integer", "minimum": 1000000 }
+      },
+      "required": ["night_lap_ppm"],
+      "additionalProperties": false
+    },
     "player": {
       "description": "The level of a driver, from the experience that every lap pays: the experience that reaches level n is xp_base * n ^ xp_exponent, rounded. It opens the tracks, and the cities, one after the other.",
       "type": "object",
@@ -191,6 +200,7 @@
           "name": { "$ref": "common.schema.json#/$defs/i18n" },
           "region": { "$ref": "common.schema.json#/$defs/slug" },
           "surface": { "description": "What the track is made of when it is dry. The weather turns it wet or snowy.", "enum": ["asphalt", "gravel"] },
+          "lit": { "description": "Whether the track has lights: a track that has none takes longer to drive at night.", "type": "boolean" },
           "min_player_level": { "description": "The level of the driver from which the track is open. A car is thought of as the level of the track when the tracks are compared: it can mount the tier that level reaches.", "type": "integer", "minimum": 1 },
           "base_lap_ms": { "description": "Lap time of a car that matches the reference exactly.", "type": "integer", "minimum": 1 },
           "fuel_per_lap_ml": { "type": "integer", "minimum": 1 },
@@ -211,12 +221,12 @@
             "additionalProperties": { "type": "number", "exclusiveMinimum": 0 }
           }
         },
-        "required": ["name", "region", "surface", "min_player_level", "base_lap_ms", "fuel_per_lap_ml", "reward_cents_per_lap", "xp_per_lap", "demand", "reference"],
+        "required": ["name", "region", "surface", "lit", "min_player_level", "base_lap_ms", "fuel_per_lap_ml", "reward_cents_per_lap", "xp_per_lap", "demand", "reference"],
         "additionalProperties": false
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "tracks"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "tracks"],
   "additionalProperties": false,
   "$defs": {
     "surfaces": {

@@ -427,3 +427,22 @@ it('lets a driver of the level of a track have the parts of its tier in the pack
 
     expect($problems)->toBe([]);
 });
+
+it('says for every track whether it is lit, starts a new driver on a track that is, and makes the night longer, never shorter', function () {
+    $rules = starterRules();
+
+    expect($rules['tracks'][array_key_first($rules['tracks'])]['lit'])->toBeTrue()
+        ->and($rules['clock']['night_lap_ppm'])->toBeGreaterThanOrEqual(1_000_000);
+
+    foreach ($rules['tracks'] as $slug => $track) {
+        expect($track['lit'])->toBeBool($slug);
+    }
+
+    $unlit = $rules;
+    unset($unlit['tracks']['zlomowo-street']['lit']);
+    $noClock = $rules;
+    unset($noClock['clock']);
+
+    expect(rulesSchemaErrors($unlit))->not->toBe([])
+        ->and(rulesSchemaErrors($noClock))->not->toBe([]);
+});

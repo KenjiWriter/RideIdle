@@ -15,6 +15,7 @@
     "mass": { "reference_kg": 1000, "exponent": 0.6 },
     "stat_ceiling": { "accel": 400, "top_speed": 450, "grip": 250, "handling": 250, "braking": 250, "clearance": 200 }
   },
+  "clock": { "night_lap_ppm": 1030000 },
   "player": { "xp_base": 45, "xp_exponent": 2.3, "max_level": 30 },
   "shop": {
     "parts": [
@@ -96,6 +97,7 @@
       },
       "region": "zlomowo",
       "surface": "asphalt",
+      "lit": true,
       "min_player_level": 1,
       "base_lap_ms": 75000,
       "fuel_per_lap_ml": 1500,
@@ -114,6 +116,7 @@
       },
       "region": "kruszyn",
       "surface": "gravel",
+      "lit": false,
       "min_player_level": 3,
       "base_lap_ms": 95000,
       "fuel_per_lap_ml": 1900,
@@ -132,6 +135,7 @@
       },
       "region": "suchy-pas",
       "surface": "asphalt",
+      "lit": false,
       "min_player_level": 5,
       "base_lap_ms": 45000,
       "fuel_per_lap_ml": 900,
@@ -150,6 +154,7 @@
       },
       "region": "wilcza-przelecz",
       "surface": "asphalt",
+      "lit": false,
       "min_player_level": 8,
       "base_lap_ms": 85000,
       "fuel_per_lap_ml": 1700,
@@ -168,6 +173,7 @@
       },
       "region": "autodrom",
       "surface": "asphalt",
+      "lit": true,
       "min_player_level": 12,
       "base_lap_ms": 80000,
       "fuel_per_lap_ml": 1600,

@@ -151,6 +151,12 @@ final class Rules
         return $level;
     }
 
+    /** How much longer a lap of a track that is not lit takes at night, in ppm of its time (1 030 000 is 3% longer). */
+    public function nightLapPpm(): int
+    {
+        return $this->data['clock']['night_lap_ppm'];
+    }
+
     /** The level of the driver from which a track is open. */
     public function trackMinPlayerLevel(string $slug): int
     {

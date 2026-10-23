@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Domain\Run;
 
+use App\Domain\Settlement\Ppm;
 use App\Domain\Settlement\RunConfig;
 use InvalidArgumentException;
 
@@ -14,12 +15,10 @@ use InvalidArgumentException;
 final readonly class FrozenRun
 {
     /**
-     * @param  array{lap_ms: array<string, int>, lap_cash_cents: array<string, int>, lap_xp: array<string, int>, fuel_per_lap_ml: int, weather: array{seed: string, chances_ppm: array<string, int>}}  $config
+     * @param  array{lap_ms: array<string, int>, lap_cash_cents: array<string, int>, lap_xp: array<string, int>, fuel_per_lap_ml: int, weather: array{seed: string, chances_ppm: array<string, int>}, night_lap_ppm?: int}  $config
      * @param  int|null  $breakAfterLaps  absolute lap number after which the car breaks down, null when no breakdown is planned
      */
-    public function __construct(public array $config, public ?int $breakAfterLaps)
-    {
-    }
+    public function __construct(public array $config, public ?int $breakAfterLaps) {}
 
     /** The configuration that Settler needs, with the weather rebuilt from its seed. */
     public function runConfig(): RunConfig
@@ -48,6 +47,8 @@ final readonly class FrozenRun
             $config['lap_xp'],
             $config['fuel_per_lap_ml'],
             new SeededWeather((string) $weather['seed'], $weather['chances_ppm']),
+            // A run frozen before the night had no such number: its laps are the same all day.
+            (int) ($config['night_lap_ppm'] ?? Ppm::ONE),
         );
     }
 }

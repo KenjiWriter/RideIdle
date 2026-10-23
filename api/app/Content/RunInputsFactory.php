@@ -81,6 +81,7 @@ final class RunInputsFactory
             weatherEffects: $effects,
             climateSeed: $region['climate_seed'],
             breakChancePerLapPpm: $this->rules->breakChancePerLapPpm(),
+            nightLapPpm: $track['lit'] ? Ppm::ONE : $this->rules->nightLapPpm(),
         );
     }
 

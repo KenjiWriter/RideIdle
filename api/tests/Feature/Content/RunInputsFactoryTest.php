@@ -291,3 +291,15 @@ describe('the mass of the car', function () {
             ->and($stock['clearance'])->toBe(15.0);
     });
 });
+
+describe('the night and the lights of a track', function () {
+    it('freezes a longer night lap only for the tracks that are not lit, and the same all day for the ones that are', function (string $track, int $nightLapPpm) {
+        expect(frozenConfig('rdzak-gt-4', $track)['night_lap_ppm'])->toBe($nightLapPpm);
+    })->with([
+        'the street sprint has lights' => ['zlomowo-street', 1_000_000],
+        'the quarry has none' => ['kruszyn-quarry', 1_030_000],
+        'the drag strip has none' => ['suchy-pas-drag', 1_030_000],
+        'the pass has none' => ['wilcza-przelecz-switchbacks', 1_030_000],
+        'the autodrome has lights' => ['autodrom-circuit', 1_000_000],
+    ]);
+});

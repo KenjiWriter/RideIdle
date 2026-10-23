@@ -8,6 +8,9 @@ use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
 use App\Domain\Run\FrozenRun;
+use App\Domain\Run\GameClock;
+use App\Domain\Run\Surface;
+use App\Domain\Settlement\Ppm;
 use App\Domain\Settlement\RunConfig;
 use App\Domain\Settlement\Settler;
 use App\Models\RaceRun;
@@ -24,6 +27,9 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 final class RunResource extends JsonResource
 {
+    /** How many segments of the weather the forecast shows after the one that is now. */
+    private const FORECAST_SEGMENTS = 4;
+
     /** @return array<string, mixed> */
     public function toArray(Request $request): array
     {
@@ -56,13 +62,17 @@ final class RunResource extends JsonResource
             ],
             'lap' => [
                 'ms' => $this->config['lap_ms'],
+                // How much of its time a lap takes when it starts at night: 1 000 000 on a track that is lit.
+                'night_ppm' => $this->config['night_lap_ppm'] ?? Ppm::ONE,
                 'cash_cents' => $this->config['lap_cash_cents'],
                 'xp' => $this->config['lap_xp'],
                 'fuel_ml' => $this->config['fuel_per_lap_ml'],
                 // What a lap gives the car, which levels on its laps: the same in every weather.
                 'car_xp' => app(Rules::class)->carXpPerLap(),
             ],
-            // The weather of the region now and in the next 22.5 minutes: it is drawn from the seed of the climate, so it can be told ahead.
+            // The clock of the game, which a client counts from the time of the server: the length of a day and where its phases begin.
+            'clock' => ['day_ms' => GameClock::DAY_MS, 'phases' => GameClock::phases()],
+            // The weather of the region now and ahead: it is drawn from the seed of the climate, so it can be told ahead.
             'weather' => $this->weather($config, $nowMs),
             'current_lap' => $this->currentLap($config, $nowMs),
             'server_time_ms' => $nowMs,
@@ -70,9 +80,10 @@ final class RunResource extends JsonResource
     }
 
     /**
-     * The weather in the segment of 22.5 minutes that `$nowMs` is in, when it ends, and what the next one brings.
+     * The weather in the segment of 22.5 minutes that `$nowMs` is in, when it ends, and what the next one brings, and the forecast: this
+     * segment and the four after it (an hour and a half), each with the surface it makes of the track.
      *
-     * @return array{now: string, ends_ms: int, next: string}
+     * @return array{now: string, ends_ms: int, next: string, forecast: list<array{weather: string, starts_ms: int, ends_ms: int, surface: string}>}
      */
     private function weather(RunConfig $config, int $nowMs): array
     {
@@ -82,7 +93,32 @@ final class RunResource extends JsonResource
             'now' => $config->weather->at($segment),
             'ends_ms' => ($segment + 1) * Settler::SEGMENT_MS,
             'next' => $config->weather->at($segment + 1),
+            'forecast' => $this->forecast($config, $segment),
         ];
+    }
+
+    /**
+     * @return list<array{weather: string, starts_ms: int, ends_ms: int, surface: string}>
+     */
+    private function forecast(RunConfig $config, int $segment): array
+    {
+        $rules = app(Rules::class);
+        $track = $rules->track($this->track_slug);
+        $forecast = [];
+
+        for ($ahead = 0; $ahead <= self::FORECAST_SEGMENTS; $ahead++) {
+            $weather = $config->weather->at($segment + $ahead);
+            $ground = $rules->weather()[$weather]['ground'] ?? 'dry';
+
+            $forecast[] = [
+                'weather' => $weather,
+                'starts_ms' => ($segment + $ahead) * Settler::SEGMENT_MS,
+                'ends_ms' => ($segment + $ahead + 1) * Settler::SEGMENT_MS,
+                'surface' => Surface::of($track['surface'] ?? 'asphalt', $ground),
+            ];
+        }
+
+        return $forecast;
     }
 
     /**
@@ -99,7 +135,7 @@ final class RunResource extends JsonResource
         }
 
         $weather = $config->weather->at(intdiv($this->cursor_ms, Settler::SEGMENT_MS));
-        $ms = $config->lapMs[$weather] ?? null;
+        $ms = isset($config->lapMs[$weather]) ? $config->lapMsAt($weather, $this->cursor_ms) : null;
 
         return $ms === null ? null : ['start_ms' => $this->cursor_ms, 'finish_ms' => $this->cursor_ms + $ms, 'ms' => $ms, 'weather' => $weather];
     }
