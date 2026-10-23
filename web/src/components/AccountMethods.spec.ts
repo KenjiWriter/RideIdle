@@ -1,10 +1,12 @@
 import { flushPromises, mount } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 
 import { storeToken } from '@/auth/token'
 import { readPending } from '@/features/account/oauth'
 import { goTo } from '@/features/account/redirect'
 import { i18n, setLocale } from '@/i18n'
+import { useSessionStore } from '@/stores/session'
 import { respond, serveApi, type Call } from '@/test/fetchServer'
 import { mountView } from '@/test/mountView'
 
@@ -15,7 +17,7 @@ vi.mock('@/features/account/redirect', () => ({ goTo: vi.fn() }))
 const fetchMock = vi.fn()
 
 /** Mounts the methods with the providers the server has on. `extra` adds the calls the test makes. */
-async function show(mode: 'link' | 'login', extra: Record<string, () => Response> = {}, providers: string[] = ['google', 'facebook', 'apple']) {
+async function show(mode: 'link' | 'add' | 'login', extra: Record<string, () => Response> = {}, providers: string[] = ['google', 'facebook', 'apple']) {
   const calls = serveApi(fetchMock, { 'GET /api/v1/auth/providers': () => respond(200, { data: providers }), ...extra })
   const mounted = await mountView(AccountMethods, '/', { props: { mode } })
   await flushPromises()
@@ -219,6 +221,80 @@ describe('AccountMethods', () => {
 
       expect(made(calls, 'POST', '/api/v1/account/login-link')[0]?.body).toEqual({ email: 'turbo@example.com' })
       expect(wrapper.get('[data-test="sent"]').text()).toContain('a link is on its way')
+    })
+  })
+
+  describe('to add another sign-in to an account that has one', () => {
+    /** The driver has these sign-ins already. */
+    async function showFor(identities: { provider: 'email' | 'google' | 'facebook' | 'apple'; email: string | null }[], extra: Record<string, () => Response> = {}) {
+      const mounted = await show('add', extra)
+      useSessionStore().me = { id: 1, name: 'Maciek_Turbo', locale: 'en', is_guest: false, has_recovery_code: false, identities }
+      await nextTick()
+
+      return mounted
+    }
+
+    const google = { provider: 'google' as const, email: 'm***@gmail.com' }
+    const email = { provider: 'email' as const, email: 't***@example.com' }
+
+    it('asks for no terms and no age again', async () => {
+      const { wrapper } = await showFor([google])
+
+      expect(wrapper.find('[data-test="terms"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="age"]').exists()).toBe(false)
+    })
+
+    it('offers the providers the account does not have yet, and the e-mail', async () => {
+      const { wrapper } = await showFor([google])
+
+      expect(wrapper.findAll('[data-test^="provider-"]').map((button) => button.text())).toEqual(['Continue with Facebook', 'Continue with Apple'])
+      expect(wrapper.find('[data-test="email"]').exists()).toBe(true)
+      expect(wrapper.text()).toContain('or with an e-mail')
+    })
+
+    it('does not offer an e-mail to an account that has one, and does not say "or" with nothing after it', async () => {
+      const { wrapper } = await showFor([email])
+
+      expect(wrapper.findAll('[data-test^="provider-"]').map((button) => button.text())).toEqual([
+        'Continue with Google',
+        'Continue with Facebook',
+        'Continue with Apple',
+      ])
+      expect(wrapper.find('[data-test="email"]').exists()).toBe(false)
+      expect(wrapper.text()).not.toContain('or with an e-mail')
+    })
+
+    it('offers nothing when the account has every way there is', async () => {
+      const { wrapper } = await showFor([email, google, { provider: 'facebook', email: null }, { provider: 'apple', email: null }])
+
+      expect(wrapper.find('[data-test="providers"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="email"]').exists()).toBe(false)
+    })
+
+    it('sends the browser to the provider with no terms in the request', async () => {
+      const { wrapper, calls } = await showFor([email], {
+        'POST /api/v1/account/identities/facebook/start': () => respond(200, { url: 'https://facebook.test/dialog?state=s', verifier: 'v-789' }),
+      })
+
+      await wrapper.get('[data-test="provider-facebook"]').trigger('click')
+      await flushPromises()
+
+      expect(made(calls, 'POST', '/api/v1/account/identities/facebook/start')[0]?.body).toEqual({})
+      expect(goTo).toHaveBeenCalledWith('https://facebook.test/dialog?state=s')
+      expect(readPending()).toMatchObject({ provider: 'facebook', verifier: 'v-789' })
+    })
+
+    it('sends a link to add an e-mail with the address only', async () => {
+      const { wrapper, calls } = await showFor([google], {
+        'POST /api/v1/account/email': () => respond(202, { message: 'We sent a link to turbo@example.com.', expires_in: 1800 }),
+      })
+      await wrapper.get('[data-test="email"]').setValue('turbo@example.com')
+
+      await wrapper.get('form').trigger('submit')
+      await flushPromises()
+
+      expect(made(calls, 'POST', '/api/v1/account/email')[0]?.body).toEqual({ email: 'turbo@example.com' })
+      expect(wrapper.get('[data-test="sent"]').text()).toContain('We sent a link to turbo@example.com.')
     })
   })
 

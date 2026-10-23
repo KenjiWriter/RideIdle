@@ -5,18 +5,27 @@ import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/api/client'
 import type { SocialProvider } from '@/api/types'
 import { useAccountStore } from '@/stores/account'
+import { useSessionStore } from '@/stores/session'
 
 /**
  * The ways to get into an account: Google, Facebook or Apple when the server has them on, and a link sent by e-mail.
- * To `link` them to the guest account of the driver, the terms must be accepted and the age confirmed first. To
- * `login` on a device with no account nothing is asked, because the account already exists.
+ * To `link` them to the guest account of the driver, the terms must be accepted and the age confirmed first. To `add`
+ * one to an account that has a sign-in already nothing is asked again, and the ones it has are not offered. To `login`
+ * on a device with no account nothing is asked either, because the account exists.
  */
-const props = defineProps<{ mode: 'link' | 'login' }>()
+const props = defineProps<{ mode: 'link' | 'add' | 'login' }>()
 
 const { t } = useI18n()
 const account = useAccountStore()
+const session = useSessionStore()
 
-const linking = computed(() => props.mode === 'link')
+/** Whether this is about the account of the driver on this device, and not about signing in to another one. */
+const linking = computed(() => props.mode !== 'login')
+const asksConsent = computed(() => props.mode === 'link')
+
+const linked = computed(() => new Set(session.me?.identities.map((identity) => identity.provider) ?? []))
+const offered = computed(() => account.providers.filter((provider) => props.mode !== 'add' || !linked.value.has(provider)))
+const offersEmail = computed(() => props.mode !== 'add' || !linked.value.has('email'))
 
 const terms = ref(false)
 const age = ref(false)
@@ -53,7 +62,7 @@ function describe(failure: unknown): string {
 
 /** Linking is for a driver who accepted the terms and confirmed their age; the server asks for it too. */
 function consentGiven(): boolean {
-  if (!linking.value || (terms.value && age.value)) {
+  if (!asksConsent.value || (terms.value && age.value)) {
     return true
   }
 
@@ -74,7 +83,7 @@ async function useProvider(provider: SocialProvider): Promise<void> {
 
   try {
     // The browser leaves for the provider: nothing is left to do here when this succeeds.
-    await account.startProvider(provider, linking.value)
+    await account.startProvider(provider, linking.value, asksConsent.value)
   } catch (failure) {
     error.value = describe(failure)
     busy.value = false
@@ -110,7 +119,9 @@ async function sendLink(): Promise<void> {
   busy.value = true
 
   try {
-    sent.value = linking.value ? await account.requestEmailLink(address) : await account.requestLoginLink(address)
+    sent.value = linking.value
+      ? await account.requestEmailLink(address, asksConsent.value)
+      : await account.requestLoginLink(address)
   } catch (failure) {
     error.value = describe(failure)
   } finally {
@@ -126,7 +137,7 @@ function another(): void {
 
 <template>
   <div class="flex flex-col gap-4">
-    <fieldset v-if="linking" class="flex flex-col gap-3">
+    <fieldset v-if="asksConsent" class="flex flex-col gap-3">
       <legend class="sr-only">{{ t('account.consentLegend') }}</legend>
       <label class="flex items-start gap-3">
         <input v-model="terms" type="checkbox" class="mt-1 size-5 shrink-0 accent-amber" data-test="terms" />
@@ -138,9 +149,9 @@ function another(): void {
       </label>
     </fieldset>
 
-    <div v-if="account.providers.length > 0" class="flex flex-col gap-3" data-test="providers">
+    <div v-if="offered.length > 0" class="flex flex-col gap-3" data-test="providers">
       <button
-        v-for="provider in account.providers"
+        v-for="provider in offered"
         :key="provider"
         type="button"
         class="btn btn-secondary"
@@ -154,7 +165,7 @@ function another(): void {
             : t('account.continueWith', { provider: t(`provider.${provider}`) })
         }}
       </button>
-      <p class="text-center text-sm text-muted">{{ t('account.or') }}</p>
+      <p v-if="offersEmail" class="text-center text-sm text-muted">{{ t('account.or') }}</p>
     </div>
 
     <div v-if="sent" class="flex flex-col gap-3 rounded-lg border border-cyan bg-surface-2 p-4" role="status" data-test="sent">
@@ -164,7 +175,7 @@ function another(): void {
       </div>
     </div>
 
-    <form v-else class="flex flex-col gap-3" novalidate @submit.prevent="sendLink">
+    <form v-else-if="offersEmail" class="flex flex-col gap-3" novalidate @submit.prevent="sendLink">
       <label :for="`account-email-${mode}`" class="font-semibold">{{ t('account.emailLabel') }}</label>
       <input
         :id="`account-email-${mode}`"

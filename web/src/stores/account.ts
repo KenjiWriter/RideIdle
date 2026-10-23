@@ -41,13 +41,13 @@ export const useAccountStore = defineStore('account', () => {
 
   /**
    * Asks for a link that secures this guest account with an e-mail. Nothing changes until the link is opened. The
-   * answer is the same whether the address already has a garage or not. Needs the terms accepted and the age
-   * confirmed, which the caller has asked the driver for.
+   * answer is the same whether the address already has a garage or not. A guest needs the terms accepted and the age
+   * confirmed, which the caller has asked the driver for (`withConsent`); an account that did that already is not asked.
    */
-  async function requestEmailLink(email: string): Promise<string> {
+  async function requestEmailLink(email: string, withConsent = true): Promise<string> {
     const response = await api<EmailLinkResponse>('/v1/account/email', {
       method: 'POST',
-      body: JSON.stringify({ email, accept_terms: true, confirm_age: true }),
+      body: JSON.stringify(withConsent ? { email, accept_terms: true, confirm_age: true } : { email }),
     })
 
     return response.message
@@ -65,14 +65,15 @@ export const useAccountStore = defineStore('account', () => {
 
   /**
    * Sends the browser to a provider, to link it to the account of the driver or, with no account on this device, to
-   * sign in. The verifier of the sign-in is kept here until the browser comes back. Linking needs the terms accepted
-   * and the age confirmed, which the caller has asked the driver for.
+   * sign in. The verifier of the sign-in is kept here until the browser comes back. A guest linking needs the terms
+   * accepted and the age confirmed, which the caller has asked the driver for (`withConsent`); an account that did that
+   * already is not asked.
    */
-  async function startProvider(provider: SocialProvider, link: boolean): Promise<void> {
+  async function startProvider(provider: SocialProvider, link: boolean, withConsent = true): Promise<void> {
     const start = link
       ? await api<ProviderStart>(`/v1/account/identities/${provider}/start`, {
           method: 'POST',
-          body: JSON.stringify({ accept_terms: true, confirm_age: true }),
+          body: JSON.stringify(withConsent ? { accept_terms: true, confirm_age: true } : {}),
         })
       : await api<ProviderStart>(`/v1/auth/${provider}/start`, { method: 'POST' })
 

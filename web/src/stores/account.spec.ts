@@ -74,6 +74,17 @@ describe('account store', () => {
       expect(calls[0]?.body).toEqual({ email: 't@example.com', accept_terms: true, confirm_age: true })
     })
 
+    it('asks for a link that adds an e-mail to an account that accepted the terms before, with the address only', async () => {
+      storeToken('device-token')
+      const calls = serveApi(fetchMock, {
+        'POST /api/v1/account/email': () => respond(202, { message: 'We sent a link to t@example.com.', expires_in: 1800 }),
+      })
+
+      await useAccountStore().requestEmailLink('t@example.com', false)
+
+      expect(calls[0]?.body).toEqual({ email: 't@example.com' })
+    })
+
     it('asks for a link that signs in, without any consent', async () => {
       const calls = serveApi(fetchMock, {
         'POST /api/v1/account/login-link': () =>
@@ -106,6 +117,19 @@ describe('account store', () => {
       expect(calls[0]?.body).toEqual({ accept_terms: true, confirm_age: true })
       expect(readPending()).toMatchObject({ provider: 'google', verifier: 'v-123' })
       expect(goTo).toHaveBeenCalledWith('https://accounts.google.test/auth?state=s')
+    })
+
+    it('adds a provider to an account that accepted the terms before, with no terms in the request', async () => {
+      storeToken('device-token')
+      const calls = serveApi(fetchMock, {
+        'POST /api/v1/account/identities/apple/start': () => respond(200, { url: 'https://appleid.test/auth?state=s', verifier: 'v-789' }),
+      })
+
+      await useAccountStore().startProvider('apple', true, false)
+
+      expect(calls[0]?.body).toEqual({})
+      expect(readPending()).toMatchObject({ provider: 'apple', verifier: 'v-789' })
+      expect(goTo).toHaveBeenCalledWith('https://appleid.test/auth?state=s')
     })
 
     it('signs in with no account on the device, and asks for no consent', async () => {
