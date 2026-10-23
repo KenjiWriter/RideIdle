@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Car;
 use App\Models\RaceRun;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -24,6 +25,10 @@ class RaceRunFactory extends Factory
         return [
             'user_id' => User::factory()->guest(),
             'car_slug' => 'rdzak-gt-4',
+            'car_id' => fn (array $attributes): int => Car::factory()->create([
+                'user_id' => $attributes['user_id'],
+                'vehicle_slug' => $attributes['car_slug'],
+            ])->id,
             'track_slug' => 'zlomowo-street',
             'status' => RaceRun::STATUS_RUNNING,
             'cursor_ms' => 0,

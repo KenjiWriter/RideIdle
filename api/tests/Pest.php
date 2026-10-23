@@ -6,12 +6,15 @@ use App\Domain\Run\TrackProfile;
 use App\Mail\AccountLinkMail;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
+use App\Models\Car;
 use App\Models\LedgerEntry;
+use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\WorkshopJob;
 use App\Services\Ledger;
 use App\Services\RunService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -296,6 +299,12 @@ function accountWithHistory(): User
     $user->createToken('google-login');
 
     $run = aRun(['user_id' => $user->id]);
+
+    // A part on the car, a spare one in the inventory, and a job that waits for the mechanic.
+    Part::factory()->state(['part_slug' => 'sport-exhaust-t2', 'slot' => 'exhaust'])->mountedOn($run->car)->create();
+    $spare = Part::factory()->create(['user_id' => $user->id]);
+    WorkshopJob::factory()->create(['user_id' => $user->id, 'car_id' => $run->car_id, 'part_id' => $spare->id]);
+
     $settlement = Settlement::query()->create([
         'race_run_id' => $run->id,
         'state_version' => 1,
@@ -322,6 +331,9 @@ function rowsOf(): array
         'devices' => PersonalAccessToken::query()->count(),
         'links' => AccountToken::query()->count(),
         'wallets' => Wallet::query()->count(),
+        'cars' => Car::query()->count(),
+        'parts' => Part::query()->count(),
+        'jobs' => WorkshopJob::query()->count(),
         'runs' => RaceRun::query()->count(),
         'settlements' => Settlement::query()->count(),
         'events' => SettlementEvent::query()->count(),

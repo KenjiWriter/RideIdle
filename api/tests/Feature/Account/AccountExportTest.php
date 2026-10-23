@@ -87,10 +87,23 @@ describe('what is exported', function () {
             ->and($game['ledger'][0])->toMatchArray(['delta' => 1_550, 'reason' => 'laps']);
     });
 
+    it('has the cars with their parts, the spare parts and the jobs of the workshop', function () {
+        $game = (new AccountExport)->for(accountWithHistory())['game'];
+
+        expect($game['cars'])->toHaveCount(1)
+            ->and($game['cars'][0])->toMatchArray(['vehicle_slug' => 'rdzak-gt-4', 'level' => 3])
+            ->and($game['cars'][0]['parts'])->toHaveCount(1)
+            ->and($game['cars'][0]['parts'][0])->toMatchArray(['part_slug' => 'sport-exhaust-t2', 'mounted_slot' => 'exhaust'])
+            ->and($game['inventory'])->toHaveCount(1)
+            ->and($game['inventory'][0])->toMatchArray(['part_slug' => 'street-tires-t2'])
+            ->and($game['workshop_jobs'])->toHaveCount(1)
+            ->and($game['workshop_jobs'][0])->toMatchArray(['kind' => 'mount', 'status' => 'queued']);
+    });
+
     it('has an empty game for an account that never played', function () {
         $game = (new AccountExport)->for(User::factory()->guest()->create())['game'];
 
-        expect($game)->toBe(['wallet' => null, 'runs' => [], 'ledger' => []]);
+        expect($game)->toBe(['wallet' => null, 'cars' => [], 'inventory' => [], 'workshop_jobs' => [], 'runs' => [], 'ledger' => []]);
     });
 
     it('is only about the account, and never about another', function () {

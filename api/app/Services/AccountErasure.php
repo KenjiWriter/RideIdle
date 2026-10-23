@@ -6,12 +6,15 @@ namespace App\Services;
 
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
+use App\Models\Car;
 use App\Models\LedgerEntry;
+use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\WorkshopJob;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -49,6 +52,9 @@ final class AccountErasure
             'devices' => PersonalAccessToken::query()->where('tokenable_type', $user->getMorphClass())->where('tokenable_id', $user->id)->count(),
             'waiting links' => AccountToken::query()->where('user_id', $user->id)->count(),
             'wallets' => Wallet::query()->where('user_id', $user->id)->count(),
+            'cars' => Car::query()->where('user_id', $user->id)->count(),
+            'parts' => Part::query()->where('user_id', $user->id)->count(),
+            'workshop jobs' => WorkshopJob::query()->where('user_id', $user->id)->count(),
             'runs' => $runs->count(),
             'settlements' => $settlements->count(),
             'settlement events' => SettlementEvent::query()->whereIn('settlement_id', $settlements)->count(),
@@ -81,6 +87,9 @@ final class AccountErasure
             LedgerEntry::query()->where('user_id', $user->id)->delete();
             Settlement::query()->whereIn('race_run_id', $runs)->delete();
             RaceRun::query()->where('user_id', $user->id)->delete();
+            WorkshopJob::query()->where('user_id', $user->id)->delete();
+            Part::query()->where('user_id', $user->id)->delete();
+            Car::query()->where('user_id', $user->id)->delete();
             Wallet::query()->where('user_id', $user->id)->delete();
             AccountToken::query()->where('user_id', $user->id)->delete();
             AccountIdentity::query()->where('user_id', $user->id)->delete();

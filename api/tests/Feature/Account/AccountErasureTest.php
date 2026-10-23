@@ -38,7 +38,7 @@ describe('what is removed', function () {
 
         erasure()->erase($user);
 
-        expect(rowsOf())->toBe(['users' => 0, 'identities' => 0, 'devices' => 0, 'links' => 0, 'wallets' => 0, 'runs' => 0, 'settlements' => 0, 'events' => 0, 'ledger' => 0])
+        expect(rowsOf())->toBe(['users' => 0, 'identities' => 0, 'devices' => 0, 'links' => 0, 'wallets' => 0, 'cars' => 0, 'parts' => 0, 'jobs' => 0, 'runs' => 0, 'settlements' => 0, 'events' => 0, 'ledger' => 0])
             ->and(User::query()->find($user->id))->toBeNull();
     });
 
@@ -49,7 +49,7 @@ describe('what is removed', function () {
         $removed = erasure()->erase($user);
 
         expect($removed)->toBe($before)
-            ->and($removed)->toMatchArray(['accounts' => 1, 'sign-ins' => 2, 'devices' => 1, 'wallets' => 1, 'runs' => 1, 'settlements' => 1, 'settlement events' => 1, 'ledger entries' => 1]);
+            ->and($removed)->toMatchArray(['accounts' => 1, 'sign-ins' => 2, 'devices' => 1, 'wallets' => 1, 'cars' => 1, 'parts' => 2, 'workshop jobs' => 1, 'runs' => 1, 'settlements' => 1, 'settlement events' => 1, 'ledger entries' => 1]);
     });
 
     it('leaves another account and everything of it as it was', function () {
@@ -65,7 +65,7 @@ describe('what is removed', function () {
 
         erasure()->erase($user);
 
-        expect(rowsOf())->toBe(['users' => 1, 'identities' => 1, 'devices' => 1, 'links' => 1, 'wallets' => 1, 'runs' => 1, 'settlements' => 1, 'events' => 1, 'ledger' => 1])
+        expect(rowsOf())->toBe(['users' => 1, 'identities' => 1, 'devices' => 1, 'links' => 1, 'wallets' => 1, 'cars' => 1, 'parts' => 0, 'jobs' => 0, 'runs' => 1, 'settlements' => 1, 'events' => 1, 'ledger' => 1])
             ->and(User::query()->firstOrFail()->name)->toBe('Somebody_Else')
             ->and(cashOf($run))->toBe(999);
     });

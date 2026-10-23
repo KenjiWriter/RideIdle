@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Content\Rules;
 use App\Domain\Run\FrozenRun;
 use App\Domain\Run\RunFreezer;
 use App\Domain\Run\RunInputs;
@@ -14,6 +15,7 @@ use App\Domain\Settlement\Settler;
 use App\Exceptions\IdempotencyConflictException;
 use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\RunAlreadyExistsException;
+use App\Models\Car;
 use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\Settlement;
@@ -36,10 +38,10 @@ final class RunService
 
     public function __construct(
         private readonly Ledger $ledger,
-        private readonly Settler $settler = new Settler(),
-        private readonly RunFreezer $freezer = new RunFreezer(),
-    ) {
-    }
+        private readonly Settler $settler = new Settler,
+        private readonly RunFreezer $freezer = new RunFreezer,
+        private readonly ?Rules $rules = null,
+    ) {}
 
     /** Milliseconds since the Unix epoch from the (testable) application clock. */
     public static function nowMs(): int
@@ -47,14 +49,24 @@ final class RunService
         return now()->getTimestampMs();
     }
 
-    /** Starts a run: freezes the configuration with a new seed and puts the cursor at the start time. */
-    public function start(int $userId, string $carSlug, string $trackSlug, RunInputs $inputs, int $fuelMl, ?int $nowMs = null): RaceRun
+    /**
+     * Starts a run: freezes the configuration with a new seed and puts the cursor at the start time. The run drives
+     * `$car`, or a new car of the driver at the level a new car has when none is given.
+     */
+    public function start(int $userId, string $carSlug, string $trackSlug, RunInputs $inputs, int $fuelMl, ?int $nowMs = null, ?Car $car = null): RaceRun
     {
         $seed = bin2hex(random_bytes(16));
         $frozen = $this->freezer->freeze($inputs, $seed, 0);
 
+        $car ??= Car::query()->create([
+            'user_id' => $userId,
+            'vehicle_slug' => $carSlug,
+            'level' => ($this->rules ?? Rules::fromConfig())->carStartLevel(),
+        ]);
+
         return RaceRun::query()->create([
             'user_id' => $userId,
+            'car_id' => $car->id,
             'car_slug' => $carSlug,
             'track_slug' => $trackSlug,
             'status' => RaceRun::STATUS_RUNNING,
@@ -369,7 +381,7 @@ final class RunService
      */
     private function locked(int $runId, ?int $nowMs, callable $work): mixed
     {
-        $userId = RaceRun::query()->whereKey($runId)->value('user_id') ?? throw (new ModelNotFoundException())->setModel(RaceRun::class, [$runId]);
+        $userId = RaceRun::query()->whereKey($runId)->value('user_id') ?? throw (new ModelNotFoundException)->setModel(RaceRun::class, [$runId]);
 
         // Before the transaction: creating the wallet under a lock deadlocks (see Ledger::ensureWallet).
         $this->ledger->ensureWallet((int) $userId);

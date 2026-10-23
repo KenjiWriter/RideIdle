@@ -20,6 +20,9 @@ class RaceRun extends Model
 
     public const STATUS_STOPPED = 'stopped';
 
+    /** The car stands in the workshop while a job on it is in progress. The other stop reasons are events of settlement. */
+    public const STOP_WORKSHOP = 'workshop';
+
     protected $guarded = [];
 
     /** @return array<string, string> */
@@ -27,6 +30,7 @@ class RaceRun extends Model
     {
         return [
             'user_id' => 'integer',
+            'car_id' => 'integer',
             'config' => 'array',
             'cursor_ms' => 'integer',
             'laps_done' => 'integer',
@@ -40,6 +44,12 @@ class RaceRun extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return BelongsTo<Car, $this> */
+    public function car(): BelongsTo
+    {
+        return $this->belongsTo(Car::class);
     }
 
     /** @return HasMany<Settlement, $this> */
