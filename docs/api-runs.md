@@ -140,7 +140,7 @@ Kierowca ma auta i części jako wiersze (`cars`, `parts`), a bieg jeździ autem
 
 ### Garaż: `GET /garage`
 
-Najpierw wykonuje to, co w warsztacie jest już należne. `data.car`: poziom, nadwozie, `stats` (przyspieszenie, prędkość maksymalna, przyczepność, prowadzenie, hamowanie) z częściami i `base_stats` bez nich, `tank_ml`, `lap_ms` biegu, stan biegu i dziewięć gniazd w stałej kolejności (opony, zawieszenie, hamulce, silnik, doładowanie, skrzynia, wydech, chłodzenie, zbiornik; silnik to na razie część nadwozia, `built_in`). `data.inventory`: części poza autem. `data.workshop`: `queue_max`, mechanik i niewykonane zlecenia. `now_ms` to czas serwera: czasy zleceń (`start_ms`, `finish_ms`) są w jego zegarze, więc odliczanie nie zależy od zegara klienta.
+Najpierw wykonuje to, co w warsztacie jest już należne. `data.car`: poziom, nadwozie, `stats` (przyspieszenie, prędkość maksymalna, przyczepność, prowadzenie, hamowanie) z częściami i `base_stats` bez nich, `ceilings` (wartość każdej z tych statystyk, przy której pasek w garażu jest pełny, z `car.stat_ceiling` reguł: to, co ma osiągać najlepsze auto całej gry, jednakowe na każdym torze), `tank_ml`, `lap_ms` biegu, stan biegu i dziewięć gniazd w stałej kolejności (opony, zawieszenie, hamulce, silnik, doładowanie, skrzynia, wydech, chłodzenie, zbiornik; silnik to na razie część nadwozia, `built_in`). `data.inventory`: części poza autem. `data.workshop`: `queue_max`, mechanik i niewykonane zlecenia. `now_ms` to czas serwera: czasy zleceń (`start_ms`, `finish_ms`) są w jego zegarze, więc odliczanie nie zależy od zegara klienta.
 
 ### Warsztat: `POST /garage/jobs`
 
