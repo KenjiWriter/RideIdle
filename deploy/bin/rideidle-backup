@@ -6,7 +6,10 @@
 # to another place (see deploy/README.md). They are removed after KEEP_DAYS days, which is also how long a person who
 # asked for the deletion of their account can still be in a copy.
 #
-# Restore: runuser -u postgres -- pg_restore --clean --if-exists --no-owner -d rideidle /var/backups/rideidle/FILE.dump
+# Restore (with the queue stopped; the owners are in the copy, so the tables stay the property of the user of the game):
+#   systemctl stop rideidle-queue
+#   runuser -u postgres -- pg_restore --clean --if-exists -d rideidle /var/backups/rideidle/FILE.dump
+#   systemctl start rideidle-queue
 
 set -Eeuo pipefail
 
