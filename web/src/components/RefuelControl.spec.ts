@@ -25,7 +25,7 @@ function aRun(overrides: Partial<Run> = {}): Run {
     cursor_ms: 1_792_692_000_000,
     state_version: 2,
     prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
-    lap: { ms: { dry: 75_000 }, cash_cents: { dry: 1_550 }, xp: { dry: 25 }, fuel_ml: 1_500 },
+    lap: { ms: { dry: 75_000 }, cash_cents: { dry: 1_550 }, xp: { dry: 25 }, fuel_ml: 1_500, car_xp: 10 },
     server_time_ms: 1_792_692_000_000,
     ...liveFields(1_792_692_000_000),
     ...overrides,

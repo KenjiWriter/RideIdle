@@ -7,6 +7,7 @@ import { POLL_MS } from '@/features/run/useRunPolling'
 import { readSeen, storeSeen } from '@/features/run/seen'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
+import { aCar, aGarage } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
 import { aStep, aTutorial } from '@/test/tutorialFixtures'
 
@@ -32,7 +33,7 @@ function aRun(overrides: Partial<Run> = {}): Run {
     cursor_ms: NOW,
     state_version: 4,
     prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
-    lap: { ms: { dry: 75_000, rain: 84_391 }, cash_cents: { dry: 1_550, rain: 1_442 }, xp: { dry: 25, rain: 23 }, fuel_ml: 1_500 },
+    lap: { ms: { dry: 75_000, rain: 84_391 }, cash_cents: { dry: 1_550, rain: 1_442 }, xp: { dry: 25, rain: 23 }, fuel_ml: 1_500, car_xp: 10 },
     server_time_ms: NOW,
     ...liveFields(NOW),
     ...overrides,
@@ -710,7 +711,7 @@ describe('GarageView', () => {
     })
 
     it('says what the mentor paid, for a while', async () => {
-      const paid = aTutorial(aStep({ key: 'rewards', number: 3, target: 'cash' }), { rewarded: [{ key: 'first-lap', cash_cents: 20_000 }] })
+      const paid = aTutorial(aStep({ key: 'rewards', number: 3, target: 'cash' }), { rewarded: [{ key: 'first-lap', cash_cents: 20_000, car_xp: 0 }] })
       const { mounted } = openWithTutorial(() => respond(200, paid))
       const { wrapper } = await mounted
       await flushPromises()
@@ -749,6 +750,100 @@ describe('GarageView', () => {
         expect(wrapper.find('[data-test="tutorial-phone"]').exists()).toBe(false)
         expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
       })
+    })
+  })
+
+  describe('the car', () => {
+    function openWithCar(car = aCar(), overrides: Partial<Run> = {}) {
+      const calls = serve(() => respond(200, runAnswer(aRun(overrides))), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage({ car })) })
+
+      return { calls, mounted: show() }
+    }
+
+    it('shows its level and its experience as the board of the garage does: how far into the level, and how much the level takes', async () => {
+      const { mounted } = openWithCar()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="car-level"]').text()).toBe('Car LV 3')
+      expect(wrapper.get('[data-test="car-xp-value"]').text()).toBe('410 / 600')
+      expect(wrapper.get('[data-test="car-xp"] [role="progressbar"]').attributes('aria-valuenow')).toBe('68')
+    })
+
+    it('says what the next level that opens parts opens', async () => {
+      const { mounted } = openWithCar()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="tier-unlock"]').text()).toBe('From level 6: T3 parts')
+    })
+
+    it('has a full bar and no next tier at the highest level', async () => {
+      const { mounted } = openWithCar(aCar({ level: 30, xp: { total: 87_000, level_start: 87_000, next_level_at: null }, tier_unlock: null }))
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="car-xp-value"]').text()).toBe('Highest level')
+      expect(wrapper.get('[data-test="car-xp"] [role="progressbar"]').attributes('aria-valuenow')).toBe('100')
+      expect(wrapper.find('[data-test="tier-unlock"]').exists()).toBe(false)
+    })
+
+    it('says that the car rose, with the tier of parts that opened, when the garage is asked again and the car is higher', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+      const { mounted } = openWithCar(aCar({ level: 5, tier_unlock: { tier: 3, level: 6 } }))
+      const { wrapper } = await mounted
+      await flushPromises()
+      expect(wrapper.find('[data-test="level-up"]').exists()).toBe(false)
+
+      // The run moves on (a lap is settled), and with it the car, which is level 6 now.
+      serve(() => respond(200, runAnswer(aRun({ state_version: 5 }))), undefined, {
+        'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ level: 6, tier_unlock: { tier: 4, level: 9 } }) })),
+      })
+      await vi.advanceTimersByTimeAsync(POLL_MS)
+
+      expect(wrapper.get('[data-test="level-up"]').text()).toBe('The car reached level 6. You can mount T3 parts now.')
+      expect(wrapper.get('[data-test="car-level"]').text()).toBe('Car LV 6')
+    })
+
+    it('says only the level when a rise opens no tier', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+      const { mounted } = openWithCar()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      serve(() => respond(200, runAnswer(aRun({ state_version: 5 }))), undefined, {
+        'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ level: 4 }) })),
+      })
+      await vi.advanceTimersByTimeAsync(POLL_MS)
+
+      expect(wrapper.get('[data-test="level-up"]').text()).toBe('The car reached level 4.')
+    })
+
+    it('shows the experience the mentor gave the car in the bar, which is asked for again because the run has not moved', async () => {
+      const paid = aTutorial(null, { rewarded: [{ key: 'rewards', cash_cents: 0, car_xp: 100 }] })
+      let total = 1_010
+      const calls = serve(() => respond(200, runAnswer(aRun())), undefined, {
+        'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ xp: { total, level_start: 600, next_level_at: 1_200 } }) })),
+        'GET /api/v1/tutorial': () => {
+          total = 1_110
+
+          return respond(200, paid)
+        },
+      })
+      const { wrapper } = await show()
+      await flushPromises()
+
+      expect(calls.filter((call) => call.url === '/api/v1/garage').length).toBeGreaterThanOrEqual(2)
+      expect(wrapper.get('[data-test="car-xp-value"]').text()).toBe('510 / 600')
+    })
+
+    it('says what the mentor gave the car, with the cash when there is some', async () => {
+      const paid = aTutorial(null, { rewarded: [{ key: 'rewards', cash_cents: 0, car_xp: 100 }] })
+      serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/tutorial': () => respond(200, paid) })
+      const { wrapper } = await show()
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="tutorial-reward"]').text()).toBe('K. added 100 XP to your car.')
     })
   })
 })

@@ -95,7 +95,7 @@ describe('ShopView', () => {
     const { wrapper } = await mountView(ShopView, '/shop')
     await flushPromises()
 
-    expect(wrapper.get('[data-test="offer-street-tires-t2"] [data-test="needs-level"]').text()).toBe('Needs car level 3 Your car is level 2.')
+    expect(wrapper.get('[data-test="offer-street-tires-t2"] [data-test="needs-level"]').text()).toBe('Needs car level 3 Your car is level 2. You get XP by driving this car.')
     expect(wrapper.find('[data-test="offer-sport-suspension-t1"] [data-test="needs-level"]').exists()).toBe(false)
     expect(wrapper.get('[data-test="buy-street-tires-t2"]').attributes('disabled')).toBeUndefined()
   })

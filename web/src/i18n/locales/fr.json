@@ -70,7 +70,12 @@
   "garage": {
     "welcome": "Bienvenue, {name}",
     "signOut": "Se déconnecter",
-    "carLevel": "Voiture LV {level}"
+    "carLevel": "Voiture LV {level}",
+    "carXp": "XP de la voiture",
+    "carXpMax": "Niveau maximal",
+    "nextTier": "Dès le niveau {level} : pièces T{tier}",
+    "levelUp": "La voiture passe au niveau {level}.",
+    "tierUnlocked": "Vous pouvez monter des pièces T{tier}."
   },
   "choose": {
     "title": "Choisissez votre épave",
@@ -326,7 +331,8 @@
     "loadError": "La boutique n’a pas pu être chargée.",
     "toWorkshop": "À l’atelier",
     "noCar": "Vous n’avez pas encore de voiture.",
-    "last": "Dernier achat"
+    "last": "Dernier achat",
+    "getXp": "Vous gagnez de l’XP en conduisant cette voiture."
   },
   "workshop": {
     "title": "Atelier",
@@ -378,7 +384,8 @@
     "keep": "Revenir au tutoriel",
     "skipConfirm": "Passer le tutoriel",
     "from": "Message de {sender}",
-    "reward": "K. vous a envoyé {cash}."
+    "reward": "K. vous a envoyé {cash}.",
+    "rewardCarXp": "K. a ajouté {xp} XP à votre voiture."
   },
   "story": {
     "scene1": "« Écoute, je dois disparaître un moment. »",
@@ -424,6 +431,7 @@
       "you": "Vous · {car}",
       "youTag": "VOUS",
       "later": "Les bots et les fantômes des autres pilotes arriveront plus tard. Pour l’instant, vous roulez seul."
-    }
+    },
+    "carXp": "+{value} XP voiture"
   }
 }

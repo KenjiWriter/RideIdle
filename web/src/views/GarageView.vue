@@ -78,12 +78,35 @@ const { message: rewardMessage, show: showReward } = useFlash()
 
 watch(
   () => tutorial.reward,
-  (cents) => {
-    if (cents !== null) {
-      showReward(t('tutorial.reward', { cash: money(cents, 2) }))
+  (paid) => {
+    if (paid !== null) {
+      showReward(
+        [paid.cashCents > 0 ? t('tutorial.reward', { cash: money(paid.cashCents, 2) }) : null, paid.carXp > 0 ? t('tutorial.rewardCarXp', { xp: number(paid.carXp) }) : null]
+          .filter(Boolean)
+          .join(' '),
+      )
       tutorial.acknowledgeReward()
+
+      // The experience went to the car, which the bar shows: ask for the garage again, as the run has not moved.
+      if (paid.carXp > 0) {
+        void garage.loadGarage().catch(() => undefined)
+      }
     }
   },
+)
+
+/** A rise of the car is said once, with the tier of parts it opened. */
+const { message: levelUpMessage, show: showLevelUp } = useFlash()
+
+watch(
+  () => garage.levelUp,
+  (rose) => {
+    if (rose !== null) {
+      showLevelUp([t('garage.levelUp', { level: rose.level }), rose.tier !== null ? t('garage.tierUnlocked', { tier: rose.tier }) : null].filter(Boolean).join(' '))
+      garage.acknowledgeLevelUp()
+    }
+  },
+  { immediate: true },
 )
 
 /** The server carries out the jobs of the workshop whenever it settles the run, so a new version of the run may mean new parts. */
@@ -100,6 +123,11 @@ watch(
 const { statusKey, chipClass } = useRunStatus()
 
 const car = computed(() => garage.garage?.car ?? null)
+
+/** How far the car is into its level, how much the level takes, and how full the bar is: all of it at the highest level. */
+const xpInto = computed(() => (car.value ? car.value.xp.total - car.value.xp.level_start : 0))
+const xpNeeded = computed(() => (car.value && car.value.xp.next_level_at !== null ? car.value.xp.next_level_at - car.value.xp.level_start : null))
+const xpFill = computed(() => (xpNeeded.value ? Math.min(100, Math.round((xpInto.value / xpNeeded.value) * 100)) : 100))
 const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking']
 
 function delta(stat: CarStatKey): number {
@@ -150,6 +178,7 @@ async function useCode(): Promise<void> {
     </p>
 
     <p v-if="rewardMessage" class="card card-hi text-sm" role="status" data-test="tutorial-reward">{{ rewardMessage }}</p>
+    <p v-if="levelUpMessage" class="card card-hi text-sm" role="status" data-test="level-up">{{ levelUpMessage }}</p>
 
     <LinkAccountBanner v-if="offerLinking && session.linkPromptDismissed && !linkOpen" @open="linkOpen = true" />
 
@@ -175,6 +204,18 @@ async function useCode(): Promise<void> {
               {{ t(`run.status.${statusKey}`) }}
             </span>
           </div>
+        </div>
+
+        <!-- The experience of the car, and what is left to the next level, as the board of the garage has it. -->
+        <div v-if="car" data-test="car-xp">
+          <div class="mb-1 flex justify-between text-xs text-muted">
+            <span>{{ t('garage.carXp') }}</span>
+            <span class="mono text-ink" data-test="car-xp-value">
+              {{ xpNeeded === null ? t('garage.carXpMax') : `${number(xpInto)} / ${number(xpNeeded)}` }}
+            </span>
+          </div>
+          <div class="bar" role="progressbar" :aria-label="t('garage.carXp')" :aria-valuenow="xpFill" aria-valuemin="0" aria-valuemax="100"><i :style="{ width: `${xpFill}%` }" /></div>
+          <p v-if="car.tier_unlock" class="sub mt-1" data-test="tier-unlock">{{ t('garage.nextTier', { level: car.tier_unlock.level, tier: car.tier_unlock.tier }) }}</p>
         </div>
 
         <div v-if="carPicture(run.run.car.slug)" class="card flex items-stretch overflow-hidden !p-0" data-test="picture">

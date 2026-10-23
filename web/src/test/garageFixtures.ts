@@ -28,6 +28,9 @@ export function aCar(overrides: Partial<GarageCar> = {}, mounted: Record<string,
   return {
     id: 5,
     level: 3,
+    // Level 3 runs from 600 to 1 200 XP, and this car is 410 into it, as on the board of the garage.
+    xp: { total: 1_010, level_start: 600, next_level_at: 1_200 },
+    tier_unlock: { tier: 3, level: 6 },
     vehicle: { slug: 'rdzak-gt-4', name: 'Rdzak GT-4', engine: 'R4 1.8', power_kw: 97, drivetrain: 'fwd' },
     stats: { accel: 97, top_speed: 175, grip: 90, handling: 88, braking: 90 },
     base_stats: { accel: 97, top_speed: 175, grip: 90, handling: 88, braking: 90 },

@@ -70,7 +70,12 @@
   "garage": {
     "welcome": "Witaj, {name}",
     "signOut": "Wyloguj",
-    "carLevel": "Auto LV {level}"
+    "carLevel": "Auto LV {level}",
+    "carXp": "XP auta",
+    "carXpMax": "Najwyższy poziom",
+    "nextTier": "Od poziomu {level}: części T{tier}",
+    "levelUp": "Auto awansowało na poziom {level}.",
+    "tierUnlocked": "Można montować części T{tier}."
   },
   "choose": {
     "title": "Wybierz swój wrak",
@@ -326,7 +331,8 @@
     "loadError": "Nie udało się wczytać sklepu.",
     "toWorkshop": "Do warsztatu",
     "noCar": "Nie masz jeszcze auta.",
-    "last": "Ostatni zakup"
+    "last": "Ostatni zakup",
+    "getXp": "Zdobywasz XP, jeżdżąc tym autem."
   },
   "workshop": {
     "title": "Warsztat",
@@ -378,7 +384,8 @@
     "keep": "Wróć do samouczka",
     "skipConfirm": "Pomiń samouczek",
     "from": "Wiadomość od {sender}",
-    "reward": "K. przesłał Ci {cash}."
+    "reward": "K. przesłał Ci {cash}.",
+    "rewardCarXp": "K. dorzucił Twojemu autu {xp} XP."
   },
   "story": {
     "scene1": "„Słuchaj, muszę zniknąć na jakiś czas.”",
@@ -424,6 +431,7 @@
       "you": "Ty · {car}",
       "youTag": "TY",
       "later": "Boty i duchy innych kierowców dojdą później. Na razie jedziesz sam."
-    }
+    },
+    "carXp": "+{value} XP auta"
   }
 }

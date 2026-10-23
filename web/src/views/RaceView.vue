@@ -170,6 +170,7 @@ const ring = computed(() => {
             <div class="mt-0.5 flex flex-wrap gap-[5px]">
               <span class="chip chip-am !h-7 !px-2" data-test="lap-cash">+{{ money(lapCash, 2) }}</span>
               <span class="chip !h-7 !px-2" data-test="lap-xp">+{{ t('car.xp', { value: number(lapXp) }) }}</span>
+              <span class="chip !h-7 !px-2" data-test="lap-car-xp">{{ t('race.carXp', { value: number(run.run.lap.car_xp) }) }}</span>
             </div>
           </div>
         </div>

@@ -20,6 +20,11 @@ export const useGarageStore = defineStore('garage', () => {
   const loaded = ref(false)
   /** The clock of the server minus the clock of this device, as it was at the last answer. */
   const clockOffsetMs = ref(0)
+  /**
+   * The car rose a level since the garage was last asked about, and the tier of parts that opened, if one did. The screen
+   * that says it takes it away, so the driver is told once, and also when they come back to the garage later.
+   */
+  const levelUp = ref<{ level: number; tier: number | null } | null>(null)
 
   const offers = ref<ShopOffer[]>([])
   const shopCar = ref<ShopResponse['data']['car']>(null)
@@ -33,6 +38,16 @@ export const useGarageStore = defineStore('garage', () => {
   }
 
   function applyGarage(response: GarageResponse): void {
+    const before = garage.value?.car ?? null
+    const after = response.data.car
+
+    // The first answer is not a rise: only a car that was seen at a lower level is said to have risen.
+    if (before && after && before.id === after.id && after.level > before.level) {
+      const opened = before.tier_unlock && after.tier_unlock && after.tier_unlock.tier > before.tier_unlock.tier
+
+      levelUp.value = { level: after.level, tier: opened ? after.tier_unlock!.tier - 1 : null }
+    }
+
     garage.value = response.data
     clockOffsetMs.value = response.now_ms - Date.now()
     loaded.value = true
@@ -92,5 +107,9 @@ export const useGarageStore = defineStore('garage', () => {
     syncRun()
   }
 
-  return { garage, loaded, offers, shopCar, shopLoaded, cash, serverNow, loadGarage, loadShop, buy, queue }
+  function acknowledgeLevelUp(): void {
+    levelUp.value = null
+  }
+
+  return { garage, loaded, offers, shopCar, shopLoaded, cash, levelUp, serverNow, loadGarage, loadShop, buy, queue, acknowledgeLevelUp }
 })

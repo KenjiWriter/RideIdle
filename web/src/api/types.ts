@@ -60,6 +60,8 @@ export interface Run {
     cash_cents: Record<string, number>
     xp: Record<string, number>
     fuel_ml: number
+    /** What a lap gives the car, in any weather: the car levels on its laps. */
+    car_xp: number
   }
   /** The weather of the region now, when this segment of 22.5 minutes ends, and what comes next. */
   weather: { now: string; ends_ms: number; next: string }
@@ -255,6 +257,10 @@ export interface GarageSlot {
 export interface GarageCar {
   id: number
   level: number
+  /** The experience of the car, and where its level begins and ends; `next_level_at` is null at the highest level. */
+  xp: { total: number; level_start: number; next_level_at: number | null }
+  /** The next tier of parts the car cannot have mounted yet, and the level that opens it, or null when no level does. */
+  tier_unlock: { tier: number; level: number } | null
   vehicle: { slug: string; name: string; engine: string | null; power_kw: number | null; drivetrain: 'fwd' | 'rwd' | 'awd' | null }
   /** With the parts that are on the car, and without them. */
   stats: Record<CarStatKey, number>
@@ -317,6 +323,6 @@ export interface TutorialResponse {
     done: number
     current: TutorialStep | null
     /** What the steps completed by this very call paid. */
-    rewarded: { key: string; cash_cents: number }[]
+    rewarded: { key: string; cash_cents: number; car_xp: number }[]
   }
 }

@@ -26,7 +26,7 @@ function aRun(overrides: Partial<Run> = {}): Run {
     cursor_ms: NOW,
     state_version: 4,
     prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
-    lap: { ms: { dry: 75_000, rain: 84_000 }, cash_cents: { dry: 1_550, rain: 1_440 }, xp: { dry: 25, rain: 23 }, fuel_ml: 1_500 },
+    lap: { ms: { dry: 75_000, rain: 84_000 }, cash_cents: { dry: 1_550, rain: 1_440 }, xp: { dry: 25, rain: 23 }, fuel_ml: 1_500, car_xp: 10 },
     server_time_ms: NOW + 10_000,
     ...liveFields(NOW),
     ...overrides,
@@ -107,6 +107,8 @@ describe('RaceView', () => {
     expect(wrapper.get('[data-test="lap-pays"]').text()).toBe('$15.50')
     expect(wrapper.get('[data-test="lap-cash"]').text()).toBe('+$15.50')
     expect(wrapper.get('[data-test="lap-xp"]').text()).toBe('+25 XP')
+    // The car levels on its laps, whatever the weather: the same in the rain.
+    expect(wrapper.get('[data-test="lap-car-xp"]').text()).toBe('+10 car XP')
   })
 
   it('tells the forecast, and says nothing about the lap when the weather does not change it', async () => {

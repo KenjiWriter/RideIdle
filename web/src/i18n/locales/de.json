@@ -70,7 +70,12 @@
   "garage": {
     "welcome": "Willkommen, {name}",
     "signOut": "Abmelden",
-    "carLevel": "Auto LV {level}"
+    "carLevel": "Auto LV {level}",
+    "carXp": "Auto-XP",
+    "carXpMax": "Höchste Stufe",
+    "nextTier": "Ab Stufe {level}: Teile T{tier}",
+    "levelUp": "Das Auto ist auf Stufe {level} aufgestiegen.",
+    "tierUnlocked": "Du kannst jetzt Teile T{tier} montieren."
   },
   "choose": {
     "title": "Wähle dein Wrack",
@@ -326,7 +331,8 @@
     "loadError": "Der Shop konnte nicht geladen werden.",
     "toWorkshop": "Zur Werkstatt",
     "noCar": "Du hast noch kein Auto.",
-    "last": "Letzter Kauf"
+    "last": "Letzter Kauf",
+    "getXp": "XP bekommst du, indem du dieses Auto fährst."
   },
   "workshop": {
     "title": "Werkstatt",
@@ -378,7 +384,8 @@
     "keep": "Zurück zum Tutorial",
     "skipConfirm": "Tutorial überspringen",
     "from": "Nachricht von {sender}",
-    "reward": "K. hat dir {cash} geschickt."
+    "reward": "K. hat dir {cash} geschickt.",
+    "rewardCarXp": "K. hat deinem Auto {xp} XP draufgelegt."
   },
   "story": {
     "scene1": "„Hör zu, ich muss für eine Weile verschwinden.“",
@@ -424,6 +431,7 @@
       "you": "Du · {car}",
       "youTag": "DU",
       "later": "Bots und Geister anderer Fahrer kommen später. Vorerst fährst du allein."
-    }
+    },
+    "carXp": "+{value} Auto-XP"
   }
 }

@@ -124,7 +124,7 @@ async function buy(offer: ShopOffer): Promise<void> {
 
           <p v-if="!affordable(offer)" class="sub" data-test="no-cash">{{ t('shop.noCash') }}</p>
           <p v-if="store.shopCar && !offer.mountable" class="text-sm text-danger" data-test="needs-level">
-            {{ t('shop.needsLevel', { level: offer.required_car_level }) }} {{ t('shop.yourLevel', { level: store.shopCar.level }) }}
+            {{ t('shop.needsLevel', { level: offer.required_car_level }) }} {{ t('shop.yourLevel', { level: store.shopCar.level }) }} {{ t('shop.getXp') }}
           </p>
         </li>
       </ul>

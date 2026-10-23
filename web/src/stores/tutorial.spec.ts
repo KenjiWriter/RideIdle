@@ -59,18 +59,28 @@ describe('the tutorial store', () => {
 
   it('keeps what the steps paid until it is said, and asks the run for the cash that arrived', async () => {
     serveApi(fetchMock, {
-      'GET /api/v1/tutorial': () => respond(200, aTutorial(aStep(), { rewarded: [{ key: 'first-lap', cash_cents: 20_000 }, { key: 'refuel', cash_cents: 9_000 }] })),
+      'GET /api/v1/tutorial': () => respond(200, aTutorial(aStep(), { rewarded: [{ key: 'first-lap', cash_cents: 20_000, car_xp: 0 }, { key: 'refuel', cash_cents: 9_000, car_xp: 0 }] })),
     })
     const store = useTutorialStore()
     const refresh = vi.spyOn(useRunStore(), 'refresh').mockResolvedValue()
 
     await store.load()
 
-    expect(store.reward).toBe(29_000)
+    expect(store.reward).toEqual({ cashCents: 29_000, carXp: 0 })
     expect(refresh).toHaveBeenCalledTimes(1)
 
     store.acknowledgeReward()
     expect(store.reward).toBeNull()
+  })
+
+  it('keeps the experience the steps gave the car as well as the cash', async () => {
+    serveApi(fetchMock, { 'POST /api/v1/tutorial/reply': () => respond(200, aTutorial(null, { rewarded: [{ key: 'rewards', cash_cents: 0, car_xp: 100 }] })) })
+    vi.spyOn(useRunStore(), 'refresh').mockResolvedValue()
+    const store = useTutorialStore()
+
+    await store.reply()
+
+    expect(store.reward).toEqual({ cashCents: 0, carXp: 100 })
   })
 
   it('does not ask the run for anything when nothing was paid', async () => {

@@ -70,7 +70,12 @@
   "garage": {
     "welcome": "Welcome, {name}",
     "signOut": "Sign out",
-    "carLevel": "Car LV {level}"
+    "carLevel": "Car LV {level}",
+    "carXp": "Car XP",
+    "carXpMax": "Highest level",
+    "nextTier": "From level {level}: T{tier} parts",
+    "levelUp": "The car reached level {level}.",
+    "tierUnlocked": "You can mount T{tier} parts now."
   },
   "choose": {
     "title": "Choose your wreck",
@@ -326,7 +331,8 @@
     "loadError": "The shop could not be loaded.",
     "toWorkshop": "To the workshop",
     "noCar": "You have no car yet.",
-    "last": "Last purchase"
+    "last": "Last purchase",
+    "getXp": "You get XP by driving this car."
   },
   "workshop": {
     "title": "Workshop",
@@ -378,7 +384,8 @@
     "keep": "Back to the tutorial",
     "skipConfirm": "Skip the tutorial",
     "from": "Message from {sender}",
-    "reward": "K. sent you {cash}."
+    "reward": "K. sent you {cash}.",
+    "rewardCarXp": "K. added {xp} XP to your car."
   },
   "story": {
     "scene1": "“Listen, I have to disappear for a while.”",
@@ -424,6 +431,7 @@
       "you": "You · {car}",
       "youTag": "YOU",
       "later": "Bots and the ghosts of other drivers come later. For now you race alone."
-    }
+    },
+    "carXp": "+{value} car XP"
   }
 }

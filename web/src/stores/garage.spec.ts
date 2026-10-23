@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError } from '@/api/client'
 import { respond, serveApi } from '@/test/fetchServer'
-import { NOW, aGarage, aJob, aPart, anOffer } from '@/test/garageFixtures'
+import { NOW, aCar, aGarage, aJob, aPart, anOffer } from '@/test/garageFixtures'
 
 import { PURCHASE_ID_LIFETIME_MS, useGarageStore } from './garage'
 
@@ -38,6 +38,66 @@ describe('garage store', () => {
     vi.advanceTimersByTime(5_000)
 
     expect(store.serverNow()).toBe(NOW + 5_000)
+  })
+
+  describe('the level of the car', () => {
+    const atLevel = (level: number, tierUnlock: { tier: number; level: number } | null, total = 0) =>
+      aGarage({ car: aCar({ level, xp: { total, level_start: 0, next_level_at: 1 }, tier_unlock: tierUnlock }) })
+
+    it('does not call the first answer a rise', async () => {
+      serveApi(fetchMock, { 'GET /api/v1/garage': () => respond(200, atLevel(3, { tier: 3, level: 6 })) })
+      const store = useGarageStore()
+
+      await store.loadGarage()
+
+      expect(store.levelUp).toBeNull()
+    })
+
+    it('says that the car rose, once it is seen at a higher level than before', async () => {
+      const store = useGarageStore()
+      serveApi(fetchMock, { 'GET /api/v1/garage': () => respond(200, atLevel(3, { tier: 3, level: 6 })) })
+      await store.loadGarage()
+
+      serveApi(fetchMock, { 'GET /api/v1/garage': () => respond(200, atLevel(4, { tier: 3, level: 6 })) })
+      await store.loadGarage()
+
+      // Level 4 opens no tier: 3 is for level 6.
+      expect(store.levelUp).toEqual({ level: 4, tier: null })
+
+      store.acknowledgeLevelUp()
+      expect(store.levelUp).toBeNull()
+    })
+
+    it('says which tier the rise opened', async () => {
+      const store = useGarageStore()
+      serveApi(fetchMock, { 'GET /api/v1/garage': () => respond(200, atLevel(5, { tier: 3, level: 6 })) })
+      await store.loadGarage()
+
+      serveApi(fetchMock, { 'GET /api/v1/garage': () => respond(200, atLevel(6, { tier: 4, level: 9 })) })
+      await store.loadGarage()
+
+      expect(store.levelUp).toEqual({ level: 6, tier: 3 })
+    })
+
+    it('says the highest tier that a long absence opened, when several levels came at once', async () => {
+      const store = useGarageStore()
+      serveApi(fetchMock, { 'GET /api/v1/garage': () => respond(200, atLevel(5, { tier: 3, level: 6 })) })
+      await store.loadGarage()
+
+      serveApi(fetchMock, { 'GET /api/v1/garage': () => respond(200, atLevel(9, { tier: 5, level: 12 })) })
+      await store.loadGarage()
+
+      expect(store.levelUp).toEqual({ level: 9, tier: 4 })
+    })
+
+    it('says nothing when the level has not changed', async () => {
+      const store = useGarageStore()
+      serveApi(fetchMock, { 'GET /api/v1/garage': () => respond(200, atLevel(3, { tier: 3, level: 6 })) })
+      await store.loadGarage()
+      await store.loadGarage()
+
+      expect(store.levelUp).toBeNull()
+    })
   })
 
   it('loads the shop with what the car says about each part, and the cash', async () => {

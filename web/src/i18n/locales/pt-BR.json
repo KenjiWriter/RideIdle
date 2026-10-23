@@ -70,7 +70,12 @@
   "garage": {
     "welcome": "Boas-vindas, {name}",
     "signOut": "Sair",
-    "carLevel": "Carro LV {level}"
+    "carLevel": "Carro LV {level}",
+    "carXp": "XP do carro",
+    "carXpMax": "Nível máximo",
+    "nextTier": "A partir do nível {level}: peças T{tier}",
+    "levelUp": "O carro subiu para o nível {level}.",
+    "tierUnlocked": "Agora você pode montar peças T{tier}."
   },
   "choose": {
     "title": "Escolha sua carcaça",
@@ -326,7 +331,8 @@
     "loadError": "Não foi possível carregar a loja.",
     "toWorkshop": "Para a oficina",
     "noCar": "Você ainda não tem um carro.",
-    "last": "Última compra"
+    "last": "Última compra",
+    "getXp": "Você ganha XP dirigindo este carro."
   },
   "workshop": {
     "title": "Oficina",
@@ -378,7 +384,8 @@
     "keep": "Voltar ao tutorial",
     "skipConfirm": "Pular o tutorial",
     "from": "Mensagem de {sender}",
-    "reward": "K. enviou {cash} para você."
+    "reward": "K. enviou {cash} para você.",
+    "rewardCarXp": "K. deu {xp} XP ao seu carro."
   },
   "story": {
     "scene1": "“Escute, preciso sumir por um tempo.”",
@@ -424,6 +431,7 @@
       "you": "Você · {car}",
       "youTag": "VOCÊ",
       "later": "Bots e fantasmas de outros pilotos chegam depois. Por enquanto, você corre sozinho."
-    }
+    },
+    "carXp": "+{value} XP do carro"
   }
 }
