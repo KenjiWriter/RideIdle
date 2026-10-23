@@ -2,50 +2,32 @@
 
 declare(strict_types=1);
 
-use App\Models\AccountIdentity;
 use App\Services\SocialProviders;
 use Laravel\Socialite\Facades\Socialite;
-
-/** Gives a provider the keys it needs, and takes them from the others. */
-function withProviders(array $keys): void
-{
-    foreach (AccountIdentity::SOCIAL as $provider) {
-        config(["services.{$provider}" => [...($keys[$provider] ?? []), 'redirect' => "https://api.example/api/v1/auth/{$provider}/callback"]]);
-    }
-}
-
-function providerKeys(): array
-{
-    return [
-        'google' => ['client_id' => 'google-id', 'client_secret' => 'google-secret'],
-        'facebook' => ['client_id' => 'facebook-id', 'client_secret' => 'facebook-secret'],
-        'apple' => ['client_id' => 'com.example.ride', 'client_secret' => 'apple-signed-token'],
-    ];
-}
 
 describe('which providers are on', function () {
     it('has none until a provider has its keys', function () {
         withProviders([]);
 
-        expect((new SocialProviders())->enabled())->toBe([]);
+        expect((new SocialProviders)->enabled())->toBe([]);
     });
 
     it('turns a provider on when it has all its keys, and lists them in the order they are offered', function () {
         withProviders(providerKeys());
 
-        expect((new SocialProviders())->enabled())->toBe(['google', 'facebook', 'apple']);
+        expect((new SocialProviders)->enabled())->toBe(['google', 'facebook', 'apple']);
     });
 
     it('offers only the providers that were set up', function () {
         withProviders(['facebook' => providerKeys()['facebook']]);
 
-        expect((new SocialProviders())->enabled())->toBe(['facebook']);
+        expect((new SocialProviders)->enabled())->toBe(['facebook']);
     });
 
     it('does not offer a provider with half its keys', function (string $provider, array $keys) {
         withProviders([$provider => $keys]);
 
-        expect((new SocialProviders())->isEnabled($provider))->toBeFalse();
+        expect((new SocialProviders)->isEnabled($provider))->toBeFalse();
     })->with([
         'google without a secret' => ['google', ['client_id' => 'id']],
         'google without an id' => ['google', ['client_secret' => 'secret']],
@@ -56,16 +38,16 @@ describe('which providers are on', function () {
 
     it('turns Apple on with a ready secret, or with the team, the key id and the private key', function () {
         withProviders(['apple' => ['client_id' => 'com.example.ride', 'client_secret' => 'ready']]);
-        expect((new SocialProviders())->isEnabled('apple'))->toBeTrue();
+        expect((new SocialProviders)->isEnabled('apple'))->toBeTrue();
 
         withProviders(['apple' => ['client_id' => 'com.example.ride', 'team_id' => 'TEAM', 'key_id' => 'KEY', 'private_key' => '/keys/AuthKey.p8']]);
-        expect((new SocialProviders())->isEnabled('apple'))->toBeTrue();
+        expect((new SocialProviders)->isEnabled('apple'))->toBeTrue();
     });
 
     it('does not know a provider that is not one of the three', function () {
         config(['services.github' => ['client_id' => 'id', 'client_secret' => 'secret']]);
 
-        expect((new SocialProviders())->isEnabled('github'))->toBeFalse();
+        expect((new SocialProviders)->isEnabled('github'))->toBeFalse();
     });
 });
 

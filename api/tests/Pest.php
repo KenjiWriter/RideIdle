@@ -13,6 +13,7 @@ use App\Services\RunService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 /*
@@ -62,7 +63,7 @@ expect()->extend('toBeOne', function () {
 
 function runService(): RunService
 {
-    return new RunService(new Ledger());
+    return new RunService(new Ledger);
 }
 
 /** @param  array<string, mixed>  $attributes */
@@ -81,7 +82,7 @@ function fundedRun(int $cents, array $attributes = []): RaceRun
     $run = aRun($attributes);
 
     if ($cents > 0) {
-        (new Ledger())->post($run->user_id, $cents, 'gift', 'seed-money:'.$run->id);
+        (new Ledger)->post($run->user_id, $cents, 'gift', 'seed-money:'.$run->id);
     }
 
     return $run;
@@ -118,7 +119,7 @@ function driverWithRun(array $attributes = []): array
     return [$driver, $run];
 }
 
-function getRun(User $driver, string $path = 'current', array $headers = []): Illuminate\Testing\TestResponse
+function getRun(User $driver, string $path = 'current', array $headers = []): TestResponse
 {
     return test()->getJson("/api/v1/runs/{$path}", [...bearerFor($driver), ...$headers]);
 }
@@ -138,7 +139,7 @@ function tokenWith(array $attributes = []): AccountToken
     ]);
 }
 
-function askForEmailLink(User $driver, array $body = [], array $headers = []): Illuminate\Testing\TestResponse
+function askForEmailLink(User $driver, array $body = [], array $headers = []): TestResponse
 {
     $body = ['email' => 'turbo@example.com', 'accept_terms' => true, 'confirm_age' => true, ...$body];
 
@@ -153,7 +154,7 @@ function secretOf(AccountLinkMail $mail): string
     return $query['token'];
 }
 
-function confirmLink(string $secret, array $headers = []): Illuminate\Testing\TestResponse
+function confirmLink(string $secret, array $headers = []): TestResponse
 {
     // Public: the link is opened in any browser, with no device token.
     return test()->postJson('/api/v1/account/email/confirm', ['token' => $secret], $headers);
@@ -167,9 +168,26 @@ function claimSecretFor(User $guest, string $email = 'turbo@example.com'): strin
     return secretOf(Mail::queued(AccountLinkMail::class)->last());
 }
 
+/** Gives a provider the keys it needs, and takes them from the others. */
+function withProviders(array $keys): void
+{
+    foreach (AccountIdentity::SOCIAL as $provider) {
+        config(["services.{$provider}" => [...($keys[$provider] ?? []), 'redirect' => "https://api.example/api/v1/auth/{$provider}/callback"]]);
+    }
+}
+
+function providerKeys(): array
+{
+    return [
+        'google' => ['client_id' => 'google-id', 'client_secret' => 'google-secret'],
+        'facebook' => ['client_id' => 'facebook-id', 'client_secret' => 'facebook-secret'],
+        'apple' => ['client_id' => 'com.example.ride', 'client_secret' => 'apple-signed-token'],
+    ];
+}
+
 function cashOf(RaceRun $run): int
 {
-    return (new Ledger())->balance($run->user_id);
+    return (new Ledger)->balance($run->user_id);
 }
 
 /** Dry weather only, so the lap time is the same everywhere and the arithmetic stays readable. */

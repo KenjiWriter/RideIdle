@@ -14,9 +14,11 @@ class AccountToken extends Model
 
     public const LOGIN = 'login';
 
+    /** The state of a sign-in with a provider, from the start until the provider sends the person back. */
     public const OAUTH = 'oauth';
 
-    public const EXCHANGE = 'exchange';
+    /** What the provider said about the person, waiting for the browser that started the sign-in to finish it. */
+    public const RESULT = 'oauth_result';
 
     public const UPDATED_AT = null;
 

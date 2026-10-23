@@ -9,7 +9,7 @@ use Illuminate\Support\Carbon;
 
 function tokens(): AccountTokens
 {
-    return new AccountTokens();
+    return new AccountTokens;
 }
 
 afterEach(fn () => Carbon::setTestNow());
@@ -56,7 +56,7 @@ it('works for its own purpose only', function () {
     $secret = tokens()->issue(AccountToken::LOGIN, 1_800);
 
     expect(tokens()->consume(AccountToken::CLAIM, $secret))->toBeNull()
-        ->and(tokens()->consume(AccountToken::EXCHANGE, $secret))->toBeNull()
+        ->and(tokens()->consume(AccountToken::RESULT, $secret))->toBeNull()
         // The wrong purpose did not spend it.
         ->and(tokens()->consume(AccountToken::LOGIN, $secret))->not->toBeNull();
 });
@@ -119,4 +119,33 @@ it('prunes with a command', function () {
     $this->artisan('accounts:prune-tokens')->expectsOutput('Removed 1 account token(s).')->assertSuccessful();
 
     expect(AccountToken::query()->count())->toBe(0);
+});
+
+it('can be bound to a verifier, and a wrong verifier does not spend it', function () {
+    $verifier = 'verifier-kept-by-the-browser';
+    $secret = tokens()->issue(AccountToken::RESULT, 600, ['challenge' => AccountTokens::hash($verifier)]);
+
+    expect(tokens()->consume(AccountToken::RESULT, $secret, 'a-verifier-of-somebody-else'))->toBeNull()
+        ->and(tokens()->consume(AccountToken::RESULT, $secret))->not->toBeNull(); // not burnt by the wrong one
+
+    $other = tokens()->issue(AccountToken::RESULT, 600, ['challenge' => AccountTokens::hash($verifier)]);
+
+    expect(tokens()->consume(AccountToken::RESULT, $other, $verifier))->not->toBeNull()
+        ->and(tokens()->consume(AccountToken::RESULT, $other, $verifier))->toBeNull();
+});
+
+it('does not take a token that was not bound for one that asks for a verifier', function () {
+    $secret = tokens()->issue(AccountToken::RESULT, 600);
+
+    expect(tokens()->consume(AccountToken::RESULT, $secret, 'any-verifier'))->toBeNull();
+});
+
+it('keeps what the provider said and what the browser must prove', function () {
+    $secret = tokens()->issue(AccountToken::RESULT, 600, ['provider' => 'google', 'intent' => 'login', 'subject' => '1098765', 'email' => 'turbo@example.com', 'challenge' => AccountTokens::hash('v')]);
+
+    $token = tokens()->consume(AccountToken::RESULT, $secret, 'v');
+
+    expect($token->provider)->toBe('google')
+        ->and($token->subject)->toBe('1098765')
+        ->and($token->email)->toBe('turbo@example.com');
 });

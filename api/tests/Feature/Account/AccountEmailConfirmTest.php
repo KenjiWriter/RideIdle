@@ -6,6 +6,7 @@ use App\Mail\AccountLinkMail;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\User;
+use App\Services\AccountTokens;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 
@@ -179,7 +180,7 @@ describe('what is not a link', function () {
     });
 
     it('does not take a secret of another kind for a link', function () {
-        $secret = (new App\Services\AccountTokens())->issue(AccountToken::EXCHANGE, 600, ['user_id' => User::factory()->guest()->create()->id]);
+        $secret = (new AccountTokens)->issue(AccountToken::RESULT, 600, ['user_id' => User::factory()->guest()->create()->id]);
 
         confirmLink($secret)->assertUnprocessable();
     });

@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 
 it('has the tables and columns the account flows need', function () {
     expect(Schema::hasColumns('account_identities', ['user_id', 'provider', 'subject', 'email']))->toBeTrue()
-        ->and(Schema::hasColumns('account_tokens', ['purpose', 'token_hash', 'user_id', 'provider', 'intent', 'email', 'consent_at', 'expires_at', 'used_at']))->toBeTrue()
+        ->and(Schema::hasColumns('account_tokens', ['purpose', 'token_hash', 'user_id', 'provider', 'intent', 'email', 'consent_at', 'challenge', 'subject', 'expires_at', 'used_at']))->toBeTrue()
         ->and(Schema::hasColumns('users', ['terms_accepted_at', 'age_confirmed_at']))->toBeTrue();
 });
 
