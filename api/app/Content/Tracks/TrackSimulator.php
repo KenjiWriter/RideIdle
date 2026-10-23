@@ -61,6 +61,7 @@ final class TrackSimulator
         $candidates = 0;
         $winner = null;
         $fastest = [];
+        $byCar = [];
 
         foreach ($this->vehiclesFor($track['min_player_level']) as $vehicle) {
             foreach ($this->buildsOf($vehicle, $tierCap) as $build) {
@@ -72,6 +73,8 @@ final class TrackSimulator
                 foreach ($region['weather_ppm'] as $weather => $chancePpm) {
                     $income += $chancePpm / 1_000_000 * $frozen['lap_cash_cents'][$weather] * 3_600_000 / $frozen['lap_ms'][$weather];
                 }
+
+                $byCar[$build->vehicle] = max($byCar[$build->vehicle] ?? 0.0, $income);
 
                 if ($winner === null || $this->beats($income, $build, $winner['income'], $winner['build'])) {
                     $winner = ['income' => $income, 'build' => $build, 'lap_ms' => $frozen['lap_ms']];
@@ -91,7 +94,7 @@ final class TrackSimulator
             throw new RuntimeException("No car of the pack can drive the track {$slug}.");
         }
 
-        return new TrackOutcome($slug, $track['surface'], $track['min_player_level'], $tierCap, $candidates, $winner['build'], $winner['income'], $winner['lap_ms'], $fastest);
+        return new TrackOutcome($slug, $track['surface'], $track['min_player_level'], $tierCap, $candidates, $winner['build'], $winner['income'], $winner['lap_ms'], $byCar, $fastest);
     }
 
     /** Whether a build earning `$income` is better than the one that is the best so far: more an hour, and for the same, cheaper. */

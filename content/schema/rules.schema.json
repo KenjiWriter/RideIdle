@@ -54,6 +54,16 @@
         "levels_per_tier": { "type": "integer", "minimum": 1, "maximum": 20 },
         "xp_per_lap": { "description": "The experience a car gets for every lap it drives, in any weather: the laps of this car are what it levels on.", "type": "integer", "minimum": 1 },
         "xp_per_level": { "description": "The experience from level n to level n + 1 is xp_per_level * n, so a level takes more than the one before it, and the experience to reach level n is xp_per_level * n * (n - 1) / 2.", "type": "integer", "minimum": 2 },
+        "mass": {
+          "description": "A heavier car handles and brakes worse, a lighter one better: handling and braking are multiplied by (reference_kg / mass) ^ exponent. A car of the reference mass is not touched, so the stock Rdzak stays the reference of the first track.",
+          "type": "object",
+          "properties": {
+            "reference_kg": { "type": "integer", "minimum": 1 },
+            "exponent": { "type": "number", "exclusiveMinimum": 0, "maximum": 2 }
+          },
+          "required": ["reference_kg", "exponent"],
+          "additionalProperties": false
+        },
         "max_level": { "description": "The level a car does not rise above, whatever experience it has. It has to be high enough for the highest tier.", "type": "integer", "minimum": 1, "maximum": 100 },
         "stat_ceiling": {
           "description": "The value of a statistic at which its bar in the garage is full: what the best car of the whole game is meant to reach, not what a track asks for. A car that has only just left the wreck yard stands well below it.",
@@ -70,7 +80,7 @@
           "additionalProperties": false
         }
       },
-      "required": ["start_level", "levels_per_tier", "xp_per_lap", "xp_per_level", "max_level", "stat_ceiling"],
+      "required": ["start_level", "levels_per_tier", "xp_per_lap", "xp_per_level", "max_level", "mass", "stat_ceiling"],
       "additionalProperties": false
     },
     "player": {

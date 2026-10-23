@@ -12,6 +12,7 @@
     "xp_per_lap": 10,
     "xp_per_level": 200,
     "max_level": 30,
+    "mass": { "reference_kg": 1000, "exponent": 0.6 },
     "stat_ceiling": { "accel": 400, "top_speed": 450, "grip": 250, "handling": 250, "braking": 250, "clearance": 200 }
   },
   "player": { "xp_base": 45, "xp_exponent": 2.3, "max_level": 30 },
@@ -119,7 +120,7 @@
       "reward_cents_per_lap": 2200,
       "xp_per_lap": 2,
       "demand": { "accel": 5, "grip": 25, "handling": 25, "braking": 10, "clearance": 35 },
-      "reference": { "accel": 65, "grip": 92, "handling": 90, "braking": 90, "clearance": 80 }
+      "reference": { "accel": 65, "grip": 92, "handling": 71, "braking": 71, "clearance": 80 }
     },
     "suchy-pas-drag": {
       "name": {
@@ -137,7 +138,7 @@
       "reward_cents_per_lap": 1170,
       "xp_per_lap": 1,
       "demand": { "accel": 50, "top_speed": 15, "grip": 25, "handling": 5, "braking": 5 },
-      "reference": { "accel": 135, "top_speed": 200, "grip": 90, "handling": 88, "braking": 90 }
+      "reference": { "accel": 135, "top_speed": 200, "grip": 90, "handling": 70, "braking": 71 }
     },
     "wilcza-przelecz-switchbacks": {
       "name": {
@@ -173,7 +174,7 @@
       "reward_cents_per_lap": 2650,
       "xp_per_lap": 2,
       "demand": { "accel": 20, "top_speed": 20, "grip": 20, "handling": 20, "braking": 20 },
-      "reference": { "accel": 135, "top_speed": 200, "grip": 100, "handling": 99, "braking": 102 }
+      "reference": { "accel": 135, "top_speed": 200, "grip": 100, "handling": 78, "braking": 81 }
     }
   }
 }

@@ -50,7 +50,7 @@ final class SimulateTracks extends Command
         $this->newLine();
         $this->line('The best build on every track, by what it earns an hour in the climate of the region (parts up to the tier of the level of the track):');
         $this->table(
-            ['track', 'level', 'tier', 'builds', 'car', 'parts', '$/h', 'best dry', 'best rain'],
+            ['track', 'level', 'tier', 'builds', 'car', 'parts', '$/h', 'runner-up', 'best dry', 'best rain'],
             array_map(fn (TrackOutcome $track): array => [
                 $track->track,
                 $track->minPlayerLevel,
@@ -59,6 +59,7 @@ final class SimulateTracks extends Command
                 $track->winner->vehicle,
                 implode(', ', $track->winner->mounted) ?: '-',
                 number_format($track->centsPerHour / 100, 0),
+                $this->runnerUp($track),
                 $this->fastest($track, 'dry'),
                 $this->fastest($track, 'rain'),
             ], $report->tracks),
@@ -123,6 +124,13 @@ final class SimulateTracks extends Command
         $passed ? $this->info('Gate passed. '.$ok) : $this->error('Gate FAILED. '.$failed);
     }
 
+    private function runnerUp(TrackOutcome $track): string
+    {
+        $next = $track->runnerUp();
+
+        return $next === null ? '-' : sprintf('%s -%.1f%%', $next['car'], $next['behind'] * 100);
+    }
+
     private function fastest(TrackOutcome $track, string $weather): string
     {
         $fastest = $track->fastest[$weather] ?? null;
@@ -164,6 +172,7 @@ final class SimulateTracks extends Command
                 'car' => $track->winner->vehicle,
                 'parts' => $track->winner->mounted,
                 'cents_per_hour' => round($track->centsPerHour, 2),
+                'cents_per_hour_by_car' => array_map(static fn (float $cents): float => round($cents, 2), $track->centsPerHourByCar),
                 'lap_ms' => $track->lapMs,
                 'fastest' => array_map(static fn (array $fastest): array => ['car' => $fastest['build']->vehicle, 'parts' => $fastest['build']->mounted, 'lap_ms' => $fastest['lap_ms']], $track->fastest),
             ], $report->tracks),

@@ -119,13 +119,42 @@ describe('the gates of the track simulator', function () {
     });
 
     it('fails the gate M3 when one car wins more than two tracks, and says which', function () {
-        $report = simulateTracks(['zlomowo-street', 'suchy-pas-drag', 'autodrom-circuit']);
+        // Three asphalt tracks that ask what a drag strip asks are won by the car that accelerates best, whatever else they are called.
+        $report = simulateTracks(['suchy-pas-drag', 'wilcza-przelecz-switchbacks', 'autodrom-circuit'], function (array $data): array {
+            foreach (['wilcza-przelecz-switchbacks', 'autodrom-circuit'] as $track) {
+                $data['tracks'][$track]['demand'] = $data['tracks']['suchy-pas-drag']['demand'];
+                $data['tracks'][$track]['reference'] = $data['tracks']['suchy-pas-drag']['reference'];
+            }
+
+            return $data;
+        });
 
         expect($report->m3Passed())->toBeFalse()
             ->and(array_keys($report->carsThatWinTooMuch()))->toBe(['bizon-m-2'])
-            ->and($report->carsThatWinTooMuch()['bizon-m-2'])->toBe(['zlomowo-street', 'suchy-pas-drag', 'autodrom-circuit'])
+            ->and($report->carsThatWinTooMuch()['bizon-m-2'])->toBe(['suchy-pas-drag', 'wilcza-przelecz-switchbacks', 'autodrom-circuit'])
             // The data is coherent all the same: the command fails on this only with --strict.
             ->and($report->passed())->toBeTrue();
+    });
+
+    it('passes the gate M3 on the shipped rules: the weight of a car is what sends the tracks to different cars', function () {
+        $wins = trackReportJson()['wins'];
+
+        expect(trackReportJson()['gates']['no_car_wins_more_than_two'])->toBeTrue()
+            ->and(array_map('count', $wins))->toBe(['bizon-m-2' => 2, 'rdzak-gt-4' => 2, 'kuna-4x4' => 1]);
+
+        $this->artisan('tracks:simulate', ['--strict' => true])->assertSuccessful();
+    });
+
+    it('says which car comes second on a track and how far behind it is', function () {
+        $report = simulateTracks(['zlomowo-street', 'kruszyn-quarry']);
+
+        foreach ($report->tracks as $track) {
+            $next = $track->runnerUp();
+
+            expect($next['car'])->not->toBe($track->winner->vehicle)
+                ->and($next['behind'])->toBeGreaterThan(0.0)
+                ->and($next['behind'])->toBeLessThan(1.0);
+        }
     });
 
     it('passes the gate M3 for tracks that are won by different cars', function () {

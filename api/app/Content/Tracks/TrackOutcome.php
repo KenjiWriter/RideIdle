@@ -13,6 +13,7 @@ final readonly class TrackOutcome
      * @param  int  $candidates  how many builds were compared
      * @param  float  $centsPerHour  what the winner earns an hour in the climate of the region, weather by weather
      * @param  array<string, int>  $lapMs  the lap of the winner in every weather of the region
+     * @param  array<string, float>  $centsPerHourByCar  what the best build of every car earns an hour: how far the winner is ahead
      * @param  array<string, array{build: Build, lap_ms: int}>  $fastest  the fastest build in the dry and in the rain, when the region has them
      */
     public function __construct(
@@ -24,6 +25,25 @@ final readonly class TrackOutcome
         public Build $winner,
         public float $centsPerHour,
         public array $lapMs,
+        public array $centsPerHourByCar,
         public array $fastest,
     ) {}
+
+    /**
+     * The best of the other cars and how far it is behind the winner, as a share of what the winner earns; null when no other car drives here.
+     *
+     * @return array{car: string, behind: float}|null
+     */
+    public function runnerUp(): ?array
+    {
+        $others = array_diff_key($this->centsPerHourByCar, [$this->winner->vehicle => true]);
+
+        if ($others === []) {
+            return null;
+        }
+
+        arsort($others);
+
+        return ['car' => (string) array_key_first($others), 'behind' => 1 - reset($others) / $this->centsPerHourByCar[$this->winner->vehicle]];
+    }
 }

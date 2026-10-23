@@ -115,6 +115,7 @@ final class RunInputsFactory
      * - Top speed is the one of the body, grown with the cube root of the power gained, and never above the cap of the gearbox.
      * - Grip, handling and braking start from the tires, and the suspension and the brakes are averaged with the handling and
      *   the braking of the tires. A slot without a part adds nothing, so the stock car is the reference of the tracks.
+     * - Handling and braking are then multiplied by the factor of the mass of the body (`Rules::massFactor`).
      * - Clearance (Off-road in the garage) starts from the body, and the suspension is averaged with it the same way:
      *   a lowered one costs a 4x4 what it gives a hatchback on asphalt. The tires have their say through the tire matrix.
      * - Fuel use grows with power.
@@ -142,13 +143,16 @@ final class RunInputsFactory
             $topSpeed = min($topSpeed, (float) $parts['gearbox']['stats']['top_speed_cap_kmh']);
         }
 
+        // A heavy car turns and stops worse, a light one better; the stock Rdzak has the mass the rules take as the reference.
+        $massFactor = $this->rules->massFactor($vehicle['mass_kg']);
+
         return new CarStats(
             stats: [
                 'accel' => $power / ($vehicle['mass_kg'] / 1000),
                 'top_speed' => $topSpeed,
                 'grip' => (float) $tires['stats']['grip'],
-                'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null),
-                'braking' => $this->average($tires['stats']['braking'], $parts['brakes']['stats']['braking'] ?? null),
+                'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null) * $massFactor,
+                'braking' => $this->average($tires['stats']['braking'], $parts['brakes']['stats']['braking'] ?? null) * $massFactor,
                 'clearance' => $this->average($vehicle['clearance'], $parts['suspension']['stats']['clearance'] ?? null),
             ],
             fuelUseMultiplier: (1.0 + self::FUEL_USE_POWER_SHARE * $power / $this->rules->fuelReferencePowerKw()) / self::FUEL_USE_BASE,

@@ -28,8 +28,8 @@ it('freezes the lap time of every starter wreck in every weather', function (str
         ->and(runInputsFactory()->tankMl($car))->toBe($tankMl);
 })->with([
     'the stock Rdzak GT-4 drives the base lap' => ['rdzak-gt-4', ['dry' => 75_000, 'cloudy' => 75_000, 'rain' => 84_391, 'downpour' => 86_736, 'fog' => 76_049], 1_500, 45_000],
-    'the Bizon M-2 is faster and thirstier' => ['bizon-m-2', ['dry' => 67_015, 'cloudy' => 67_015, 'rain' => 74_542, 'downpour' => 76_396, 'fog' => 67_986], 2_109, 60_000],
-    'the Kuna 4x4 is slower' => ['kuna-4x4', ['dry' => 82_313, 'cloudy' => 82_313, 'rain' => 93_600, 'downpour' => 96_452, 'fog' => 83_454], 1_500, 70_000],
+    'the Bizon M-2 is still faster for all its weight, and thirstier' => ['bizon-m-2', ['dry' => 73_394, 'cloudy' => 73_394, 'rain' => 81_119, 'downpour' => 83_294, 'fog' => 74_547], 2_109, 60_000],
+    'the Kuna 4x4 is slower' => ['kuna-4x4', ['dry' => 91_848, 'cloudy' => 91_848, 'rain' => 103_850, 'downpour' => 107_324, 'fog' => 93_250], 1_500, 70_000],
 ]);
 
 it('rounds the reward of wet laps like the settlement vector W5, and the XP of a lap to the whole', function () {
@@ -245,9 +245,9 @@ describe('the tracks of the world', function () {
         $onStreetTires = lapsOn('kruszyn-quarry', 'kuna-4x4');
         $hatchback = lapsOn('kruszyn-quarry', 'rdzak-gt-4');
 
-        // Street tires slip on gravel, and a hatchback has no clearance for it: more than twice the lap of the 4x4 that was made for it.
+        // Street tires slip on gravel, and a hatchback has no clearance for it: almost twice the lap of the 4x4 that was made for it.
         expect($onStreetTires['dry'])->toBeGreaterThan($quarry['dry'] * 1.3)
-            ->and($hatchback['dry'])->toBeGreaterThan($quarry['dry'] * 2)
+            ->and($hatchback['dry'])->toBeGreaterThan($quarry['dry'] * 1.8)
             // Rain turns gravel into mud, where the off-road tires lose less than the street tires do.
             ->and($quarry['rain'] / $quarry['dry'])->toBeLessThan($onStreetTires['rain'] / $onStreetTires['dry']);
     });
@@ -264,5 +264,30 @@ describe('the tracks of the world', function () {
     it('freezes a lap for every weather of the region, and no weather that the region does not have', function () {
         expect(array_keys(lapsOn('suchy-pas-drag', 'bizon-m-2')))->toBe(['dry', 'cloudy', 'rain', 'fog'])
             ->and(array_keys(lapsOn('autodrom-circuit', 'bizon-m-2')))->toBe(['dry', 'cloudy', 'rain', 'downpour']);
+    });
+});
+
+describe('the mass of the car', function () {
+    it('leaves a car of the reference mass alone, and makes a heavy one handle and brake worse and a light one better', function () {
+        $rules = Rules::fromConfig();
+
+        expect($rules->massFactor(1_000))->toBe(1.0)
+            ->and($rules->massFactor(1_480))->toBeLessThan(1.0)
+            ->and($rules->massFactor(800))->toBeGreaterThan(1.0)
+            ->and($rules->massFactor(1_480))->toEqualWithDelta((1000 / 1480) ** 0.6, 1e-12);
+    });
+
+    it('multiplies the handling and the braking of the body by it, after the suspension and the brakes were averaged in', function () {
+        $factor = (1000 / 1480) ** 0.6;
+        $stock = runInputsFactory()->stats('bizon-m-2')->stats;
+        $tuned = runInputsFactory()->stats('bizon-m-2', ['suspension' => 'sport-suspension-t1', 'brakes' => 'disc-brakes-t2'])->stats;
+
+        expect($stock['handling'])->toEqualWithDelta(88 * $factor, 1e-9)
+            ->and($stock['braking'])->toEqualWithDelta(90 * $factor, 1e-9)
+            ->and($tuned['handling'])->toEqualWithDelta(94 * $factor, 1e-9)
+            ->and($tuned['braking'])->toEqualWithDelta(97.5 * $factor, 1e-9)
+            // What the mass has nothing to do with is not touched: the grip of the tires, the power per tonne, the clearance.
+            ->and($stock['grip'])->toBe(90.0)
+            ->and($stock['clearance'])->toBe(15.0);
     });
 });

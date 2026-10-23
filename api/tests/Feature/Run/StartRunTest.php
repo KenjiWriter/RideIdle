@@ -59,8 +59,8 @@ it('starts every starter wreck with its own tank and lap', function (string $car
         ->assertJsonPath('data.lap.fuel_ml', $fuelPerLapMl);
 })->with([
     'rdzak' => ['rdzak-gt-4', 45_000, 75_000, 1_500],
-    'bizon' => ['bizon-m-2', 60_000, 67_015, 2_109],
-    'kuna' => ['kuna-4x4', 70_000, 82_313, 1_500],
+    'bizon' => ['bizon-m-2', 60_000, 73_394, 2_109],
+    'kuna' => ['kuna-4x4', 70_000, 91_848, 1_500],
 ]);
 
 it('names the car and the track in the language of the request', function (string $locale, string $track) {

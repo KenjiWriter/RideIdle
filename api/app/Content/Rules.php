@@ -157,6 +157,17 @@ final class Rules
         return $this->data['tracks'][$slug]['min_player_level'] ?? throw new \InvalidArgumentException("Unknown track {$slug}.");
     }
 
+    /**
+     * What the mass of a car does to its handling and braking: (reference mass / mass) ^ exponent. A heavy car is below 1, a light one
+     * above, and a car of the reference mass is not touched.
+     */
+    public function massFactor(int $massKg): float
+    {
+        $mass = $this->data['car']['mass'];
+
+        return ($mass['reference_kg'] / $massKg) ** $mass['exponent'];
+    }
+
     /** The highest tier of a part that a car of this level can have mounted: 1 + floor(level / levels per tier). */
     public function maxMountableTier(int $carLevel): int
     {
