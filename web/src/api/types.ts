@@ -36,8 +36,8 @@ export interface RecoveryCodeResponse extends MeResponse {
 
 export type RunStatus = 'running' | 'stopped'
 
-/** Why a run stopped: the tank is empty or the car broke down. */
-export type StopReason = 'fuel_empty' | 'breakdown'
+/** Why a run stopped: the tank is empty, the car broke down, or it stands in the workshop while a job is done. */
+export type StopReason = 'fuel_empty' | 'breakdown' | 'workshop'
 
 /** A run: a car driving laps on a track (GET /api/v1/runs/current). Times are ms of the server clock, fuel is in ml. */
 export interface Run {
@@ -201,4 +201,85 @@ export interface ProviderFinish extends MeResponse {
 export interface EmailConfirmation extends MeResponse {
   purpose: 'claim' | 'login'
   token?: string
+}
+
+/** What a definition of the pack says about a part. The name is in the language of the driver. */
+export interface PartInfo {
+  slug: string
+  name: string
+  slot: string
+  tier: number | null
+  price_cents: number | null
+  stats: Record<string, number>
+}
+
+/** A part of the driver, in the inventory or on the car. */
+export interface OwnedPart extends PartInfo {
+  id: number
+  mounted: boolean
+  car_id: number | null
+}
+
+/** A part for sale, with what the car of the driver says about it. */
+export interface ShopOffer extends PartInfo {
+  required_car_level: number
+  mountable: boolean
+}
+
+/** GET /api/v1/shop */
+export interface ShopResponse {
+  data: { parts: ShopOffer[]; car: { id: number; level: number } | null }
+  wallet: Wallet
+}
+
+/** POST /api/v1/shop/purchases. `data` is null when the same request was made before: the part is in the inventory already. */
+export interface PurchaseResponse {
+  data: OwnedPart | null
+  purchase: { cost_cents: number; repeated: boolean }
+  wallet: Wallet
+}
+
+export type CarStatKey = 'accel' | 'top_speed' | 'grip' | 'handling' | 'braking'
+
+export interface GarageSlot {
+  slot: string
+  part: OwnedPart | null
+  /** The slot holds a part of the body, which cannot be taken off (the engine for now). */
+  built_in: boolean
+}
+
+export interface GarageCar {
+  id: number
+  level: number
+  vehicle: { slug: string; name: string; engine: string | null; power_kw: number | null }
+  /** With the parts that are on the car, and without them. */
+  stats: Record<CarStatKey, number>
+  base_stats: Record<CarStatKey, number>
+  tank_ml: number
+  slots: GarageSlot[]
+  lap_ms: Record<string, number> | null
+  run: { id: number; status: RunStatus; stop_reason: StopReason | null } | null
+}
+
+export type JobKind = 'mount' | 'unmount'
+
+/** A job of the workshop. The times are ms of the clock of the server. */
+export interface WorkshopJob {
+  id: number
+  kind: JobKind
+  /** Waiting for the mechanic, or being done (the car stands in the workshop). */
+  status: 'queued' | 'working'
+  part: OwnedPart
+  start_ms: number
+  finish_ms: number
+}
+
+/** GET /api/v1/garage, and the answer of POST /api/v1/garage/jobs. `now_ms` is the clock of the server. */
+export interface GarageResponse {
+  data: {
+    car: GarageCar | null
+    inventory: OwnedPart[]
+    workshop: { queue_max: number; mechanic: { level: number; time_cut_ppm: number }; jobs: WorkshopJob[] }
+  }
+  now_ms: number
 }
