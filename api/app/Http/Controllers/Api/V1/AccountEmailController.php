@@ -10,8 +10,8 @@ use App\Mail\AccountLinkMail;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Services\AccountLinks;
-use App\Services\AccountTokens;
 use App\Services\Accounts;
+use App\Services\AccountTokens;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -24,17 +24,18 @@ final class AccountEmailController extends Controller
      *
      * The answer is the same whether the address is free or already has a garage, so a guest cannot use it to find out
      * who has an account. In the second case the link goes to the owner of the address, to the garage they have.
-     * Securing needs the terms accepted and the age confirmed; when they did it is saved with the account.
+     * Securing needs the terms accepted and the age confirmed, and when they did it is saved with the account. An
+     * account that has done that already, because it has a sign-in, is not asked again to add an e-mail.
      */
     public function store(Request $request, Accounts $accounts, AccountLinks $links): JsonResponse
     {
+        $user = $request->user();
+
         $data = $request->validate([
             'email' => ['required', 'email:rfc', 'max:191'],
-            'accept_terms' => ['accepted'],
-            'confirm_age' => ['accepted'],
+            ...Accounts::consentRules($user),
         ]);
 
-        $user = $request->user();
         $email = Accounts::normalizeEmail($data['email']);
 
         if ($user->identities()->where('provider', AccountIdentity::EMAIL)->exists()) {
@@ -44,7 +45,7 @@ final class AccountEmailController extends Controller
         $owner = $accounts->userFor(AccountIdentity::EMAIL, $email);
 
         if ($owner === null) {
-            $links->send(AccountLinkMail::CLAIM, AccountToken::CLAIM, $email, $user, $user->id, now());
+            $links->send(AccountLinkMail::CLAIM, AccountToken::CLAIM, $email, $user, $user->id, Accounts::consentAt($user));
         } else {
             $links->send(AccountLinkMail::EXISTING, AccountToken::LOGIN, $email, $owner, $owner->id);
         }

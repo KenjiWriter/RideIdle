@@ -48,6 +48,24 @@ describe('finishing a link', function () {
         expect(collect($response->json('data.identities'))->pluck('provider')->all())->toBe(['email', 'facebook']);
     });
 
+    it('adds a provider to a secured account and leaves the moments it accepted the terms as they were', function () {
+        $accepted = now()->subWeek()->startOfSecond();
+        $driver = User::factory()->create(['claimed_at' => $accepted, 'terms_accepted_at' => $accepted, 'age_confirmed_at' => $accepted]);
+        identityOf($driver, 'email', 'turbo@example.com', 'turbo@example.com');
+
+        $start = startProviderLink($driver, 'google', ['accept_terms' => null, 'confirm_age' => null])->assertOk();
+        providerSays('google', ['id' => '1098765', 'email' => 'turbo@gmail.com']);
+        $ticket = fragmentOf(comesBackFrom('google', stateOf($start->json('url'))))['ticket'];
+
+        $response = finishWith(['ticket' => $ticket, 'verifier' => $start->json('verifier')], $driver)->assertOk();
+
+        $driver->refresh();
+        expect(collect($response->json('data.identities'))->pluck('provider')->all())->toBe(['email', 'google'])
+            ->and($driver->terms_accepted_at->equalTo($accepted))->toBeTrue()
+            ->and($driver->age_confirmed_at->equalTo($accepted))->toBeTrue()
+            ->and($driver->claimed_at->equalTo($accepted))->toBeTrue();
+    });
+
     it('needs the driver to be signed in', function () {
         $driver = User::factory()->guest()->create();
         $held = providerTicket('google', $driver);

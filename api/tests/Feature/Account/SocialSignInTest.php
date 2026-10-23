@@ -68,6 +68,27 @@ describe('starting to link a provider', function () {
             ->and(AccountToken::query()->where('token_hash', $response->json('verifier'))->orWhere('challenge', $response->json('verifier'))->exists())->toBeFalse();
     });
 
+    it('does not ask an account that has accepted the terms and confirmed its age for them again', function () {
+        Carbon::setTestNow('2026-10-23 12:00:00');
+        $driver = User::factory()->create(['claimed_at' => now(), 'terms_accepted_at' => now()->subWeek(), 'age_confirmed_at' => now()->subWeek()]);
+        identityOf($driver, 'email', 'turbo@example.com');
+
+        $response = test()->postJson('/api/v1/account/identities/google/start', [], bearerFor($driver))->assertOk();
+        $state = AccountToken::query()->where('token_hash', AccountTokens::hash(stateOf($response->json('url'))))->firstOrFail();
+
+        // Nothing new to record: the moments it accepted them stay as they were.
+        expect($state->consent_at)->toBeNull()->and($state->user_id)->toBe($driver->id);
+    });
+
+    it('asks an account for them when they are not both on record', function () {
+        $driver = User::factory()->create(['claimed_at' => now(), 'terms_accepted_at' => now(), 'age_confirmed_at' => null]);
+
+        test()->postJson('/api/v1/account/identities/google/start', [], bearerFor($driver))
+            ->assertUnprocessable()->assertJsonValidationErrors(['confirm_age']);
+
+        expect(AccountToken::query()->count())->toBe(0);
+    });
+
     it('gives a different state and verifier every time', function () {
         $driver = User::factory()->guest()->create();
 

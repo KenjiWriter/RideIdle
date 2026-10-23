@@ -54,6 +54,12 @@ class User extends Authenticatable
         return $this->claimed_at === null;
     }
 
+    /** Whether the driver accepted the terms and confirmed their age, which is asked once, with the first sign-in linked. */
+    public function hasConsented(): bool
+    {
+        return $this->terms_accepted_at !== null && $this->age_confirmed_at !== null;
+    }
+
     public function hasRecoveryCode(): bool
     {
         return $this->recovery_code_hash !== null;

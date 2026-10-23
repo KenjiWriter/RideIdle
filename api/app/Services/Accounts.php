@@ -24,6 +24,23 @@ final class Accounts
         return Str::lower(trim($email));
     }
 
+    /**
+     * What linking a sign-in asks of the request: the terms accepted and the age confirmed, unless the account has
+     * done that already. Once is enough; a driver who adds a second sign-in is not asked the same again.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function consentRules(User $user): array
+    {
+        return $user->hasConsented() ? [] : ['accept_terms' => ['accepted'], 'confirm_age' => ['accepted']];
+    }
+
+    /** The moment to record as the consent of a link that is being asked for: none when it is on record already. */
+    public static function consentAt(User $user): ?CarbonInterface
+    {
+        return $user->hasConsented() ? null : now();
+    }
+
     /** The account an identity belongs to, if any. */
     public function userFor(string $provider, string $subject): ?User
     {

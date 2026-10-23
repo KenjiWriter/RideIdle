@@ -24,23 +24,24 @@ final class SocialAuthController extends Controller
     /**
      * Starts linking the account of the driver to a provider. The answer is the address to send the browser to and
      * the verifier the browser must keep until it comes back, because only the browser that started can finish.
-     * Linking needs the terms accepted and the age confirmed, as securing an account with an e-mail does.
+     * Linking needs the terms accepted and the age confirmed, as securing an account with an e-mail does, unless the
+     * account has done that already: a driver adding a second sign-in is not asked again.
      */
     public function startLink(Request $request, string $provider, SocialProviders $providers, SocialSignIn $flow): JsonResponse
     {
-        $request->validate(['accept_terms' => ['accepted'], 'confirm_age' => ['accepted']]);
+        $user = $request->user();
+
+        $request->validate(Accounts::consentRules($user));
 
         if (! $providers->isEnabled($provider)) {
             return $this->unavailable();
         }
 
-        $user = $request->user();
-
         if ($user->identities()->where('provider', $provider)->exists()) {
             throw new ProviderAlreadyLinkedException($provider);
         }
 
-        return response()->json($flow->start($provider, SocialSignIn::LINK, $user, now()));
+        return response()->json($flow->start($provider, SocialSignIn::LINK, $user, Accounts::consentAt($user)));
     }
 
     /** Starts signing in with a provider on a device that has no account yet. The same answer as to link. */

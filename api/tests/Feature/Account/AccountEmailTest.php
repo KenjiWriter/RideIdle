@@ -7,6 +7,7 @@ use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\User;
 use App\Services\AccountTokens;
+use App\Support\Locale;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(fn () => Mail::fake());
@@ -43,7 +44,7 @@ it('makes a token for the guest that is good for the link and nothing else', fun
     // The secret is in the link only; the table holds its hash, and it is a claim for this guest and this address.
     expect(AccountToken::query()->where('token_hash', $secret)->exists())->toBeFalse();
 
-    $token = (new AccountTokens())->consume(AccountToken::CLAIM, $secret);
+    $token = (new AccountTokens)->consume(AccountToken::CLAIM, $secret);
 
     expect($token->user_id)->toBe($guest->id)
         ->and($token->email)->toBe('turbo@example.com')
@@ -76,9 +77,9 @@ it('writes in the language of the driver', function (string $locale, string $sub
     askForEmailLink($guest)->assertStatus(202);
 
     $mail = Mail::queued(AccountLinkMail::class)->first();
-    expect($mail->locale)->toBe(App\Support\Locale::toLaravel($locale));
+    expect($mail->locale)->toBe(Locale::toLaravel($locale));
 
-    app()->setLocale(App\Support\Locale::toLaravel($locale));
+    app()->setLocale(Locale::toLaravel($locale));
     expect($mail->envelope()->subject)->toBe($subject);
 })->with([
     'polish' => ['pl', 'Potwierdź e-mail, żeby zabezpieczyć garaż'],
@@ -124,7 +125,7 @@ describe('an address that already has a garage', function () {
 
         Mail::assertQueued(AccountLinkMail::class, fn (AccountLinkMail $mail) => $mail->kind === 'existing' && $mail->driver === 'Stary_Kierowca' && $mail->locale === 'pl');
 
-        $token = (new AccountTokens())->consume(AccountToken::LOGIN, secretOf(Mail::queued(AccountLinkMail::class)->first()));
+        $token = (new AccountTokens)->consume(AccountToken::LOGIN, secretOf(Mail::queued(AccountLinkMail::class)->first()));
         expect($token->user_id)->toBe($owner->id);
         expect($guest->fresh()->isGuest())->toBeTrue();
     });
@@ -160,6 +161,51 @@ it('lets an account secured with a provider add an e-mail', function () {
     askForEmailLink($user)->assertStatus(202);
 
     Mail::assertQueued(AccountLinkMail::class, fn (AccountLinkMail $mail) => $mail->kind === 'claim');
+});
+
+describe('an account that accepted the terms and confirmed its age already', function () {
+    /** An account secured with Google a while ago, which accepted the terms then. */
+    function securedWithGoogle(array $attributes = []): User
+    {
+        $user = User::factory()->create(['claimed_at' => now()->subWeek(), 'email' => null, 'terms_accepted_at' => now()->subWeek(), 'age_confirmed_at' => now()->subWeek(), ...$attributes]);
+        identityOf($user, AccountIdentity::GOOGLE, '1098765');
+
+        return $user;
+    }
+
+    it('adds an e-mail without being asked for them again', function () {
+        $user = securedWithGoogle();
+
+        test()->postJson('/api/v1/account/email', ['email' => 'turbo@example.com'], bearerFor($user))->assertStatus(202);
+
+        Mail::assertQueued(AccountLinkMail::class, fn (AccountLinkMail $mail) => $mail->kind === 'claim');
+    });
+
+    it('keeps the moments it accepted them when the e-mail is added', function () {
+        $user = securedWithGoogle();
+        $accepted = $user->terms_accepted_at;
+        test()->postJson('/api/v1/account/email', ['email' => 'turbo@example.com'], bearerFor($user))->assertStatus(202);
+
+        confirmLink(secretOf(Mail::queued(AccountLinkMail::class)->last()))->assertOk();
+
+        $user->refresh();
+        expect($user->terms_accepted_at->equalTo($accepted))->toBeTrue()
+            ->and($user->age_confirmed_at->equalTo($accepted))->toBeTrue()
+            ->and($user->email)->toBe('turbo@example.com')
+            ->and($user->identities()->pluck('provider')->sort()->values()->all())->toBe(['email', 'google']);
+    });
+
+    it('is still asked when only one of the two is on record', function (array $attributes, string $missing) {
+        $user = securedWithGoogle($attributes);
+
+        test()->postJson('/api/v1/account/email', ['email' => 'turbo@example.com'], bearerFor($user))
+            ->assertUnprocessable()->assertJsonValidationErrors([$missing]);
+
+        Mail::assertNothingQueued();
+    })->with([
+        'the age is missing' => [['age_confirmed_at' => null], 'confirm_age'],
+        'the terms are missing' => [['terms_accepted_at' => null], 'accept_terms'],
+    ]);
 });
 
 it('needs a valid address and the terms and the age confirmed', function (array $body, array $invalid) {
