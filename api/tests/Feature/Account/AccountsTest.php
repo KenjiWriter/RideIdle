@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Event;
 
 function accounts(): Accounts
 {
-    return new Accounts();
+    return new Accounts;
 }
 
 it('normalizes an e-mail, so the same address is the same identity', function () {
@@ -53,6 +53,34 @@ it('saves when the driver accepted the terms and confirmed their age', function 
     $fresh = $guest->fresh();
     expect($fresh->terms_accepted_at->equalTo($consent))->toBeTrue()
         ->and($fresh->age_confirmed_at->equalTo($consent))->toBeTrue();
+});
+
+it('saves which version of the terms the driver accepted', function () {
+    config(['ride.legal.version' => '2026-10-23']);
+    $guest = User::factory()->guest()->create();
+
+    accounts()->link($guest, AccountIdentity::GOOGLE, '1', null, now());
+
+    expect($guest->fresh()->terms_version)->toBe('2026-10-23');
+});
+
+it('keeps the version the driver accepted when the texts change and another identity is linked', function () {
+    config(['ride.legal.version' => '2026-10-23']);
+    $guest = User::factory()->guest()->create();
+    accounts()->link($guest, AccountIdentity::GOOGLE, '1', null, now());
+
+    config(['ride.legal.version' => '2027-03-01']);
+    accounts()->link($guest, AccountIdentity::APPLE, '2', null, now());
+
+    expect($guest->fresh()->terms_version)->toBe('2026-10-23');
+});
+
+it('saves no version when no consent was given', function () {
+    $user = User::factory()->guest()->create();
+
+    accounts()->link($user, AccountIdentity::GOOGLE, '1');
+
+    expect($user->fresh()->terms_version)->toBeNull();
 });
 
 it('keeps the first consent and the time of securing when another identity is linked', function () {

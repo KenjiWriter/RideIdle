@@ -51,7 +51,7 @@ final class Accounts
 
     /**
      * Links an identity to an account, which secures a guest account, and saves when the driver accepted the terms
-     * and confirmed their age if that is given. Linking the identity the account already has changes nothing.
+     * (and which version of them) and confirmed their age if that is given. Linking the identity the account already has changes nothing.
      * Only an e-mail identity is also the e-mail of the account, because only an e-mail was proven to be theirs by
      * a link; what a provider says about an e-mail is kept for display and never used to find an account.
      *
@@ -81,6 +81,8 @@ final class Accounts
                     'claimed_at' => $locked->claimed_at === null ? now() : null,
                     'terms_accepted_at' => $consentAt !== null && $locked->terms_accepted_at === null ? $consentAt : null,
                     'age_confirmed_at' => $consentAt !== null && $locked->age_confirmed_at === null ? $consentAt : null,
+                    // The texts the driver accepted are the ones in force now, which is also what they were shown.
+                    'terms_version' => $consentAt !== null && $locked->terms_accepted_at === null ? config('ride.legal.version') : null,
                     'email' => $provider === AccountIdentity::EMAIL ? $subject : null,
                     'email_verified_at' => $provider === AccountIdentity::EMAIL ? now() : null,
                 ]))->save();

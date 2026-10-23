@@ -30,6 +30,7 @@ describe('a link that secures an account', function () {
             ->and($fresh->email_verified_at)->not->toBeNull()
             ->and($fresh->terms_accepted_at)->not->toBeNull()
             ->and($fresh->age_confirmed_at)->not->toBeNull()
+            ->and($fresh->terms_version)->toBe(config('ride.legal.version'))
             ->and($fresh->identities()->where('provider', 'email')->where('subject', 'turbo@example.com')->exists())->toBeTrue();
     });
 
