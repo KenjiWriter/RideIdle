@@ -32,6 +32,7 @@ it('starts the run of a driver with a full tank', function () {
         ->assertJsonPath('data.lap.ms.dry', 75_000)
         ->assertJsonPath('data.lap.cash_cents.rain', 1_442)
         ->assertJsonPath('data.lap.fuel_ml', 1_500)
+        ->assertJsonPath('data.prices', ['fuel_cents_per_liter' => 200, 'repair_cents' => 3_000])
         ->assertJsonPath('wallet.cash_cents', 0)
         ->assertJsonPath('wallet.xp', 0)
         ->assertJsonStructure(['data' => ['id', 'cursor_ms', 'server_time_ms']]);

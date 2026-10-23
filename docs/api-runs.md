@@ -26,6 +26,7 @@ Każda odpowiedź ma `data` (bieg) i `wallet` (gotówka w centach i XP po wywoł
     "tank_ml": 45000,
     "cursor_ms": 1792692900000,
     "state_version": 3,
+    "prices": { "fuel_cents_per_liter": 200, "repair_cents": 3000 },
     "lap": {
       "ms": { "dry": 75000, "rain": 84391 },
       "cash_cents": { "dry": 1550, "rain": 1442 },
@@ -38,7 +39,7 @@ Każda odpowiedź ma `data` (bieg) i `wallet` (gotówka w centach i XP po wywoł
 }
 ```
 
-`status` to `running` albo `stopped`, a `stop_reason` to `fuel_empty`, `breakdown` albo `null`. `cursor_ms` to początek bieżącego okrążenia. `state_version` rośnie przy każdej zmianie stanu i jest tym, co klient odsyła jako `since_version`.
+`status` to `running` albo `stopped`, a `stop_reason` to `fuel_empty`, `breakdown` albo `null`. `prices` to ceny akcji biegu w centach (litr paliwa i naprawa), żeby przycisk mógł podać koszt przed naciśnięciem. `cursor_ms` to początek bieżącego okrążenia. `state_version` rośnie przy każdej zmianie stanu i jest tym, co klient odsyła jako `since_version`.
 
 ## Punkty końcowe
 

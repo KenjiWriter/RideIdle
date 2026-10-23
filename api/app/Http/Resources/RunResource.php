@@ -44,6 +44,11 @@ final class RunResource extends JsonResource
             'tank_ml' => $vehicle !== null ? app(RunInputsFactory::class)->tankMl($this->car_slug) : null,
             'cursor_ms' => $this->cursor_ms,
             'state_version' => $this->state_version,
+            // What the actions of the run cost, so a button can say it before it is pressed.
+            'prices' => [
+                'fuel_cents_per_liter' => app(Rules::class)->fuelPriceCentsPerLiter(),
+                'repair_cents' => app(Rules::class)->repairCostCents(),
+            ],
             'lap' => [
                 'ms' => $this->config['lap_ms'],
                 'cash_cents' => $this->config['lap_cash_cents'],
