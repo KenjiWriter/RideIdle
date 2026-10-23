@@ -67,7 +67,7 @@ Trzy wraki startowe, od najtańszego (to on jest polecany na start), i tor, na k
 { "car": "rdzak-gt-4", "track": "zlomowo-street" }
 ```
 
-`car` musi być wrakiem startowym z paczki treści (`sources` zawiera `start`), `track` torem z `content/rules/starter.json`. Odpowiedź to 201. Kierowca, który ma już bieg, dostaje 409 z `code: run_exists` i `run_id`. Dwa równoległe żądania tego samego kierowcy nie założą dwóch biegów (blokada portfela, sprawdzone na osobnych procesach).
+`car` musi być wrakiem startowym z paczki treści (`sources` zawiera `start`), `track` torem z `content/rules/starter.json`, który otwiera poziom gracza (`min_player_level` toru; inaczej 422 `track_locked`, opis w części „Poziom gracza i tory”). Odpowiedź to 201. Kierowca, który ma już bieg, dostaje 409 z `code: run_exists` i `run_id`. Dwa równoległe żądania tego samego kierowcy nie założą dwóch biegów (blokada portfela, sprawdzone na osobnych procesach).
 
 ### Podsumowanie: `GET /runs/current` i `GET /runs/{id}`
 
@@ -92,7 +92,7 @@ Każde rozliczenie ma `version`, `from_ms`, `to_ms`, `at_ms`, `laps`, `cash_cent
 { "track": "zlomowo-street" }
 ```
 
-Rozlicza i wypłaca jazdę ze starym torem, potem zamraża nowy i auto jedzie nim od teraz. Okrążenie w toku przepada, żeby zmiana nie działała wstecz. Planowana awaria nie przesuwa się (ziarno biegu zostaje). Zatrzymane auto zostaje zatrzymane. Wysłanie tej samej zmiany w tej samej chwili nic nie płaci dwa razy.
+Rozlicza i wypłaca jazdę ze starym torem, potem zamraża nowy i auto jedzie nim od teraz. Okrążenie w toku przepada, żeby zmiana nie działała wstecz. Planowana awaria nie przesuwa się (ziarno biegu zostaje). Zatrzymane auto zostaje zatrzymane. Wysłanie tej samej zmiany w tej samej chwili nic nie płaci dwa razy. Tor musi być otwarty poziomem gracza, tak jak przy starcie (422 `track_locked`, nic się wtedy nie rozlicza i nie zmienia).
 
 ### Naprawa: `POST /runs/{id}/repair`
 
@@ -122,13 +122,14 @@ Odpowiedź ma `towed`: `false`, gdy auto jedzie albo kierowca jednak może zapł
 | 404 | `no_run` | Kierowca nie ma biegu albo bieg nie jest jego |
 | 409 | `run_exists` | Start, gdy kierowca ma już bieg (`run_id` w odpowiedzi) |
 | 422 | `insufficient_funds` | Za mało gotówki na tankowanie lub naprawę (`available_cents`, `required_cents`). Nic się nie zmienia, nawet rozliczenie |
+| 422 | `track_locked` | Start lub zmiana toru poniżej poziomu gracza, którego tor wymaga (`details.required`, `details.current`). Komunikat mówi, jak zdobyć poziom |
 | 422 | | Błędne dane: nieznane auto lub tor, brak `request_id`, `liters` poniżej 1 lub nie całkowite, zła `since_version`. Szczegóły w `errors` |
 
 Komunikaty (`message`) są w języku żądania.
 
 ## Skąd są dane
 
-Auto pochodzi z paczki `content/packs/core`, a tor, klimat regionu, efekty pogody, cena paliwa, koszt naprawy i szansa awarii z `content/rules/starter.json` (opis w `content/README.md`). Dopóki nie ma wyboru części i opon, każde auto jedzie na oponach fabrycznych, a jego statystyki wynikają z nadwozia: przyspieszenie to moc na tonę, prędkość maksymalna z definicji. Wartości bez źródła w projekcie (koszt naprawy, szansa awarii) są tymczasowe.
+Auto pochodzi z paczki `content/packs/core`, a tor, klimat regionu, efekty pogody, cena paliwa, koszt naprawy i szansa awarii z `content/rules/starter.json` (opis w `content/README.md`). Statystyki auta wynikają z nadwozia i zamontowanych części (opis w części „Garaż, sklep i warsztat”), a auto bez części w gnieździe ma fabryczną, na oponach `stock_tires`. Wartości bez źródła w projekcie (koszt naprawy, szansa awarii) są tymczasowe.
 
 ## Garaż, sklep i warsztat
 
@@ -136,7 +137,7 @@ Kierowca ma auta i części jako wiersze (`cars`, `parts`), a bieg jeździ autem
 
 ### Sklep: `GET /shop` i `POST /shop/purchases`
 
-`GET /shop` zwraca części na sprzedaż (kolejność z reguł, nazwa w języku kierowcy, `price_cents`, `tier`, `stats`) i dla każdej `required_car_level` oraz `mountable`: czy auto kierowcy ma poziom na jej montaż (tier ≤ 1 + ⌊poziom auta / 3⌋). Do tego `data.car` (id i poziom albo `null`) i `wallet`.
+`GET /shop` zwraca części na sprzedaż (kolejność z reguł, nazwa w języku kierowcy, `price_cents`, `tier`, `stats` i, dla opon, `surfaces`: mnożnik przyczepności na każdej nawierzchni, `null` dla reszty części) i dla każdej `required_car_level` oraz `mountable`: czy auto kierowcy ma poziom na jej montaż (tier ≤ 1 + ⌊poziom auta / 3⌋). Do tego `data.car` (id i poziom albo `null`) i `wallet`.
 
 `POST /shop/purchases` (`part`: slug, `request_id`: do 64 znaków) kupuje część do inwentarza: pieniądze (klucz księgi `shop:{kierowca}:{request_id}`) i część w jednej transakcji pod blokadą portfela. Odpowiedź 201 ma `data` (część), `purchase.cost_cents` i `wallet`. Powtórzone `request_id` nie pobiera ani nie daje drugi raz (200, `purchase.repeated: true`, `data: null`), a to samo `request_id` dla innej części to 409 `request_reused`. Błędy: 422 `part_not_for_sale` (nie ma jej na liście reguł, także gdy jest w paczce), 422 `insufficient_funds`.
 
@@ -156,7 +157,7 @@ Najpierw wykonuje to, co w warsztacie jest już należne. `data.car`: poziom, na
 
 Tankowanie nie rusza auta w warsztacie, a holowanie nie jest wtedy oferowane (`tow.available: false`).
 
-Statystyki auta (`RunInputsFactory::stats`): moc nadwozia razy `power_mult` części, przyspieszenie to moc na tonę, prędkość maksymalna rośnie z pierwiastkiem sześciennym zysku mocy i nie przekracza limitu skrzyni, przyczepność, prowadzenie i hamowanie biorą się z opon (fabrycznych, gdy żadnych nie założono), a zawieszenie i hamulce są uśredniane z prowadzeniem i hamowaniem opon. **Uśrednianie to pierwsza reguła do sprawdzenia w symulatorze ekonomii.** Efektów opon na mokrym i na żwirze jeszcze nie ma (macierz opon dojdzie z torami), dlatego sklep sprzedaje tylko opony uliczne T2, zawieszenie, hamulce i wydech: wszystko, co zmienia statystyki.
+Statystyki auta (`RunInputsFactory::stats`): moc nadwozia razy `power_mult` części, przyspieszenie to moc na tonę, prędkość maksymalna rośnie z pierwiastkiem sześciennym zysku mocy i nie przekracza limitu skrzyni, przyczepność, prowadzenie i hamowanie biorą się z opon (fabrycznych, gdy żadnych nie założono), a zawieszenie i hamulce są uśredniane z prowadzeniem i hamowaniem opon, **terenowość** (`clearance`) startuje od nadwozia, a zawieszenie jest z nią uśredniane tak samo. **Uśrednianie to pierwsza reguła do sprawdzenia w symulatorze ekonomii.** To, jak opony trzymają na danej nawierzchni, nie jest w statystykach auta, tylko w okrążeniu: opisuje to część „Nawierzchnie, opony i tory” niżej. Sklep sprzedaje wszystko, co zmienia jazdę: opony (uliczne, całoroczne, terenowe, deszczowe, zimowe), zawieszenie (sportowe, rajdowe), hamulce i wydech.
 
 ### Anulowanie zlecenia: `DELETE /garage/jobs/{job}`
 
@@ -170,6 +171,14 @@ Anuluje zlecenie, które czeka na mechanika albo które mechanik właśnie robi.
 - Wiersze anulowanych zleceń są usuwane: miejsca w kolejce (cztery) wracają, a część można znów ustawić w kolejce.
 
 Odpowiedź 200 to cały garaż, jak przy ustawianiu w kolejce, z dodatkowym `cancelled`. Błędy 422 z kodem: `job_not_found`, `job_done`.
+
+### Nawierzchnie, opony i tory
+
+Tor ma nawierzchnię (asfalt albo żwir), a pogoda ma grunt (sucho, mokro, śnieg): razem to jedna z pięciu nawierzchni, czyli kolumn **macierzy opon**. Rodzaj opon z definicji części (`tire_kind`) wybiera jej wiersz, a liczba mnoży przyczepność, prowadzenie i hamowanie auta w okrążeniu tej pogody, więc **zamrożona konfiguracja biegu zależy od zamontowanych opon**: `lap_ms`, `lap_cash_cents` i `lap_xp` mają wpis na każdą pogodę regionu (w górach także `snow`), policzony dla opon, które auto ma teraz. Zmiana opon w warsztacie zamraża bieg od nowa jak każda inna część. Opony uliczne dają te same liczby, co płaskie mnożniki pogody sprzed macierzy, więc okrążenia fabrycznych aut się nie zmieniły. Macierz, pięć torów (poziomy 1, 3, 5, 8 i 12), klimaty i moje decyzje z tym związane są w `content/README.md` (część „Tory, nawierzchnie i macierz opon”), a sprawdza je polecenie `php artisan tracks:simulate`.
+
+### Poziom gracza i tory
+
+Serwer liczy poziom gracza z XP z portfela: XP do poziomu *n* to `player.xp_base · n ^ player.xp_exponent` (45 i 2,3, do pełnych: poziom 2 od 222 XP), ta sama krzywa co w pasku HUD i w symulatorze ekonomii (test pilnuje, żeby się nie rozjechały), najwyżej `player.max_level` (30). Tor otwiera `min_player_level`. Start biegu i zmiana toru na tor, którego poziom gracza nie otwiera, to 422 `track_locked` z `details` (`required`, `current`) i komunikatem „Wymaga poziomu gracza 8 (masz 1). Zdobywasz XP, jeżdżąc.”: zasada projektu, że każda blokada pokazuje powód i ścieżkę. To jedyna bramka po stronie serwera; miasta i mapa dojdą z podróżami.
 
 ### XP i poziom auta
 
@@ -208,6 +217,6 @@ Kroki 1–5 to pierwsze pięć z planszy Samouczek, dopasowane do tego, co w grz
 
 ## Znane ograniczenia
 
-- Jeden bieg na kierowcę i jeden tor (Złomowo). Kolejne tory wymagają podróży i poziomów gracza, których jeszcze nie ma.
+- Jeden bieg na kierowcę. Torów jest pięć i otwiera je poziom gracza, ale kierowca zmienia tor tylko tym punktem końcowym: mapy, miast i podróży (czas jazdy między torami, garaż w mieście) jeszcze nie ma, a ekran garażu nie ma wyboru toru.
 - Wyjście z sytuacji bez wyjścia (kierowca, którego nie stać na ruszenie stojącego auta) to holowanie. Wartości (5 minut czekania, paliwo na dwa okrążenia) są tymczasowe i czekają na kalibrację razem z resztą reguł. Gdy pojawi się sklep, trzeba sprawdzić, czy czas czekania nadal kosztuje więcej niż to, co holowanie oszczędza.
 - `ruleset_version` zapisany w biegu pochodzi z konfiguracji (`RIDE_RULESET_VERSION`), a nie z wersji pliku zasad.

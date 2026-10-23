@@ -41,12 +41,69 @@ Z tego pliku zamrażana jest konfiguracja biegu: tor (wagi i wartości odniesien
 
 Kroki samouczka są w osobnym pliku, `rules/tutorial.json` (schemat `tutorial.schema.json`): kolejność, fakt rozpoczynający i kończący krok, SMS-y Kuby w pięciu językach, przycisk odpowiedzi, element do podświetlenia i nagroda w gotówce. Opisuje je `docs/api-runs.md`.
 
-`car`, `shop` i `workshop` opisują własne auta, sklep z częściami i warsztat. Część tieru T da się zamontować w aucie od poziomu `levels_per_tier × (T − 1)` (tier ≤ 1 + ⌊poziom / 3⌋), a nowe auto ma poziom `start_level`. Auto zbiera XP z okrążeń (`xp_per_lap`: 10 na okrążenie w każdej pogodzie), pasmo od poziomu *n* do *n+1* ma `xp_per_level · n` XP (200: trzecie pasmo to 600, jak na planszy Garaż), a poziom kończy się na `max_level` (30; tier 10 odblokowuje poziom 27, co pilnuje `StarterRulesTest`). Liczby są wstępne, projekt ich nie podaje. `stat_ceiling` to wartość każdej statystyki, przy której jej pasek w garażu jest pełny: to, co ma osiągać najlepsze auto całej gry, a nie to, czego chce tor (od tego są wartości odniesienia toru). Wrak startowy nie może mieć więcej niż połowy sufitu żadnej statystyki, pilnuje tego test; liczby (przyspieszenie 400 kW/t, prędkość 450 km/h, przyczepność, prowadzenie i hamowanie po 250) są wstępne i do sprawdzenia w symulatorze ekonomii. Sklep sprzedaje części z listy `shop.parts` po cenie z definicji (bez rzadkości) i **tylko takie, które coś zmieniają w statystykach auta**: opony T2, zawieszenie, hamulce i wydech; reszta paczki (zbiornik, chłodzenie, skrzynia, opony terenowe i deszczowe) czeka na swoje mechaniki. Warsztat ma jednego mechanika bez wyposażenia: zlecenie trwa `base_time_ms` slotu (dla tieru 1) razy tier, skrócone o 2% za poziom mechanika, a zdjęcie części to 60% czasu założenia (`removal_ppm`). W kolejce mieści się `max_queue` zleceń. Czasy są robocze: wzięte z przykładów na płótnie (opony T3 ok. 6 min, zawieszenie T3 ok. 14 min tam, tu krótsze) i czekają na kalibrację w symulatorze ekonomii. Czas zlecenia liczy `Rules::workshopJobMs` na liczbach całkowitych.
+`car`, `shop` i `workshop` opisują własne auta, sklep z częściami i warsztat. Część tieru T da się zamontować w aucie od poziomu `levels_per_tier × (T − 1)` (tier ≤ 1 + ⌊poziom / 3⌋), a nowe auto ma poziom `start_level`. Auto zbiera XP z okrążeń (`xp_per_lap`: 10 na okrążenie w każdej pogodzie), pasmo od poziomu *n* do *n+1* ma `xp_per_level · n` XP (200: trzecie pasmo to 600, jak na planszy Garaż), a poziom kończy się na `max_level` (30; tier 10 odblokowuje poziom 27, co pilnuje `StarterRulesTest`). Liczby są wstępne, projekt ich nie podaje. `stat_ceiling` to wartość każdej statystyki, przy której jej pasek w garażu jest pełny: to, co ma osiągać najlepsze auto całej gry, a nie to, czego chce tor (od tego są wartości odniesienia toru). Wrak startowy nie może mieć więcej niż połowy sufitu żadnej statystyki, pilnuje tego test; liczby (przyspieszenie 400 kW/t, prędkość 450 km/h, przyczepność, prowadzenie i hamowanie po 250, terenowość 200) są wstępne i do sprawdzenia w symulatorze ekonomii. Sklep sprzedaje części z listy `shop.parts` po cenie z definicji (bez rzadkości) i **tylko takie, które coś zmieniają w jeździe auta**: opony (uliczne T2, całoroczne T1, terenowe T2, deszczowe T3, zimowe T3), zawieszenie (sportowe T1, rajdowe T2), hamulce i wydech; reszta paczki (zbiornik, chłodzenie, skrzynia, slick T7) czeka na swoje mechaniki. Sklep może sprzedawać część o jeden tier wyżej, niż montuje nowe auto (deszczowe i zimowe T3): wtedy mówi, jakiego poziomu auta ona wymaga, i pilnuje tego `StarterRulesTest`. Warsztat ma jednego mechanika bez wyposażenia: zlecenie trwa `base_time_ms` slotu (dla tieru 1) razy tier, skrócone o 2% za poziom mechanika, a zdjęcie części to 60% czasu założenia (`removal_ppm`). W kolejce mieści się `max_queue` zleceń. Czasy są robocze: wzięte z przykładów na płótnie (opony T3 ok. 6 min, zawieszenie T3 ok. 14 min tam, tu krótsze) i czekają na kalibrację w symulatorze ekonomii. Czas zlecenia liczy `Rules::workshopJobMs` na liczbach całkowitych.
 
 - Mnożniki są w ppm (850 000 to 0,85), wagi toru w procentach i sumują się do 100, szanse pogody sumują się do 1 000 000.
 - Wartości odniesienia toru Złomowo to statystyki fabrycznego Rdzaka GT-4 na oponach `stock_tires`, więc to auto jeździ tam dokładnie czas bazowy.
-- Efekty pogody zakładają opony fabryczne. Gdy dojdzie wybór opon, efekt wyliczy się z macierzy opon i nawierzchni.
+- Efekt pogody na przyczepność, prowadzenie i hamowanie wylicza się z macierzy opon i nawierzchni (część „Tory, nawierzchnie i macierz opon” niżej), a `stat_ppm` pogody to to, co pogoda robi sama (ulewa: ×0,9 na przyczepności, mgła: ×0,92 na prędkości maksymalnej).
 - Schemat to `schema/rules.schema.json`, a zależności, których schemat nie wyrazi (sumy, regiony, tłumaczenia), sprawdza test `StarterRulesTest`.
+
+## Tory, nawierzchnie i macierz opon
+
+Z projektu (Systemy I i II, plansza Mapa) są **pięć torów** z profilami, **pięć klimatów** i **macierz opon**. Wszystko jest w `rules/starter.json`; schemat pilnuje kształtu, a `StarterRulesTest` zależności.
+
+| tor | region | nawierzchnia | poziom gracza | czas bazowy | nagroda | XP | paliwo | co waży (%) |
+|---|---|---|---|---|---|---|---|---|
+| `zlomowo-street` | Złomowo | asfalt | 1 | 75 s | 15,50 $ | 2 | 1,5 l | przysp. 20, prędk. 15, przycz. 25, prow. 25, ham. 15 |
+| `kruszyn-quarry` | Kruszyn | żwir | 3 | 95 s | 22,00 $ | 2 | 1,9 l | przysp. 5, przycz. 25, prow. 25, ham. 10, teren 35 |
+| `suchy-pas-drag` | Suchy Pas | asfalt | 5 | 45 s | 11,70 $ | 1 | 0,9 l | przysp. 50, prędk. 15, przycz. 25, prow. 5, ham. 5 |
+| `wilcza-przelecz-switchbacks` | Wilcza Przełęcz | asfalt | 8 | 85 s | 25,00 $ | 2 | 1,7 l | przysp. 15, prędk. 5, przycz. 20, prow. 35, ham. 25 |
+| `autodrom-circuit` | Autodrom | asfalt | 12 | 80 s | 26,50 $ | 2 | 1,6 l | po 20 |
+
+Z projektu są wagi (Systemy I, „Profil toru”), czasy bazowe tam, gdzie je podaje „Dowód” (drag 45 s, Kruszyn 95 s, autodrom 80 s), poziomy (plansza Mapa: Kruszyn 3, Suchy Pas 5, Wilcza Przełęcz 8, Autodrom 12) i szanse pogody (tabela „Klimat regionów”: np. Wilcza Przełęcz 25% sucho, 25% deszcz, 8% ulewa, 12% mgła, 5% śnieg). **Moje decyzje, których projekt nie rozstrzyga** (robocze):
+
+- Czas bazowy Wilczej Przełęczy (85 s) i **zużycie paliwa**: tyle samo na sekundę jazdy co na torze startowym (20 ml/s).
+- **Nagroda za okrążenie**: tyle, żeby godzina jazdy autem, do którego tor jest zrobiony, dawała dochód szczebla drabiny najbliższego poziomowi toru: (dochód netto godziny szczebla + paliwo na godzinę) × czas okrążenia, z kotwic ekonomii (L1 690 $/h dla Kruszyna, L2 794 dla Suchego Pasa, L3 913 dla Wilczej Przełęczy, L4 1050 dla Autodromu; Złomowo to L0, 600 $/h). Symulator ekonomii sprawdza tylko tor startowy, więc tych nagród jeszcze nie sprawdził.
+- **XP za okrążenie** z kotwicy 90 XP na godzinę, w pełnych liczbach (2, 1, 2, 2).
+- **Wartości odniesienia** (statystyki auta, które jeździ czas bazowy) to statystyki auta, do którego tor jest zrobiony: fabryczny Rdzak na Złomowie, Kuna 4x4 na oponach terenowych w kamieniołomie, Bizon na Suchym Pasie, Rdzak z zawieszeniem sportowym i oponami T2 na serpentynach, Bizon z zawieszeniem, hamulcami i oponami T2 na Autodromie. Pilnuje tego `RunInputsFactoryTest` (każde z nich jedzie czas bazowy z dokładnością 1,5%).
+- **Śnieg** (tylko Wilcza Przełęcz) płaci jak deszcz: ×0,93 nagrody i XP.
+- **Poziom gracza otwiera tor** (`min_player_level`): serwer odmawia startu i zmiany toru poniżej niego (opis w `docs/api-runs.md`). Do porównań auto jest myślane jako poziomu toru, ale nie niższego niż poziom nowego auta.
+
+**Nawierzchnie i macierz opon.** Tor ma `surface` (asfalt albo żwir), pogoda ma `ground` (sucho, mokro, śnieg): razem dają jedną z pięciu nawierzchni, czyli kolumn macierzy. Deszcz i ulewa mokrzą asfalt i zamieniają żwir w błoto, śnieg przykrywa jedno i drugie, pochmurno i mgła nic nie zmieniają. Rodzaj opon (`tire_kind` w części: `all_season`, `street`, `slick`, `rain`, `offroad`, `winter`) wybiera wiersz, a liczba z niego mnoży przyczepność, prowadzenie i hamowanie auta w tej pogodzie (mnożniki w ppm, liczone na liczbach całkowitych jak reszta).
+
+| opony | asfalt suchy | asfalt mokry | żwir | błoto | śnieg |
+|---|---|---|---|---|---|
+| całoroczne | 0,95 | 0,90 | 0,65 | 0,50 | 0,60 |
+| uliczne | 1,00 | 0,85 | 0,60 | 0,45 | 0,40 |
+| slick | 1,15 | 0,45 | 0,55 | 0,30 | 0,20 |
+| deszczowe | 0,90 | 1,05 | 0,55 | 0,50 | 0,55 |
+| terenowe | 0,85 | 0,80 | 1,00 | 0,90 | 0,70 |
+| zimowe | 0,80 | 0,90 | 0,75 | 0,65 | 1,00 |
+
+To macierz „rozszerzona” z Systemów II. Opony uliczne dają dokładnie te liczby, które dawały płaskie mnożniki pogody sprzed macierzy (0,85 na mokrym, w ulewie 0,765 na przyczepności), więc okrążenia fabrycznych aut się nie zmieniły. Części opon w paczce: uliczne T1 i T2, całoroczne T1, terenowe T2, deszczowe T3, zimowe T3 i slick T7 (indeksy przyczepności z „Katalogu części” przeskalowane do liczb opon ulicznych z paczki: ×1,05; ceny z udziału opon w zestawie, Systemy V: 450, 570, 750 i 3000 $ dla tieru 1, 2, 3 i 7). Slick T7 nie jest w sklepie: wymaga auta poziomu 18.
+
+**Szósta statystyka: Terenowość (klucz `clearance`).** Z projektu (Systemy I: „Prześwit i terenowość”). Nadwozie ma ją w definicji (`clearance`: Rdzak 20, Bizon 15, Kuna 80), a zawieszenie jest z nią uśredniane jak z prowadzeniem opon: sportowe obniżone (25) pomaga na asfalcie i odbiera Kunie przewagę, rajdowe (110) odwrotnie. Opony nie wchodzą do niej, bo działają przez macierz. Waży ją tylko tor żwirowy (35% w Kruszynie). Sufit paska w garażu to 200.
+
+### Symulator torów (`tracks:simulate`)
+
+```
+php artisan tracks:simulate            # tabele i bramki
+php artisan tracks:simulate --json     # raport jako JSON
+php artisan tracks:simulate --strict   # kod 1 także, gdy jedno auto wygrywa więcej niż dwa tory (bramka M3)
+```
+
+Gra to, co gra: bierze każde auto paczki z każdą kombinacją części, które zmieniają okrążenie (opony, zawieszenie, hamulce, wydech, skrzynia), zamraża je tym samym kodem co bieg i szuka najlepszej na każdym torze. Zasady (moje, robocze):
+
+- Zestaw jest dozwolony na torze, gdy mógł go zrobić kierowca poziomu toru: części nie wyższe niż tier, który montuje auto tego poziomu (nigdy niższego niż poziom nowego auta, czyli tier 2), a auto jest wrakiem startowym albo jego poziom u dealera nie przekracza toru.
+- Najlepszy zestaw zarabia najwięcej na godzinę w klimacie regionu: każda pogoda liczy się z szansą, czasem okrążenia i nagrodą okrążenia. Opony zostają te same przez wszystkie pogody (cena braku drugiego kompletu, którego symulator nie modeluje). Gdy dwa zestawy jadą to samo, wygrywa tańszy (części, nie auto).
+- Osobno próbuje wszystkich opon paczki na każdej nawierzchni (najtańszy wrak, nic więcej nie zmienione, bez limitu tieru): to tabela z projektu („deszcz wymusza zmianę opon”).
+
+**Bramki.** Dwie kończą polecenie kodem 1, bo dotyczą spójności danych: (1) najlepsze opony na każdej nawierzchni to rodzaj z projektu (slick suchy asfalt, deszczowe mokry, terenowe żwir i błoto, zimowe śnieg), czyli deszcz zmienia zwycięzcę; (2) żadne auto, które wygrywa tor żwirowy, nie wygrywa toru asfaltowego, czyli teren wymusza inne auto. Trzecia to bramka M3 z roadmapy, „żaden build nie wygrywa więcej niż dwóch torów” (liczone na samochodach): kończy polecenie kodem 1 dopiero z `--strict`, bo zależy od tego, ile jest różnych aut.
+
+**Co pokazał pierwszy przebieg** (reguły `2026.10.0`, paczka z trzema autami):
+
+- Bramki spójności przechodzą. Na każdej nawierzchni wygrywa rodzaj z projektu: slick 51,4 s na suchym asfalcie (uliczne T2: 69,2 s), deszczowe 68,4 s na mokrym (78,2 s), terenowe 129,8 s na żwirze (186,9 s) i 142,7 s w błocie (233,8 s), zimowe 85,3 s na śniegu (180,9 s). Dobór opon to więc realna decyzja, a nie kosmetyka.
+- **Bramka M3 mówi „jeszcze nie”**: Bizon M-2 wygrywa cztery tory (Złomowo, Suchy Pas, Wilczą Przełęcz i Autodrom), Kuna 4x4 jeden (Kruszyn), Rdzaka nie wygrywa nic. Powód jest w danych, nie w liczbach: przyczepność, prowadzenie i hamowanie biorą się z opon i zawieszenia, a nie z auta, więc auto, które jest szybsze w przyspieszeniu i prędkości, wygrywa każdy tor asfaltowy. Różne auta na różne tory wymusi to, czego jeszcze nie ma: wpływ masy na prowadzenie, napęd (FWD, RWD, AWD z trakcją zależną od nawierzchni, Katalog aut) i szerszy katalog aut (dealer, giełda). Poza kodem sprawdziłem prototypem, że sama masa (prowadzenie i hamowanie razy (1000 kg / masa)^0,6) rozdaje tory tak, że Bizon i Rdzak wygrywają po dwa, a Kuna jeden, ale z przewagą poniżej 2%: to decyzja o balansie, którą trzeba podjąć świadomie, nie przy okazji.
 
 ## Ekonomia i symulator (`rules/economy.json`)
 
@@ -80,7 +137,7 @@ php artisan economy:simulate --strict              # kod 1 także, gdy liczba gr
 - Flota dla B to jedno auto (jeździ „tyle, ile ma paliwa”), a dla C taka sama jak dla A. Na tempo nie ma to wpływu, bo gotówka nie jest ograniczeniem, ale będzie miało, gdy to się zmieni.
 - Zakup następuje w dniu, w którym dochód i XP tego dnia wystarczają; pierwszy dzień liczy się w całości.
 - Okno offline L0 to 0,5 h, a limity godzin (14, 12, 18) są granicą doby, nie liczbą wizyt razy okno.
-- Tytuł „tempo” obejmuje tylko drabinę aut. Planowane przez projekt, a **jeszcze niezrobione**: druga bramka („żaden build nie wygrywa więcej niż dwóch torów”, wymaga torów i buildów, F2), regulatory z audytem i trybem cienia, wskaźniki zdrowia z telemetrii, `reward_mult` osobno dla klas D–X, `price_index_used`, tempo rzadkich części (cele projektowe bez modelu), rynek, kursy i turnieje (siedzą w mnożniku aktywności), VIP.
+- Tytuł „tempo” obejmuje tylko drabinę aut. Planowane przez projekt, a **jeszcze niezrobione**: bramka „żaden build nie wygrywa więcej niż dwóch torów” (jest w `tracks:simulate`, opis niżej: dziś odpowiedź brzmi „jeszcze nie”), regulatory z audytem i trybem cienia, wskaźniki zdrowia z telemetrii, `reward_mult` osobno dla klas D–X, `price_index_used`, tempo rzadkich części (cele projektowe bez modelu), rynek, kursy i turnieje (siedzą w mnożniku aktywności), VIP.
 
 ## Wersje i zmiany balansu
 
