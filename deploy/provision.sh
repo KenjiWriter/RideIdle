@@ -127,6 +127,22 @@ nginx_check_or_undo() {
     fail "nginx did not accept the configuration of the game. The files of the game were taken out of /etc/nginx again, so the other sites are as they were."
 }
 
+# The site of the game from an earlier run can be what nginx objects to, when its certificate was deleted, for example
+# (certbot delete). The script writes that site again, so it is taken out of sites-enabled, and it stays out only if nginx
+# accepts the rest. Only the link of the game is touched, and it is put back if nginx still fails without it.
+own_site_blocks_nginx() {
+    local link=/etc/nginx/sites-enabled/rideidle.conf target
+    [[ -L "$link" ]] || return 1
+    target="$(readlink "$link")"
+    rm -f "$link"
+    if nginx -t >/dev/null 2>&1; then
+        note "The site of the game from an earlier run did not work (a certificate missing?). It is written again below."
+        return 0
+    fi
+    ln -sf "$target" "$link"
+    return 1
+}
+
 # A folder whose new files belong to its group, which is what the web server and the user that deploys share.
 make_folder() {
     local mode="$1" owner="$2" group="$3"
@@ -176,7 +192,9 @@ check_shared() {
     fi
 
     # What is there must work now: the game must not be blamed for a configuration that is broken already.
-    nginx -t >/dev/null 2>&1 || fail "nginx does not accept its configuration as it is (nginx -t). Fix that first. Nothing was changed."
+    if ! nginx -t >/dev/null 2>&1; then
+        own_site_blocks_nginx || fail "nginx does not accept its configuration as it is (nginx -t). Fix that first. Nothing was changed."
+    fi
 
     # No other site may answer for this domain.
     clash="$(grep -rlE --exclude=rideidle.conf --exclude=rideidle-global.conf "server_name[^;]*[[:space:]]${DOMAIN//./\\.}[[:space:];]" /etc/nginx 2>/dev/null || true)"

@@ -272,6 +272,7 @@ Sprawdzone:
 |---|---|
 | `provision.sh` zatrzymuje się na DNS | rekord A jeszcze się nie rozszedł albo wskazuje inny adres; poczekaj (`nslookup`) |
 | certbot odmawia | port 80 zamknięty u dostawcy serwera, błędny rekord AAAA, albo limit Let's Encrypt (użyj `CERTBOT_STAGING=1`) |
+| `nginx -t` nie przechodzi po `certbot delete` | strona gry nadal wskazuje na skasowany certyfikat; `provision.sh` sam wyłącza tę stronę i zapisuje ją od nowa. Ręcznie: `sudo rm /etc/nginx/sites-enabled/rideidle.conf && sudo nginx -t`. Certyfikatu nie kasuj ręcznie: test zastępuje się prawdziwym w miejscu (uruchom bez `CERTBOT_STAGING=1`) |
 | `composer` lub `npm` kończy się „Killed” | brak pamięci; sprawdź `swapon --show`, rozważ większy serwer |
 | 502 Bad Gateway | `systemctl status php8.4-fpm`, `/var/log/nginx/rideidle.error.log` |
 | wydanie „is not well”, poprzednie wraca | `.../shared/storage/logs/`, błąd nginx, `.env` (np. hasło bazy); nieudane wydanie zostało w `releases/` |
