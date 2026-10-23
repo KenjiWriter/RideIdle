@@ -60,11 +60,11 @@
           "pt-BR": "Primeira volta concluída. Mandei $200 para você."
         },
         {
-          "pl": "Pieniądze i XP wpadają same, nawet gdy Cię nie ma. Zapisz kod odzyskiwania, jeśli chcesz zachować garaż. — K.",
-          "en": "Cash and XP arrive on their own, even when you’re away. Save your recovery code if you want to keep the garage. — K.",
-          "fr": "L’argent et l’XP arrivent tout seuls, même quand tu es absent. Note ton code de récupération si tu veux garder le garage. — K.",
-          "de": "Geld und XP kommen von allein, auch wenn du weg bist. Sichere deinen Wiederherstellungscode, wenn du die Garage behalten willst. — K.",
-          "pt-BR": "Dinheiro e XP chegam sozinhos, mesmo quando você não está. Guarde o código de recuperação se quiser manter a garagem. — K."
+          "pl": "Gotówka i XP wpadają same, a auto awansuje z każdym okrążeniem. Dorzuciłem mu trochę XP. Zapisz kod odzyskiwania, jeśli chcesz zachować garaż. — K.",
+          "en": "Cash and XP arrive on their own, and the car levels up with every lap. I added a little XP for it. Save your recovery code if you want to keep the garage. — K.",
+          "fr": "L’argent et l’XP arrivent tout seuls, et la voiture monte en niveau à chaque tour. Je lui ai ajouté un peu d’XP. Note ton code de récupération si tu veux garder le garage. — K.",
+          "de": "Geld und XP kommen von allein, und das Auto steigt mit jeder Runde auf. Ich habe ihm etwas XP draufgelegt. Sichere deinen Wiederherstellungscode, wenn du die Garage behalten willst. — K.",
+          "pt-BR": "Dinheiro e XP chegam sozinhos, e o carro sobe de nível a cada volta. Dei um pouco de XP a ele. Guarde o código de recuperação se quiser manter a garagem. — K."
         }
       ],
       "reply": {
@@ -74,7 +74,7 @@
         "de": "OK, verstanden",
         "pt-BR": "OK, entendi"
       },
-      "reward": {}
+      "reward": { "car_xp": 100 }
     },
     {
       "key": "refuel",

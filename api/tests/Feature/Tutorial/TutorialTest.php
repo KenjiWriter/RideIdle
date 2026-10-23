@@ -100,7 +100,7 @@ describe('the tutorial', function () {
             ->assertJsonPath('data.done', 2)
             ->assertJsonPath('data.current.key', 'rewards')
             ->assertJsonPath('data.current.target', 'cash')
-            ->assertJsonPath('data.rewarded', [['key' => 'first-lap', 'cash_cents' => 20_000]]);
+            ->assertJsonPath('data.rewarded', [['key' => 'first-lap', 'cash_cents' => 20_000, 'car_xp' => 0]]);
 
         expect(driverCash($driver))->toBe(1_550 + 20_000)
             ->and($run->refresh()->laps_done)->toBe(1);
@@ -141,7 +141,42 @@ describe('the tutorial', function () {
         replyToTutorial($driver)->assertOk()
             ->assertJsonPath('data.done', 3)
             ->assertJsonPath('data.current', null)
-            ->assertJsonPath('data.rewarded', []);
+            ->assertJsonPath('data.rewarded', [['key' => 'rewards', 'cash_cents' => 0, 'car_xp' => 100]]);
+    });
+
+    it('gives the experience of the step to the car of the driver, and it can level the car', function () {
+        [$driver, $run] = driverWithRun();
+        tutorialBefore($driver, 'rewards');
+        TutorialProgress::factory()->create(['user_id' => $driver->id, 'step_key' => 'rewards']);
+        // A hundred XP short of level 4, so that the 100 of the step is what makes it.
+        $run->car->update(['xp' => 1_100]);
+
+        replyToTutorial($driver)->assertOk();
+
+        $car = $run->car->refresh();
+        expect($car->xp)->toBe(1_200)
+            ->and($car->level)->toBe(4);
+    });
+
+    it('does not give the experience twice for a step that is done', function () {
+        [$driver, $run] = driverWithRun();
+        tutorialBefore($driver, 'rewards');
+        TutorialProgress::factory()->create(['user_id' => $driver->id, 'step_key' => 'rewards']);
+
+        replyToTutorial($driver)->assertOk();
+        replyToTutorial($driver)->assertOk()->assertJsonPath('data.rewarded', []);
+        getTutorial($driver)->assertOk()->assertJsonPath('data.rewarded', []);
+
+        expect($run->car->refresh()->xp)->toBe(700);
+    });
+
+    it('pays nothing in experience to a driver who has no car, and still ends the step', function () {
+        $driver = User::factory()->guest()->create();
+        tutorialBefore($driver, 'rewards');
+        TutorialProgress::factory()->create(['user_id' => $driver->id, 'step_key' => 'rewards']);
+
+        // The step before it needs a run to have been done, which it was by the setup above: here only the answer counts.
+        replyToTutorial($driver)->assertOk()->assertJsonPath('data.rewarded', []);
     });
 
     it('sends a message about the tank when it is under a quarter full, and pays the tank when it is filled again', function () {
@@ -159,7 +194,7 @@ describe('the tutorial', function () {
 
         getTutorial($driver)->assertOk()
             ->assertJsonPath('data.done', 4)
-            ->assertJsonPath('data.rewarded', [['key' => 'refuel', 'cash_cents' => 9_000]])
+            ->assertJsonPath('data.rewarded', [['key' => 'refuel', 'cash_cents' => 9_000, 'car_xp' => 0]])
             ->assertJsonPath('data.current', null);
     });
 
@@ -195,7 +230,7 @@ describe('the tutorial', function () {
             ->assertJsonPath('data.status', 'finished')
             ->assertJsonPath('data.done', 5)
             ->assertJsonPath('data.current', null)
-            ->assertJsonPath('data.rewarded', [['key' => 'repair', 'cash_cents' => 3_000]]);
+            ->assertJsonPath('data.rewarded', [['key' => 'repair', 'cash_cents' => 3_000, 'car_xp' => 0]]);
 
         // The repair cost $30 and the step gave it back.
         expect(driverCash($driver))->toBe(10_000);

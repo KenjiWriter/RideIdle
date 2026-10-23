@@ -38,6 +38,8 @@ final class Tutorial
         private readonly Workshop $workshop,
         private readonly RunInputsFactory $inputs,
         private readonly Ledger $ledger,
+        private readonly Garage $garage,
+        private readonly CarProgress $progress,
     ) {}
 
     /** Brings the tutorial of the driver up to date, which settles the run first, and tells where it stands. */
@@ -144,10 +146,20 @@ final class Tutorial
             $row->update(['state' => TutorialProgress::STATE_DONE, 'completed_at' => now()]);
 
             $cents = (int) ($step['reward']['cash_cents'] ?? 0);
+            $carXp = (int) ($step['reward']['car_xp'] ?? 0);
 
             if ($cents > 0) {
                 $this->ledger->post($userId, $cents, 'tutorial', "tutorial:{$userId}:{$step['key']}");
-                $rewarded[] = ['key' => $step['key'], 'cash_cents' => $cents];
+            }
+
+            // The experience goes to the car the driver has: with no car there is nothing to give it to.
+            if ($carXp > 0) {
+                $car = $this->garage->carOf($userId);
+                $carXp = $car === null ? 0 : ($this->progress->award($car->id, $carXp) === null ? 0 : $carXp);
+            }
+
+            if ($cents > 0 || $carXp > 0) {
+                $rewarded[] = ['key' => $step['key'], 'cash_cents' => $cents, 'car_xp' => $carXp];
             }
         }
 
@@ -155,7 +167,7 @@ final class Tutorial
     }
 
     /**
-     * @param  list<array{key: string, cash_cents: int}>  $rewarded
+     * @param  list<array{key: string, cash_cents: int, car_xp: int}>  $rewarded
      */
     private function state(int $userId, array $rewarded): TutorialState
     {

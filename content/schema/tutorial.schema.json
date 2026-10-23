@@ -32,7 +32,10 @@
           "reply": { "description": "The words of the button that answers the messages.", "$ref": "common.schema.json#/$defs/i18n" },
           "reward": {
             "type": "object",
-            "properties": { "cash_cents": { "type": "integer", "minimum": 1 } },
+            "properties": {
+              "cash_cents": { "type": "integer", "minimum": 1 },
+              "car_xp": { "description": "Experience for the car of the driver, which can level it.", "type": "integer", "minimum": 1 }
+            },
             "additionalProperties": false
           }
         },
