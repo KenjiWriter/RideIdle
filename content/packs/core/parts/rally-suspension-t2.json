@@ -1,0 +1,14 @@
+{
+  "slug": "rally-suspension-t2",
+  "name": {
+    "en": "Rally suspension",
+    "pl": "Zawieszenie rajdowe",
+    "fr": "Suspension rallye",
+    "de": "Rallyefahrwerk",
+    "pt-BR": "Suspensão de rali"
+  },
+  "slot": "suspension",
+  "tier": 2,
+  "price_cents": 95000,
+  "stats": { "handling": 90, "clearance": 110 }
+}

@@ -1,0 +1,15 @@
+{
+  "slug": "all-season-tires-t1",
+  "name": {
+    "en": "All-season tires",
+    "pl": "Opony całoroczne",
+    "fr": "Pneus toutes saisons",
+    "de": "Ganzjahresreifen",
+    "pt-BR": "Pneus para todas as estações"
+  },
+  "slot": "tires",
+  "tire_kind": "all_season",
+  "tier": 1,
+  "price_cents": 45000,
+  "stats": { "grip": 85, "handling": 83, "braking": 85 }
+}

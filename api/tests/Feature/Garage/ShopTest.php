@@ -44,7 +44,7 @@ describe('the shop', function () {
 
         $parts = collect($response->json('data.parts'))->keyBy('slug');
 
-        expect($parts->keys()->all())->toBe(['street-tires-t2', 'sport-suspension-t1', 'disc-brakes-t2', 'sport-exhaust-t2'])
+        expect($parts->keys()->all())->toBe(['street-tires-t2', 'all-season-tires-t1', 'offroad-tires-t2', 'rain-tires-t3', 'winter-tires-t3', 'sport-suspension-t1', 'rally-suspension-t2', 'disc-brakes-t2', 'sport-exhaust-t2'])
             ->and($parts['sport-exhaust-t2'])->toMatchArray([
                 'name' => 'Wydech sportowy',
                 'slot' => 'exhaust',
@@ -160,7 +160,7 @@ describe('buying a part', function () {
             ->assertJsonPath('message', 'This part is not for sale.');
 
         expect(Part::query()->count())->toBe(0)->and((new Ledger)->balance($driver->id))->toBe(1_000_000);
-    })->with(['in the pack but not in the shop' => 'rain-tires-t3', 'not in the pack' => 'golden-wheels']);
+    })->with(['in the pack but not in the shop' => 'slick-tires-t7', 'not in the pack' => 'golden-wheels']);
 
     it('answers in the language of the driver', function () {
         $driver = driverWithMoney(0);

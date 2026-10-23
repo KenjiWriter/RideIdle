@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
+use App\Domain\Economy\EconomyRules;
 use App\Domain\Run\Surface;
 use App\Support\Locale;
 use Opis\JsonSchema\Errors\ErrorFormatter;
@@ -240,9 +241,10 @@ it('starts a new car at the experience of its level, so that its first lap is th
     expect($rules->carLevelAt($rules->carXpToReach($rules->carStartLevel())))->toBe($rules->carStartLevel());
 });
 
-it('sells only parts of the core pack that a new car can mount', function () {
+it('sells only parts of the core pack, none of them more than one tier above what a new car can mount', function () {
     $rules = starterRules();
-    $maxTier = Rules::fromArray($rules)->maxMountableTier($rules['car']['start_level']);
+    // The shop says what a car needs for a part it cannot mount yet, so the next tier is something to aim for, and nothing is out of sight.
+    $maxTier = Rules::fromArray($rules)->maxMountableTier($rules['car']['start_level']) + 1;
     $problems = [];
 
     foreach ($rules['shop']['parts'] as $slug) {
@@ -257,7 +259,7 @@ it('sells only parts of the core pack that a new car can mount', function () {
         $part = json_decode((string) file_get_contents($path), true);
 
         if ($part['tier'] > $maxTier) {
-            $problems[] = "{$slug} is tier {$part['tier']}, and a new car mounts up to tier {$maxTier}";
+            $problems[] = "{$slug} is tier {$part['tier']}, and the shop sells up to tier {$maxTier}";
         }
     }
 
@@ -340,6 +342,86 @@ it('lets every tire of the pack use a kind that the matrix has, and every weathe
     foreach ($rules['weather'] as $weather => $effect) {
         if (! in_array($effect['ground'], ['dry', 'wet', 'snow'], true)) {
             $problems[] = "{$weather}: unknown ground {$effect['ground']}";
+        }
+    }
+
+    expect($problems)->toBe([]);
+});
+
+it('opens the starting track at level 1, the others from a level above it, and gives each a surface and a region', function () {
+    $rules = starterRules();
+    $first = array_key_first($rules['tracks']);
+
+    expect($rules['tracks'][$first]['min_player_level'])->toBe(1);
+
+    foreach ($rules['tracks'] as $slug => $track) {
+        if ($slug !== $first) {
+            expect($track['min_player_level'])->toBeGreaterThan(1, $slug);
+        }
+
+        expect($track['surface'])->toBeIn(['asphalt', 'gravel'], $slug)
+            ->and($rules['regions'])->toHaveKey($track['region']);
+    }
+});
+
+it('puts a track on every surface a weather of its region can make of it', function () {
+    $rules = Rules::fromArray(starterRules());
+    $problems = [];
+
+    foreach ($rules->tracks() as $slug => $track) {
+        foreach (array_keys($rules->region($track['region'])['weather_ppm']) as $weather) {
+            try {
+                $surface = Surface::of($track['surface'], $rules->weather()[$weather]['ground']);
+
+                foreach ($rules->tireKinds() as $kind) {
+                    $rules->tireGripPpm($kind, $surface);
+                }
+            } catch (InvalidArgumentException $exception) {
+                $problems[] = "{$slug}: {$exception->getMessage()}";
+            }
+        }
+    }
+
+    expect($problems)->toBe([]);
+});
+
+it('draws the level of a driver by the curve of the economy ruleset, which the web draws too', function () {
+    $rules = Rules::fromArray(starterRules());
+    $economy = EconomyRules::fromArray(economyData());
+
+    foreach (range(2, 30) as $level) {
+        expect($rules->playerXpToReach($level))->toBe((int) round($economy->xpToReach($level)));
+    }
+
+    // Level 2 starts at 222 XP, as the bar of the HUD says.
+    expect($rules->playerXpToReach(1))->toBe(0)
+        ->and($rules->playerXpToReach(2))->toBe(222)
+        ->and($rules->playerLevelAt(0))->toBe(1)
+        ->and($rules->playerLevelAt(221))->toBe(1)
+        ->and($rules->playerLevelAt(222))->toBe(2)
+        ->and($rules->playerLevelAt(PHP_INT_MAX))->toBe(30);
+});
+
+it('lets a driver of the level of a track have the parts of its tier in the pack, so that the track can be driven well', function () {
+    $rules = Rules::fromArray(starterRules());
+    $problems = [];
+
+    foreach ($rules->tracks() as $slug => $track) {
+        // A car is thought of as the level of the track, but never lower than the level a new car starts with.
+        $tier = $rules->maxMountableTier(max($track['min_player_level'], $rules->carStartLevel()));
+        $surface = Surface::of($track['surface'], 'dry');
+        $tires = [];
+
+        foreach (glob(config('ride.content_path').'/packs/core/parts/*.json') as $file) {
+            $part = json_decode((string) file_get_contents($file), true);
+
+            if ($part['slot'] === 'tires' && $part['tier'] <= $tier) {
+                $tires[] = $part['tire_kind'];
+            }
+        }
+
+        if (! in_array($surface === Surface::GRAVEL_DRY ? 'offroad' : 'street', $tires, true)) {
+            $problems[] = "{$slug}: no tires of the right kind up to tier {$tier}";
         }
     }
 

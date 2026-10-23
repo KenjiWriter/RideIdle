@@ -1,0 +1,15 @@
+{
+  "slug": "winter-tires-t3",
+  "name": {
+    "en": "Winter tires",
+    "pl": "Opony zimowe",
+    "fr": "Pneus hiver",
+    "de": "Winterreifen",
+    "pt-BR": "Pneus de inverno"
+  },
+  "slot": "tires",
+  "tire_kind": "winter",
+  "tier": 3,
+  "price_cents": 75000,
+  "stats": { "grip": 100, "handling": 98, "braking": 100 }
+}

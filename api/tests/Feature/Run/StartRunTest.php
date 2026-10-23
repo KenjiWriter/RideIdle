@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Content\Rules;
 use App\Models\RaceRun;
 use App\Models\User;
+use App\Services\Ledger;
+use Illuminate\Testing\TestResponse;
 
-function startRun(User $driver, array $body = ['car' => 'rdzak-gt-4', 'track' => 'zlomowo-street'], array $headers = []): Illuminate\Testing\TestResponse
+function startRun(User $driver, array $body = ['car' => 'rdzak-gt-4', 'track' => 'zlomowo-street'], array $headers = []): TestResponse
 {
     return test()->postJson('/api/v1/runs', $body, [...bearerFor($driver), ...$headers]);
 }
@@ -110,4 +113,39 @@ it('lets two drivers start their own runs', function () {
 
     expect($first)->not->toBe($second)
         ->and(RaceRun::query()->count())->toBe(2);
+});
+
+describe('the level of the driver and the tracks', function () {
+    it('refuses a track that the level of the driver does not open, and says what it takes and how to get it', function () {
+        $driver = User::factory()->guest()->create();
+
+        startRun($driver, ['car' => 'rdzak-gt-4', 'track' => 'autodrom-circuit'], ['X-Locale' => 'pl'])
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'track_locked')
+            ->assertJsonPath('message', 'Wymaga poziomu gracza 12 (masz 1). Zdobywasz XP, jeżdżąc.');
+
+        expect(RaceRun::query()->count())->toBe(0);
+    });
+
+    it('opens a track from the level that it asks for, and not one level before', function () {
+        $rules = app(Rules::class);
+        $before = User::factory()->guest()->create();
+        $enough = User::factory()->guest()->create();
+
+        // Kruszyn is open from level 3, which takes xp_base * 3 ^ xp_exponent experience.
+        (new Ledger)->ensureWallet($before->id);
+        (new Ledger)->grantXp($before->id, $rules->playerXpToReach(3) - 1);
+        (new Ledger)->ensureWallet($enough->id);
+        (new Ledger)->grantXp($enough->id, $rules->playerXpToReach(3));
+
+        startRun($before, ['car' => 'kuna-4x4', 'track' => 'kruszyn-quarry'])
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'track_locked')
+            ->assertJsonPath('details', ['required' => 3, 'current' => 2]);
+
+        startRun($enough, ['car' => 'kuna-4x4', 'track' => 'kruszyn-quarry'])
+            ->assertCreated()
+            ->assertJsonPath('data.track.slug', 'kruszyn-quarry')
+            ->assertJsonPath('data.lap.fuel_ml', 1_900);
+    });
 });

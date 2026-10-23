@@ -8,6 +8,7 @@ return [
         'no_run' => 'You have no car on the track yet.',
         'player_level_required' => 'Requires player level :required (you have :current).',
         'car_level_required' => 'Requires car level :required (you have :current). You get XP by driving this car.',
+        'track_locked' => 'Requires player level :required (you are level :current). You get XP by driving.',
         'workshop_level_required' => 'Requires workshop level :required.',
         'car_locked' => 'This car is locked in a tournament and cannot be changed.',
         'part_not_for_sale' => 'This part is not for sale.',

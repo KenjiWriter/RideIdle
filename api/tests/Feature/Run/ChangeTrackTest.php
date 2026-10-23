@@ -7,6 +7,7 @@ use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Testing\TestResponse;
 
 /** The shipped rules have one track, so a test adds a longer one in the same region: a base lap of 90 s and $20.00. */
 function rulesWithLongTrack(): void
@@ -25,7 +26,7 @@ function rulesWithLongTrack(): void
     app()->instance(Rules::class, Rules::fromArray($data));
 }
 
-function changeTrack(User $driver, RaceRun $run, array $body = ['track' => 'zlomowo-long'], array $headers = []): Illuminate\Testing\TestResponse
+function changeTrack(User $driver, RaceRun $run, array $body = ['track' => 'zlomowo-long'], array $headers = []): TestResponse
 {
     return test()->patchJson("/api/v1/runs/{$run->id}", $body, [...bearerFor($driver), ...$headers]);
 }
@@ -119,4 +120,18 @@ it('does not know the run of another driver', function () {
     changeTrack($other, $run, ['track' => 'zlomowo-street'])->assertNotFound()->assertJsonPath('code', 'no_run');
 
     expect($run->fresh()->state_version)->toBe(0);
+});
+
+it('does not take the car to a track that the level of the driver does not open', function () {
+    [$driver, $run] = driverWithRun(['fuel_ml' => 45_000]);
+    clockAt(1_000_000);
+
+    changeTrack($driver, $run, ['track' => 'wilcza-przelecz-switchbacks'], ['X-Locale' => 'en'])
+        ->assertStatus(422)
+        ->assertJsonPath('code', 'track_locked')
+        ->assertJsonPath('message', 'Requires player level 8 (you are level 1). You get XP by driving.')
+        ->assertJsonPath('details', ['required' => 8, 'current' => 1]);
+
+    // Nothing was settled or changed: the car drives where it was.
+    expect($run->fresh()->track_slug)->toBe('zlomowo-street')->and($run->fresh()->state_version)->toBe(0);
 });

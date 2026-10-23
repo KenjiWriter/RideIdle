@@ -222,3 +222,47 @@ describe('the tires and the surface', function () {
         }
     });
 });
+
+describe('the tracks of the world', function () {
+    /** @param  array<string, string>  $mounted */
+    function lapsOn(string $track, string $car, array $mounted = []): array
+    {
+        return (new RunFreezer)->freeze(runInputsFactory()->make($car, $track, $mounted), 'seed', 0)->config['lap_ms'];
+    }
+
+    // The reference of a track is the stats of the build it is made for, so that build runs the base lap (within the rounding of the numbers).
+    it('lets the build that a track is made for drive its base lap', function (string $track, string $car, array $mounted, int $baseLapMs) {
+        expect(lapsOn($track, $car, $mounted)['dry'])->toBeBetween((int) ($baseLapMs * 0.985), (int) ($baseLapMs * 1.015));
+    })->with([
+        'a 4x4 on off-road tires in the quarry' => ['kruszyn-quarry', 'kuna-4x4', ['tires' => 'offroad-tires-t2'], 95_000],
+        'a muscle car on the drag strip' => ['suchy-pas-drag', 'bizon-m-2', [], 45_000],
+        'a light hatchback with sport suspension on the switchbacks' => ['wilcza-przelecz-switchbacks', 'rdzak-gt-4', ['tires' => 'street-tires-t2', 'suspension' => 'sport-suspension-t1'], 85_000],
+        'a muscle car with the brakes and the suspension on the circuit' => ['autodrom-circuit', 'bizon-m-2', ['tires' => 'street-tires-t2', 'suspension' => 'sport-suspension-t1', 'brakes' => 'disc-brakes-t2'], 80_000],
+    ]);
+
+    it('makes gravel a different track for the cars and the tires', function () {
+        $quarry = lapsOn('kruszyn-quarry', 'kuna-4x4', ['tires' => 'offroad-tires-t2']);
+        $onStreetTires = lapsOn('kruszyn-quarry', 'kuna-4x4');
+        $hatchback = lapsOn('kruszyn-quarry', 'rdzak-gt-4');
+
+        // Street tires slip on gravel, and a hatchback has no clearance for it: more than twice the lap of the 4x4 that was made for it.
+        expect($onStreetTires['dry'])->toBeGreaterThan($quarry['dry'] * 1.3)
+            ->and($hatchback['dry'])->toBeGreaterThan($quarry['dry'] * 2)
+            // Rain turns gravel into mud, where the off-road tires lose less than the street tires do.
+            ->and($quarry['rain'] / $quarry['dry'])->toBeLessThan($onStreetTires['rain'] / $onStreetTires['dry']);
+    });
+
+    it('draws the snow of a mountain region, where winter tires are the ones that grip', function () {
+        $stock = lapsOn('wilcza-przelecz-switchbacks', 'rdzak-gt-4');
+        $winter = lapsOn('wilcza-przelecz-switchbacks', 'rdzak-gt-4', ['tires' => 'winter-tires-t3']);
+
+        expect($stock)->toHaveKey('snow')
+            ->and($winter['snow'])->toBeLessThan($stock['snow'])
+            ->and(runInputsFactory()->make('rdzak-gt-4', 'wilcza-przelecz-switchbacks')->weatherChancesPpm['snow'])->toBe(50_000);
+    });
+
+    it('freezes a lap for every weather of the region, and no weather that the region does not have', function () {
+        expect(array_keys(lapsOn('suchy-pas-drag', 'bizon-m-2')))->toBe(['dry', 'cloudy', 'rain', 'fog'])
+            ->and(array_keys(lapsOn('autodrom-circuit', 'bizon-m-2')))->toBe(['dry', 'cloudy', 'rain', 'downpour']);
+    });
+});

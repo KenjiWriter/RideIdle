@@ -1,0 +1,15 @@
+{
+  "slug": "slick-tires-t7",
+  "name": {
+    "en": "Slick tires",
+    "pl": "Opony slick",
+    "fr": "Pneus slicks",
+    "de": "Slick-Reifen",
+    "pt-BR": "Pneus slick"
+  },
+  "slot": "tires",
+  "tire_kind": "slick",
+  "tier": 7,
+  "price_cents": 300000,
+  "stats": { "grip": 145, "handling": 143, "braking": 145 }
+}

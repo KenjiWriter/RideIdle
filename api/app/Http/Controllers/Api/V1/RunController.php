@@ -7,12 +7,14 @@ namespace App\Http\Controllers\Api\V1;
 use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
+use App\Exceptions\RuleRefusedException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RunResource;
 use App\Http\Resources\SettlementResource;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\Wallet;
+use App\Services\Ledger;
 use App\Services\RunService;
 use App\Services\TowTerms;
 use App\Services\Workshop;
@@ -37,6 +39,7 @@ final class RunController extends Controller
         private readonly Rules $rules,
         private readonly RunInputsFactory $inputs,
         private readonly Workshop $workshop,
+        private readonly Ledger $ledger,
     ) {}
 
     /** Starts the run of the driver: one of the starter wrecks on a track, with a full tank. */
@@ -46,6 +49,8 @@ final class RunController extends Controller
             'car' => ['required', 'string', Rule::in(array_keys($this->catalog->startingVehicles()))],
             'track' => ['required', 'string', Rule::in(array_keys($this->rules->tracks()))],
         ]);
+
+        $this->assertTrackOpen((int) $request->user()->getAuthIdentifier(), $data['track']);
 
         $run = $this->runs->startFirstRun(
             (int) $request->user()->getAuthIdentifier(),
@@ -105,6 +110,8 @@ final class RunController extends Controller
         $data = $request->validate([
             'track' => ['required', 'string', Rule::in(array_keys($this->rules->tracks()))],
         ]);
+
+        $this->assertTrackOpen((int) $request->user()->getAuthIdentifier(), $data['track']);
 
         $changed = $this->runs->reconfigure($found->id, $this->inputs->make($found->car_slug, $data['track'], $this->mountedOn($found)), trackSlug: $data['track']);
 
@@ -231,6 +238,20 @@ final class RunController extends Controller
                 'stop_reason' => $settlements->pluck('stop_reason')->filter()->last(),
             ],
         ]);
+    }
+
+    /**
+     * A track is open to a driver whose level reaches it. The refusal says what level it takes and which one the driver is, so
+     * that a locked track always shows the reason and the way to it: the level comes from the XP that laps pay.
+     */
+    private function assertTrackOpen(int $userId, string $track): void
+    {
+        $required = $this->rules->trackMinPlayerLevel($track);
+        $current = $this->rules->playerLevelAt($this->ledger->xp($userId));
+
+        if ($current < $required) {
+            throw new RuleRefusedException('track_locked', ['required' => $required, 'current' => $current]);
+        }
     }
 
     private function noRun(): JsonResponse

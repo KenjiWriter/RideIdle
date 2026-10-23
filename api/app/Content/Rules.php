@@ -122,6 +122,40 @@ final class Rules
         return array_map('floatval', $this->data['car']['stat_ceiling']);
     }
 
+    /**
+     * The experience that reaches a level of the driver: xp_base * level ^ xp_exponent, to the whole. Level 1 is the start, at
+     * nothing. The web draws the same curve for the bar of the HUD, and the economy simulator has its own copy of the numbers;
+     * a test keeps the three together.
+     */
+    public function playerXpToReach(int $level): int
+    {
+        if ($level <= 1) {
+            return 0;
+        }
+
+        $player = $this->data['player'];
+
+        return (int) round($player['xp_base'] * $level ** $player['xp_exponent']);
+    }
+
+    /** The level that this much experience gives a driver, never above the highest. */
+    public function playerLevelAt(int $xp): int
+    {
+        $level = 1;
+
+        while ($level < $this->data['player']['max_level'] && $this->playerXpToReach($level + 1) <= $xp) {
+            $level++;
+        }
+
+        return $level;
+    }
+
+    /** The level of the driver from which a track is open. */
+    public function trackMinPlayerLevel(string $slug): int
+    {
+        return $this->data['tracks'][$slug]['min_player_level'] ?? throw new \InvalidArgumentException("Unknown track {$slug}.");
+    }
+
     /** The highest tier of a part that a car of this level can have mounted: 1 + floor(level / levels per tier). */
     public function maxMountableTier(int $carLevel): int
     {

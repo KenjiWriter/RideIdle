@@ -107,6 +107,12 @@ final class Ledger
         return (int) (Wallet::query()->whereKey($userId)->value('cash_cents') ?? 0);
     }
 
+    /** The experience of the driver: it gives the level that opens the tracks. */
+    public function xp(int $userId): int
+    {
+        return (int) (Wallet::query()->whereKey($userId)->value('xp') ?? 0);
+    }
+
     /** The balance equals the sum of the ledger and the last entry agrees with it. */
     public function isConsistent(int $userId): bool
     {

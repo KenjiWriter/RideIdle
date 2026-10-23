@@ -8,6 +8,7 @@ return [
         'no_run' => 'Nie masz jeszcze auta na torze.',
         'player_level_required' => 'Wymaga poziomu gracza :required (masz :current).',
         'car_level_required' => 'Wymaga poziomu auta :required (masz :current). Zdobywasz XP, jeżdżąc tym autem.',
+        'track_locked' => 'Wymaga poziomu gracza :required (masz :current). Zdobywasz XP, jeżdżąc.',
         'workshop_level_required' => 'Wymaga poziomu warsztatu :required.',
         'car_locked' => 'To auto jest zablokowane w turnieju i nie można go zmieniać.',
         'part_not_for_sale' => 'Tej części nie ma w sprzedaży.',

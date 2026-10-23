@@ -8,6 +8,7 @@ return [
         'no_run' => 'Você ainda não tem um carro na pista.',
         'player_level_required' => 'Requer nível de jogador :required (você tem :current).',
         'car_level_required' => 'Requer nível do carro :required (você tem :current). Você ganha XP dirigindo este carro.',
+        'track_locked' => 'Requer nível de jogador :required (você está no nível :current). Você ganha XP dirigindo.',
         'workshop_level_required' => 'Requer nível da oficina :required.',
         'car_locked' => 'Este carro está bloqueado em um torneio e não pode ser alterado.',
         'part_not_for_sale' => 'Esta peça não está à venda.',
