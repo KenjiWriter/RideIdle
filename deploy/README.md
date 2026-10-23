@@ -32,7 +32,7 @@ PostgreSQL (baza)   Redis (tylko liczniki limitów)   rideidle-queue (systemd, w
 
 ## Czego potrzebujesz
 
-- Serwer z Ubuntu 22.04 lub 24.04, **najlepiej 2 GB pamięci i 20 GB dysku** (mniej pamięci: skrypt dokłada 2 GB swapu, bo budowanie aplikacji web jej potrzebuje), publiczny adres IPv4, dostęp przez SSH jako root kluczem.
+- Serwer z Ubuntu 22.04 lub 24.04, **najlepiej 2 GB pamięci i 20 GB dysku** (mniej pamięci: skrypt dokłada 2 GB swapu, bo budowanie aplikacji web jej potrzebuje), publiczny adres IPv4, dostęp przez SSH jako `root` albo jako użytkownik z `sudo` (np. `ubuntu` na VPS OVH). **Serwer ma być pusty** (patrz „Serwer, który już jest w użyciu”).
 - Dostęp do DNS domeny `cerasusdigital.pl`.
 - Na Twoim komputerze: `git` i `ssh` (Git Bash na Windowsie wystarczy; `rsync` nie jest potrzebny).
 - Dane SMTP, przez które pójdą maile z linkami (patrz „Poczta”).
@@ -53,21 +53,30 @@ Poczekaj, aż `nslookup idlerace.cerasusdigital.pl` pokaże adres serwera. `prov
 
 ## Krok 2. Przygotowanie serwera (raz)
 
-Z katalogu repozytorium, na Twoim komputerze:
+Pliki z `deploy/` muszą trafić na serwer. Są dwie drogi.
+
+**A. Z Twojego komputera** (Git Bash, z katalogu repozytorium; wymaga klucza SSH na komputerze):
 
 ```bash
-deploy/upload.sh bootstrap root@ADRES_SERWERA
+deploy/upload.sh bootstrap ubuntu@ADRES_SERWERA
 ```
 
-Skrypt wysyła folder `deploy/` do `/root/rideidle-deploy` i pokazuje, co dalej. Potem na serwerze:
+Skrypt wysyła zatwierdzony stan `deploy/` do `~/rideidle-deploy` i pokazuje, co dalej.
+
+**B. Przez git na serwerze** (gdy logujesz się innym narzędziem, np. MobaXterm). Zmiany muszą być wypchnięte do GitHuba, a repozytorium dostępne dla serwera (publiczne albo z kluczem):
 
 ```bash
-ssh root@ADRES_SERWERA
-cd /root/rideidle-deploy
-DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=twoj@adres.pl bash provision.sh
+git clone https://github.com/KenjiWriter/RideIdle.git ~/RideIdle
 ```
 
-`ADMIN_EMAIL` dostaje od Let's Encrypt ostrzeżenia o certyfikacie. Pozostałe ustawienia (zmienne środowiska przed `bash provision.sh`):
+W obu wypadkach potem, na serwerze (`sudo env` przekazuje zmienne; jako `root` pomiń `sudo`):
+
+```bash
+cd ~/rideidle-deploy   # albo: cd ~/RideIdle/deploy
+sudo env DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=twoj@adres.pl bash provision.sh
+```
+
+`ADMIN_EMAIL` dostaje od Let's Encrypt ostrzeżenia o certyfikacie. Pozostałe ustawienia (zmienne środowiska po `sudo env`, przed `bash provision.sh`):
 
 | Zmienna | Znaczenie |
 |---|---|
@@ -78,14 +87,21 @@ DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=twoj@adres.pl bash provision.sh
 | `DEPLOY_USER`, `APP_DIR`, `PHP_VERSION`, `NODE_MAJOR` | użytkownik wydań (`deploy`), folder gry, wersje |
 | `CERTBOT_STAGING=1` | testowy certyfikat, który nie zużywa limitów Let's Encrypt |
 | `SKIP_DNS_CHECK=1` | pomija sprawdzenie DNS (nie używaj bez powodu) |
+| `ALLOW_EXISTING=1` | idzie dalej mimo że na serwerze coś już działa (przeczytaj najpierw następną sekcję) |
 
 **Hasła nie wpisuj w poleceniu** (zostaje w historii powłoki): `MAIL_PASSWORD` uzupełnij w `.env` (krok 3). Wartości ze znakami `$`, `\`, `"`, `&` są zapisywane do `.env` poprawnie.
 
-Skrypt: sprawdza system i DNS, dodaje swap, instaluje PHP 8.4 (z PPA ondrej), Composera, Node 24, PostgreSQL, Redis (tylko na 127.0.0.1) i nginx, zakłada bazę i użytkownika, tworzy użytkownika `deploy` (z tym samym kluczem SSH co root) i foldery, generuje `.env` z nowym `APP_KEY` i hasłem bazy, dopisuje wąskie uprawnienia `sudo` dla `deploy`, instaluje kolejkę, harmonogram i kopie, zdobywa certyfikat (webroot, odnawiany sam; po odnowieniu nginx jest przeładowywany), a na końcu włącza zaporę `ufw` (SSH, 80, 443), `fail2ban` i automatyczne aktualizacje bezpieczeństwa. Na końcu wypisuje, co zostało do zrobienia.
+Skrypt: sprawdza system i DNS, dodaje swap, instaluje PHP 8.4 (z PPA ondrej), Composera, Node 24, PostgreSQL, Redis (tylko na 127.0.0.1) i nginx, zakłada bazę i użytkownika, tworzy użytkownika `deploy` (z kluczami SSH konta, z którego uruchomiłeś skrypt, albo roota) i foldery, generuje `.env` z nowym `APP_KEY` i hasłem bazy, dopisuje wąskie uprawnienia `sudo` dla `deploy`, instaluje kolejkę, harmonogram i kopie, zdobywa certyfikat (webroot, odnawiany sam; po odnowieniu nginx jest przeładowywany), a na końcu włącza zaporę `ufw` (SSH, 80, 443), `fail2ban` i automatyczne aktualizacje bezpieczeństwa. Na końcu wypisuje, co zostało do zrobienia.
 
 **Najpierw na próbę:** `CERTBOT_STAGING=1 DOMAIN=... bash provision.sh` daje certyfikat testowy, któremu przeglądarki nie ufają. Wtedy dopisz do `/etc/rideidle/deploy.env` linię `HEALTH_CURL_OPTS=-k`, żeby sprawdzenie po wydaniu go przyjęło. Gdy wszystko działa: `certbot delete --cert-name idlerace.cerasusdigital.pl` i `bash provision.sh` jeszcze raz, bez `CERTBOT_STAGING` (przy okazji `deploy.env` wraca do normalnego).
 
-SSH nie jest utwardzany (hasła nadal mogą działać), żeby skrypt nie mógł Cię zablokować. Gdy klucz działa dla `root` i `deploy`, wyłącz logowanie hasłem sam (`PasswordAuthentication no` w `/etc/ssh/sshd_config.d/`).
+SSH nie jest utwardzany (hasła nadal mogą działać), żeby skrypt nie mógł Cię zablokować. Gdy klucz działa dla `deploy`, wyłącz logowanie hasłem sam (`PasswordAuthentication no` w `/etc/ssh/sshd_config.d/`).
+
+### Serwer, który już jest w użyciu
+
+`provision.sh` jest napisany dla serwera, na którym nie ma nic innego, bo zmienia go **dla wszystkiego, co na nim działa**: zajmuje porty 80 i 443, usuwa domyślną stronę nginx, włącza zaporę `ufw` z blokadą ruchu przychodzącego (poza SSH, 80 i 443), ustawia PHP 8.4 jako domyślne PHP w systemie (`update-alternatives`), przepisuje ustawienia Redisa (`bind`, `protected-mode`) i restartuje go, nadpisuje `/etc/apt/apt.conf.d/20auto-upgrades`, dodaje PPA ondrej/php i włącza `fail2ban`.
+
+Dlatego skrypt zatrzymuje się, zanim cokolwiek zmieni, gdy widzi, że serwer jest w użyciu: coś innego niż nginx słucha na 80 lub 443, działa Apache, nginx obsługuje już inną stronę, działają kontenery Docker albo w `/var/www` jest folder innej aplikacji. Wypisuje, co znalazł. Jeśli to nie pomyłka, wybierz serwer tylko dla gry. `ALLOW_EXISTING=1` jest dla kogoś, kto przeczytał listę powyżej i wie, że nic z tego nie zepsuje innych usług; wtedy i tak zrób najpierw kopię (`/etc/nginx`, `/etc/redis`, `ufw status verbose`).
 
 ## Krok 3. Uzupełnij `.env`
 
@@ -118,7 +134,13 @@ Z katalogu repozytorium na Twoim komputerze:
 deploy/upload.sh release deploy@idlerace.cerasusdigital.pl
 ```
 
-Wysyłany jest **zatwierdzony** stan (`HEAD`), nie to, co leży w katalogu roboczym; skrypt ostrzega, jeśli masz niezatwierdzone zmiany. Inny commit lub tag: `deploy/upload.sh release deploy@... v1.0`. Pierwsze wydanie trwa kilka minut (Composer, `npm ci`, budowanie). Kroki: źródła → `composer install --no-dev` → `npm ci` i `npm run build` → `.env` i `storage` z `shared/` → `content:validate` → migracje → pamięci podręczne Laravela → przełączenie linku `current` → przeładowanie PHP-FPM i restart kolejki → **sprawdzenie** (`/up`, `/api/v1/meta/locales` i strona główna z serwera na samego siebie). Jeśli sprawdzenie nie przejdzie, poprzednie wydanie wraca, a skrypt kończy się błędem; nieudane wydanie zostaje w `releases/` do obejrzenia.
+Bez klucza SSH na komputerze (droga B z kroku 2) wydanie zrobisz na samym serwerze, jako użytkownik `deploy`; serwer pobierze kod z GitHuba (musi być wypchnięty):
+
+```bash
+sudo -iu deploy /var/www/idlerace/bin/deploy.sh --repo https://github.com/KenjiWriter/RideIdle.git --ref main
+```
+
+Wysyłany przez `upload.sh` jest **zatwierdzony** stan (`HEAD`), nie to, co leży w katalogu roboczym; skrypt ostrzega, jeśli masz niezatwierdzone zmiany. Inny commit lub tag: `deploy/upload.sh release deploy@... v1.0`. Pierwsze wydanie trwa kilka minut (Composer, `npm ci`, budowanie). Kroki: źródła → `composer install --no-dev` → `npm ci` i `npm run build` → `.env` i `storage` z `shared/` → `content:validate` → migracje → pamięci podręczne Laravela → przełączenie linku `current` → przeładowanie PHP-FPM i restart kolejki → **sprawdzenie** (`/up`, `/api/v1/meta/locales` i strona główna z serwera na samego siebie). Jeśli sprawdzenie nie przejdzie, poprzednie wydanie wraca, a skrypt kończy się błędem; nieudane wydanie zostaje w `releases/` do obejrzenia.
 
 Potem sprawdź w przeglądarce `https://idlerace.cerasusdigital.pl`: strona startowa, utworzenie kierowcy, `/terms` i `/privacy` oraz `https://idlerace.cerasusdigital.pl/up`.
 
