@@ -16,6 +16,10 @@ return [
         'sent' => 'If this e-mail belongs to a garage, a link is on its way. It works once, for :minutes minutes.',
     ],
 
+    'oauth' => [
+        'unavailable' => 'This way of signing in is not available.',
+    ],
+
     'token' => [
         'invalid' => 'This link is not valid or has expired.',
     ],

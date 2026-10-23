@@ -9,15 +9,20 @@ use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PlayerController;
 use App\Http\Controllers\Api\V1\RunController;
+use App\Http\Controllers\Api\V1\SocialAuthController;
 use App\Http\Controllers\Api\V1\StarterCarController;
 use App\Http\Middleware\TouchLastSeen;
+use App\Models\AccountIdentity;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/meta/locales', [LocaleController::class, 'index']);
 
-    // The sign-ins with another service that are on.
+    // The sign-ins with another service that are on, and the way in and out of each of them. The providers are
+    // Google, Facebook and Apple; the callback is where the provider sends the person back (Apple with a form post).
     Route::get('/auth/providers', [AuthProviderController::class, 'index']);
+    Route::post('/auth/{provider}/start', [SocialAuthController::class, 'startLogin'])->whereIn('provider', AccountIdentity::SOCIAL)->middleware('throttle:account-oauth-start');
+    Route::match(['get', 'post'], '/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', AccountIdentity::SOCIAL);
 
     // A new guest driver. Limited per address to make mass account creation expensive.
     Route::post('/players', [PlayerController::class, 'store'])->middleware('throttle:guest-create');
@@ -36,6 +41,7 @@ Route::prefix('v1')->group(function (): void {
         Route::patch('/me/locale', [MeController::class, 'updateLocale']);
         Route::post('/account/recovery-code', [AccountRecoveryController::class, 'issue'])->middleware('throttle:recovery-issue');
         Route::post('/account/email', [AccountEmailController::class, 'store'])->middleware('throttle:account-email');
+        Route::post('/account/identities/{provider}/start', [SocialAuthController::class, 'startLink'])->whereIn('provider', AccountIdentity::SOCIAL)->middleware('throttle:account-oauth-start');
 
         Route::get('/starter-cars', StarterCarController::class);
 

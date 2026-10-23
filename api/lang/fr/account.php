@@ -16,6 +16,10 @@ return [
         'sent' => 'Si cet e-mail appartient à un garage, un lien est en route. Il fonctionne une seule fois, pendant :minutes minutes.',
     ],
 
+    'oauth' => [
+        'unavailable' => 'Ce mode de connexion n’est pas disponible.',
+    ],
+
     'token' => [
         'invalid' => 'Ce lien n’est pas valide ou a expiré.',
     ],

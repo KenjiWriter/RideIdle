@@ -16,6 +16,10 @@ return [
         'sent' => 'Se este e-mail pertence a uma garagem, um link está a caminho. Ele funciona uma vez e por :minutes minutos.',
     ],
 
+    'oauth' => [
+        'unavailable' => 'Esta forma de entrar não está disponível.',
+    ],
+
     'token' => [
         'invalid' => 'Este link não é válido ou expirou.',
     ],

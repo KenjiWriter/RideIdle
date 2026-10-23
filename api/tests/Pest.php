@@ -14,6 +14,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as SocialiteUser;
 use Tests\TestCase;
 
 /*
@@ -183,6 +185,52 @@ function providerKeys(): array
         'facebook' => ['client_id' => 'facebook-id', 'client_secret' => 'facebook-secret'],
         'apple' => ['client_id' => 'com.example.ride', 'client_secret' => 'apple-signed-token'],
     ];
+}
+
+/** Starts linking a provider to the account of the driver. */
+function startProviderLink(User $driver, string $provider, array $body = [], array $headers = []): TestResponse
+{
+    $body = ['accept_terms' => true, 'confirm_age' => true, ...$body];
+
+    return test()->postJson("/api/v1/account/identities/{$provider}/start", $body, [...bearerFor($driver), ...$headers]);
+}
+
+/** Starts signing in with a provider on a device that has no account. */
+function startProviderLogin(string $provider, array $headers = []): TestResponse
+{
+    return test()->postJson("/api/v1/auth/{$provider}/start", [], $headers);
+}
+
+/** The state a provider is sent back with, read from the address the browser was sent to. */
+function stateOf(string $url): string
+{
+    parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+
+    return $query['state'];
+}
+
+/** What the provider will say about the person who comes back from it. */
+function providerSays(string $provider, array $person = []): void
+{
+    Socialite::fake($provider, SocialiteUser::fake($person));
+}
+
+/** The browser comes back from the provider: Google and Facebook with a GET, Apple with a form post. */
+function comesBackFrom(string $provider, string $state, array $query = [], string $method = 'get'): TestResponse
+{
+    $params = ['state' => $state, 'code' => 'code-from-provider', ...$query];
+
+    return $method === 'post'
+        ? test()->post("/api/v1/auth/{$provider}/callback", $params)
+        : test()->get("/api/v1/auth/{$provider}/callback?".http_build_query($params));
+}
+
+/** The fields the web app finds in the fragment of the address the browser was sent on to. */
+function fragmentOf(TestResponse $response): array
+{
+    parse_str((string) parse_url($response->headers->get('Location'), PHP_URL_FRAGMENT), $fields);
+
+    return $fields;
 }
 
 function cashOf(RaceRun $run): int

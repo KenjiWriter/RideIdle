@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use SocialiteProviders\Apple\Provider;
 use SocialiteProviders\Manager\SocialiteWasCalled;
 
 class AppServiceProvider extends ServiceProvider
@@ -31,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Apple is not one of the providers Socialite has built in.
         Event::listen(function (SocialiteWasCalled $event): void {
-            $event->extendSocialite('apple', \SocialiteProviders\Apple\Provider::class);
+            $event->extendSocialite('apple', Provider::class);
         });
 
         // Creating a guest is free, so it is limited per address.
@@ -45,6 +46,13 @@ class AppServiceProvider extends ServiceProvider
         // address is not kept) and per network address.
         // The secret of a link has 256 bits, so it cannot be guessed; the limit only keeps a flood of requests away.
         RateLimiter::for('account-confirm', fn (Request $request) => Limit::perHour(30)->by((string) $request->ip()));
+
+        // Starting a sign-in with a provider is cheap for us and nothing for the provider, so it is limited per network
+        // address, and per account when there is one (a device with no account is told apart by its address only).
+        RateLimiter::for('account-oauth-start', fn (Request $request) => [
+            Limit::perHour(60)->by('ip:'.$request->ip()),
+            ...($request->user() ? [Limit::perHour(20)->by('user:'.$request->user()->getAuthIdentifier())] : []),
+        ]);
 
         RateLimiter::for('account-login-link', fn (Request $request) => [
             Limit::perHour(3)->by('address:'.sha1(Accounts::normalizeEmail($request->string('email')->toString()))),

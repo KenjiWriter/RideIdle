@@ -16,6 +16,10 @@ return [
         'sent' => 'Wenn diese E-Mail zu einer Garage gehört, ist ein Link unterwegs. Er funktioniert einmal und :minutes Minuten lang.',
     ],
 
+    'oauth' => [
+        'unavailable' => 'Diese Art der Anmeldung ist nicht verfügbar.',
+    ],
+
     'token' => [
         'invalid' => 'Dieser Link ist ungültig oder abgelaufen.',
     ],
