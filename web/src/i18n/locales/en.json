@@ -244,5 +244,19 @@
     "back": "Back to the start",
     "termsLink": "terms of service",
     "privacyLink": "privacy policy"
+  },
+  "data": {
+    "title": "Your data",
+    "description": "You can take a copy of everything the game holds about you, or delete your account.",
+    "download": "Download my data",
+    "preparing": "Preparing…",
+    "downloaded": "Saved. The file holds your data, but no recovery code or other secret.",
+    "delete": "Delete my account",
+    "deleteTitle": "Delete the account for good",
+    "deleteWarning": "This deletes your driver, your cars, your cash and everything else about your account. It cannot be undone, and nobody can bring it back. Download your data first if you want a copy.",
+    "confirmLabel": "To confirm, type the name of your driver: {name}",
+    "confirm": "Delete my account for good",
+    "deleting": "Deleting…",
+    "cancel": "Cancel"
   }
 }

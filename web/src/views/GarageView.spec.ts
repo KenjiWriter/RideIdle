@@ -55,11 +55,16 @@ async function show() {
 }
 
 /** The calls of the screen: the profile and the run. */
-function serve(run: () => Response | Promise<Response>, me: () => Response = () => respond(200, { data: profile })) {
+function serve(
+  run: () => Response | Promise<Response>,
+  me: () => Response = () => respond(200, { data: profile }),
+  extra: Record<string, () => Response | Promise<Response>> = {},
+) {
   return serveApi(fetchMock, {
     'GET /api/v1/me': me,
     'GET /api/v1/runs/current': run,
     'GET /api/v1/auth/providers': () => respond(200, { data: ['google', 'apple'] }),
+    ...extra,
   })
 }
 
@@ -457,6 +462,30 @@ describe('GarageView', () => {
     expect(readToken()).toBeNull()
     expect(readSeen()).toBeNull()
     await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('landing'))
+  })
+
+  describe('your data', () => {
+    it('is in the garage, for a guest as well', async () => {
+      const { mounted } = open()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="data"] h2').text()).toBe('Your data')
+    })
+
+    it('lets the driver delete the account from the garage, which takes them to the start and says it was deleted', async () => {
+      serve(() => respond(200, runAnswer(aRun())), () => respond(200, { data: profile }), { 'DELETE /api/v1/account': () => respond(200, { deleted: true }) })
+      const { wrapper, router } = await show()
+      await flushPromises()
+
+      await wrapper.get('[data-test="delete"]').trigger('click')
+      await wrapper.get('[data-test="confirm-name"]').setValue('Maciek_Turbo')
+      await wrapper.get('[data-test="delete-form"]').trigger('submit')
+      await flushPromises()
+
+      expect(readToken()).toBeNull()
+      await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('landing'))
+    })
   })
 
   describe('saving the garage', () => {

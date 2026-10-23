@@ -40,6 +40,10 @@ body {
     @apply border border-line bg-surface text-ink hover:border-amber;
   }
 
+  .btn-danger {
+    @apply border border-danger bg-surface text-danger hover:bg-danger hover:text-bg;
+  }
+
   .field {
     @apply min-h-12 w-full rounded-lg border border-line bg-surface px-3 text-base text-ink;
     @apply placeholder:text-muted focus:border-amber focus:outline-none;

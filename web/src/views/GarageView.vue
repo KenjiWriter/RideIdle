@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 
+import AccountData from '@/components/AccountData.vue'
 import AwaySummary from '@/components/AwaySummary.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
 import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
@@ -177,6 +178,8 @@ async function useCode(): Promise<void> {
     <RecoveryPanel v-if="session.me?.is_guest" ref="recoveryPanel" />
 
     <LinkedAccounts />
+
+    <AccountData />
 
     <LinkAccountDialog v-if="linkOpen && offerLinking" @later="later" @recovery="useCode" />
 

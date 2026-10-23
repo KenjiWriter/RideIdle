@@ -244,5 +244,19 @@
     "back": "Zurück zum Start",
     "termsLink": "Nutzungsbedingungen",
     "privacyLink": "Datenschutzerklärung"
+  },
+  "data": {
+    "title": "Deine Daten",
+    "description": "Du kannst eine Kopie von allem herunterladen, was das Spiel über dich speichert, oder dein Konto löschen.",
+    "download": "Meine Daten herunterladen",
+    "preparing": "Wird vorbereitet…",
+    "downloaded": "Gespeichert. Die Datei enthält deine Daten, aber keinen Wiederherstellungscode und keine anderen geheimen Werte.",
+    "delete": "Mein Konto löschen",
+    "deleteTitle": "Konto endgültig löschen",
+    "deleteWarning": "Dadurch werden dein Fahrer, deine Autos, dein Spielgeld und alles andere zu deinem Konto gelöscht. Das lässt sich nicht rückgängig machen, und niemand kann es wiederherstellen. Lade zuerst deine Daten herunter, wenn du eine Kopie möchtest.",
+    "confirmLabel": "Gib zur Bestätigung den Namen deines Fahrers ein: {name}",
+    "confirm": "Mein Konto endgültig löschen",
+    "deleting": "Wird gelöscht…",
+    "cancel": "Abbrechen"
   }
 }

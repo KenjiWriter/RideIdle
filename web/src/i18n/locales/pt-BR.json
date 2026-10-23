@@ -244,5 +244,19 @@
     "back": "Voltar ao início",
     "termsLink": "termos de uso",
     "privacyLink": "política de privacidade"
+  },
+  "data": {
+    "title": "Seus dados",
+    "description": "Você pode baixar uma cópia de tudo o que o jogo guarda sobre você ou excluir sua conta.",
+    "download": "Baixar meus dados",
+    "preparing": "Preparando…",
+    "downloaded": "Salvo. O arquivo contém seus dados, mas nenhum código de recuperação nem outro dado secreto.",
+    "delete": "Excluir minha conta",
+    "deleteTitle": "Excluir a conta para sempre",
+    "deleteWarning": "Isso exclui seu piloto, seus carros, seu dinheiro do jogo e tudo o mais da sua conta. Não dá para desfazer, e ninguém pode recuperar. Baixe seus dados antes se quiser uma cópia.",
+    "confirmLabel": "Para confirmar, digite o nome do seu piloto: {name}",
+    "confirm": "Excluir minha conta para sempre",
+    "deleting": "Excluindo…",
+    "cancel": "Cancelar"
   }
 }

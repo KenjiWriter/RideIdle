@@ -244,5 +244,19 @@
     "back": "Retour à l’accueil",
     "termsLink": "les conditions d’utilisation",
     "privacyLink": "la politique de confidentialité"
+  },
+  "data": {
+    "title": "Vos données",
+    "description": "Vous pouvez télécharger une copie de tout ce que le jeu conserve à votre sujet, ou supprimer votre compte.",
+    "download": "Télécharger mes données",
+    "preparing": "Préparation…",
+    "downloaded": "Enregistré. Le fichier contient vos données, mais ni code de récupération ni autre secret.",
+    "delete": "Supprimer mon compte",
+    "deleteTitle": "Supprimer le compte définitivement",
+    "deleteWarning": "Cela supprime votre pilote, vos voitures, votre argent du jeu et tout le reste de votre compte. C’est irréversible et personne ne pourra le récupérer. Téléchargez d’abord vos données si vous en voulez une copie.",
+    "confirmLabel": "Pour confirmer, saisissez le nom de votre pilote : {name}",
+    "confirm": "Supprimer mon compte définitivement",
+    "deleting": "Suppression…",
+    "cancel": "Annuler"
   }
 }

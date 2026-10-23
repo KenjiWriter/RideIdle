@@ -244,5 +244,19 @@
     "back": "Wróć na początek",
     "termsLink": "regulamin",
     "privacyLink": "politykę prywatności"
+  },
+  "data": {
+    "title": "Twoje dane",
+    "description": "Możesz pobrać kopię wszystkiego, co gra o Tobie przechowuje, albo usunąć swoje konto.",
+    "download": "Pobierz moje dane",
+    "preparing": "Przygotowujemy…",
+    "downloaded": "Zapisano. Plik zawiera Twoje dane, ale nie zawiera kodu odzyskiwania ani innych sekretów.",
+    "delete": "Usuń moje konto",
+    "deleteTitle": "Usuń konto na zawsze",
+    "deleteWarning": "To usuwa Twojego kierowcę, auta, gotówkę i wszystko inne, co jest związane z kontem. Nie da się tego cofnąć i nikt tego nie przywróci. Jeśli chcesz mieć kopię, najpierw pobierz swoje dane.",
+    "confirmLabel": "Aby potwierdzić, wpisz imię kierowcy: {name}",
+    "confirm": "Usuń moje konto na zawsze",
+    "deleting": "Usuwamy…",
+    "cancel": "Anuluj"
   }
 }
