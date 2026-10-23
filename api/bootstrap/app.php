@@ -1,8 +1,10 @@
 <?php
 
+use App\Exceptions\IdempotencyConflictException;
 use App\Exceptions\IdentityTakenException;
 use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\ProviderAlreadyLinkedException;
+use App\Exceptions\RuleRefusedException;
 use App\Exceptions\RunAlreadyExistsException;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
@@ -43,6 +45,18 @@ return Application::configure(basePath: dirname(__DIR__))
             'message' => __('account.identity.provider_linked'),
             'code' => 'provider_already_linked',
         ], 409));
+
+        // A request id used again for something else is a mistake of the client, not a retry (a retry repeats the same thing).
+        $exceptions->render(fn (IdempotencyConflictException $e) => response()->json([
+            'message' => __('game.errors.request_reused'),
+            'code' => 'request_reused',
+        ], 409));
+
+        $exceptions->render(fn (RuleRefusedException $e) => response()->json([
+            'message' => __("game.errors.{$e->reason}", $e->replace),
+            'code' => $e->reason,
+            ...($e->replace !== [] ? ['details' => $e->replace] : []),
+        ], 422));
 
         $exceptions->render(fn (InsufficientFundsException $e) => response()->json([
             'message' => __('game.errors.insufficient_funds'),

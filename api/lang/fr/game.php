@@ -10,6 +10,14 @@ return [
         'car_level_required' => 'Niveau de voiture :required requis (vous avez :current).',
         'workshop_level_required' => 'Niveau d’atelier :required requis.',
         'car_locked' => 'Cette voiture est verrouillée dans un tournoi et ne peut pas être modifiée.',
+        'part_not_for_sale' => 'Cette pièce n’est pas en vente.',
+        'part_not_found' => 'Vous n’avez pas cette pièce.',
+        'part_busy' => 'Cette pièce attend déjà à l’atelier.',
+        'part_mounted' => 'Cette pièce est déjà montée sur la voiture.',
+        'part_not_mounted' => 'Cette pièce n’est pas montée sur la voiture.',
+        'queue_full' => 'La file d’attente de l’atelier est pleine.',
+        'no_car' => 'Vous n’avez pas encore de voiture.',
+        'request_reused' => 'Cette requête a déjà été utilisée pour autre chose.',
     ],
 
     'fuel' => [

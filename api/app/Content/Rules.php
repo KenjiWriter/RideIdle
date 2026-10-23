@@ -85,6 +85,12 @@ final class Rules
         return 1 + intdiv($carLevel, $this->data['car']['levels_per_tier']);
     }
 
+    /** The lowest level of a car that can have a part of this tier mounted. */
+    public function requiredCarLevel(int $tier): int
+    {
+        return $this->data['car']['levels_per_tier'] * ($tier - 1);
+    }
+
     /** @return list<string> slugs of the parts the shop sells */
     public function shopParts(): array
     {

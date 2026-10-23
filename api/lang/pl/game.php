@@ -10,6 +10,14 @@ return [
         'car_level_required' => 'Wymaga poziomu auta :required (masz :current).',
         'workshop_level_required' => 'Wymaga poziomu warsztatu :required.',
         'car_locked' => 'To auto jest zablokowane w turnieju i nie można go zmieniać.',
+        'part_not_for_sale' => 'Tej części nie ma w sprzedaży.',
+        'part_not_found' => 'Nie masz tej części.',
+        'part_busy' => 'Ta część już czeka w warsztacie.',
+        'part_mounted' => 'Ta część jest już w aucie.',
+        'part_not_mounted' => 'Ta część nie jest zamontowana w aucie.',
+        'queue_full' => 'Kolejka warsztatu jest pełna.',
+        'no_car' => 'Nie masz jeszcze auta.',
+        'request_reused' => 'To żądanie zostało już użyte do czegoś innego.',
     ],
 
     'fuel' => [

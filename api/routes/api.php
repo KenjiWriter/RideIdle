@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PlayerController;
 use App\Http\Controllers\Api\V1\RunController;
+use App\Http\Controllers\Api\V1\ShopController;
 use App\Http\Controllers\Api\V1\SocialAuthController;
 use App\Http\Controllers\Api\V1\StarterCarController;
 use App\Http\Middleware\TouchLastSeen;
@@ -51,6 +52,9 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/account/identities/{provider}/start', [SocialAuthController::class, 'startLink'])->whereIn('provider', AccountIdentity::SOCIAL)->middleware('throttle:account-oauth-start');
 
         Route::get('/starter-cars', StarterCarController::class);
+
+        Route::get('/shop', [ShopController::class, 'index']);
+        Route::post('/shop/purchases', [ShopController::class, 'purchase']);
 
         Route::post('/runs', [RunController::class, 'store']);
         Route::get('/runs/current', [RunController::class, 'current']);
