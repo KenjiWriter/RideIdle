@@ -158,6 +158,33 @@ Statystyki auta (`RunInputsFactory::stats`): moc nadwozia razy `power_mult` czę
 
 Kolejki nie da się jeszcze anulować, a auto ma poziom stały (`car.start_level`): poziomy aut z XP dojdą później.
 
+## Samouczek
+
+Samouczek prowadzi pierwsze minuty gry SMS-ami od Kuby (mentora, który się ukrywa i pisze za każdym razem z innego numeru). **Kroki są danymi**: `content/rules/tutorial.json` (schemat `tutorial.schema.json`, teksty w pięciu językach, test `TutorialStepsTest`), więc kolejność, słowa i nagrody zmienia się bez wdrażania kodu. Serwer jest źródłem prawdy, a postęp kierowcy to wiersze tabeli `tutorial_progress` (jeden na krok, który kierowca osiągnął: `active`, `done` albo `skipped`, z czasami; krok bez wiersza nie jest jeszcze osiągnięty).
+
+Każdy krok ma `trigger` (co go rozpoczyna, gdy poprzedni jest skończony) i `completion` (co go kończy). To fakty o grze, które serwer odczytuje ze stanu, a nie zdarzenia, na które nasłuchuje: `none`, `run_started` (jest bieg), `lap_completed` (ukończone okrążenie), `fuel_low` (w baku poniżej jednej czwartej), `fuel_restored` (co najmniej cztery piąte), `breakdown` (auto stoi po awarii), `recovered` (już nie stoi po awarii), `acknowledged` (kierowca odpowiedział na SMS). Dzięki temu samouczek, tak jak rozliczenie biegu, jest doprowadzany do stanu bieżącego, gdy ktoś na niego patrzy, i niczego nie traci z tego, co się stało pod nieobecność kierowcy.
+
+| Krok | Rozpoczyna | Kończy | Podświetla | Nagroda |
+|---|---|---|---|---|
+| 1 `wreck` | od razu | wybór wraku (jest bieg) | nic (bez SMS-a) | brak |
+| 2 `first-lap` | jest bieg | pierwsze okrążenie | okrążenia | 200 $ |
+| 3 `rewards` | pierwsze okrążenie | odpowiedź kierowcy | gotówka w HUD | brak |
+| 4 `refuel` | bak poniżej 25% | bak od 80% | przycisk tankowania | 90 $ (tankowanie na koszt Kuby) |
+| 5 `repair` | awaria | auto znów jedzie | przycisk naprawy | 30 $ (naprawa na koszt Kuby) |
+
+Kroki 1–5 to pierwsze pięć z planszy Samouczek, dopasowane do tego, co w grze jest. Dwa odstępstwa: krok 3 w projekcie nagradza „XP auta”, a aut z XP jeszcze nie ma, więc nie daje nic; krok 5 w projekcie to naprawa hamulców i „stan techniczny” części, którego nie ma, więc tu jest awaria i naprawa, a ten krok czeka na pierwszą awarię (szansa 0,3% na okrążenie, więc może długo). Kroki 6–20 (skrzynki, sloty, mapa, miasta…) dojdą z mechanikami, których dotyczą. Nagrody to gotówka z kluczem idempotencji `tutorial:{kierowca}:{krok}`, księgowana w tej samej transakcji, która oznacza krok jako zrobiony, więc nie da się ich wypłacić dwa razy. Nic w samouczku nie kosztuje kierowcy gotówki: tankowanie i naprawa są mu zwracane.
+
+### `GET /tutorial`, `POST /tutorial/reply`, `POST /tutorial/skip`
+
+`GET` najpierw wykonuje to, co w warsztacie należne, i rozlicza bieg, a potem przesuwa kierowcę po krokach. Krok z SMS-ami jest najpierw **pokazany**: przejście do niego kończy przebieg, a ukończyć go można dopiero przy następnym spojrzeniu, więc kierowca zawsze zobaczy wiadomość, zanim krok się skończy. Krok bez SMS-ów (pierwszy) jest wykonywany bez pokazywania. Odpowiedź to `data`:
+
+- `status`: `in_progress`, `finished` albo `skipped`;
+- `total` i `done`: liczba kroków i skończonych;
+- `current`: krok, który czeka, z `key`, `number` (od 1), `sender` (numer, z którego pisze Kuba), `sms` (jedna do dwóch wiadomości w języku kierowcy), `reply` (napis przycisku odpowiedzi), `target` (`laps`, `cash`, `refuel`, `repair`: co ekran podświetla) i `acknowledged` (kierowca już odpowiedział), albo `null`;
+- `rewarded`: co wypłaciły kroki skończone tym wywołaniem, żeby klient mógł to powiedzieć i odświeżyć gotówkę.
+
+`POST /tutorial/reply` odpowiada na SMS-y kroku, który czeka (telefon znika, a krok kończący się odpowiedzią jest skończony); dwa razy to jedna odpowiedź. `POST /tutorial/skip` zostawia bez wykonania kroki, które nie są skończone, **razem z ich nagrodami**; to, co zrobione i wypłacone, zostaje. Po `skip` samouczek już nie wraca. Obie odpowiedzi mają ten sam kształt co `GET`, a żadna nie jest buforowana. Postęp wchodzi do kopii danych konta (`game.tutorial`) i do usunięcia konta (rodzaj `tutorial steps`).
+
 ## Znane ograniczenia
 
 - Jeden bieg na kierowcę i jeden tor (Złomowo). Kolejne tory wymagają podróży i poziomów gracza, których jeszcze nie ma.
