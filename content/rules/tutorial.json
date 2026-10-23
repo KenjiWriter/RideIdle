@@ -1,0 +1,144 @@
+{
+  "schema": 0,
+  "version": "2026.10.1",
+  "steps": [
+    {
+      "key": "wreck",
+      "phase": 1,
+      "trigger": "none",
+      "completion": "run_started",
+      "target": null,
+      "sender": "+48 555 010 112",
+      "sms": [],
+      "reward": {}
+    },
+    {
+      "key": "first-lap",
+      "phase": 1,
+      "trigger": "run_started",
+      "completion": "lap_completed",
+      "target": "laps",
+      "sender": "+48 555 010 134",
+      "sms": [
+        {
+          "pl": "Znowu ja, inny numer. Nie pytaj.",
+          "en": "It’s me again, different number. Don’t ask.",
+          "fr": "C’est encore moi, autre numéro. Ne pose pas de questions.",
+          "de": "Ich schon wieder, andere Nummer. Frag nicht.",
+          "pt-BR": "Sou eu de novo, outro número. Não pergunte."
+        },
+        {
+          "pl": "Auto jedzie samo. Poczekaj na pierwsze okrążenie, a dorzucę Ci na start. — K.",
+          "en": "The car drives itself. Wait for the first lap and I’ll add something to get you started. — K.",
+          "fr": "La voiture roule toute seule. Attends le premier tour et je te glisse un petit plus pour démarrer. — K.",
+          "de": "Das Auto fährt von allein. Warte auf die erste Runde, dann lege ich dir etwas für den Start drauf. — K.",
+          "pt-BR": "O carro anda sozinho. Espere a primeira volta e eu acrescento algo para você começar. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, czekam",
+        "en": "OK, I’ll wait",
+        "fr": "OK, j’attends",
+        "de": "OK, ich warte",
+        "pt-BR": "OK, vou esperar"
+      },
+      "reward": { "cash_cents": 20000 }
+    },
+    {
+      "key": "rewards",
+      "phase": 1,
+      "trigger": "lap_completed",
+      "completion": "acknowledged",
+      "target": "cash",
+      "sender": "+48 555 010 188",
+      "sms": [
+        {
+          "pl": "Pierwsze okrążenie za Tobą. Wysłałem Ci $200.",
+          "en": "First lap done. I sent you $200.",
+          "fr": "Premier tour bouclé. Je t’ai envoyé 200 $.",
+          "de": "Erste Runde geschafft. Ich habe dir $200 geschickt.",
+          "pt-BR": "Primeira volta concluída. Mandei $200 para você."
+        },
+        {
+          "pl": "Pieniądze i XP wpadają same, nawet gdy Cię nie ma. Zapisz kod odzyskiwania, jeśli chcesz zachować garaż. — K.",
+          "en": "Cash and XP arrive on their own, even when you’re away. Save your recovery code if you want to keep the garage. — K.",
+          "fr": "L’argent et l’XP arrivent tout seuls, même quand tu es absent. Note ton code de récupération si tu veux garder le garage. — K.",
+          "de": "Geld und XP kommen von allein, auch wenn du weg bist. Sichere deinen Wiederherstellungscode, wenn du die Garage behalten willst. — K.",
+          "pt-BR": "Dinheiro e XP chegam sozinhos, mesmo quando você não está. Guarde o código de recuperação se quiser manter a garagem. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, rozumiem",
+        "en": "OK, got it",
+        "fr": "OK, compris",
+        "de": "OK, verstanden",
+        "pt-BR": "OK, entendi"
+      },
+      "reward": {}
+    },
+    {
+      "key": "refuel",
+      "phase": 1,
+      "trigger": "fuel_low",
+      "completion": "fuel_restored",
+      "target": "refuel",
+      "sender": "+48 555 010 247",
+      "sms": [
+        {
+          "pl": "Nowy numer, stary ja. Nie pytaj.",
+          "en": "New number, same me. Don’t ask.",
+          "fr": "Nouveau numéro, même moi. Ne pose pas de questions.",
+          "de": "Neue Nummer, derselbe ich. Frag nicht.",
+          "pt-BR": "Número novo, o mesmo eu. Não pergunte."
+        },
+        {
+          "pl": "Bak prawie pusty. Dotknij „Zatankuj do pełna”, żeby auto jechało dalej, nawet gdy Cię nie będzie. — K.",
+          "en": "The tank is almost empty. Tap “Fill up” so the car keeps driving, even when you’re away. — K.",
+          "fr": "Le réservoir est presque vide. Touche « Faire le plein » pour que la voiture continue de rouler, même en ton absence. — K.",
+          "de": "Der Tank ist fast leer. Tippe auf „Volltanken“, damit das Auto weiterfährt, auch wenn du weg bist. — K.",
+          "pt-BR": "O tanque está quase vazio. Toque em “Encher o tanque” para o carro seguir andando, mesmo quando você não estiver. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, tankuję",
+        "en": "OK, filling up",
+        "fr": "OK, je fais le plein",
+        "de": "OK, ich tanke",
+        "pt-BR": "OK, vou encher o tanque"
+      },
+      "reward": { "cash_cents": 9000 }
+    },
+    {
+      "key": "repair",
+      "phase": 2,
+      "trigger": "breakdown",
+      "completion": "recovered",
+      "target": "repair",
+      "sender": "+48 555 010 301",
+      "sms": [
+        {
+          "pl": "To ja. Znowu zmieniłem numer.",
+          "en": "It’s me. I changed my number again.",
+          "fr": "C’est moi. J’ai encore changé de numéro.",
+          "de": "Ich bin’s. Wieder neue Nummer.",
+          "pt-BR": "Sou eu. Troquei de número outra vez."
+        },
+        {
+          "pl": "Auto stanęło: awaria. Dotknij „Napraw”, a pojedzie dalej. Tym razem ja stawiam. — K.",
+          "en": "The car stopped: a breakdown. Tap “Repair” and it drives on. This one’s on me. — K.",
+          "fr": "La voiture est en panne. Touche « Réparer » et elle repart. Cette fois, c’est pour moi. — K.",
+          "de": "Das Auto steht: Panne. Tippe auf „Reparieren“, dann fährt es weiter. Diesmal zahle ich. — K.",
+          "pt-BR": "O carro parou: pane. Toque em “Consertar” e ele segue. Desta vez, eu pago. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, naprawiam",
+        "en": "OK, repairing",
+        "fr": "OK, je répare",
+        "de": "OK, ich repariere",
+        "pt-BR": "OK, vou consertar"
+      },
+      "reward": { "cash_cents": 3000 }
+    }
+  ]
+}

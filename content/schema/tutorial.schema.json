@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rideidle.local/schema/tutorial.schema.json",
+  "title": "Steps of the tutorial (content/rules/tutorial.json, schema v0)",
+  "description": "The steps are data: the order, the words of the mentor, what shows a step is due and done, and what it pays. The server moves the driver along them. Provisional, like the rules.",
+  "type": "object",
+  "properties": {
+    "schema": { "const": 0 },
+    "version": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$" },
+    "steps": {
+      "description": "In the order the driver meets them. A step starts when the one before it is done and its trigger holds, and ends when its completion holds.",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": { "$ref": "common.schema.json#/$defs/slug" },
+          "phase": { "description": "The phase of the design: 1 the first five minutes, 2 the first hour, 3 the first day, 4 the first week.", "type": "integer", "minimum": 1, "maximum": 4 },
+          "trigger": { "$ref": "#/$defs/condition" },
+          "completion": { "$ref": "#/$defs/condition" },
+          "target": {
+            "description": "What the screen highlights while the step waits for the driver, or null for a step that needs no screen of its own.",
+            "enum": ["laps", "cash", "refuel", "repair", null]
+          },
+          "sender": { "description": "The made-up number the mentor writes from. It changes with every step, because the mentor is in hiding.", "type": "string", "pattern": "^\\+48 555 010 [0-9]{3}$" },
+          "sms": {
+            "description": "At most two short messages: a greeting and the request. A step without any is carried out without being shown.",
+            "type": "array",
+            "maxItems": 2,
+            "items": { "$ref": "common.schema.json#/$defs/i18n" }
+          },
+          "reply": { "description": "The words of the button that answers the messages.", "$ref": "common.schema.json#/$defs/i18n" },
+          "reward": {
+            "type": "object",
+            "properties": { "cash_cents": { "type": "integer", "minimum": 1 } },
+            "additionalProperties": false
+          }
+        },
+        "required": ["key", "phase", "trigger", "completion", "target", "sender", "sms", "reward"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schema", "version", "steps"],
+  "additionalProperties": false,
+  "$defs": {
+    "condition": {
+      "description": "A fact about the driver that the server can read: none always holds; run_started the driver has a run; lap_completed it has finished a lap; fuel_low the tank holds less than a quarter; fuel_restored it holds at least four fifths; breakdown the car stands broken down; recovered it does not; acknowledged the driver has answered the messages of the step.",
+      "enum": ["none", "run_started", "lap_completed", "fuel_low", "fuel_restored", "breakdown", "recovered", "acknowledged"]
+    }
+  }
+}
