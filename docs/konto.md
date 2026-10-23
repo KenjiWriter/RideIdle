@@ -15,7 +15,7 @@ Kierowca zaczyna jako **gość**: konto powstaje od razu, bez e-maila, a urządz
 
 - Otwiera się w garażu, gdy kierowca jest gościem i ma co najmniej jedno okrążenie. Czeka, aż kierowca zatwierdzi podsumowanie nieobecności, żeby nic się nie nakładało.
 - To okno dialogowe: fokus przechodzi do środka i tam zostaje, `Esc` i kliknięcie poza oknem odkładają sprawę, fokus wraca tam, skąd przyszedł.
-- Zawiera dwie zgody (regulamin i polityka prywatności, wiek), przyciski dostawców, którzy są włączeni na serwerze, i pole e-mail. Bez obu zgód nic się nie wysyła.
+- Zawiera dwie zgody, przyciski dostawców, którzy są włączeni na serwerze, i pole e-mail. Bez obu zgód nic się nie wysyła. Pierwsza zgoda nazywa regulamin i politykę prywatności i linkuje do `/terms` i `/privacy` (w nowej karcie, żeby okno zostało, jak było); druga mówi, ile lat trzeba mieć, a liczbę podaje serwer (`LEGAL_MIN_AGE`). Gdy serwera nie da się zapytać o wiek, pole mówi to ogólnie, a serwer i tak o zgody pyta.
 - „Później” zapamiętuje to w `localStorage` (`ride.linkPrompt`) i zostawia cichy baner, dopóki konto jest gościem. „Wolę kod odzyskiwania” zamyka okno i przewija do panelu z kodem. Wylogowanie i zalogowanie kogoś innego kasuje zapamiętane „później”.
 - Kierowca, który ma już konto, widzi w garażu kartę „Twoje sposoby logowania” (adres zamaskowany: `t***@example.com`) z przyciskiem „Dodaj kolejny sposób logowania”. Przycisk rozwija to, co zostało do dodania: dostawców włączonych na serwerze, których konto jeszcze nie ma, i e-mail, jeśli konta go nie ma. Bez pytania o zgody, bo złożono je przy pierwszym sposobie. Gdy konto ma już wszystko, przycisku nie ma. Dzięki temu utrata jednego sposobu (np. konta Google) nie zamyka drogi do garażu.
 
@@ -57,6 +57,7 @@ Klucze zakłada się u dostawców, w swoich kontach deweloperskich; w repozytori
 | Zmienna | Znaczenie |
 |---|---|
 | `WEB_URL` | Adres aplikacji web (domyślnie `http://localhost:5173`). Tam prowadzą linki z maili i powroty od dostawców. |
+| `LEGAL_MIN_AGE`, `LEGAL_VERSION`, `LEGAL_OPERATOR_NAME`, `LEGAL_OPERATOR_ADDRESS`, `LEGAL_CONTACT_EMAIL` | Regulamin i polityka prywatności: wiek, wersja tekstów i dane operatora. Opis w `docs/prawo.md`. |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google Cloud Console → API i usługi → Dane logowania → Identyfikator klienta OAuth, typ „Aplikacja internetowa”. W „Autoryzowanych identyfikatorach URI przekierowania” adres powrotu. |
 | `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET` | Meta for Developers → aplikacja → Logowanie przez Facebooka → „Prawidłowe identyfikatory URI przekierowania OAuth”. Identyfikator i sekret aplikacji są w ustawieniach podstawowych. |
 | `APPLE_CLIENT_ID` | Services ID (nie App ID) z włączonym „Sign in with Apple”; domena i adres powrotu są w jego konfiguracji. |
@@ -67,6 +68,7 @@ Klucze zakłada się u dostawców, w swoich kontach deweloperskich; w repozytori
 Uwagi:
 
 - **Apple wymaga HTTPS i prawdziwej domeny**, nie przyjmie `localhost`. Do lokalnego sprawdzenia Apple trzeba tunelu (np. własnej domeny z certyfikatem). Google i Facebook (aplikacja w trybie deweloperskim) przyjmują `http://localhost`.
+- **Adresy stron prawnych**: Google (ekran zgody OAuth), Facebook (ustawienia aplikacji) i Apple (Services ID) wymagają adresu polityki prywatności (`WEB_URL/privacy`), a Google i Facebook także regulaminu (`WEB_URL/terms`).
 - **Lokalnie**: `APP_URL=http://localhost:8000`, `WEB_URL=http://localhost:5173`. Adres powrotu to API, które przekierowuje do web, więc proxy Vite nie jest do tego potrzebne.
 - **Kolejka**: maile idą kolejką. Przy `QUEUE_CONNECTION=database` musi działać `php artisan queue:work`, inaczej nic nie wyjdzie. Lokalnie wystarczy `QUEUE_CONNECTION=sync` albo Mailpit z `docker/compose.yaml` (SMTP 1025, interfejs na 8025).
 - **Harmonogram**: `accounts:prune-tokens` (co godzinę) usuwa wygasłe i zużyte sekrety, `accounts:prune-guests` (codziennie) nieużywane konta gości. Potrzebny jest cron z `php artisan schedule:run` albo `schedule:work`.
@@ -85,6 +87,6 @@ Uwagi:
 
 - Odłączania logowania i zmiany adresu e-mail. Zanim odłączanie powstanie, trzeba zdecydować, co z kontem, które odłączy ostatni sposób logowania (ostatniego nie wolno odłączyć), i czy odłączenie wymaga ponownego potwierdzenia.
 - Nagrody za zabezpieczenie konta (w makiecie 10 diamentów): diamentów jeszcze nie ma w grze.
-- Stron regulaminu i polityki prywatności. Zgody są polami wyboru z tekstem i znacznikami czasu. **Brakuje też progu wieku**: tekst mówi „mam wiek wymagany do założenia konta”, a liczbę ma wskazać przegląd prawny (ryzyko R9 z roadmapy).
+- Przeglądu prawnego regulaminu i polityki prywatności (`/terms`, `/privacy`, opis w `docs/prawo.md`). Teksty są roboczym projektem. **Próg wieku jest roboczy** (16 lat, `LEGAL_MIN_AGE`): ostateczną liczbę ma wskazać przegląd prawny (ryzyko R9 z roadmapy).
 - Samouczka. Okno otwiera się po pierwszym okrążeniu, bo na ekranie „krok 3” makiety („Zapisz swój garaż”) jest pierwszy zarobek; baner „dzień 2 i 3” z makiety jest tu banerem stałym, dopóki konto jest gościem.
 - Tłumaczenia francuskie, niemieckie i brazylijskie są robocze (mojego autorstwa) i warto, żeby przejrzała je osoba mówiąca w tych językach.
