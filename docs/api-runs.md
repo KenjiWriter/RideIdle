@@ -30,14 +30,14 @@ Każda odpowiedź ma `data` (bieg) i `wallet` (gotówka w centach i XP po wywoł
     "lap": {
       "ms": { "dry": 75000, "rain": 84391 },
       "cash_cents": { "dry": 1550, "rain": 1442 },
-      "xp": { "dry": 25, "rain": 23 },
+      "xp": { "dry": 2, "rain": 2 },
       "fuel_ml": 1500
     },
     "weather": { "now": "rain", "ends_ms": 1792693350000, "next": "dry" },
     "current_lap": { "start_ms": 1792692900000, "finish_ms": 1792692984391, "ms": 84391, "weather": "rain" },
     "server_time_ms": 1792692960123
   },
-  "wallet": { "cash_cents": 46500, "xp": 750 },
+  "wallet": { "cash_cents": 46500, "xp": 60 },
   "tow": { "available": false, "delay_ms": 300000 }
 }
 ```
