@@ -3,6 +3,8 @@
 use App\Domain\Run\CarStats;
 use App\Domain\Run\RunInputs;
 use App\Domain\Run\TrackProfile;
+use App\Models\AccountIdentity;
+use App\Models\AccountToken;
 use App\Models\RaceRun;
 use App\Models\User;
 use App\Services\Ledger;
@@ -117,6 +119,21 @@ function driverWithRun(array $attributes = []): array
 function getRun(User $driver, string $path = 'current', array $headers = []): Illuminate\Testing\TestResponse
 {
     return test()->getJson("/api/v1/runs/{$path}", [...bearerFor($driver), ...$headers]);
+}
+
+function identityOf(User $user, string $provider, string $subject, ?string $email = null): AccountIdentity
+{
+    return AccountIdentity::query()->create(['user_id' => $user->id, 'provider' => $provider, 'subject' => $subject, 'email' => $email]);
+}
+
+function tokenWith(array $attributes = []): AccountToken
+{
+    return AccountToken::query()->create([
+        'purpose' => AccountToken::CLAIM,
+        'token_hash' => hash('sha256', bin2hex(random_bytes(8))),
+        'expires_at' => now()->addMinutes(30),
+        ...$attributes,
+    ]);
 }
 
 function cashOf(RaceRun $run): int

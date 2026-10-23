@@ -37,6 +37,8 @@ class User extends Authenticatable
             'claimed_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'recovery_code_set_at' => 'datetime',
+            'terms_accepted_at' => 'datetime',
+            'age_confirmed_at' => 'datetime',
         ];
     }
 
@@ -55,6 +57,12 @@ class User extends Authenticatable
     public function hasRecoveryCode(): bool
     {
         return $this->recovery_code_hash !== null;
+    }
+
+    /** @return HasMany<AccountIdentity, $this> the ways this account can be signed in to */
+    public function identities(): HasMany
+    {
+        return $this->hasMany(AccountIdentity::class);
     }
 
     /** @return HasOne<Wallet, $this> */
