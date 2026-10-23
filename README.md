@@ -110,4 +110,6 @@ Samouczek i ekran Turniej (opisy w `docs/api-runs.md` i `docs/web-run.md`): nowy
 
 Symulator ekonomii v0 (opis w `content/README.md`): `php artisan economy:simulate` gra trzy typy graczy po drabinie dziewięciu aut z kotwic w `content/rules/economy.json`, mówi, w którym dniu każdy kupuje każde auto, i sprawdza, czy dni mieszczą się w ±25% celu z projektu (kod wyjścia 1, gdy nie; 24 liczby, na tym zestawie wszystkie co do dnia). Zestawia też liczby gry z kotwicami (`--strict` daje kod 1, gdy któraś odbiega o więcej niż 20%). Pierwszy przebieg wykrył, że XP za okrążenie w grze (25) jest o rząd wielkości za duże wobec kotwic (1,9); skalibrowano je do 2 i teraz `--strict` przechodzi.
 
-Dalej według roadmapy (F1): XP i poziomy aut oraz anulowanie kolejki warsztatu; potem F2 (świat, rynek, pogoda), a obok przegląd prawny regulaminu i polityki prywatności.
+XP i poziomy aut (opis w `docs/api-runs.md`): auto zbiera 10 XP na każde rozliczone okrążenie i awansuje (pasmo od poziomu *n* to `200 · n` XP, najwyżej poziom 30), a poziom ogranicza tier części, którą można zamontować. Garaż pokazuje pasek XP auta jak plansza, mówi o awansie i o tym, co otwiera następny tier; trzeci krok samouczka wypłaca 100 XP auta.
+
+Dalej według roadmapy (F1): anulowanie kolejki warsztatu; potem F2 (świat, rynek, pogoda), a obok przegląd prawny regulaminu i polityki prywatności.

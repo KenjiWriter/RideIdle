@@ -158,7 +158,15 @@ Tankowanie nie rusza auta w warsztacie, a holowanie nie jest wtedy oferowane (`t
 
 Statystyki auta (`RunInputsFactory::stats`): moc nadwozia razy `power_mult` części, przyspieszenie to moc na tonę, prędkość maksymalna rośnie z pierwiastkiem sześciennym zysku mocy i nie przekracza limitu skrzyni, przyczepność, prowadzenie i hamowanie biorą się z opon (fabrycznych, gdy żadnych nie założono), a zawieszenie i hamulce są uśredniane z prowadzeniem i hamowaniem opon. **Uśrednianie to pierwsza reguła do sprawdzenia w symulatorze ekonomii.** Efektów opon na mokrym i na żwirze jeszcze nie ma (macierz opon dojdzie z torami), dlatego sklep sprzedaje tylko opony uliczne T2, zawieszenie, hamulce i wydech: wszystko, co zmienia statystyki.
 
-Kolejki nie da się jeszcze anulować, a auto ma poziom stały (`car.start_level`): poziomy aut z XP dojdą później.
+Kolejki nie da się jeszcze anulować.
+
+### XP i poziom auta
+
+Auto awansuje na okrążeniach, które przejechało (projekt: „Okrążeń tym autem”). Każde rozliczone okrążenie daje autu **10 XP** (`car.xp_per_lap`), niezależnie od pogody, a XP dopisuje to samo rozliczenie, które liczy okrążenia, więc okrążenie liczy się raz i nigdy przed końcem. Pasmo od poziomu *n* do *n+1* to `200 · n` XP (`car.xp_per_level`), więc XP do poziomu *n* to `100 · n · (n − 1)`: trzeci poziom zaczyna się od 600 XP, a pasmo trzeciego poziomu ma 600, jak „410 / 600” na planszy Garaż. Nowe auto ma poziom 3 (`car.start_level`) i XP, od którego ten poziom się zaczyna. Poziom nie spada i kończy się na `car.max_level` (30, czyli tyle, ile trzeba na tier 10, który odblokowuje poziom 27). Liczby są wstępne: projekt podaje tylko, że auto awansuje na okrążeniach, a tempo ma sprawdzić symulator.
+
+**Poziom auta ogranicza tier części**, którą auto może mieć zamontowaną: tier ≤ 1 + ⌊poziom / 3⌋ (reguła, która już była). Odmowa `car_level_required` mówi, ile trzeba i ile jest, oraz jak zdobyć poziom („Wymaga poziomu auta 6 (masz 4). Zdobywasz XP, jeżdżąc tym autem.”, zasada UX z projektu). XP auta nie dają ani statystyk („mały stały bonus” z projektu jest do zrobienia: zmieniłby zamrożoną konfigurację biegu przy każdym awansie), ani miast.
+
+`GET /garage`: auto ma teraz `xp` (`total`, `level_start`, `next_level_at`, ostatnie `null` na najwyższym poziomie: pasek to `total` między początkiem a końcem poziomu) i `tier_unlock` (`tier` i `level`: najbliższy tier części, którego auto jeszcze nie zamontuje, i poziom, który go otwiera; `null`, gdy żaden poziom auta już go nie otwiera). Bieg (`lap`) mówi, co okrążenie daje autu: `car_xp`. Auta, które istniały przed tą zmianą, dostały XP, od którego zaczyna się ich poziom (migracja `add_xp_to_cars_table`): okrążenia przejechane wcześniej nie liczą się, bo nic ich dla auta nie zapisało. XP auta jest w kopii danych konta.
 
 ## Samouczek
 
@@ -170,11 +178,11 @@ Każdy krok ma `trigger` (co go rozpoczyna, gdy poprzedni jest skończony) i `co
 |---|---|---|---|---|
 | 1 `wreck` | od razu | wybór wraku (jest bieg) | nic (bez SMS-a) | brak |
 | 2 `first-lap` | jest bieg | pierwsze okrążenie | okrążenia | 200 $ |
-| 3 `rewards` | pierwsze okrążenie | odpowiedź kierowcy | gotówka w HUD | brak |
+| 3 `rewards` | pierwsze okrążenie | odpowiedź kierowcy | gotówka w HUD | 100 XP auta |
 | 4 `refuel` | bak poniżej 25% | bak od 80% | przycisk tankowania | 90 $ (tankowanie na koszt Kuby) |
 | 5 `repair` | awaria | auto znów jedzie | przycisk naprawy | 30 $ (naprawa na koszt Kuby) |
 
-Kroki 1–5 to pierwsze pięć z planszy Samouczek, dopasowane do tego, co w grze jest. Dwa odstępstwa: krok 3 w projekcie nagradza „XP auta”, a aut z XP jeszcze nie ma, więc nie daje nic; krok 5 w projekcie to naprawa hamulców i „stan techniczny” części, którego nie ma, więc tu jest awaria i naprawa, a ten krok czeka na pierwszą awarię (szansa 0,3% na okrążenie, więc może długo). Kroki 6–20 (skrzynki, sloty, mapa, miasta…) dojdą z mechanikami, których dotyczą. Nagrody to gotówka z kluczem idempotencji `tutorial:{kierowca}:{krok}`, księgowana w tej samej transakcji, która oznacza krok jako zrobiony, więc nie da się ich wypłacić dwa razy. Nic w samouczku nie kosztuje kierowcy gotówki: tankowanie i naprawa są mu zwracane.
+Kroki 1–5 to pierwsze pięć z planszy Samouczek, dopasowane do tego, co w grze jest. Jedno odstępstwo: krok 5 w projekcie to naprawa hamulców i „stan techniczny” części, którego nie ma, więc tu jest awaria i naprawa, a ten krok czeka na pierwszą awarię (szansa 0,3% na okrążenie, więc może długo). Kroki 6–20 (skrzynki, sloty, mapa, miasta…) dojdą z mechanikami, których dotyczą. Nagrody to gotówka z kluczem idempotencji `tutorial:{kierowca}:{krok}`, księgowana w tej samej transakcji, która oznacza krok jako zrobiony, więc nie da się ich wypłacić dwa razy. Nic w samouczku nie kosztuje kierowcy gotówki: tankowanie i naprawa są mu zwracane.
 
 ### `GET /tutorial`, `POST /tutorial/reply`, `POST /tutorial/skip`
 
@@ -183,7 +191,7 @@ Kroki 1–5 to pierwsze pięć z planszy Samouczek, dopasowane do tego, co w grz
 - `status`: `in_progress`, `finished` albo `skipped`;
 - `total` i `done`: liczba kroków i skończonych;
 - `current`: krok, który czeka, z `key`, `number` (od 1), `sender` (numer, z którego pisze Kuba), `sms` (jedna do dwóch wiadomości w języku kierowcy), `reply` (napis przycisku odpowiedzi), `target` (`laps`, `cash`, `refuel`, `repair`: co ekran podświetla) i `acknowledged` (kierowca już odpowiedział), albo `null`;
-- `rewarded`: co wypłaciły kroki skończone tym wywołaniem, żeby klient mógł to powiedzieć i odświeżyć gotówkę.
+- `rewarded`: co wypłaciły kroki skończone tym wywołaniem (`key`, `cash_cents` i `car_xp`, oba zawsze są), żeby klient mógł to powiedzieć i odświeżyć gotówkę i garaż. XP auta trafia do auta kierowcy w tej samej transakcji, która kończy krok; kierowca bez auta dostaje 0.
 
 `POST /tutorial/reply` odpowiada na SMS-y kroku, który czeka (telefon znika, a krok kończący się odpowiedzią jest skończony); dwa razy to jedna odpowiedź. `POST /tutorial/skip` zostawia bez wykonania kroki, które nie są skończone, **razem z ich nagrodami**; to, co zrobione i wypłacone, zostaje. Po `skip` samouczek już nie wraca. Obie odpowiedzi mają ten sam kształt co `GET`, a żadna nie jest buforowana. Postęp wchodzi do kopii danych konta (`game.tutorial`) i do usunięcia konta (rodzaj `tutorial steps`).
 

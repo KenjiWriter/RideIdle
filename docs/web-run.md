@@ -59,7 +59,7 @@ Ekran nie decyduje sam, czy holowanie przysługuje: czyta `tow.available`, któr
 
 Nad ekranami gry jest nawigacja `GameNav` (Garaż, Warsztat, Sklep). API i zasady są w `docs/api-runs.md` (część „Garaż, sklep i warsztat”), a stan trzyma sklep Pinia `garage`.
 
-**Sklep.** Lista części z reguł: nazwa w języku kierowcy, gniazdo, tier, co część robi (`PartStats`: „Moc +2%”, „Przyczepność 100”), cena i przycisk „Kup”. Kupuje się jedną część naraz. Przycisk jest nieaktywny, gdy brakuje gotówki, a pod częścią, której auto nie zamontuje z powodu poziomu, jest „Wymaga poziomu auta 3” i poziom auta kierowcy (część i tak można kupić na zapas). Po zakupie komunikat mówi, co dodano, i prowadzi do warsztatu; to, czego odmawia serwer, pokazuje się jego własnym tekstem w języku kierowcy. Zakup ma `request_id`, który zostaje ten sam, dopóki nie ma odpowiedzi (jak przy tankowaniu), więc powtórzone kliknięcie po zgubionej odpowiedzi kupuje raz.
+**Sklep.** Lista części z reguł: nazwa w języku kierowcy, gniazdo, tier, co część robi (`PartStats`: „Moc +2%”, „Przyczepność 100”), cena i przycisk „Kup”. Kupuje się jedną część naraz. Przycisk jest nieaktywny, gdy brakuje gotówki, a pod częścią, której auto nie zamontuje z powodu poziomu, jest „Wymaga poziomu auta 3. Twoje auto ma poziom 2. Zdobywasz XP, jeżdżąc tym autem.” (część i tak można kupić na zapas). Po zakupie komunikat mówi, co dodano, i prowadzi do warsztatu; to, czego odmawia serwer, pokazuje się jego własnym tekstem w języku kierowcy. Zakup ma `request_id`, który zostaje ten sam, dopóki nie ma odpowiedzi (jak przy tankowaniu), więc powtórzone kliknięcie po zgubionej odpowiedzi kupuje raz.
 
 **Warsztat.** Kolejka mechanika (zlecenie w toku z odliczaniem, reszta „Czeka”), auto z poziomem i statystykami razem z tym, co zmieniają części („Przyczepność 100 +10”), dziewięć gniazd (z przyciskiem „Zdejmij” przy zamontowanej części; silnik jest na razie częścią nadwozia) i inwentarz z przyciskiem „Załóż”. Część, która już czeka w kolejce, ma przyciski nieaktywne. Gdy auto stoi w warsztacie, jest o tym komunikat, a ekran garażu pokazuje status „W warsztacie” i nie oferuje naprawy ani holowania.
 
@@ -71,9 +71,9 @@ Ekran Turniej to plansza Wyscig: wyścig takim, jakim jest teraz. Wejście jest 
 
 - **Pierścień** pokazuje, ile zostało do końca okrążenia w toku (`0:41 DO KOŃCA`), według zegara serwera, odświeżany co 250 ms. Gdy okrążenie mija, ekran po chwili pyta serwer, ile zapłaciło, więc gotówka i licznik okrążeń zmieniają się w tym samym momencie, a nie przy następnym odpytaniu (co 15 s). Do czasu odpowiedzi pierścień kręci się dalej z tą samą długością okrążenia, a odpowiedź go prostuje (nowa pogoda, pusty bak). Auto, które stoi, ma w pierścieniu kreskę i swój stan, a czekające na holowanie odlicza czekanie.
 - **Pasek pogody** mówi, jaka jest pogoda teraz, za ile się zmienia i jaka będzie („Teraz: sucho. Za 12 min 30 s: deszcz.”). Gdy pogoda zmienia czas okrążenia, dodaje, ile okrążenie trwa i płaci w tej pogodzie, i ile w suchym. Efektem pogody jest to, co liczą reguły: oponami nie da się jej jeszcze zmieniać, więc planszowego „Zmień opony” nie ma.
-- Wiersze obok pierścienia: okrążenie (numer w toku albo liczba ukończonych), czas okrążenia i zysk na okrążenie, a pod nimi zysk i XP gracza za okrążenie w tej pogodzie.
+- Wiersze obok pierścienia: okrążenie (numer w toku albo liczba ukończonych), czas okrążenia i zysk na okrążenie, a pod nimi zysk, XP gracza i XP auta za okrążenie w tej pogodzie (XP auta jest w każdej pogodzie takie samo).
 
-Czego z planszy **nie ma**, bo nie ma jeszcze, na czym to oprzeć: turnieju i rund („Runda 3/10”: bieg jedzie, póki jest paliwo), **pozycji** (P3/8) i rywali na tablicy (tablica ma jeden wiersz, z kierowcą, i mówi, że boty i duchy dojdą później: boty to F3, duchy F4), „+22 XP auta” (aut z XP jeszcze nie ma), przycisku „Zmień turniej” (jeden tor, mapa to F2), przełącznika auto-powtarzania (auto zawsze jedzie do końca paliwa), zakładek Turnieje i Ranking oraz zegara gry i pogody w HUD. Tytuł „Turniej” w nawigacji jest z planszy: po F6, gdy będą turnieje z drabinką, ten ekran będzie ich zakładką „Wyścig”.
+Czego z planszy **nie ma**, bo nie ma jeszcze, na czym to oprzeć: turnieju i rund („Runda 3/10”: bieg jedzie, póki jest paliwo), **pozycji** (P3/8) i rywali na tablicy (tablica ma jeden wiersz, z kierowcą, i mówi, że boty i duchy dojdą później: boty to F3, duchy F4), przycisku „Zmień turniej” (jeden tor, mapa to F2), przełącznika auto-powtarzania (auto zawsze jedzie do końca paliwa), zakładek Turnieje i Ranking oraz zegara gry i pogody w HUD. Tytuł „Turniej” w nawigacji jest z planszy: po F6, gdy będą turnieje z drabinką, ten ekran będzie ich zakładką „Wyścig”.
 
 ## Historia i samouczek
 
@@ -88,6 +88,12 @@ Czego z planszy **nie ma**, bo nie ma jeszcze, na czym to oprzeć: turnieju i ru
 - Dostępność: telefon ma `role="dialog"`, `aria-modal` i etykietę „Wiadomość od {numer}”, odpowiedź dostaje fokus, Escape zamyka pytanie o pominięcie, wysuwanie telefonu wyłącza się przy `prefers-reduced-motion`, a przyciski odpowiedzi mają co najmniej 44 px wysokości. Tło strony poza otworem nie jest `inert`: nawigacja klawiaturą może wyjść poza telefon (do poprawy, jeśli test z czytnikiem ekranu to potwierdzi).
 
 Samouczek jest wyświetlany tylko w garażu: SMS, który przychodzi, gdy kierowca jest w warsztacie albo sklepie, czeka na garaż.
+
+## XP i poziom auta w garażu
+
+Pod tytułem garażu jest pasek z planszy Garaż: „XP auta 410 / 600” (ile auto ma w swoim poziomie i ile ten poziom trwa; pasek pokazuje ten ułamek), a pod nim, jaki poziom otwiera następne części („Od poziomu 6: części T3”). Na najwyższym poziomie pasek jest pełny i mówi „Najwyższy poziom”. Obok tytułu jest znacznik „Auto LV 3”.
+
+Gdy garaż pyta o auto (przy otwarciu i za każdym razem, gdy zmienia się wersja biegu, więc po każdym rozliczeniu) i widzi **wyższy poziom niż poprzednio**, mówi o tym raz („Auto awansowało na poziom 5. Można montować części T3.”; drugie zdanie tylko wtedy, gdy awans otworzył tier, a przy kilku poziomach naraz jest to najwyższy otwarty tier). Pierwsza odpowiedź nigdy nie jest awansem, a komunikat czeka, gdy awans zauważył warsztat, a kierowca wraca do garażu później. XP auta z nagrody samouczka („K. dorzucił Twojemu autu 100 XP.”) odświeża pasek od razu, bo wersja biegu się wtedy nie zmienia.
 
 ## Wygląd (skórka z canvy)
 
