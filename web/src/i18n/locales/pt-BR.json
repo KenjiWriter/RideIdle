@@ -41,7 +41,6 @@
   },
   "garage": {
     "welcome": "Bem-vindo, {name}",
-    "placeholder": "Sua primeira carcaça já está esperando. A garagem abre na próxima versão.",
     "signOut": "Sair"
   },
   "choose": {
@@ -74,6 +73,39 @@
     "weight": "{value} kg",
     "liters": "{value} l",
     "xp": "{value} XP"
+  },
+  "run": {
+    "laps": "{n} volta | {n} voltas",
+    "status": {
+      "running": "Correndo",
+      "fuel_empty": "Sem combustível",
+      "breakdown": "Quebrado"
+    },
+    "stat": {
+      "cash": "Dinheiro",
+      "xp": "Experiência",
+      "laps": "Voltas",
+      "reward": "Ganho por volta",
+      "lapTime": "Tempo de volta"
+    },
+    "banner": {
+      "fuel_empty": "O tanque está vazio. O carro fica parado até você abastecer.",
+      "breakdown": "O carro quebrou. Ele fica parado até ser consertado."
+    },
+    "fuel": {
+      "title": "Combustível",
+      "range": "Dá para {laps} (cerca de {time})",
+      "empty": "O tanque está vazio."
+    },
+    "away": {
+      "title": "Enquanto você esteve fora",
+      "duration": "Tempo fora",
+      "earned": "Ganho",
+      "fuel_empty": "O combustível acabou.",
+      "breakdown": "O carro quebrou.",
+      "dismiss": "Entendi"
+    },
+    "loadError": "Não foi possível carregar o estado do seu carro."
   },
   "recover": {
     "title": "Restaurar seu piloto",

@@ -6,13 +6,12 @@ import { useRouter } from 'vue-router'
 import { ApiError } from '@/api/client'
 import StarterCarCard from '@/components/StarterCarCard.vue'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
+import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { useRunStore } from '@/stores/run'
-import { useSessionStore } from '@/stores/session'
 
 const { t } = useI18n()
 const router = useRouter()
 const run = useRunStore()
-const session = useSessionStore()
 
 useLeaveOnSignOut()
 
@@ -20,17 +19,6 @@ const loading = ref(true)
 const loadError = ref(false)
 const starting = ref<string | null>(null)
 const error = ref<string | null>(null)
-
-/** A 401 means the server no longer knows this device: the session ends and the driver is sent to the start. */
-function unauthorized(failure: unknown): boolean {
-  if (failure instanceof ApiError && failure.status === 401) {
-    session.signOut()
-
-    return true
-  }
-
-  return false
-}
 
 async function open(): Promise<void> {
   loading.value = true
@@ -48,7 +36,7 @@ async function open(): Promise<void> {
 
     await run.loadStarters()
   } catch (failure) {
-    if (!unauthorized(failure)) {
+    if (!endSessionIfUnauthorized(failure)) {
       loadError.value = true
     }
   } finally {
@@ -70,7 +58,7 @@ async function choose(slug: string): Promise<void> {
     await run.start(slug)
     await router.replace({ name: 'garage' })
   } catch (failure) {
-    if (unauthorized(failure)) {
+    if (endSessionIfUnauthorized(failure)) {
       return
     }
 

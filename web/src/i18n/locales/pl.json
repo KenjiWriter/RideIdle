@@ -41,7 +41,6 @@
   },
   "garage": {
     "welcome": "Witaj, {name}",
-    "placeholder": "Twój pierwszy wrak już czeka. Garaż otworzy się w następnej wersji.",
     "signOut": "Wyloguj"
   },
   "choose": {
@@ -74,6 +73,39 @@
     "weight": "{value} kg",
     "liters": "{value} l",
     "xp": "{value} XP"
+  },
+  "run": {
+    "laps": "{n} okrążenie | {n} okrążenia | {n} okrążeń",
+    "status": {
+      "running": "Jedzie",
+      "fuel_empty": "Brak paliwa",
+      "breakdown": "Awaria"
+    },
+    "stat": {
+      "cash": "Gotówka",
+      "xp": "Doświadczenie",
+      "laps": "Okrążenia",
+      "reward": "Nagroda za okrążenie",
+      "lapTime": "Czas okrążenia"
+    },
+    "banner": {
+      "fuel_empty": "Bak jest pusty. Auto stoi, dopóki go nie zatankujesz.",
+      "breakdown": "Auto się zepsuło. Stoi, dopóki go nie naprawisz."
+    },
+    "fuel": {
+      "title": "Paliwo",
+      "range": "Wystarczy na {laps} (ok. {time})",
+      "empty": "Bak jest pusty."
+    },
+    "away": {
+      "title": "Pod Twoją nieobecność",
+      "duration": "Czas nieobecności",
+      "earned": "Zarobione",
+      "fuel_empty": "Skończyło się paliwo.",
+      "breakdown": "Auto się zepsuło.",
+      "dismiss": "Rozumiem"
+    },
+    "loadError": "Nie udało się wczytać stanu auta."
   },
   "recover": {
     "title": "Przywróć kierowcę",

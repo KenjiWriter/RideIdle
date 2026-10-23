@@ -5,13 +5,10 @@ import type { Run, StarterCar } from '@/api/types'
 import { readToken, storeToken } from '@/auth/token'
 import { readSeen } from '@/features/run/seen'
 import { setLocale } from '@/i18n'
+import { respond, serveApi } from '@/test/fetchServer'
 import { mountView } from '@/test/mountView'
 
 import ChooseCarView from './ChooseCarView.vue'
-
-function respond(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
-}
 
 function car(overrides: Partial<StarterCar>): StarterCar {
   return {
@@ -55,21 +52,8 @@ const run: Run = {
   server_time_ms: 1_792_692_000_000,
 }
 
-/** Answers every call of the screen by its address, and remembers the calls. */
-function serve(routes: Record<string, () => Response | Promise<Response>>) {
-  const calls: { url: string; method: string; body: unknown }[] = []
-
-  fetchMock.mockImplementation((url: string, init: RequestInit = {}) => {
-    calls.push({ url, method: init.method ?? 'GET', body: init.body ? JSON.parse(init.body as string) : null })
-    const handler = routes[`${init.method ?? 'GET'} ${url.split('?')[0]}`]
-
-    return handler ? Promise.resolve(handler()) : Promise.resolve(respond(404, { message: 'Not found' }))
-  })
-
-  return calls
-}
-
 const fetchMock = vi.fn()
+const serve = (routes: Record<string, () => Response | Promise<Response>>) => serveApi(fetchMock, routes)
 const noRun = () => respond(404, { message: 'You have no car on the track yet.', code: 'no_run' })
 
 describe('ChooseCarView', () => {

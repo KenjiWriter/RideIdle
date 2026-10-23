@@ -41,7 +41,6 @@
   },
   "garage": {
     "welcome": "Willkommen, {name}",
-    "placeholder": "Dein erstes Wrack wartet schon. Die Garage öffnet in der nächsten Version.",
     "signOut": "Abmelden"
   },
   "choose": {
@@ -74,6 +73,39 @@
     "weight": "{value} kg",
     "liters": "{value} l",
     "xp": "{value} XP"
+  },
+  "run": {
+    "laps": "{n} Runde | {n} Runden",
+    "status": {
+      "running": "Im Rennen",
+      "fuel_empty": "Kein Sprit",
+      "breakdown": "Defekt"
+    },
+    "stat": {
+      "cash": "Geld",
+      "xp": "Erfahrung",
+      "laps": "Runden",
+      "reward": "Belohnung pro Runde",
+      "lapTime": "Rundenzeit"
+    },
+    "banner": {
+      "fuel_empty": "Der Tank ist leer. Das Auto steht, bis du tankst.",
+      "breakdown": "Das Auto hat eine Panne. Es steht, bis es repariert ist."
+    },
+    "fuel": {
+      "title": "Kraftstoff",
+      "range": "Reicht für {laps} (etwa {time})",
+      "empty": "Der Tank ist leer."
+    },
+    "away": {
+      "title": "Während du weg warst",
+      "duration": "Abwesenheit",
+      "earned": "Verdient",
+      "fuel_empty": "Der Tank ist leer gefahren.",
+      "breakdown": "Das Auto hatte eine Panne.",
+      "dismiss": "Verstanden"
+    },
+    "loadError": "Der Zustand deines Autos konnte nicht geladen werden."
   },
   "recover": {
     "title": "Fahrer wiederherstellen",

@@ -41,7 +41,6 @@
   },
   "garage": {
     "welcome": "Bienvenue, {name}",
-    "placeholder": "Votre première épave vous attend. Le garage ouvrira dans la prochaine version.",
     "signOut": "Se déconnecter"
   },
   "choose": {
@@ -74,6 +73,39 @@
     "weight": "{value} kg",
     "liters": "{value} l",
     "xp": "{value} XP"
+  },
+  "run": {
+    "laps": "{n} tour | {n} tours",
+    "status": {
+      "running": "En course",
+      "fuel_empty": "Panne sèche",
+      "breakdown": "En panne"
+    },
+    "stat": {
+      "cash": "Argent",
+      "xp": "Expérience",
+      "laps": "Tours",
+      "reward": "Gain par tour",
+      "lapTime": "Temps au tour"
+    },
+    "banner": {
+      "fuel_empty": "Le réservoir est vide. La voiture reste arrêtée tant que vous ne faites pas le plein.",
+      "breakdown": "La voiture est tombée en panne. Elle reste arrêtée tant qu’elle n’est pas réparée."
+    },
+    "fuel": {
+      "title": "Carburant",
+      "range": "Assez pour {laps} (environ {time})",
+      "empty": "Le réservoir est vide."
+    },
+    "away": {
+      "title": "Pendant votre absence",
+      "duration": "Durée d’absence",
+      "earned": "Gagné",
+      "fuel_empty": "Le réservoir s’est vidé.",
+      "breakdown": "La voiture est tombée en panne.",
+      "dismiss": "Compris"
+    },
+    "loadError": "Impossible de charger l’état de la voiture."
   },
   "recover": {
     "title": "Récupérer votre pilote",

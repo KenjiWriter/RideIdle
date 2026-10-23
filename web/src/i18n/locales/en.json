@@ -41,7 +41,6 @@
   },
   "garage": {
     "welcome": "Welcome, {name}",
-    "placeholder": "Your first wreck is waiting. The garage opens in the next version.",
     "signOut": "Sign out"
   },
   "choose": {
@@ -74,6 +73,39 @@
     "weight": "{value} kg",
     "liters": "{value} l",
     "xp": "{value} XP"
+  },
+  "run": {
+    "laps": "{n} lap | {n} laps",
+    "status": {
+      "running": "Racing",
+      "fuel_empty": "Out of fuel",
+      "breakdown": "Broken down"
+    },
+    "stat": {
+      "cash": "Cash",
+      "xp": "Experience",
+      "laps": "Laps",
+      "reward": "Reward per lap",
+      "lapTime": "Lap time"
+    },
+    "banner": {
+      "fuel_empty": "The tank is empty. The car stands until you refuel it.",
+      "breakdown": "The car broke down. It stands until it is repaired."
+    },
+    "fuel": {
+      "title": "Fuel",
+      "range": "Enough for {laps} (about {time})",
+      "empty": "The tank is empty."
+    },
+    "away": {
+      "title": "While you were away",
+      "duration": "Time away",
+      "earned": "Earned",
+      "fuel_empty": "The tank ran dry.",
+      "breakdown": "The car broke down.",
+      "dismiss": "Got it"
+    },
+    "loadError": "The state of your car could not be loaded."
   },
   "recover": {
     "title": "Restore your driver",
