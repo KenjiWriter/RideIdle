@@ -169,5 +169,25 @@
     "garage": "Przejdź do garażu",
     "newLink": "Poproś o nowy link",
     "home": "Wróć na początek"
+  },
+  "provider": {
+    "email": "E-mail",
+    "google": "Google",
+    "facebook": "Facebook",
+    "apple": "Apple"
+  },
+  "callback": {
+    "checking": "Kończymy logowanie…",
+    "linkedTitle": "Konto {provider} zostało połączone",
+    "linkedBody": "Twój garaż jest zapisany. Od teraz możesz logować się przez {provider}.",
+    "cancelledTitle": "Logowanie przerwane",
+    "cancelledBody": "Zgoda w {provider} nie została udzielona, więc nic nie zostało zmienione.",
+    "failedTitle": "Logowanie się nie udało",
+    "failed": "Coś poszło nie tak w drodze powrotnej z {provider}. Spróbuj ponownie.",
+    "missingVerifier": "To logowanie nie zostało rozpoczęte w tej przeglądarce albo trwało zbyt długo. Zacznij je od nowa.",
+    "expired": "To logowanie wygasło albo zostało już użyte. Zacznij je od nowa.",
+    "signedOut": "Sesja się zakończyła. Zaloguj się do garażu i spróbuj ponownie.",
+    "garage": "Przejdź do garażu",
+    "signIn": "Wróć do logowania"
   }
 }

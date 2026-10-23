@@ -169,5 +169,25 @@
     "garage": "Aller au garage",
     "newLink": "Demander un nouveau lien",
     "home": "Retour au début"
+  },
+  "provider": {
+    "email": "E-mail",
+    "google": "Google",
+    "facebook": "Facebook",
+    "apple": "Apple"
+  },
+  "callback": {
+    "checking": "Fin de la connexion…",
+    "linkedTitle": "Le compte {provider} est lié",
+    "linkedBody": "Votre garage est sauvegardé. Désormais, vous pouvez vous connecter avec {provider}.",
+    "cancelledTitle": "Connexion annulée",
+    "cancelledBody": "Vous n’avez pas autorisé l’accès chez {provider}, rien n’a donc été modifié.",
+    "failedTitle": "La connexion a échoué",
+    "failed": "Un problème est survenu au retour de {provider}. Réessayez.",
+    "missingVerifier": "Cette connexion n’a pas été démarrée dans ce navigateur, ou elle a pris trop de temps. Recommencez.",
+    "expired": "Cette connexion a expiré ou a déjà été utilisée. Recommencez.",
+    "signedOut": "Votre session est terminée. Connectez-vous à votre garage et réessayez.",
+    "garage": "Aller au garage",
+    "signIn": "Retour à la connexion"
   }
 }

@@ -169,5 +169,25 @@
     "garage": "Go to the garage",
     "newLink": "Ask for a new link",
     "home": "Back to the start"
+  },
+  "provider": {
+    "email": "E-mail",
+    "google": "Google",
+    "facebook": "Facebook",
+    "apple": "Apple"
+  },
+  "callback": {
+    "checking": "Finishing the sign-in…",
+    "linkedTitle": "{provider} is linked",
+    "linkedBody": "Your garage is saved. From now on you can sign in with {provider}.",
+    "cancelledTitle": "Sign-in cancelled",
+    "cancelledBody": "You did not allow it at {provider}, so nothing was changed.",
+    "failedTitle": "The sign-in did not work",
+    "failed": "Something went wrong on the way back from {provider}. Try again.",
+    "missingVerifier": "This sign-in was not started in this browser, or it took too long. Start it again.",
+    "expired": "This sign-in has expired or was already used. Start it again.",
+    "signedOut": "Your session has ended. Sign in to your garage and try again.",
+    "garage": "Go to the garage",
+    "signIn": "Back to signing in"
   }
 }

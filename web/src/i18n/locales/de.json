@@ -169,5 +169,25 @@
     "garage": "Zur Garage",
     "newLink": "Neuen Link anfordern",
     "home": "Zurück zum Start"
+  },
+  "provider": {
+    "email": "E-Mail",
+    "google": "Google",
+    "facebook": "Facebook",
+    "apple": "Apple"
+  },
+  "callback": {
+    "checking": "Die Anmeldung wird abgeschlossen…",
+    "linkedTitle": "{provider} ist verknüpft",
+    "linkedBody": "Deine Garage ist gesichert. Ab jetzt kannst du dich mit {provider} anmelden.",
+    "cancelledTitle": "Anmeldung abgebrochen",
+    "cancelledBody": "Du hast bei {provider} nicht zugestimmt, deshalb wurde nichts geändert.",
+    "failedTitle": "Die Anmeldung hat nicht geklappt",
+    "failed": "Bei der Rückkehr von {provider} ist etwas schiefgelaufen. Versuche es erneut.",
+    "missingVerifier": "Diese Anmeldung wurde nicht in diesem Browser gestartet oder hat zu lange gedauert. Starte sie noch einmal.",
+    "expired": "Diese Anmeldung ist abgelaufen oder wurde schon benutzt. Starte sie noch einmal.",
+    "signedOut": "Deine Sitzung ist beendet. Melde dich bei deiner Garage an und versuche es erneut.",
+    "garage": "Zur Garage",
+    "signIn": "Zurück zur Anmeldung"
   }
 }

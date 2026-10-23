@@ -169,5 +169,25 @@
     "garage": "Ir para a garagem",
     "newLink": "Pedir um novo link",
     "home": "Voltar ao início"
+  },
+  "provider": {
+    "email": "E-mail",
+    "google": "Google",
+    "facebook": "Facebook",
+    "apple": "Apple"
+  },
+  "callback": {
+    "checking": "Concluindo a entrada…",
+    "linkedTitle": "{provider} foi vinculado",
+    "linkedBody": "Sua garagem está salva. A partir de agora você pode entrar com {provider}.",
+    "cancelledTitle": "Entrada cancelada",
+    "cancelledBody": "Você não permitiu em {provider}, então nada foi alterado.",
+    "failedTitle": "A entrada não funcionou",
+    "failed": "Algo deu errado na volta de {provider}. Tente novamente.",
+    "missingVerifier": "Esta entrada não foi iniciada neste navegador ou demorou demais. Comece de novo.",
+    "expired": "Esta entrada expirou ou já foi usada. Comece de novo.",
+    "signedOut": "Sua sessão terminou. Entre na sua garagem e tente novamente.",
+    "garage": "Ir para a garagem",
+    "signIn": "Voltar para a entrada"
   }
 }
