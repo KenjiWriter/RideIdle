@@ -118,6 +118,12 @@ Miasto to region reguł. `regions[slug]` ma `name` (pięć języków), `map` (`x
 
 `StarterRulesTest` pilnuje, że każdy region ma nazwę w pięciu językach i tor, a każda droga łączy istniejące miasta.
 
+### Garaże i flota
+
+`garage` w `rules/starter.json` (wymagane przez schemat) ma `capacity` (ile aut mieści garaż w mieście), `price_cents` (cena garażu poza miastem startowym) i `wreck_price_cents` (ceny wraków ze złomowiska: tylko auta z tej listy są na sprzedaż). **Wszystkie liczby są moje i robocze**, projekt ich nie podaje: pojemność 3, garaż 500 000 centów (5 000 $), wraki 114 000 (Rdzak GT-4), 139 000 (Bizon M-2) i 151 000 (Kuna 4x4). Garaż miasta startowego jest od początku i nic nie kosztuje; inny kupuje się w mieście, które otwiera poziom gracza (bramka z poprzedniej części).
+
+Plansza Flota (aktywne sloty z limitem 2, magazyn na 3 auta, trzeci slot za 600 diamentów albo VIP, zamiana 2 minuty) **nie jest wzorem**: w prototypie jeżdżą wszystkie auta, a ograniczeniem jest miejsce w garażach miast. Tak jest prościej i pasuje do „zaparkowane auta jeżdżą same”, ale **zmienia bilans**: dochód rośnie z liczbą aut, a symulator ekonomii (`economy:simulate`) floty nie modeluje (ma tylko mnożnik). Limit aut aktywnych dojdzie z VIP-em i diamentami (F6); do tego czasu ceny wraków i garażu trzeba traktować jako tymczasowe.
+
 ## Ekonomia i symulator (`rules/economy.json`)
 
 `economy.json` (schemat `economy.schema.json`) to **kotwice ekonomii** z Systemy V i VI projektu: to, co się wpisuje, a z czego wynika reszta. Czyta je symulator ekonomii v0, polecenie `php artisan economy:simulate` (kod w `api/app/Domain/Economy/`, czysty, bez zegara i losowości, więc ten sam zestaw reguł zawsze daje te same dni).
