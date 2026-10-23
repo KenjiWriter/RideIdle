@@ -128,6 +128,36 @@ Komunikaty (`message`) są w języku żądania.
 
 Auto pochodzi z paczki `content/packs/core`, a tor, klimat regionu, efekty pogody, cena paliwa, koszt naprawy i szansa awarii z `content/rules/starter.json` (opis w `content/README.md`). Dopóki nie ma wyboru części i opon, każde auto jedzie na oponach fabrycznych, a jego statystyki wynikają z nadwozia: przyspieszenie to moc na tonę, prędkość maksymalna z definicji. Wartości bez źródła w projekcie (koszt naprawy, szansa awarii) są tymczasowe.
 
+## Garaż, sklep i warsztat
+
+Kierowca ma auta i części jako wiersze (`cars`, `parts`), a bieg jeździ autem (`race_runs.car_id`). Części są w inwentarzu (`car_id` puste) albo zamontowane w gnieździe auta (`mounted_slot`; baza sama odrzuca drugą część w jednym gnieździe). Reguły są w `content/rules/starter.json` (`car`, `shop`, `workshop`), opis w `content/README.md`.
+
+### Sklep: `GET /shop` i `POST /shop/purchases`
+
+`GET /shop` zwraca części na sprzedaż (kolejność z reguł, nazwa w języku kierowcy, `price_cents`, `tier`, `stats`) i dla każdej `required_car_level` oraz `mountable`: czy auto kierowcy ma poziom na jej montaż (tier ≤ 1 + ⌊poziom auta / 3⌋). Do tego `data.car` (id i poziom albo `null`) i `wallet`.
+
+`POST /shop/purchases` (`part`: slug, `request_id`: do 64 znaków) kupuje część do inwentarza: pieniądze (klucz księgi `shop:{kierowca}:{request_id}`) i część w jednej transakcji pod blokadą portfela. Odpowiedź 201 ma `data` (część), `purchase.cost_cents` i `wallet`. Powtórzone `request_id` nie pobiera ani nie daje drugi raz (200, `purchase.repeated: true`, `data: null`), a to samo `request_id` dla innej części to 409 `request_reused`. Błędy: 422 `part_not_for_sale` (nie ma jej na liście reguł, także gdy jest w paczce), 422 `insufficient_funds`.
+
+### Garaż: `GET /garage`
+
+Najpierw wykonuje to, co w warsztacie jest już należne. `data.car`: poziom, nadwozie, `stats` (przyspieszenie, prędkość maksymalna, przyczepność, prowadzenie, hamowanie) z częściami i `base_stats` bez nich, `tank_ml`, `lap_ms` biegu, stan biegu i dziewięć gniazd w stałej kolejności (opony, zawieszenie, hamulce, silnik, doładowanie, skrzynia, wydech, chłodzenie, zbiornik; silnik to na razie część nadwozia, `built_in`). `data.inventory`: części poza autem. `data.workshop`: `queue_max`, mechanik i niewykonane zlecenia. `now_ms` to czas serwera: czasy zleceń (`start_ms`, `finish_ms`) są w jego zegarze, więc odliczanie nie zależy od zegara klienta.
+
+### Warsztat: `POST /garage/jobs`
+
+`kind` (`mount` albo `unmount`) i `part` (id części kierowcy) ustawiają zlecenie w kolejce jednego mechanika. Czas zlecenia to czas bazowy gniazda dla tieru 1 razy tier, skrócony o 2% za poziom mechanika; zdjęcie części trwa 60% tego czasu. Zlecenie startuje, gdy skończy się poprzednie (albo od razu, gdy mechanik jest wolny), a czasy ustala się przy ustawianiu w kolejce. Montaż w gnieździe, które ma część, ustawia najpierw osobne zlecenie zdjęcia starej, więc wymiana to dwa miejsca w kolejce (mieści się cztery). Odpowiedź 201 to cały garaż. Błędy 422 z kodem: `no_car`, `part_not_found`, `part_busy` (część już czeka w kolejce), `slot_busy` (inna część tego gniazda już czeka na montaż), `part_mounted`, `part_not_mounted`, `car_level_required` (z `details.required` i `details.current`), `queue_full`.
+
+**Nic nie działa w tle.** Zlecenia wykonują się leniwie, w kolejności swoich czasów, gdy kierowca wraca (każdy punkt końcowy biegu i `GET /garage` robią to najpierw, żeby bieg nigdy nie został rozliczony poza początek zlecenia):
+
+- gdy zlecenie startuje, **auto wchodzi do warsztatu**: to, co zarobiło do tej chwili, jest rozliczone, a potem stoi (`status: stopped`, `stop_reason: workshop`) i nic nie zarabia, więc strojenie kosztuje czas poza ceną części;
+- gdy zlecenie się kończy, część jest w aucie albo zdjęta;
+- gdy kończy się ostatnie zlecenie z rzędu, konfiguracja biegu jest zamrażana od nowa z częściami, które auto ma teraz (to samo ziarno, więc zaplanowana awaria się nie przesuwa), a auto jedzie od tej chwili. Auto, które stało z innego powodu (awaria), zostaje stojące i dostaje tylko nową konfigurację.
+
+Tankowanie nie rusza auta w warsztacie, a holowanie nie jest wtedy oferowane (`tow.available: false`).
+
+Statystyki auta (`RunInputsFactory::stats`): moc nadwozia razy `power_mult` części, przyspieszenie to moc na tonę, prędkość maksymalna rośnie z pierwiastkiem sześciennym zysku mocy i nie przekracza limitu skrzyni, przyczepność, prowadzenie i hamowanie biorą się z opon (fabrycznych, gdy żadnych nie założono), a zawieszenie i hamulce są uśredniane z prowadzeniem i hamowaniem opon. **Uśrednianie to pierwsza reguła do sprawdzenia w symulatorze ekonomii.** Efektów opon na mokrym i na żwirze jeszcze nie ma (macierz opon dojdzie z torami), dlatego sklep sprzedaje tylko opony uliczne T2, zawieszenie, hamulce i wydech: wszystko, co zmienia statystyki.
+
+Kolejki nie da się jeszcze anulować, a auto ma poziom stały (`car.start_level`): poziomy aut z XP dojdą później.
+
 ## Znane ograniczenia
 
 - Jeden bieg na kierowcę i jeden tor (Złomowo). Kolejne tory wymagają podróży i poziomów gracza, których jeszcze nie ma.
