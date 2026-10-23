@@ -13,6 +13,9 @@ server {
     listen [::]:80;
     server_name __DOMAIN__;
 
+    # The same log and format as below: a link opened over http still has its secret in the address.
+    access_log /var/log/nginx/idlerace.access.log rideidle;
+
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
@@ -49,7 +52,7 @@ server {
     gzip_min_length 1024;
     gzip_types text/css application/javascript application/json image/svg+xml;
 
-    access_log /var/log/nginx/idlerace.access.log;
+    access_log /var/log/nginx/idlerace.access.log rideidle;
     error_log  /var/log/nginx/idlerace.error.log warn;
 
     # The API. Laravel is told what path was asked for (/api/v1/...), and the file that runs is always index.php of the

@@ -206,6 +206,7 @@ systemctl start rideidle-queue
 - **Jedna domena, jeden serwer.** Aplikacja web i API są pod jednym adresem, więc nie ma CORS ani drugiego certyfikatu. Przy większym ruchu bazę lub kolejkę można przenieść osobno.
 - **Kolejka w bazie, nie w Redisie.** Przez to `accounts:delete` usuwa także maile czekające w kolejce i nieudane, a `queue:prune-failed` je sprząta. Redis trzyma tylko liczniki limitów.
 - **Brak Content-Security-Policy.** Teksty gry są kompilowane w przeglądarce (vue-i18n), co wymaga `unsafe-eval`; polityka z nim chroni niewiele. Pozostałe nagłówki są: HSTS, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` (adres strony może zawierać sekret linku), `Permissions-Policy`. HSTS ma rok i nie ma `includeSubDomains` ani `preload`.
+- **Log dostępu nginx bez zapytania** (`rideidle-global.conf`). Link z maila to `/account/confirm?token=SEKRET`, a kod od Google i Facebooka wraca w adresie powrotu, więc zwykły log trzymałby je tak długo, jak log (Ubuntu rotuje logi nginx przez 14 dni). Format `rideidle` zapisuje adres tylko do znaku `?`. Zostaje jedna luka: **log błędów nginx** zapisuje pełny adres przy błędzie (np. 502 na `/api/v1/auth/google/callback?code=…`); sekret jest wtedy jednorazowy i krótko ważny, ale log czytają `root` i grupa `adm`, do której należy `deploy`.
 - **Opcache nie sprawdza plików** (`validate_timestamps=0`); dlatego każde wydanie przeładowuje PHP-FPM.
 - **Brak Dockera, brak CI/CD.** Wydanie robisz ręcznie z komputera. CI można dodać później, wywołując `upload.sh`.
 - **Zapora** przepuszcza tylko SSH, 80 i 443. PostgreSQL i Redis słuchają wyłącznie lokalnie.
@@ -216,7 +217,7 @@ systemctl start rideidle-queue
 Sprawdzone:
 
 - Wszystkie skrypty przechodzą `bash -n` i `shellcheck` bez uwag.
-- Konfiguracja nginx przeszła `nginx -t` (nginx 1.27.3) po wyrenderowaniu szablonu; uruchomiony serwer odpowiadał tak, jak trzeba: przekierowanie HTTP → HTTPS, ścieżka sprawdzenia Let's Encrypt, nagłówki na każdej odpowiedzi, `index.html` dla adresów aplikacji, długie cache tylko dla `assets/` (i nie dla błędu 404), brak dostępu do plików z kropką. To badanie wykryło i poprawiło jedną wadę (404 z `immutable`). Nie sprawdzono PHP-FPM ani TLS z prawdziwym certyfikatem.
+- Konfiguracja nginx przeszła `nginx -t` (nginx 1.27.3) po wyrenderowaniu szablonu; uruchomiony serwer odpowiadał tak, jak trzeba: przekierowanie HTTP → HTTPS, ścieżka sprawdzenia Let's Encrypt, nagłówki na każdej odpowiedzi, `index.html` dla adresów aplikacji, długie cache tylko dla `assets/` (i nie dla błędu 404), brak dostępu do plików z kropką, brak sekretów z adresu w logu dostępu (także przy wejściu przez HTTP). To badanie wykryło i poprawiło dwie wady (404 z `immutable` i sekrety w logu). Nie sprawdzono PHP-FPM ani TLS z prawdziwym certyfikatem.
 - Zapis wartości do `.env` (hasła z `$`, `\`, `"`, `&`, `#`, polskie litery) odczytany parserem `.env` Laravela jest identyczny. Test wykrył błąd bash 5.2, który psuł `&` w wartościach; poprawiony w skrypcie.
 - Wybór wydania do wycofania (po jednym i dwóch wycofaniach, najstarsze, brak).
 
