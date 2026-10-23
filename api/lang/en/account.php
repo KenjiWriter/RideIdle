@@ -18,6 +18,9 @@ return [
 
     'oauth' => [
         'unavailable' => 'This way of signing in is not available.',
+        'ticket_invalid' => 'This sign-in has expired or was already used. Start it again.',
+        'no_account' => 'No garage is linked to this :provider account. Start playing as a guest and link the account in your garage.',
+        'wrong_account' => 'This sign-in was started for another garage. Start it again from the garage you want to link.',
     ],
 
     'token' => [

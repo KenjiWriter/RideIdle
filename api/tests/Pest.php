@@ -233,6 +233,36 @@ function fragmentOf(TestResponse $response): array
     return $fields;
 }
 
+/**
+ * Goes through the provider as far as the callback and returns what the browser holds then: the ticket from the
+ * fragment and the verifier it was given when it started. A driver given links the provider to their account, none
+ * signs in.
+ *
+ * @param  array<string, mixed>  $person  what the provider says about the person
+ * @return array{ticket: string, verifier: string}
+ */
+function providerTicket(string $provider, ?User $driver = null, array $person = []): array
+{
+    withProviders(providerKeys());
+    config(['ride.web_url' => 'https://web.example']);
+
+    $start = $driver === null ? startProviderLogin($provider) : startProviderLink($driver, $provider);
+    $start->assertOk();
+
+    providerSays($provider, $person);
+
+    return ['ticket' => fragmentOf(comesBackFrom($provider, stateOf($start->json('url'))))['ticket'], 'verifier' => $start->json('verifier')];
+}
+
+/** The browser finishes the flow. It may be signed in as a driver, or have no account. */
+function finishWith(array $held, ?User $driver = null, array $body = []): TestResponse
+{
+    // A request without a token must not find the driver of an earlier request of the test in a cached guard.
+    app('auth')->forgetGuards();
+
+    return test()->postJson('/api/v1/auth/complete', [...$held, ...$body], $driver === null ? [] : bearerFor($driver));
+}
+
 function cashOf(RaceRun $run): int
 {
     return (new Ledger)->balance($run->user_id);

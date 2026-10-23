@@ -18,6 +18,9 @@ return [
 
     'oauth' => [
         'unavailable' => 'Ten sposób logowania jest niedostępny.',
+        'ticket_invalid' => 'To logowanie wygasło albo zostało już użyte. Zacznij je od nowa.',
+        'no_account' => 'Żaden garaż nie jest połączony z tym kontem :provider. Zacznij grać jako gość i połącz konto w swoim garażu.',
+        'wrong_account' => 'To logowanie zostało rozpoczęte dla innego garażu. Zacznij je od nowa z garażu, który chcesz połączyć.',
     ],
 
     'token' => [

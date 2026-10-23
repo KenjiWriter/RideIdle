@@ -18,6 +18,9 @@ return [
 
     'oauth' => [
         'unavailable' => 'Ce mode de connexion n’est pas disponible.',
+        'ticket_invalid' => 'Cette connexion a expiré ou a déjà été utilisée. Recommencez.',
+        'no_account' => 'Aucun garage n’est lié à ce compte :provider. Commencez à jouer en invité et liez le compte depuis votre garage.',
+        'wrong_account' => 'Cette connexion a été démarrée pour un autre garage. Recommencez depuis le garage que vous voulez lier.',
     ],
 
     'token' => [

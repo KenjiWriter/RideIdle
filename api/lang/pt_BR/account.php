@@ -18,6 +18,9 @@ return [
 
     'oauth' => [
         'unavailable' => 'Esta forma de entrar não está disponível.',
+        'ticket_invalid' => 'Esta entrada expirou ou já foi usada. Comece de novo.',
+        'no_account' => 'Nenhuma garagem está ligada a esta conta :provider. Comece a jogar como convidado e vincule a conta na sua garagem.',
+        'wrong_account' => 'Esta entrada foi iniciada para outra garagem. Comece de novo na garagem que você quer vincular.',
     ],
 
     'token' => [

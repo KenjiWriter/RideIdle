@@ -21,6 +21,7 @@ Route::prefix('v1')->group(function (): void {
     // The sign-ins with another service that are on, and the way in and out of each of them. The providers are
     // Google, Facebook and Apple; the callback is where the provider sends the person back (Apple with a form post).
     Route::get('/auth/providers', [AuthProviderController::class, 'index']);
+    Route::post('/auth/complete', [SocialAuthController::class, 'complete'])->middleware('throttle:account-confirm');
     Route::post('/auth/{provider}/start', [SocialAuthController::class, 'startLogin'])->whereIn('provider', AccountIdentity::SOCIAL)->middleware('throttle:account-oauth-start');
     Route::match(['get', 'post'], '/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', AccountIdentity::SOCIAL);
 

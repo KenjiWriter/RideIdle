@@ -18,6 +18,9 @@ return [
 
     'oauth' => [
         'unavailable' => 'Diese Art der Anmeldung ist nicht verfügbar.',
+        'ticket_invalid' => 'Diese Anmeldung ist abgelaufen oder wurde schon benutzt. Starte sie noch einmal.',
+        'no_account' => 'Mit diesem :provider-Konto ist keine Garage verknüpft. Spiele zuerst als Gast und verknüpfe das Konto in deiner Garage.',
+        'wrong_account' => 'Diese Anmeldung wurde für eine andere Garage gestartet. Starte sie noch einmal in der Garage, die du verknüpfen willst.',
     ],
 
     'token' => [
