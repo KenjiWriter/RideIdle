@@ -326,6 +326,40 @@ describe('GarageView', () => {
       expect(wrapper.get('[data-test="laps"]').text()).toBe('316')
     })
 
+    it('learns that a guest account was secured elsewhere, and stops asking to save the garage', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+      localStorage.removeItem('ride.linkPrompt')
+      const { mounted } = open()
+      const { wrapper } = await mounted
+      await flushPromises()
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(true)
+
+      // The driver opened the link of the e-mail in another tab.
+      serve(
+        () => respond(200, runAnswer(aRun())),
+        () => respond(200, { data: { ...profile, is_guest: false, identities: [{ provider: 'email', email: 't***@example.com' }] } }),
+      )
+      await vi.advanceTimersByTimeAsync(POLL_MS)
+
+      expect(wrapper.find('[data-test="dialog"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="link-banner"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="identity-email"]').exists()).toBe(true)
+    })
+
+    it('does not ask for the profile again once the driver has an account', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
+      const calls = serve(
+        () => respond(200, runAnswer(aRun())),
+        () => respond(200, { data: { ...profile, is_guest: false } }),
+      )
+      await show()
+      await flushPromises()
+
+      await vi.advanceTimersByTimeAsync(POLL_MS * 3)
+
+      expect(calls.filter((call) => call.url === '/api/v1/me')).toHaveLength(1)
+    })
+
     it('does not ask while the page is hidden, and asks as soon as it is visible again', async () => {
       vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
       const { mounted, calls } = open()
