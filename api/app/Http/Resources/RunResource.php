@@ -7,6 +7,9 @@ namespace App\Http\Resources;
 use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
+use App\Domain\Run\FrozenRun;
+use App\Domain\Settlement\RunConfig;
+use App\Domain\Settlement\Settler;
 use App\Models\RaceRun;
 use App\Services\RunService;
 use App\Support\I18nText;
@@ -26,6 +29,8 @@ final class RunResource extends JsonResource
     {
         $vehicle = app(Catalog::class)->vehicle($this->car_slug);
         $track = app(Rules::class)->track($this->track_slug);
+        $config = FrozenRun::configFromArray($this->config);
+        $nowMs = RunService::nowMs();
 
         return [
             'id' => $this->id,
@@ -55,7 +60,45 @@ final class RunResource extends JsonResource
                 'xp' => $this->config['lap_xp'],
                 'fuel_ml' => $this->config['fuel_per_lap_ml'],
             ],
-            'server_time_ms' => RunService::nowMs(),
+            // The weather of the region now and in the next 22.5 minutes: it is drawn from the seed of the climate, so it can be told ahead.
+            'weather' => $this->weather($config, $nowMs),
+            'current_lap' => $this->currentLap($config, $nowMs),
+            'server_time_ms' => $nowMs,
         ];
+    }
+
+    /**
+     * The weather in the segment of 22.5 minutes that `$nowMs` is in, when it ends, and what the next one brings.
+     *
+     * @return array{now: string, ends_ms: int, next: string}
+     */
+    private function weather(RunConfig $config, int $nowMs): array
+    {
+        $segment = intdiv($nowMs, Settler::SEGMENT_MS);
+
+        return [
+            'now' => $config->weather->at($segment),
+            'ends_ms' => ($segment + 1) * Settler::SEGMENT_MS,
+            'next' => $config->weather->at($segment + 1),
+        ];
+    }
+
+    /**
+     * The lap in progress: it started at the cursor, which settlement leaves at the start of the lap that is not done
+     * yet, and takes the lap time of the weather it started in. A car that stands, in the workshop, with an empty tank or
+     * after a breakdown, or one that waits for a tow, has none.
+     *
+     * @return array{start_ms: int, finish_ms: int, ms: int, weather: string}|null
+     */
+    private function currentLap(RunConfig $config, int $nowMs): ?array
+    {
+        if ($this->status !== RaceRun::STATUS_RUNNING || $this->cursor_ms > $nowMs) {
+            return null;
+        }
+
+        $weather = $config->weather->at(intdiv($this->cursor_ms, Settler::SEGMENT_MS));
+        $ms = $config->lapMs[$weather] ?? null;
+
+        return $ms === null ? null : ['start_ms' => $this->cursor_ms, 'finish_ms' => $this->cursor_ms + $ms, 'ms' => $ms, 'weather' => $weather];
     }
 }
