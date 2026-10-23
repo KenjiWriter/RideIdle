@@ -108,6 +108,15 @@
       "nothing": "Le réservoir était déjà plein.",
       "repeated": "Ce ravitaillement a déjà été fait."
     },
+    "repair": {
+      "button": "Réparer · {cost}",
+      "busy": "Réparation…",
+      "noCash": "Pas assez d’argent pour réparer la voiture.",
+      "done": "Réparée pour {cost}.",
+      "doneRunning": "Réparée pour {cost}. La voiture est de retour sur la piste.",
+      "notNeeded": "La voiture n’avait pas besoin d’être réparée.",
+      "repeated": "Cette réparation a déjà été faite."
+    },
     "away": {
       "title": "Pendant votre absence",
       "duration": "Durée d’absence",

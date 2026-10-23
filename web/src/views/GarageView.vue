@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router'
 import AwaySummary from '@/components/AwaySummary.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
+import RepairControl from '@/components/RepairControl.vue'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -116,6 +117,8 @@ const stopped = computed(() => run.run?.status === 'stopped')
         >
           {{ t(`run.banner.${run.run.stop_reason}`) }}
         </p>
+
+        <RepairControl :run="run.run" />
       </section>
 
       <FuelGauge :run="run.run" />

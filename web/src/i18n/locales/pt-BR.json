@@ -108,6 +108,15 @@
       "nothing": "O tanque já estava cheio.",
       "repeated": "Esse abastecimento já foi feito."
     },
+    "repair": {
+      "button": "Consertar · {cost}",
+      "busy": "Consertando…",
+      "noCash": "Dinheiro insuficiente para consertar o carro.",
+      "done": "Consertado por {cost}.",
+      "doneRunning": "Consertado por {cost}. O carro está de volta à pista.",
+      "notNeeded": "O carro não precisava de conserto.",
+      "repeated": "Esse conserto já foi feito."
+    },
     "away": {
       "title": "Enquanto você esteve fora",
       "duration": "Tempo fora",

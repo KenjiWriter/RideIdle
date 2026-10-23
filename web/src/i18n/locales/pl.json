@@ -108,6 +108,15 @@
       "nothing": "Bak był już pełny.",
       "repeated": "To tankowanie już się odbyło."
     },
+    "repair": {
+      "button": "Napraw · {cost}",
+      "busy": "Naprawianie…",
+      "noCash": "Za mało gotówki na naprawę auta.",
+      "done": "Naprawiono za {cost}.",
+      "doneRunning": "Naprawiono za {cost}. Auto znów jedzie.",
+      "notNeeded": "Auto nie wymagało naprawy.",
+      "repeated": "Ta naprawa już się odbyła."
+    },
     "away": {
       "title": "Pod Twoją nieobecność",
       "duration": "Czas nieobecności",

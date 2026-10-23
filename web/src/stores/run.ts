@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { ApiError, api } from '@/api/client'
-import type { RefuelResult, Run, RunResponse, RunSummary, StarterCar, StarterCarsResponse, Wallet } from '@/api/types'
+import type { RefuelResult, RepairResult, Run, RunResponse, RunSummary, StarterCar, StarterCarsResponse, Wallet } from '@/api/types'
 import { newRequestId } from '@/features/run/requestId'
 import { clearSeen, readSeen, storeSeen } from '@/features/run/seen'
 
@@ -128,23 +128,22 @@ export const useRunStore = defineStore('run', () => {
   }
 
   /**
-   * Buys fuel: `liters` of it, or a full tank when null. Every intention gets a request id that stays the same
-   * while the answer is missing, so pressing the button again after a lost answer cannot charge twice. After a
-   * minute the old id is dropped, because then the driver means a new refuel.
+   * An action on the run that costs money and could be repeated by mistake: refuel or repair. Every intention gets a
+   * request id that stays the same while the answer is missing, so pressing the button again after a lost answer
+   * cannot charge twice. After a minute the old id is dropped, because then the driver means a new one.
    */
-  async function refuel(liters: number | null): Promise<RefuelResult> {
+  async function act(action: 'refuel' | 'repair', variant: string, body: Record<string, unknown> = {}): Promise<RunResponse> {
     const current = run.value
 
     if (!current) {
-      throw new Error('There is no run to refuel.')
+      throw new Error(`There is no run to ${action}.`)
     }
 
-    const key = `refuel:${current.id}:${liters ?? 'full'}`
-    const request = pendingRequest(key)
+    const request = pendingRequest(`${action}:${current.id}:${variant}`)
 
-    const response = await api<RunResponse>(`/v1/runs/${current.id}/refuel`, {
+    const response = await api<RunResponse>(`/v1/runs/${current.id}/${action}`, {
       method: 'POST',
-      body: JSON.stringify({ request_id: request, ...(liters !== null ? { liters } : {}) }),
+      body: JSON.stringify({ request_id: request, ...body }),
     })
 
     pending = null
@@ -154,7 +153,21 @@ export const useRunStore = defineStore('run', () => {
       remember(response.data)
     }
 
+    return response
+  }
+
+  /** Buys fuel: `liters` of it, or a full tank when null. */
+  async function refuel(liters: number | null): Promise<RefuelResult> {
+    const response = await act('refuel', String(liters ?? 'full'), liters !== null ? { liters } : {})
+
     return response.refuel as RefuelResult
+  }
+
+  /** Repairs the car after a breakdown. A car that did not break down is left as it is (`repaired` is false). */
+  async function repair(): Promise<RepairResult> {
+    const response = await act('repair', 'car')
+
+    return response.repair as RepairResult
   }
 
   /** The driver has read the summary: from now on everything up to the present counts as seen. */
@@ -178,5 +191,5 @@ export const useRunStore = defineStore('run', () => {
     clearSeen()
   }
 
-  return { run, wallet, loaded, away, starters, startTrack, loadStarters, start, load, refresh, refuel, dismissAway, reset }
+  return { run, wallet, loaded, away, starters, startTrack, loadStarters, start, load, refresh, refuel, repair, dismissAway, reset }
 })

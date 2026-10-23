@@ -108,6 +108,15 @@
       "nothing": "Der Tank war schon voll.",
       "repeated": "Dieses Tanken wurde schon erledigt."
     },
+    "repair": {
+      "button": "Reparieren · {cost}",
+      "busy": "Wird repariert…",
+      "noCash": "Nicht genug Geld für die Reparatur.",
+      "done": "Für {cost} repariert.",
+      "doneRunning": "Für {cost} repariert. Das Auto ist wieder auf der Strecke.",
+      "notNeeded": "Das Auto musste nicht repariert werden.",
+      "repeated": "Diese Reparatur wurde schon erledigt."
+    },
     "away": {
       "title": "Während du weg warst",
       "duration": "Abwesenheit",

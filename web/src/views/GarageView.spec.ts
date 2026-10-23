@@ -160,6 +160,45 @@ describe('GarageView', () => {
     expect(wrapper.get('[data-test="banner"]').text()).toBe('The car broke down. It stands until it is repaired.')
   })
 
+  it('offers the repair only to a car that broke down', async () => {
+    const racing = open()
+    const { wrapper } = await racing.mounted
+    await flushPromises()
+    expect(wrapper.find('[data-test="repair-button"]').exists()).toBe(false)
+
+    const empty = open({ fuel_ml: 0, status: 'stopped', stop_reason: 'fuel_empty' })
+    const { wrapper: emptyTank } = await empty.mounted
+    await flushPromises()
+    expect(emptyTank.find('[data-test="repair-button"]').exists()).toBe(false)
+  })
+
+  it('repairs a car that broke down and sends it on its way', async () => {
+    const calls = serveApi(fetchMock, {
+      'GET /api/v1/me': () => respond(200, { data: profile }),
+      'GET /api/v1/runs/current': () => respond(200, runAnswer(aRun({ status: 'stopped', stop_reason: 'breakdown' }))),
+      'POST /api/v1/runs/7/repair': () =>
+        respond(200, {
+          ...runAnswer(aRun({ status: 'running', stop_reason: null, state_version: 5 })),
+          repair: { repaired: true, cost_cents: 3_000, repeated: false },
+        }),
+    })
+    const { wrapper } = await show()
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="status"]').text()).toBe('Broken down')
+    expect(wrapper.get('[data-test="banner"]').text()).toBe('The car broke down. It stands until it is repaired.')
+    expect(wrapper.get('[data-test="repair-button"]').text()).toBe('Repair · $30.00')
+
+    await wrapper.get('[data-test="repair-button"]').trigger('click')
+    await flushPromises()
+
+    expect(calls.some((call) => call.method === 'POST' && call.url === '/api/v1/runs/7/repair')).toBe(true)
+    expect(wrapper.get('[data-test="status"]').text()).toBe('Racing')
+    expect(wrapper.find('[data-test="banner"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="repair-button"]').exists()).toBe(false)
+    expect(wrapper.get('[data-test="repair-done"]').text()).toBe('Repaired for $30.00. The car is back on the track.')
+  })
+
   describe('the summary of an absence', () => {
     const away = aSummary({ laps: 312, cash_cents: 486_000, xp: 7_800, from_ms: NOW - (8 * 3_600_000 + 12 * 60_000), to_ms: NOW - 60_000, stop_reason: 'fuel_empty' })
 

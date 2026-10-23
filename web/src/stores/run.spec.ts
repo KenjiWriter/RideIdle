@@ -370,6 +370,81 @@ describe('run store', () => {
     })
   })
 
+  describe('repairing', () => {
+    async function broken() {
+      fetchMock.mockResolvedValueOnce(
+        respond(200, aResponse(aRun({ state_version: 2, status: 'stopped', stop_reason: 'breakdown' }))),
+      )
+      const store = useRunStore()
+      await store.load()
+      fetchMock.mockReset()
+
+      return store
+    }
+
+    function lastBody(): Record<string, unknown> {
+      return JSON.parse((fetchMock.mock.calls.at(-1) as [string, RequestInit])[1].body as string)
+    }
+
+    it('repairs the car: sends a request id and takes over the answer', async () => {
+      const store = await broken()
+      fetchMock.mockResolvedValue(
+        respond(200, { ...aResponse(aRun({ state_version: 3 })), wallet: { cash_cents: 1_650, xp: 75 }, repair: { repaired: true, cost_cents: 3_000, repeated: false } }),
+      )
+
+      const result = await store.repair()
+
+      expect(lastUrl()).toBe('/api/v1/runs/7/repair')
+      expect((fetchMock.mock.calls.at(-1) as [string, RequestInit])[1].method).toBe('POST')
+      expect(Object.keys(lastBody())).toEqual(['request_id'])
+      expect(result).toEqual({ repaired: true, cost_cents: 3_000, repeated: false })
+      expect(store.run?.status).toBe('running')
+      expect(store.wallet?.cash_cents).toBe(1_650)
+      expect(readSeen()).toEqual({ runId: 7, version: 3 })
+    })
+
+    it('repeats a request whose answer was lost with the same id', async () => {
+      const store = await broken()
+      fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      await expect(store.repair()).rejects.toBeInstanceOf(TypeError)
+      const lost = lastBody().request_id
+
+      fetchMock.mockResolvedValueOnce(
+        respond(200, { ...aResponse(aRun({ state_version: 3 })), repair: { repaired: false, cost_cents: 0, repeated: true } }),
+      )
+      const result = await store.repair()
+
+      expect(lastBody().request_id).toBe(lost)
+      expect(result.repeated).toBe(true)
+    })
+
+    it('does not mix up its request id with the one of a refuel', async () => {
+      const store = await broken()
+      fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      await store.repair().catch(() => undefined)
+      const repair = lastBody().request_id
+
+      fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      await store.refuel(null).catch(() => undefined)
+
+      expect(lastBody().request_id).not.toBe(repair)
+    })
+
+    it('passes a refused repair on', async () => {
+      const store = await broken()
+      fetchMock.mockResolvedValue(respond(422, { message: 'Not enough cash.', code: 'insufficient_funds' }))
+
+      const failure = await store.repair().catch((error: unknown) => error)
+
+      expect((failure as ApiError).code).toBe('insufficient_funds')
+      expect(store.run?.stop_reason).toBe('breakdown')
+    })
+
+    it('cannot repair without a run', async () => {
+      await expect(useRunStore().repair()).rejects.toThrow('no run')
+    })
+  })
+
   it('forgets everything on reset', async () => {
     fetchMock.mockResolvedValue(respond(200, aResponse(aRun())))
     const store = useRunStore()

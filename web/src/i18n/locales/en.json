@@ -108,6 +108,15 @@
       "nothing": "The tank was already full.",
       "repeated": "That refuel was already done."
     },
+    "repair": {
+      "button": "Repair · {cost}",
+      "busy": "Repairing…",
+      "noCash": "Not enough cash to repair the car.",
+      "done": "Repaired for {cost}.",
+      "doneRunning": "Repaired for {cost}. The car is back on the track.",
+      "notNeeded": "The car did not need a repair.",
+      "repeated": "That repair was already done."
+    },
     "away": {
       "title": "While you were away",
       "duration": "Time away",
