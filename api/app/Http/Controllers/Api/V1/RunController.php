@@ -45,7 +45,7 @@ final class RunController extends Controller
         private readonly Garage $garage,
     ) {}
 
-    /** Starts the run of the driver: one of the starter wrecks on a track, with a full tank. */
+    /** Starts the run of the driver: one of the starter wrecks on a track, with a full tank. The car waits in the garage until `start`. */
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -61,9 +61,25 @@ final class RunController extends Controller
             $data['track'],
             $this->inputs->make($data['car'], $data['track']),
             $this->inputs->tankMl($data['car']),
+            parked: true,
         );
 
         return $this->respond($run, 201);
+    }
+
+    /**
+     * Sends out the car that waits in the garage (the Start of the tournament screen): it drives from now on. A car that does not wait is left
+     * as it is, so a repeated request is harmless.
+     */
+    public function start(Request $request, int $run): JsonResponse
+    {
+        $found = $this->ownRun($request, $run);
+
+        if ($found === null) {
+            return $this->noRun();
+        }
+
+        return $this->respond($this->runs->begin($found->id));
     }
 
     /**

@@ -54,7 +54,7 @@ final class RunService
      * Starts a run: freezes the configuration with a new seed and puts the cursor at the start time. The run drives
      * `$car`, or a new car of the driver at the level a new car has when none is given.
      */
-    public function start(int $userId, string $carSlug, string $trackSlug, RunInputs $inputs, int $fuelMl, ?int $nowMs = null, ?Car $car = null): RaceRun
+    public function start(int $userId, string $carSlug, string $trackSlug, RunInputs $inputs, int $fuelMl, ?int $nowMs = null, ?Car $car = null, bool $parked = false): RaceRun
     {
         $seed = bin2hex(random_bytes(16));
         $frozen = $this->freezer->freeze($inputs, $seed, 0);
@@ -73,7 +73,8 @@ final class RunService
             'car_id' => $car->id,
             'car_slug' => $carSlug,
             'track_slug' => $trackSlug,
-            'status' => RaceRun::STATUS_RUNNING,
+            'status' => $parked ? RaceRun::STATUS_STOPPED : RaceRun::STATUS_RUNNING,
+            'stop_reason' => $parked ? RaceRun::STOP_PARKED : null,
             'cursor_ms' => $nowMs ?? self::nowMs(),
             'laps_done' => 0,
             'fuel_ml' => $fuelMl,
@@ -88,15 +89,15 @@ final class RunService
     /**
      * Starts the run of a driver who has none. A driver has at most one run for now: a second car on the track
      * would double the income. The check runs under the lock of the wallet, so two requests of one driver
-     * arriving together cannot both pass it.
+     * arriving together cannot both pass it. A parked run waits in the garage for `begin`.
      *
      * @throws RunAlreadyExistsException
      */
-    public function startFirstRun(int $userId, string $carSlug, string $trackSlug, RunInputs $inputs, int $fuelMl, ?int $nowMs = null): RaceRun
+    public function startFirstRun(int $userId, string $carSlug, string $trackSlug, RunInputs $inputs, int $fuelMl, ?int $nowMs = null, bool $parked = false): RaceRun
     {
         $this->ledger->ensureWallet($userId);
 
-        return DB::transaction(function () use ($userId, $carSlug, $trackSlug, $inputs, $fuelMl, $nowMs): RaceRun {
+        return DB::transaction(function () use ($userId, $carSlug, $trackSlug, $inputs, $fuelMl, $nowMs, $parked): RaceRun {
             $this->ledger->lockWallet($userId);
 
             $existing = RaceRun::query()->where('user_id', $userId)->value('id');
@@ -105,8 +106,30 @@ final class RunService
                 throw new RunAlreadyExistsException((int) $existing);
             }
 
-            return $this->start($userId, $carSlug, $trackSlug, $inputs, $fuelMl, $nowMs);
+            return $this->start($userId, $carSlug, $trackSlug, $inputs, $fuelMl, $nowMs, parked: $parked);
         }, Ledger::DEADLOCK_ATTEMPTS);
+    }
+
+    /**
+     * Sends out a car that waits in the garage: it drives from now on, and nothing was earned while it stood. A car that does not wait
+     * (it drives already, or it stands for another reason) is left as it is, so pressing Start twice is the same as pressing it once.
+     */
+    public function begin(int $runId, ?int $nowMs = null): RaceRun
+    {
+        return $this->locked($runId, $nowMs, function (RaceRun $run, int $now): RaceRun {
+            if ($run->stop_reason !== RaceRun::STOP_PARKED) {
+                return $run;
+            }
+
+            $run->forceFill([
+                'status' => RaceRun::STATUS_RUNNING,
+                'stop_reason' => null,
+                'cursor_ms' => max($run->cursor_ms, $now),
+                'state_version' => $run->state_version + 1,
+            ])->save();
+
+            return $run;
+        });
     }
 
     /**

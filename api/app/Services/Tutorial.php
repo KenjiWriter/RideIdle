@@ -198,6 +198,7 @@ final class Tutorial
         return match ($condition) {
             'none' => true,
             'run_started' => $run !== null,
+            'driving' => $run !== null && $run->stop_reason !== RaceRun::STOP_PARKED,
             'lap_completed' => $run !== null && $run->laps_done >= 1,
             'fuel_low' => $run !== null && $run->fuel_ml < $this->tankMl($run) * self::LOW_FUEL_SHARE,
             'fuel_restored' => $run !== null && $run->fuel_ml >= $this->tankMl($run) * self::FILLED_FUEL_SHARE,

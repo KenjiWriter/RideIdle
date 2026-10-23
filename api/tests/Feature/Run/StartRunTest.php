@@ -26,8 +26,9 @@ it('starts the run of a driver with a full tank', function () {
         ->assertJsonPath('data.car.slug', 'rdzak-gt-4')
         ->assertJsonPath('data.car.name', 'Rdzak GT-4')
         ->assertJsonPath('data.track.slug', 'zlomowo-street')
-        ->assertJsonPath('data.status', 'running')
-        ->assertJsonPath('data.stop_reason', null)
+        // The car waits in the garage until the driver sends it out (the Start of the tournament screen).
+        ->assertJsonPath('data.status', 'stopped')
+        ->assertJsonPath('data.stop_reason', 'parked')
         ->assertJsonPath('data.laps_done', 0)
         ->assertJsonPath('data.fuel_ml', 45_000)
         ->assertJsonPath('data.tank_ml', 45_000)
@@ -147,5 +148,71 @@ describe('the level of the driver and the tracks', function () {
             ->assertCreated()
             ->assertJsonPath('data.track.slug', 'kruszyn-quarry')
             ->assertJsonPath('data.lap.fuel_ml', 1_900);
+    });
+});
+
+describe('sending the car out', function () {
+    it('requires a token', function () {
+        $this->postJson('/api/v1/runs/1/start')->assertUnauthorized();
+    });
+
+    it('sends out the car that waits in the garage: it drives from now on, and earned nothing while it stood', function () {
+        clockAt(0);
+        $driver = User::factory()->guest()->create();
+        $run = RaceRun::query()->findOrFail(startRun($driver)->json('data.id'));
+
+        // An hour passes with the car in the garage: nothing is earned, and nothing is owed.
+        clockAt(3_600_000);
+        getRun($driver)->assertOk()->assertJsonPath('data.status', 'stopped')->assertJsonPath('data.stop_reason', 'parked')->assertJsonPath('data.laps_done', 0)->assertJsonPath('wallet.cash_cents', 0);
+
+        $response = test()->postJson("/api/v1/runs/{$run->id}/start", [], bearerFor($driver))->assertOk()
+            ->assertJsonPath('data.status', 'running')
+            ->assertJsonPath('data.stop_reason', null)
+            ->assertJsonPath('data.laps_done', 0);
+
+        expect($response->json('data.cursor_ms'))->toBe(RUN_T0 + 3_600_000);
+
+        // Eighty seconds later it has driven its first lap.
+        clockAt(3_680_000);
+        getRun($driver)->assertOk()->assertJsonPath('data.laps_done', 1)->assertJsonPath('wallet.cash_cents', 1_550);
+    });
+
+    it('is harmless when pressed twice, and for a car that drives already', function () {
+        $driver = User::factory()->guest()->create();
+        $run = RaceRun::query()->findOrFail(startRun($driver)->json('data.id'));
+
+        test()->postJson("/api/v1/runs/{$run->id}/start", [], bearerFor($driver))->assertOk();
+        $version = $run->refresh()->state_version;
+
+        clockAt(30_000);
+        test()->postJson("/api/v1/runs/{$run->id}/start", [], bearerFor($driver))->assertOk()->assertJsonPath('data.status', 'running');
+
+        expect($run->refresh()->state_version)->toBe($version);
+    });
+
+    it('does not send out a car that stands for another reason', function () {
+        [$driver, $run] = driverWithRun(['status' => RaceRun::STATUS_STOPPED, 'stop_reason' => 'breakdown']);
+
+        test()->postJson("/api/v1/runs/{$run->id}/start", [], bearerFor($driver))->assertOk()->assertJsonPath('data.status', 'stopped')->assertJsonPath('data.stop_reason', 'breakdown');
+    });
+
+    it('does not start a run of another driver', function () {
+        [, $run] = driverWithRun(['status' => RaceRun::STATUS_STOPPED, 'stop_reason' => RaceRun::STOP_PARKED]);
+        $other = User::factory()->guest()->create();
+
+        test()->postJson("/api/v1/runs/{$run->id}/start", [], bearerFor($other))->assertNotFound()->assertJsonPath('code', 'no_run');
+        expect($run->refresh()->stop_reason)->toBe(RaceRun::STOP_PARKED);
+    });
+
+    it('does not let fuel or the tow send out a car that waits: only the Start does', function () {
+        $driver = User::factory()->guest()->create();
+        $run = RaceRun::query()->findOrFail(startRun($driver)->json('data.id'));
+        (new Ledger)->post($driver->id, 5_000, 'gift', 'money');
+
+        // The tank is full, so there is nothing to buy, and a tow is not offered to a car that has not left the garage.
+        test()->postJson("/api/v1/runs/{$run->id}/refuel", ['request_id' => 'r1'], bearerFor($driver))->assertOk();
+        test()->postJson("/api/v1/runs/{$run->id}/tow", [], bearerFor($driver))->assertOk()->assertJsonPath('towed', false);
+
+        expect($run->refresh()->stop_reason)->toBe(RaceRun::STOP_PARKED);
     });
 });

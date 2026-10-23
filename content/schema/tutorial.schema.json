@@ -19,8 +19,8 @@
           "trigger": { "$ref": "#/$defs/condition" },
           "completion": { "$ref": "#/$defs/condition" },
           "target": {
-            "description": "What the screen highlights while the step waits for the driver, or null for a step that needs no screen of its own.",
-            "enum": ["laps", "cash", "refuel", "repair", null]
+            "description": "What the screen highlights while the step waits for the driver, or null for a step that needs no screen of its own. start is the button that sends the car out, and where the driver is not on its screen yet, the Tournament tab that leads there.",
+            "enum": ["start", "laps", "cash", "refuel", "repair", null]
           },
           "sender": { "description": "The made-up number the mentor writes from. It changes with every step, because the mentor is in hiding.", "type": "string", "pattern": "^\\+48 555 010 [0-9]{3}$" },
           "sms": {
@@ -48,8 +48,8 @@
   "additionalProperties": false,
   "$defs": {
     "condition": {
-      "description": "A fact about the driver that the server can read: none always holds; run_started the driver has a run; lap_completed it has finished a lap; fuel_low the tank holds less than a quarter; fuel_restored it holds at least four fifths; breakdown the car stands broken down; recovered it does not; acknowledged the driver has answered the messages of the step.",
-      "enum": ["none", "run_started", "lap_completed", "fuel_low", "fuel_restored", "breakdown", "recovered", "acknowledged"]
+      "description": "A fact about the driver that the server can read: none always holds; run_started the driver has a run; driving the car has been sent out and is not waiting in the garage any more; lap_completed it has finished a lap; fuel_low the tank holds less than a quarter; fuel_restored it holds at least four fifths; breakdown the car stands broken down; recovered it does not; acknowledged the driver has answered the messages of the step.",
+      "enum": ["none", "run_started", "driving", "lap_completed", "fuel_low", "fuel_restored", "breakdown", "recovered", "acknowledged"]
     }
   }
 }

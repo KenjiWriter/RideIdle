@@ -1,6 +1,6 @@
 {
   "schema": 0,
-  "version": "2026.10.1",
+  "version": "2026.10.2",
   "steps": [
     {
       "key": "wreck",
@@ -10,6 +10,38 @@
       "target": null,
       "sender": "+48 555 010 112",
       "sms": [],
+      "reward": {}
+    },
+    {
+      "key": "start",
+      "phase": 1,
+      "trigger": "run_started",
+      "completion": "driving",
+      "target": "start",
+      "sender": "+48 555 010 120",
+      "sms": [
+        {
+          "pl": "To ja. Dziupla jest Twoja, a auto czeka w garażu.",
+          "en": "It’s me. The workshop is yours, and the car is waiting in the garage.",
+          "fr": "C’est moi. L’atelier est à toi, et la voiture attend dans le garage.",
+          "de": "Ich bin’s. Die Werkstatt gehört dir, und das Auto wartet in der Garage.",
+          "pt-BR": "Sou eu. A oficina é sua e o carro está esperando na garagem."
+        },
+        {
+          "pl": "Wejdź w „Turniej” na dolnym pasku i dotknij „Start”. Od tej chwili auto jedzie samo, nawet gdy Cię nie będzie. — K.",
+          "en": "Open “Tournament” on the bottom bar and tap “Start”. From then on the car drives itself, even when you’re away. — K.",
+          "fr": "Ouvre « Tournoi » dans la barre du bas et touche « Démarrer ». Ensuite, la voiture roule toute seule, même quand tu n’es pas là. — K.",
+          "de": "Öffne „Turnier“ in der unteren Leiste und tippe auf „Start“. Danach fährt das Auto von allein, auch wenn du nicht da bist. — K.",
+          "pt-BR": "Abra “Torneio” na barra de baixo e toque em “Iniciar”. Dali em diante o carro anda sozinho, mesmo quando você não está. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, ruszam",
+        "en": "OK, on my way",
+        "fr": "OK, j’y vais",
+        "de": "OK, los geht’s",
+        "pt-BR": "OK, já vou"
+      },
       "reward": {}
     },
     {
@@ -28,11 +60,11 @@
           "pt-BR": "Sou eu de novo, outro número. Não pergunte."
         },
         {
-          "pl": "Auto jedzie samo. Poczekaj na pierwsze okrążenie, a dorzucę Ci na start. — K.",
-          "en": "The car drives itself. Wait for the first lap and I’ll add something to get you started. — K.",
-          "fr": "La voiture roule toute seule. Attends le premier tour et je te glisse un petit plus pour démarrer. — K.",
-          "de": "Das Auto fährt von allein. Warte auf die erste Runde, dann lege ich dir etwas für den Start drauf. — K.",
-          "pt-BR": "O carro anda sozinho. Espere a primeira volta e eu acrescento algo para você começar. — K."
+          "pl": "Jedzie! Pierścień pokazuje, ile zostało do końca okrążenia. Poczekaj na pierwsze, a dorzucę Ci na start. — K.",
+          "en": "It’s moving! The ring shows how much of the lap is left. Wait for the first one and I’ll add something to get you started. — K.",
+          "fr": "Elle roule ! L’anneau montre ce qui reste du tour. Attends le premier et je te glisse un petit plus pour démarrer. — K.",
+          "de": "Es fährt! Der Ring zeigt, wie viel von der Runde noch bleibt. Warte auf die erste, dann lege ich dir etwas für den Start drauf. — K.",
+          "pt-BR": "Está andando! O anel mostra quanto falta da volta. Espere pela primeira e eu acrescento algo para você começar. — K."
         }
       ],
       "reply": {
@@ -42,7 +74,9 @@
         "de": "OK, ich warte",
         "pt-BR": "OK, vou esperar"
       },
-      "reward": { "cash_cents": 20000 }
+      "reward": {
+        "cash_cents": 20000
+      }
     },
     {
       "key": "rewards",
@@ -60,11 +94,11 @@
           "pt-BR": "Primeira volta concluída. Mandei $200 para você."
         },
         {
-          "pl": "Gotówka i XP wpadają same, a auto awansuje z każdym okrążeniem. Dorzuciłem mu trochę XP. Zapisz kod odzyskiwania, jeśli chcesz zachować garaż. — K.",
-          "en": "Cash and XP arrive on their own, and the car levels up with every lap. I added a little XP for it. Save your recovery code if you want to keep the garage. — K.",
-          "fr": "L’argent et l’XP arrivent tout seuls, et la voiture monte en niveau à chaque tour. Je lui ai ajouté un peu d’XP. Note ton code de récupération si tu veux garder le garage. — K.",
-          "de": "Geld und XP kommen von allein, und das Auto steigt mit jeder Runde auf. Ich habe ihm etwas XP draufgelegt. Sichere deinen Wiederherstellungscode, wenn du die Garage behalten willst. — K.",
-          "pt-BR": "Dinheiro e XP chegam sozinhos, e o carro sobe de nível a cada volta. Dei um pouco de XP a ele. Guarde o código de recuperação se quiser manter a garagem. — K."
+          "pl": "Gotówka i XP wpadają same, a auto awansuje z każdym okrążeniem. Dorzuciłem mu trochę XP. Kod odzyskiwania czeka w Garażu: zapisz go, jeśli chcesz zachować garaż. — K.",
+          "en": "Cash and XP arrive on their own, and the car levels up with every lap. I added a little XP for it. Your recovery code is in the Garage: save it to keep your garage. — K.",
+          "fr": "L’argent et l’XP arrivent tout seuls, et la voiture monte en niveau à chaque tour. Je lui ai ajouté un peu d’XP. Ton code de récupération est dans le Garage : note-le pour garder ton garage. — K.",
+          "de": "Geld und XP kommen von allein, und das Auto steigt mit jeder Runde auf. Ich habe etwas XP draufgelegt. Dein Wiederherstellungscode liegt in der Garage: Sichere ihn, um die Garage zu behalten. — K.",
+          "pt-BR": "Dinheiro e XP chegam sozinhos, e o carro sobe de nível a cada volta. Dei um pouco de XP a ele. O código de recuperação está na Garagem: guarde-o para manter a garagem. — K."
         }
       ],
       "reply": {
@@ -74,7 +108,9 @@
         "de": "OK, verstanden",
         "pt-BR": "OK, entendi"
       },
-      "reward": { "car_xp": 100 }
+      "reward": {
+        "car_xp": 100
+      }
     },
     {
       "key": "refuel",
@@ -106,7 +142,9 @@
         "de": "OK, ich tanke",
         "pt-BR": "OK, vou encher o tanque"
       },
-      "reward": { "cash_cents": 9000 }
+      "reward": {
+        "cash_cents": 9000
+      }
     },
     {
       "key": "repair",
@@ -138,7 +176,9 @@
         "de": "OK, ich repariere",
         "pt-BR": "OK, vou consertar"
       },
-      "reward": { "cash_cents": 3000 }
+      "reward": {
+        "cash_cents": 3000
+      }
     }
   ]
 }

@@ -26,8 +26,11 @@ class RaceRun extends Model
     /** The car is on the road between two cities. */
     public const STOP_TRAVEL = 'travel';
 
+    /** The car stands in the garage and has not been sent out yet: the first car of a driver waits for the Start of the tournament screen. */
+    public const STOP_PARKED = 'parked';
+
     /** The stops that a service puts on a car, not the road or the tank: nothing settles past them, and nothing but the service ends them. */
-    public const SERVICE_STOPS = [self::STOP_WORKSHOP, self::STOP_TRAVEL];
+    public const SERVICE_STOPS = [self::STOP_WORKSHOP, self::STOP_TRAVEL, self::STOP_PARKED];
 
     protected $guarded = [];
 

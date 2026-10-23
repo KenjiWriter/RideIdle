@@ -118,7 +118,8 @@ it('numbers the steps from one', function () {
 
     expect($steps->count())->toBe(count(tutorialData()['steps']))
         ->and($steps->numberOf('wreck'))->toBe(1)
-        ->and($steps->numberOf('first-lap'))->toBe(2)
+        ->and($steps->numberOf('start'))->toBe(2)
+        ->and($steps->numberOf('first-lap'))->toBe(3)
         ->and($steps->numberOf('nope'))->toBeNull()
         ->and($steps->find('refuel')['target'])->toBe('refuel');
 });

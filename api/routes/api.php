@@ -86,6 +86,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/runs/current', [RunController::class, 'current']);
         Route::get('/runs/{run}', [RunController::class, 'show'])->whereNumber('run');
         Route::patch('/runs/{run}', [RunController::class, 'update'])->whereNumber('run');
+        Route::post('/runs/{run}/start', [RunController::class, 'start'])->whereNumber('run');
         Route::post('/runs/{run}/refuel', [RunController::class, 'refuel'])->whereNumber('run');
         Route::post('/runs/{run}/repair', [RunController::class, 'repair'])->whereNumber('run');
         Route::post('/runs/{run}/tow', [RunController::class, 'tow'])->whereNumber('run');
