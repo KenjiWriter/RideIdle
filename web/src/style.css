@@ -249,8 +249,9 @@ body {
   }
 
   /* ---------- the HUD and the navigation of the game ---------- */
+  /* Stuck to the top of the screen, as the navigation is to the bottom: the level and the cash are always in sight. */
   .hud {
-    @apply relative flex min-h-[68px] items-center gap-2.5 px-3.5 py-2.5;
+    @apply sticky top-0 z-20 flex min-h-[68px] items-center gap-2.5 px-3.5 py-2.5;
     background: linear-gradient(#272d39, #161a22);
     border-bottom: 3px solid #07080b;
     box-shadow:
