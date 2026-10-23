@@ -42,6 +42,12 @@ describe('plural rules', () => {
     expect([french(0), french(1), french(2)]).toEqual(['0 tour', '1 tour', '2 tours'])
   })
 
+  it('calls zero singular in Brazilian Portuguese', () => {
+    const portuguese = counter('pt-BR', '{n} volta | {n} voltas')
+
+    expect([portuguese(0), portuguese(1), portuguese(2), portuguese(312)]).toEqual(['0 volta', '1 volta', '2 voltas', '312 voltas'])
+  })
+
   it('keeps the English rule for the other languages', () => {
     const english = counter('en', '{n} lap | {n} laps')
     const german = counter('de', '{n} Runde | {n} Runden')
