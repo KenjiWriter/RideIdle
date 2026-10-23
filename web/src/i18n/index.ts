@@ -2,6 +2,7 @@ import { createI18n } from 'vue-i18n'
 
 import en from './locales/en.json'
 import { DEFAULT_LOCALE, detectLocale, normalizeLocale, type AppLocale } from './locales'
+import { pluralRules } from './plural'
 
 type MessageSchema = typeof en
 
@@ -16,6 +17,7 @@ export const i18n = createI18n({
   locale: DEFAULT_LOCALE,
   fallbackLocale: DEFAULT_LOCALE,
   messages: { en } as Partial<Record<AppLocale, MessageSchema>>,
+  pluralRules,
 })
 
 export function currentLocale(): AppLocale {

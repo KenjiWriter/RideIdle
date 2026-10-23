@@ -1,0 +1,33 @@
+import type { PluralizationRule } from 'vue-i18n'
+
+/**
+ * Which of the forms of a message "one | few | many" fits a number. vue-i18n knows only the English rule
+ * (one and the rest), so the languages that count differently say so here.
+ *
+ * Polish has three forms: 1 okrążenie, 2–4 okrążenia (but not 12–14, and 22–24 count again), and okrążeń for the rest.
+ * French calls 0 singular too (0 tour).
+ */
+export const pluralRules: Record<string, PluralizationRule> = {
+  pl: (choice, choicesLength) => {
+    if (choicesLength < 3) {
+      return choice === 1 ? 0 : 1
+    }
+
+    if (choice === 1) {
+      return 0
+    }
+
+    const lastDigit = choice % 10
+    const lastTwoDigits = choice % 100
+
+    return lastDigit >= 2 && lastDigit <= 4 && (lastTwoDigits < 12 || lastTwoDigits > 14) ? 1 : 2
+  },
+
+  fr: (choice, choicesLength) => {
+    if (choicesLength < 2) {
+      return 0
+    }
+
+    return choice === 0 || choice === 1 ? 0 : 1
+  },
+}

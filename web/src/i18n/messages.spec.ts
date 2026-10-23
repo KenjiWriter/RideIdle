@@ -14,8 +14,9 @@ function flatten(tree: Tree, prefix = ''): Record<string, string> {
   }, {})
 }
 
+/** The variables of a message, each once: a language with more plural forms repeats them. */
 function placeholders(text: string): string[] {
-  return [...text.matchAll(/\{[a-zA-Z_]+\}/g)].map((m) => m[0]).sort()
+  return [...new Set([...text.matchAll(/\{[a-zA-Z_]+\}/g)].map((m) => m[0]))].sort()
 }
 
 const messages = Object.fromEntries(
