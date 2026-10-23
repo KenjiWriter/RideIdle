@@ -79,6 +79,39 @@ final class Rules
         return $this->data['car']['start_level'];
     }
 
+    /** The experience a car gets for a lap, in any weather. */
+    public function carXpPerLap(): int
+    {
+        return $this->data['car']['xp_per_lap'];
+    }
+
+    /** The level a car does not rise above. */
+    public function carMaxLevel(): int
+    {
+        return $this->data['car']['max_level'];
+    }
+
+    /**
+     * The experience that reaches a level of a car: the band from level n to n + 1 is xp_per_level * n, so this is
+     * xp_per_level * n * (n - 1) / 2. Level 1 is the start, at nothing.
+     */
+    public function carXpToReach(int $level): int
+    {
+        return intdiv($this->data['car']['xp_per_level'] * $level * ($level - 1), 2);
+    }
+
+    /** The level that this much experience gives a car, never above the highest. */
+    public function carLevelAt(int $xp): int
+    {
+        $level = 1;
+
+        while ($level < $this->carMaxLevel() && $this->carXpToReach($level + 1) <= $xp) {
+            $level++;
+        }
+
+        return $level;
+    }
+
     /**
      * The value of each statistic at which its bar is full: what the best car of the game is meant to reach.
      *

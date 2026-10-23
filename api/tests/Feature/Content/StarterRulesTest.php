@@ -177,6 +177,68 @@ it('keeps every wreck a driver can start with at no more than half of the ceilin
     expect($problems)->toBe([]);
 });
 
+it('is refused by the schema when a car has no experience per lap or no highest level', function () {
+    $rules = starterRules();
+    unset($rules['car']['xp_per_lap']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    unset($rules['car']['max_level']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+});
+
+it('makes every level of a car take more experience than the one before it, and the third band 600 as the garage board has it', function () {
+    $rules = Rules::fromArray(starterRules());
+
+    expect($rules->carXpToReach(1))->toBe(0)
+        ->and($rules->carXpToReach(2))->toBe(200)
+        ->and($rules->carXpToReach(3))->toBe(600)
+        // The board of the garage shows 410 of 600 at level 3: the band from level 3 to 4 is 600.
+        ->and($rules->carXpToReach(4) - $rules->carXpToReach(3))->toBe(600);
+
+    $bands = [];
+
+    for ($level = 1; $level < $rules->carMaxLevel(); $level++) {
+        $bands[] = $rules->carXpToReach($level + 1) - $rules->carXpToReach($level);
+    }
+
+    expect($bands)->toBe(collect($bands)->sort()->values()->all())
+        ->and(count(array_unique($bands)))->toBe(count($bands));
+});
+
+it('finds the level of a car by its experience, from the start to the highest level', function () {
+    $rules = Rules::fromArray(starterRules());
+
+    expect($rules->carLevelAt(0))->toBe(1)
+        ->and($rules->carLevelAt(199))->toBe(1)
+        ->and($rules->carLevelAt(200))->toBe(2)
+        ->and($rules->carLevelAt(599))->toBe(2)
+        ->and($rules->carLevelAt(600))->toBe(3)
+        ->and($rules->carLevelAt(1_010))->toBe(3)
+        ->and($rules->carLevelAt(1_200))->toBe(4)
+        // Nothing takes a car past its highest level.
+        ->and($rules->carLevelAt(PHP_INT_MAX))->toBe($rules->carMaxLevel());
+});
+
+it('lets a car rise high enough to mount a part of the highest tier of the pack', function () {
+    $rules = Rules::fromArray(starterRules());
+    $highest = 0;
+
+    foreach (glob(config('ride.content_path').'/packs/core/parts/*.json') as $file) {
+        $highest = max($highest, json_decode((string) file_get_contents($file), true)['tier']);
+    }
+
+    // The anchors of the economy go up to tier 10, which a car mounts from level 27.
+    expect($rules->carMaxLevel())->toBeGreaterThanOrEqual($rules->requiredCarLevel(10))
+        ->and($rules->carMaxLevel())->toBeGreaterThanOrEqual($rules->requiredCarLevel($highest));
+});
+
+it('starts a new car at the experience of its level, so that its first lap is the first step of the next one', function () {
+    $rules = Rules::fromArray(starterRules());
+
+    expect($rules->carLevelAt($rules->carXpToReach($rules->carStartLevel())))->toBe($rules->carStartLevel());
+});
+
 it('sells only parts of the core pack that a new car can mount', function () {
     $rules = starterRules();
     $maxTier = Rules::fromArray($rules)->maxMountableTier($rules['car']['start_level']);
