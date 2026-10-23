@@ -2,9 +2,10 @@
 # Sets up a fresh Ubuntu server (22.04 or 24.04) to run RideIdle on one domain: the web app, the API, PostgreSQL, Redis,
 # nginx with a certificate from Let's Encrypt, the queue worker, the scheduler, backups and a firewall.
 #
-# Run it ONCE, as root, on the server, from the deploy/ folder of the repository (deploy/upload.sh bootstrap puts it there):
+# Run it ONCE, as root or with sudo, on the server, from the deploy/ folder of the repository (deploy/upload.sh bootstrap
+# puts it there, or git clone does):
 #
-#   DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=you@example.com bash provision.sh
+#   sudo env DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=you@example.com bash provision.sh
 #
 # It can be run again: what is there is kept (the .env is never overwritten, the database and its user are not made twice),
 # and what changed in the templates is put in place. It does not deploy the application: that is deploy/deploy.sh.
@@ -275,11 +276,23 @@ create_users_and_folders() {
     # www-data: the files of the game. adm and systemd-journal: reading the logs of nginx and of the queue worker.
     usermod -aG www-data,adm,systemd-journal "$DEPLOY_USER"
 
-    # The same key that lets you in as root lets you in as the user that deploys.
+    # The key that lets you in lets you in as the user that deploys too: the keys of the user that ran sudo (on many servers
+    # root cannot log in, and you are "ubuntu"), or else the keys of root.
     install -d -m 700 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "/home/${DEPLOY_USER}/.ssh"
-    if [[ -f /root/.ssh/authorized_keys ]] && [[ ! -s "/home/${DEPLOY_USER}/.ssh/authorized_keys" ]]; then
-        install -m 600 -o "$DEPLOY_USER" -g "$DEPLOY_USER" /root/.ssh/authorized_keys "/home/${DEPLOY_USER}/.ssh/authorized_keys"
-        note "The SSH key of root was copied to ${DEPLOY_USER}."
+    if [[ ! -s "/home/${DEPLOY_USER}/.ssh/authorized_keys" ]]; then
+        local keys source=""
+        for keys in "/home/${SUDO_USER:-nobody}/.ssh/authorized_keys" /root/.ssh/authorized_keys; do
+            if [[ -s "$keys" ]]; then
+                source="$keys"
+                break
+            fi
+        done
+        if [[ -n "$source" ]]; then
+            install -m 600 -o "$DEPLOY_USER" -g "$DEPLOY_USER" "$source" "/home/${DEPLOY_USER}/.ssh/authorized_keys"
+            note "The SSH keys from ${source} were copied to ${DEPLOY_USER}."
+        else
+            note "No SSH key was found to copy. Put your public key in /home/${DEPLOY_USER}/.ssh/authorized_keys, or you cannot log in as ${DEPLOY_USER}."
+        fi
     fi
 
     # releases/    one folder per release         shared/   what every release uses: the .env and the storage
@@ -474,7 +487,7 @@ finish() {
   Domain            https://${DOMAIN}   (nothing to see until the first deploy)
   The game lives in ${APP_DIR}
   The .env is       ${APP_DIR}/shared/.env
-  The user that deploys is '${DEPLOY_USER}'. It has the same SSH key as root.
+  The user that deploys is '${DEPLOY_USER}'. It has the same SSH keys as the account you ran this from.
 
   What is left to do:
 EOF

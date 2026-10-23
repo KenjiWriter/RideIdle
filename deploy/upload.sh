@@ -2,7 +2,8 @@
 # Sends RideIdle from your computer to the server. It needs ssh and git, nothing else (no rsync), so it works in Git Bash on
 # Windows as well as on Linux and macOS. Run it from anywhere inside the repository.
 #
-#   deploy/upload.sh bootstrap root@SERVER        puts the deploy/ folder on a new server, ready for provision.sh (once)
+#   deploy/upload.sh bootstrap USER@SERVER        puts the deploy/ folder on a new server, ready for provision.sh (once).
+#                                                 USER is root or the user with sudo that the host gives you (often ubuntu)
 #   deploy/upload.sh release deploy@SERVER [REF]  deploys the committed state of REF (default HEAD) as a new release
 #   deploy/upload.sh rollback deploy@SERVER       goes back to the previous release
 #
@@ -16,7 +17,7 @@ COMMAND="${1:-}"
 TARGET="${2:-}"
 
 usage() {
-    sed -n '2,10p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
     exit "${1:-0}"
 }
 
@@ -27,14 +28,15 @@ cd "$(git rev-parse --show-toplevel)"
 case "$COMMAND" in
     bootstrap)
         REF="${3:-HEAD}"
-        echo "==> Sending deploy/ to $TARGET:/root/rideidle-deploy"
-        git archive --format=tar "$REF" deploy | ssh "$TARGET" 'set -e; rm -rf /root/rideidle-deploy; mkdir -p /root/rideidle-deploy; tar -xf - -C /root/rideidle-deploy --strip-components=1'
+        # In the home folder of whoever logs in (root: /root), so that no special rights are needed to put it there.
+        echo "==> Sending deploy/ to $TARGET:~/rideidle-deploy"
+        git archive --format=tar "$REF" deploy | ssh "$TARGET" 'set -e; rm -rf rideidle-deploy; mkdir -p rideidle-deploy; tar -xf - -C rideidle-deploy --strip-components=1'
         cat <<EOF
 
 Now, on the server (ssh $TARGET):
 
-  cd /root/rideidle-deploy
-  DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=you@example.com bash provision.sh
+  cd ~/rideidle-deploy
+  sudo env DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=you@example.com bash provision.sh
 
 (deploy/README.md lists the other settings: the SMTP server, who runs the game ...)
 EOF
