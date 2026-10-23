@@ -115,3 +115,31 @@ it('names stock tires that exist in the core pack', function () {
     expect($tires['slot'])->toBe('tires')
         ->and($tires['stats'])->toHaveKeys(['grip', 'handling', 'braking']);
 });
+
+it('is refused by the schema when the tow is missing or has no delay', function () {
+    $rules = starterRules();
+    unset($rules['tow']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    $rules['tow']['delay_ms'] = 0;
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+});
+
+it('makes waiting for a tow cost more than the repair and the fuel it saves', function () {
+    $rules = starterRules();
+    $problems = [];
+
+    foreach ($rules['tracks'] as $slug => $track) {
+        // What the car would have earned in the time it waits, against what the driver would have paid instead.
+        $lostCents = $rules['tow']['delay_ms'] / $track['base_lap_ms'] * $track['reward_cents_per_lap'];
+        $litersOfFuel = (int) ceil($rules['tow']['fuel_laps'] * $track['fuel_per_lap_ml'] / 1000);
+        $savedCents = $rules['repair']['cost_cents'] + $litersOfFuel * $rules['fuel']['price_cents_per_liter'];
+
+        if ($lostCents <= $savedCents) {
+            $problems[] = "{$slug}: waiting costs {$lostCents} cents of earnings but the tow saves {$savedCents}, so it would be a way to avoid paying";
+        }
+    }
+
+    expect($problems)->toBe([]);
+});

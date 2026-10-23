@@ -4,6 +4,7 @@
   "fuel": { "price_cents_per_liter": 200, "reference_power_kw": 97 },
   "repair": { "cost_cents": 3000 },
   "breakdown": { "chance_per_lap_ppm": 3000 },
+  "tow": { "delay_ms": 300000, "fuel_laps": 2 },
   "stock_tires": "street-tires-t1",
   "weather": {
     "dry": { "reward_ppm": 1000000, "xp_ppm": 1000000, "stat_ppm": {} },

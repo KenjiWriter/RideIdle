@@ -32,6 +32,16 @@
       "required": ["chance_per_lap_ppm"],
       "additionalProperties": false
     },
+    "tow": {
+      "description": "The way out for a driver who cannot pay to get a stopped car going: the tow is free, but the car waits for it and the time it waits costs more than the repair and the fuel would have.",
+      "type": "object",
+      "properties": {
+        "delay_ms": { "description": "How long the car waits before it drives again.", "type": "integer", "minimum": 1 },
+        "fuel_laps": { "description": "Laps of fuel the tow leaves in an empty tank, enough to earn the next fuel.", "type": "integer", "minimum": 1, "maximum": 20 }
+      },
+      "required": ["delay_ms", "fuel_laps"],
+      "additionalProperties": false
+    },
     "stock_tires": {
       "description": "Slug of the tires every car drives on until tires can be chosen. The weather effects below assume them.",
       "$ref": "common.schema.json#/$defs/slug"
@@ -108,7 +118,7 @@
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "stock_tires", "weather", "regions", "tracks"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "weather", "regions", "tracks"],
   "additionalProperties": false,
   "$defs": {
     "stat": { "enum": ["accel", "top_speed", "grip", "handling", "braking", "clearance"] }

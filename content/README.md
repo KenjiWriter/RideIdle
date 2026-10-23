@@ -35,7 +35,9 @@ Komenda sprawdza schemat, zgodność nazwy pliku ze slugiem, poziom dealera i t�
 
 ## Zasady biegu (`rules/starter.json`)
 
-Z tego pliku zamrażana jest konfiguracja biegu: tor (wagi i wartości odniesienia statystyk, czas bazowy, nagroda, XP, zużycie paliwa), klimat regionu (szanse pogody w odcinku 22,5 min i ziarno), efekt każdej pogody, cena paliwa, koszt naprawy i szansa awarii na okrążenie. Liczby pochodzą z płótna projektowego (tor Złomowo, klimat regionu, cena paliwa 2 $/l) i z wektorów rozliczania (okrążenie 75 s, 15,50 $, 25 XP, 1,5 l). Wartości bez źródła w projekcie (koszt naprawy, szansa awarii) są tymczasowe i czekają na kalibrację w symulatorze ekonomii.
+Z tego pliku zamrażana jest konfiguracja biegu: tor (wagi i wartości odniesienia statystyk, czas bazowy, nagroda, XP, zużycie paliwa), klimat regionu (szanse pogody w odcinku 22,5 min i ziarno), efekt każdej pogody, cena paliwa, koszt naprawy i szansa awarii na okrążenie. Liczby pochodzą z płótna projektowego (tor Złomowo, klimat regionu, cena paliwa 2 $/l) i z wektorów rozliczania (okrążenie 75 s, 15,50 $, 25 XP, 1,5 l). Wartości bez źródła w projekcie (koszt naprawy, szansa awarii, holowanie) są tymczasowe i czekają na kalibrację w symulatorze ekonomii.
+
+`tow` to wyjście dla kierowcy, którego nie stać na ruszenie stojącego auta (naprawa po awarii albo paliwo na jedno okrążenie): holowanie jest darmowe, ale auto czeka na nie `delay_ms` i dostaje `fuel_laps` okrążeń paliwa, jeśli bak jest pusty. Czas czekania musi kosztować więcej utraconego zarobku, niż kosztowałaby naprawa z paliwem, żeby holowanie nie stało się sposobem na unikanie opłat. Pilnuje tego `StarterRulesTest`.
 
 - Mnożniki są w ppm (850 000 to 0,85), wagi toru w procentach i sumują się do 100, szanse pogody sumują się do 1 000 000.
 - Wartości odniesienia toru Złomowo to statystyki fabrycznego Rdzaka GT-4 na oponach `stock_tires`, więc to auto jeździ tam dokładnie czas bazowy.

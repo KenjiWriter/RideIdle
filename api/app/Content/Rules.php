@@ -56,6 +56,18 @@ final class Rules
         return $this->data['breakdown']['chance_per_lap_ppm'];
     }
 
+    /** How long a towed car waits before it drives again, in ms. */
+    public function towDelayMs(): int
+    {
+        return $this->data['tow']['delay_ms'];
+    }
+
+    /** Laps of fuel a tow leaves in an empty tank. */
+    public function towFuelLaps(): int
+    {
+        return $this->data['tow']['fuel_laps'];
+    }
+
     public function stockTires(): string
     {
         return $this->data['stock_tires'];
