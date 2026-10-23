@@ -14,6 +14,7 @@ use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\Wallet;
 use App\Services\RunService;
+use App\Services\TowTerms;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -139,6 +140,25 @@ final class RunController extends Controller
         ]);
     }
 
+    /**
+     * Tows a stopped car for a driver who cannot pay to get it going: the repair after a breakdown, the fuel for a lap
+     * when the tank is too empty. It is free, but the car waits `tow.delay_ms` before it drives again, and a car with a
+     * tank too empty for a lap leaves with a little fuel. `towed` says whether it was done: a car that is driving, or
+     * whose driver can pay after all, is left as it is, so asking twice tows once.
+     */
+    public function tow(Request $request, int $run): JsonResponse
+    {
+        $found = $this->ownRun($request, $run);
+
+        if ($found === null) {
+            return $this->noRun();
+        }
+
+        $towed = $this->runs->tow($found->id, $this->inputs->make($found->car_slug, $found->track_slug), TowTerms::fromRules($this->rules));
+
+        return $this->respond($towed->run, 200, ['towed' => $towed->towed]);
+    }
+
     /** The run of the driver, settled up to now. */
     public function current(Request $request): JsonResponse
     {
@@ -204,9 +224,16 @@ final class RunController extends Controller
     private function respond(RaceRun $run, int $status = 200, array $extra = []): JsonResponse
     {
         $wallet = Wallet::query()->find($run->user_id);
+        $cash = $wallet?->cash_cents ?? 0;
+        $terms = TowTerms::fromRules($this->rules);
 
         return (new RunResource($run))
-            ->additional(['wallet' => ['cash_cents' => $wallet?->cash_cents ?? 0, 'xp' => $wallet?->xp ?? 0], ...$extra])
+            ->additional([
+                'wallet' => ['cash_cents' => $cash, 'xp' => $wallet?->xp ?? 0],
+                // Whether the driver may ask for a tow now, decided by the rule the tow itself uses.
+                'tow' => ['available' => $terms->isDue($run, $cash), 'delay_ms' => $terms->delayMs],
+                ...$extra,
+            ])
             ->response()
             ->setStatusCode($status)
             ->header('Cache-Control', 'no-store');

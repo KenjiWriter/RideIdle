@@ -35,11 +35,12 @@ Każda odpowiedź ma `data` (bieg) i `wallet` (gotówka w centach i XP po wywoł
     },
     "server_time_ms": 1792692960123
   },
-  "wallet": { "cash_cents": 46500, "xp": 750 }
+  "wallet": { "cash_cents": 46500, "xp": 750 },
+  "tow": { "available": false, "delay_ms": 300000 }
 }
 ```
 
-`status` to `running` albo `stopped`, a `stop_reason` to `fuel_empty`, `breakdown` albo `null`. `prices` to ceny akcji biegu w centach (litr paliwa i naprawa), żeby przycisk mógł podać koszt przed naciśnięciem. `cursor_ms` to początek bieżącego okrążenia. `state_version` rośnie przy każdej zmianie stanu i jest tym, co klient odsyła jako `since_version`.
+`tow` mówi, czy kierowca może teraz poprosić o holowanie (patrz niżej), liczone tą samą regułą co sama akcja. `status` to `running` albo `stopped`, a `stop_reason` to `fuel_empty`, `breakdown` albo `null`. `prices` to ceny akcji biegu w centach (litr paliwa i naprawa), żeby przycisk mógł podać koszt przed naciśnięciem. `cursor_ms` to początek bieżącego okrążenia. `state_version` rośnie przy każdej zmianie stanu i jest tym, co klient odsyła jako `since_version`.
 
 ## Punkty końcowe
 
@@ -52,6 +53,7 @@ Każda odpowiedź ma `data` (bieg) i `wallet` (gotówka w centach i XP po wywoł
 | `POST /runs/{id}/refuel` | Tankowanie |
 | `PATCH /runs/{id}` | Zmiana ustawień (na razie toru) |
 | `POST /runs/{id}/repair` | Naprawa po awarii |
+| `POST /runs/{id}/tow` | Holowanie dla kierowcy, którego nie stać na ruszenie stojącego auta |
 
 ### Wybór wraku: `GET /starter-cars`
 
@@ -98,6 +100,14 @@ Rozlicza i wypłaca jazdę ze starym torem, potem zamraża nowy i auto jedzie ni
 
 Naprawia auto po awarii za koszt z zasad (30 $), po rozliczeniu, więc zarobek sprzed awarii może za nią zapłacić. Auto dostaje nowy plan następnej awarii (nowe ziarno) i rusza od teraz. Odpowiedź ma `repair`: `repaired`, `cost_cents`, `repeated`. Auto, które się nie zepsuło, zostaje bez zmian i `repaired` jest `false`, więc naprawą nie da się losować awarii od nowa. Jeśli bak jest też pusty, auto zostaje zatrzymane z powodu paliwa i rusza je dopiero tankowanie.
 
+### Holowanie: `POST /runs/{id}/tow`
+
+Bez treści. Wyjście dla kierowcy, którego nie stać na ruszenie stojącego auta: stojące auto nie zarabia, więc bez tego pieniądze nigdy by się nie pojawiły. Holowanie przysługuje, gdy auto stoi, a gotówka jest poniżej tego, co kosztuje zwykłe ruszenie: naprawa po awarii i paliwo na jedno okrążenie, gdy bak jest za pusty (paliwo w całych litrach, bo tyle da się kupić). Pieniądze zarobione przed awarią się liczą, bo bieg jest najpierw rozliczany.
+
+Holowanie jest **darmowe, ale auto czeka** `tow.delay_ms` (5 minut), zanim znów pojedzie, i ten czas nie jest płatny: `cursor_ms` jest wtedy w przyszłości, a `status` to `running`, więc klient może odliczać do startu. Auto po awarii jest naprawiane tak jak w `repair` (nowe ziarno, nowy plan awarii), a auto z bakiem za pustym na okrążenie dostaje paliwo na dwa okrążenia, żeby zarobić na następne. Czas czekania kosztuje więcej utraconego zarobku (62 $) niż naprawa z paliwem (36 $), więc nie opłaca się go wybierać, gdy można zapłacić; pilnuje tego test reguł.
+
+Odpowiedź ma `towed`: `false`, gdy auto jedzie albo kierowca jednak może zapłacić (nic się nie zmienia), więc drugie wywołanie holuje raz i nie wymaga `request_id`.
+
 ## Ponawianie i idempotencja
 
 `request_id` chroni przed podwójnym obciążeniem przy ponowieniu żądania po zgubionej odpowiedzi: to samo żądanie ponowione zwraca `repeated: true` i niczego nie zmienia, także gdy w międzyczasie stan się zmienił (na przykład auto zepsuło się drugi raz). Nowy zamiar to nowy `request_id`. Kluczem w księdze jest `refuel:{bieg}:{request_id}` albo `repair:{bieg}:{request_id}`.
@@ -121,5 +131,5 @@ Auto pochodzi z paczki `content/packs/core`, a tor, klimat regionu, efekty pogod
 ## Znane ograniczenia
 
 - Jeden bieg na kierowcę i jeden tor (Złomowo). Kolejne tory wymagają podróży i poziomów gracza, których jeszcze nie ma.
-- Nie ma ochrony przed sytuacją bez wyjścia: kierowca bez gotówki i bez paliwa albo z awarią, na którą go nie stać, nie może ruszyć, bo stojące auto nie zarabia. Zdarza się już dziś, choć rzadko: awaria na pierwszym okrążeniu (szansa 0,3%) zostawia kierowcę z 15,50 $ przy naprawie za 30 $. Ekran pokazuje wtedy komunikat o braku gotówki, ale wyjścia nie ma. Trzeba to rozwiązać przed sklepem (na przykład holowanie albo darmowa pierwsza naprawa).
+- Wyjście z sytuacji bez wyjścia (kierowca, którego nie stać na ruszenie stojącego auta) to holowanie. Wartości (5 minut czekania, paliwo na dwa okrążenia) są tymczasowe i czekają na kalibrację razem z resztą reguł. Gdy pojawi się sklep, trzeba sprawdzić, czy czas czekania nadal kosztuje więcej niż to, co holowanie oszczędza.
 - `ruleset_version` zapisany w biegu pochodzi z konfiguracji (`RIDE_RULESET_VERSION`), a nie z wersji pliku zasad.
