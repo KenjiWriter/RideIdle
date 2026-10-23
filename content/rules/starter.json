@@ -33,20 +33,20 @@
       "ecu": 240000
     }
   },
+  "tire_matrix": {
+    "all_season": { "asphalt_dry": 950000, "asphalt_wet": 900000, "gravel_dry": 650000, "mud": 500000, "snow": 600000 },
+    "street": { "asphalt_dry": 1000000, "asphalt_wet": 850000, "gravel_dry": 600000, "mud": 450000, "snow": 400000 },
+    "slick": { "asphalt_dry": 1150000, "asphalt_wet": 450000, "gravel_dry": 550000, "mud": 300000, "snow": 200000 },
+    "rain": { "asphalt_dry": 900000, "asphalt_wet": 1050000, "gravel_dry": 550000, "mud": 500000, "snow": 550000 },
+    "offroad": { "asphalt_dry": 850000, "asphalt_wet": 800000, "gravel_dry": 1000000, "mud": 900000, "snow": 700000 },
+    "winter": { "asphalt_dry": 800000, "asphalt_wet": 900000, "gravel_dry": 750000, "mud": 650000, "snow": 1000000 }
+  },
   "weather": {
-    "dry": { "reward_ppm": 1000000, "xp_ppm": 1000000, "stat_ppm": {} },
-    "cloudy": { "reward_ppm": 1000000, "xp_ppm": 1000000, "stat_ppm": {} },
-    "rain": {
-      "reward_ppm": 930000,
-      "xp_ppm": 930000,
-      "stat_ppm": { "grip": 850000, "handling": 850000, "braking": 850000 }
-    },
-    "downpour": {
-      "reward_ppm": 930000,
-      "xp_ppm": 930000,
-      "stat_ppm": { "grip": 765000, "handling": 850000, "braking": 850000 }
-    },
-    "fog": { "reward_ppm": 1000000, "xp_ppm": 1000000, "stat_ppm": { "top_speed": 920000 } }
+    "dry": { "reward_ppm": 1000000, "xp_ppm": 1000000, "ground": "dry", "stat_ppm": {} },
+    "cloudy": { "reward_ppm": 1000000, "xp_ppm": 1000000, "ground": "dry", "stat_ppm": {} },
+    "rain": { "reward_ppm": 930000, "xp_ppm": 930000, "ground": "wet", "stat_ppm": {} },
+    "downpour": { "reward_ppm": 930000, "xp_ppm": 930000, "ground": "wet", "stat_ppm": { "grip": 900000 } },
+    "fog": { "reward_ppm": 1000000, "xp_ppm": 1000000, "ground": "dry", "stat_ppm": { "top_speed": 920000 } }
   },
   "regions": {
     "zlomowo": {
@@ -64,6 +64,7 @@
         "pt-BR": "Sprint urbano de Złomowo"
       },
       "region": "zlomowo",
+      "surface": "asphalt",
       "base_lap_ms": 75000,
       "fuel_per_lap_ml": 1500,
       "reward_cents_per_lap": 1550,

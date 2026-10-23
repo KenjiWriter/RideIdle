@@ -8,6 +8,7 @@
     "pt-BR": "Pneus de rua"
   },
   "slot": "tires",
+  "tire_kind": "street",
   "tier": 1,
   "price_cents": 45000,
   "stats": { "grip": 90, "handling": 88, "braking": 90 }

@@ -8,7 +8,8 @@
     "pt-BR": "Pneus de chuva"
   },
   "slot": "tires",
+  "tire_kind": "rain",
   "tier": 3,
   "price_cents": 75000,
-  "stats": { "grip": 96, "handling": 95, "braking": 97, "wet_grip": 125 }
+  "stats": { "grip": 96, "handling": 95, "braking": 97 }
 }

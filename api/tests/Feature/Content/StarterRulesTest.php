@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
+use App\Domain\Run\Surface;
 use App\Support\Locale;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
@@ -302,4 +303,45 @@ it('computes the time of a job of the workshop in whole milliseconds', function 
         ->and($rules->requiredCarLevel(2))->toBe(3)
         ->and($rules->requiredCarLevel(3))->toBe(6)
         ->and(fn () => $rules->workshopJobMs('wings', 1))->toThrow(InvalidArgumentException::class);
+});
+
+it('has no kind of tires that is best on every surface: slick wins dry asphalt, rain the wet, off-road the gravel and the mud, winter the snow', function () {
+    $rules = Rules::fromArray(starterRules());
+    $best = [];
+
+    foreach (Surface::ALL as $surface) {
+        $kinds = $rules->tireKinds();
+        usort($kinds, fn (string $a, string $b): int => $rules->tireGripPpm($b, $surface) <=> $rules->tireGripPpm($a, $surface));
+
+        $best[$surface] = $kinds[0];
+    }
+
+    expect($best)->toBe([
+        Surface::ASPHALT_DRY => 'slick',
+        Surface::ASPHALT_WET => 'rain',
+        Surface::GRAVEL_DRY => 'offroad',
+        Surface::MUD => 'offroad',
+        Surface::SNOW => 'winter',
+    ]);
+});
+
+it('lets every tire of the pack use a kind that the matrix has, and every weather say what it does to the ground', function () {
+    $rules = starterRules();
+    $problems = [];
+
+    foreach (glob(config('ride.content_path').'/packs/core/parts/*.json') as $file) {
+        $part = json_decode((string) file_get_contents($file), true);
+
+        if ($part['slot'] === 'tires' && ! isset($rules['tire_matrix'][$part['tire_kind'] ?? ''])) {
+            $problems[] = "{$part['slug']}: the matrix has no kind ".($part['tire_kind'] ?? '(none)');
+        }
+    }
+
+    foreach ($rules['weather'] as $weather => $effect) {
+        if (! in_array($effect['ground'], ['dry', 'wet', 'snow'], true)) {
+            $problems[] = "{$weather}: unknown ground {$effect['ground']}";
+        }
+    }
+
+    expect($problems)->toBe([]);
 });

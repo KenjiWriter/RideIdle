@@ -43,7 +43,7 @@
       "additionalProperties": false
     },
     "stock_tires": {
-      "description": "Slug of the tires every car drives on until tires can be chosen. The weather effects below assume them.",
+      "description": "Slug of the tires every car drives on until it has others. Their kind picks the column of the tire matrix.",
       "$ref": "common.schema.json#/$defs/slug"
     },
     "car": {
@@ -105,8 +105,22 @@
       "required": ["mechanic_level", "time_cut_ppm_per_level", "removal_ppm", "max_queue", "base_time_ms"],
       "additionalProperties": false
     },
+    "tire_matrix": {
+      "description": "How well every kind of tires grips on every surface, in ppm: the grip, the handling and the braking of a car are multiplied by it. The one tire that is best on every surface does not exist.",
+      "type": "object",
+      "properties": {
+        "all_season": { "$ref": "#/$defs/surfaces" },
+        "street": { "$ref": "#/$defs/surfaces" },
+        "slick": { "$ref": "#/$defs/surfaces" },
+        "rain": { "$ref": "#/$defs/surfaces" },
+        "offroad": { "$ref": "#/$defs/surfaces" },
+        "winter": { "$ref": "#/$defs/surfaces" }
+      },
+      "required": ["all_season", "street", "slick", "rain", "offroad", "winter"],
+      "additionalProperties": false
+    },
     "weather": {
-      "description": "Effect of every weather. Statistics are multiplied by stat_ppm / 1 000 000, the lap reward and XP by reward_ppm and xp_ppm.",
+      "description": "Effect of every weather. The ground says which surface of the track it makes (dry, wet or snow); statistics are multiplied by stat_ppm / 1 000 000 on top of the tire matrix, the lap reward and XP by reward_ppm and xp_ppm.",
       "type": "object",
       "minProperties": 1,
       "propertyNames": { "pattern": "^[a-z][a-z_]*$" },
@@ -115,13 +129,14 @@
         "properties": {
           "reward_ppm": { "type": "integer", "minimum": 0 },
           "xp_ppm": { "type": "integer", "minimum": 0 },
+          "ground": { "enum": ["dry", "wet", "snow"] },
           "stat_ppm": {
             "type": "object",
             "propertyNames": { "$ref": "#/$defs/stat" },
             "additionalProperties": { "type": "integer", "minimum": 1 }
           }
         },
-        "required": ["reward_ppm", "xp_ppm", "stat_ppm"],
+        "required": ["reward_ppm", "xp_ppm", "ground", "stat_ppm"],
         "additionalProperties": false
       }
     },
@@ -153,6 +168,7 @@
         "properties": {
           "name": { "$ref": "common.schema.json#/$defs/i18n" },
           "region": { "$ref": "common.schema.json#/$defs/slug" },
+          "surface": { "description": "What the track is made of when it is dry. The weather turns it wet or snowy.", "enum": ["asphalt", "gravel"] },
           "base_lap_ms": { "description": "Lap time of a car that matches the reference exactly.", "type": "integer", "minimum": 1 },
           "fuel_per_lap_ml": { "type": "integer", "minimum": 1 },
           "reward_cents_per_lap": { "$ref": "common.schema.json#/$defs/cents" },
@@ -172,14 +188,27 @@
             "additionalProperties": { "type": "number", "exclusiveMinimum": 0 }
           }
         },
-        "required": ["name", "region", "base_lap_ms", "fuel_per_lap_ml", "reward_cents_per_lap", "xp_per_lap", "demand", "reference"],
+        "required": ["name", "region", "surface", "base_lap_ms", "fuel_per_lap_ml", "reward_cents_per_lap", "xp_per_lap", "demand", "reference"],
         "additionalProperties": false
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "shop", "workshop", "weather", "regions", "tracks"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "shop", "workshop", "tire_matrix", "weather", "regions", "tracks"],
   "additionalProperties": false,
   "$defs": {
+    "surfaces": {
+      "description": "A multiplier for each surface a car can drive on: dry asphalt, wet asphalt, dry gravel, mud (wet gravel) and snow.",
+      "type": "object",
+      "properties": {
+        "asphalt_dry": { "type": "integer", "minimum": 1 },
+        "asphalt_wet": { "type": "integer", "minimum": 1 },
+        "gravel_dry": { "type": "integer", "minimum": 1 },
+        "mud": { "type": "integer", "minimum": 1 },
+        "snow": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["asphalt_dry", "asphalt_wet", "gravel_dry", "mud", "snow"],
+      "additionalProperties": false
+    },
     "stat": { "enum": ["accel", "top_speed", "grip", "handling", "braking", "clearance"] }
   }
 }

@@ -9,6 +9,10 @@
     "slot": {
       "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"]
     },
+    "tire_kind": {
+      "description": "Which column of the tire matrix of the rules the tires use: how well they grip on each surface. Only tires have it, and every tire has it.",
+      "enum": ["all_season", "street", "slick", "rain", "offroad", "winter"]
+    },
     "tier": { "$ref": "common.schema.json#/$defs/tier" },
     "price_cents": { "$ref": "common.schema.json#/$defs/cents" },
     "stats": {
@@ -36,5 +40,8 @@
     }
   },
   "required": ["slug", "name", "slot", "tier", "price_cents", "stats"],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "if": { "properties": { "slot": { "const": "tires" } }, "required": ["slot"] },
+  "then": { "required": ["tire_kind"] },
+  "else": { "not": { "required": ["tire_kind"] } }
 }

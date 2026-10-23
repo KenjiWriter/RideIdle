@@ -181,6 +181,23 @@ final class Rules
         return $this->data['weather'];
     }
 
+    /**
+     * How well a kind of tires grips on a surface, in ppm: the multiplier of the grip, the handling and the braking.
+     *
+     * @param  string  $kind  all_season, street, slick, rain, offroad or winter
+     * @param  string  $surface  one of the surfaces of `Surface`
+     */
+    public function tireGripPpm(string $kind, string $surface): int
+    {
+        return $this->data['tire_matrix'][$kind][$surface] ?? throw new \InvalidArgumentException("The tire matrix has no {$kind} tires on {$surface}.");
+    }
+
+    /** @return list<string> the kinds of tires of the matrix */
+    public function tireKinds(): array
+    {
+        return array_keys($this->data['tire_matrix']);
+    }
+
     /** @return array<string, mixed>|null */
     public function region(string $slug): ?array
     {

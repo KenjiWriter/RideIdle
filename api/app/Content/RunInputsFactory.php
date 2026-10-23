@@ -6,8 +6,10 @@ namespace App\Content;
 
 use App\Domain\Run\CarStats;
 use App\Domain\Run\RunInputs;
+use App\Domain\Run\Surface;
 use App\Domain\Run\TrackProfile;
 use App\Domain\Run\WeatherEffect;
+use App\Domain\Settlement\Ppm;
 use InvalidArgumentException;
 
 /**
@@ -23,6 +25,9 @@ final class RunInputsFactory
     private const FUEL_USE_BASE = 1.6;
 
     private const FUEL_USE_POWER_SHARE = 0.6;
+
+    /** The statistics that depend on what the tires grip on: the matrix of the tires multiplies them. */
+    private const TRACTION_STATS = ['grip', 'handling', 'braking'];
 
     public function __construct(private readonly Catalog $catalog, private readonly Rules $rules) {}
 
@@ -41,13 +46,22 @@ final class RunInputsFactory
             throw new InvalidArgumentException("The track {$trackSlug} asks for statistics that cars do not have yet: ".implode(', ', $unsupported).'.');
         }
 
+        $tireKind = $this->tireKind($mounted);
         $effects = [];
 
         foreach (array_keys($region['weather_ppm']) as $weather) {
             $effect = $this->rules->weather()[$weather];
+            $multipliersPpm = $effect['stat_ppm'];
+
+            // The tires on this surface multiply what depends on the grip of the road, on top of what the weather does by itself.
+            $tirePpm = $this->rules->tireGripPpm($tireKind, Surface::of($track['surface'], $effect['ground']));
+
+            foreach (self::TRACTION_STATS as $stat) {
+                $multipliersPpm[$stat] = Ppm::mul($tirePpm, $multipliersPpm[$stat] ?? Ppm::ONE);
+            }
 
             $effects[$weather] = new WeatherEffect(
-                array_map(static fn (int $ppm): float => $ppm / 1_000_000, $effect['stat_ppm']),
+                array_map(static fn (int $ppm): float => $ppm / 1_000_000, $multipliersPpm),
                 $effect['reward_ppm'],
                 $effect['xp_ppm'],
             );
@@ -160,6 +174,18 @@ final class RunInputsFactory
         }
 
         return $parts;
+    }
+
+    /**
+     * The kind of the tires on the car, which picks the column of the tire matrix: the stock tires when none are mounted.
+     *
+     * @param  array<string, string>  $mounted  slugs of the parts on the car, by slot
+     */
+    private function tireKind(array $mounted): string
+    {
+        $tires = $this->parts($mounted)['tires'] ?? $this->stockTires();
+
+        return $tires['tire_kind'] ?? throw new InvalidArgumentException("The tires {$tires['slug']} have no kind, and the matrix cannot say how they grip.");
     }
 
     /** @return array<string, mixed> */

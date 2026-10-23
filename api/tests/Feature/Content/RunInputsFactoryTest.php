@@ -6,6 +6,7 @@ use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
 use App\Domain\Run\RunFreezer;
+use Illuminate\Support\Facades\File;
 
 function runInputsFactory(): RunInputsFactory
 {
@@ -158,5 +159,56 @@ describe('the statistics of a car with parts on it', function () {
     it('refuses a part that is not in the pack or sits in a slot that is not its own', function () {
         expect(fn () => runInputsFactory()->stats('rdzak-gt-4', ['exhaust' => 'no-such-part']))->toThrow(InvalidArgumentException::class, 'Unknown part')
             ->and(fn () => runInputsFactory()->stats('rdzak-gt-4', ['brakes' => 'sport-exhaust-t2']))->toThrow(InvalidArgumentException::class, 'belongs to the slot exhaust');
+    });
+});
+
+describe('the tires and the surface', function () {
+    /** @param  array<string, string>  $mounted */
+    function freezeWith(array $mounted, string $car = 'rdzak-gt-4'): array
+    {
+        return (new RunFreezer)->freeze(runInputsFactory()->make($car, 'zlomowo-street', $mounted), 'seed', 0)->config;
+    }
+
+    it('multiplies grip, handling and braking by the column of the matrix that the weather makes of the track', function () {
+        $stock = runInputsFactory()->make('rdzak-gt-4', 'zlomowo-street');
+        $rain = runInputsFactory()->make('rdzak-gt-4', 'zlomowo-street', ['tires' => 'rain-tires-t3']);
+
+        // Street tires, as the weather had them before the matrix: 0.85 on wet asphalt, and the downpour takes a tenth of the grip more.
+        expect($stock->effectFor('dry')->multiplierFor('grip'))->toBe(1.0)
+            ->and($stock->effectFor('rain')->multiplierFor('grip'))->toBe(0.85)
+            ->and($stock->effectFor('downpour')->multiplierFor('grip'))->toBe(0.765)
+            ->and($stock->effectFor('downpour')->multiplierFor('braking'))->toBe(0.85)
+            // Rain tires: a little worse on dry asphalt, better than anything on wet.
+            ->and($rain->effectFor('dry')->multiplierFor('handling'))->toBe(0.9)
+            ->and($rain->effectFor('rain')->multiplierFor('handling'))->toBe(1.05)
+            ->and($rain->effectFor('downpour')->multiplierFor('grip'))->toBe(0.945)
+            // What does not depend on the grip of the road is not touched by the tires.
+            ->and($rain->effectFor('rain')->multiplierFor('top_speed'))->toBe(1.0)
+            ->and($rain->effectFor('fog')->multiplierFor('top_speed'))->toBe(0.92);
+    });
+
+    it('lets the rain tires win the wet and lose the dry against the street tires of a higher tier', function () {
+        $street = freezeWith(['tires' => 'street-tires-t2']);
+        $rain = freezeWith(['tires' => 'rain-tires-t3']);
+
+        expect($rain['lap_ms']['rain'])->toBeLessThan($street['lap_ms']['rain'])
+            ->and($rain['lap_ms']['downpour'])->toBeLessThan($street['lap_ms']['downpour'])
+            ->and($rain['lap_ms']['dry'])->toBeGreaterThan($street['lap_ms']['dry']);
+    });
+
+    it('refuses tires that do not say how they grip', function () {
+        $directory = sys_get_temp_dir().'/ride-pack-'.bin2hex(random_bytes(4));
+        mkdir("{$directory}/vehicles", 0777, true);
+        mkdir("{$directory}/parts", 0777, true);
+        file_put_contents("{$directory}/vehicles/toy.json", json_encode(['slug' => 'toy', 'powertrain' => 'ice', 'power_kw' => 97, 'mass_kg' => 1000, 'top_speed_kmh' => 175, 'tank_l' => 45, 'sources' => ['start']]));
+        file_put_contents("{$directory}/parts/bare-tires.json", json_encode(['slug' => 'bare-tires', 'slot' => 'tires', 'tier' => 1, 'stats' => ['grip' => 90, 'handling' => 88, 'braking' => 90]]));
+
+        try {
+            $factory = new RunInputsFactory(new Catalog($directory), Rules::fromConfig());
+
+            expect(fn () => $factory->make('toy', 'zlomowo-street', ['tires' => 'bare-tires']))->toThrow(InvalidArgumentException::class, 'no kind');
+        } finally {
+            File::deleteDirectory($directory);
+        }
     });
 });

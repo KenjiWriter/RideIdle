@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Content\PackValidationResult;
 use App\Content\PackValidator;
 use Illuminate\Support\Facades\File;
 
@@ -67,6 +68,7 @@ function validPart(array $overrides = []): array
         'slug' => 'street-tires-t2',
         'name' => ['en' => 'Street tires', 'pl' => 'Opony uliczne'],
         'slot' => 'tires',
+        'tire_kind' => 'street',
         'tier' => 2,
         'price_cents' => 57000,
         'stats' => ['grip' => 1.0, 'handling' => 0.9],
@@ -92,13 +94,13 @@ function makePack(array $files): string
     return $directory;
 }
 
-function validatePack(array $files): App\Content\PackValidationResult
+function validatePack(array $files): PackValidationResult
 {
     return PackValidator::fromConfig()->validate(makePack($files));
 }
 
 /** @return list<string> */
-function errorsOf(App\Content\PackValidationResult $result): array
+function errorsOf(PackValidationResult $result): array
 {
     return array_map(static fn (array $issue) => "{$issue['file']} {$issue['pointer']}", $result->errors());
 }
@@ -220,7 +222,27 @@ it('validates parts', function (array $overrides) use ($manifest) {
     'non numeric stat' => [['stats' => ['grip' => 'high']]],
     'stat name in capitals' => [['stats' => ['Grip' => 1]]],
     'unknown vehicle class in fits' => [['fits' => ['classes' => ['tank']]]],
+    'unknown kind of tires' => [['tire_kind' => 'sand']],
+    'a kind of tires on a part that is not a tire' => [['slot' => 'exhaust']],
 ]);
+
+it('requires every tire to say which column of the tire matrix it uses', function () use ($manifest) {
+    $tires = validPart();
+    unset($tires['tire_kind']);
+
+    $result = validatePack(['pack.json' => $manifest, 'parts/street-tires-t2.json' => $tires]);
+
+    expect($result->isValid())->toBeFalse();
+});
+
+it('accepts a part that is not a tire without a kind', function () use ($manifest) {
+    $exhaust = validPart(['slug' => 'sport-exhaust-t2', 'slot' => 'exhaust', 'stats' => ['power_mult' => 1.02]]);
+    unset($exhaust['tire_kind']);
+
+    $result = validatePack(['pack.json' => $manifest, 'parts/sport-exhaust-t2.json' => $exhaust]);
+
+    expect($result->errors())->toBe([]);
+});
 
 it('rejects a manifest for a different schema version', function () {
     $result = validatePack(['pack.json' => ['schema' => 1, 'name' => 'test', 'version' => '2026.10.0']]);
