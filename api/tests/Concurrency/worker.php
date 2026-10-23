@@ -13,6 +13,7 @@ use App\Domain\Run\RunInputs;
 use App\Domain\Run\TrackProfile;
 use App\Services\Ledger;
 use App\Services\RunService;
+use App\Services\TowTerms;
 
 require __DIR__.'/../../vendor/autoload.php';
 
@@ -58,6 +59,11 @@ foreach ($job['ops'] as $op) {
                 return ['added' => $refueled->addedMl, 'cost' => $refueled->costCents, 'repeated' => $refueled->repeated];
             })(),
             'start' => ['run' => $runs->startFirstRun($op['user'], 'rdzak-gt-4', 'zlomowo-street', workerInputs(0), 45_000, $op['now'])->id],
+            'tow' => (function () use ($runs, $op): array {
+                $towed = $runs->tow($op['run'], workerInputs(50_000), new TowTerms(3_000, 200, 300_000, 2), $op['now']);
+
+                return ['towed' => $towed->towed];
+            })(),
             'repair' => (function () use ($runs, $op): array {
                 $repaired = $runs->repair($op['run'], workerInputs($op['chance']), $op['now'], $op['cost'], $op['request']);
 

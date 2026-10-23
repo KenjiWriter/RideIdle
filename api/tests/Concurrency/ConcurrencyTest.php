@@ -216,6 +216,26 @@ it('repairs a broken run once when eight processes ask for the same free repair'
         ->and($fresh->state_version)->toBe(2);
 });
 
+it('tows a broken car once when eight processes ask for the tow', function () {
+    // One lap earns $15.50 before the breakdown and the repair costs $30.00, so the driver cannot pay.
+    $run = committedRun($this, ['fuel_ml' => 45_000, 'break_after_laps' => 1]);
+    $seed = $run->seed;
+
+    $op = ['type' => 'tow', 'run' => $run->id, 'now' => 1_000_000];
+    $operations = flattenResults(runWorkers(array_fill(0, 8, [$op])));
+
+    $fresh = $run->fresh();
+
+    expect(unexpectedErrors($operations))->toBe([])
+        ->and($operations->where('value.towed', true)->count())->toBe(1)
+        ->and($operations->where('value.towed', false)->count())->toBe(7)
+        ->and($fresh->seed)->not->toBe($seed)
+        ->and($fresh->status)->toBe('running')
+        ->and($fresh->cursor_ms)->toBe(1_000_000 + 300_000) // the wait was added once, not eight times
+        ->and($fresh->state_version)->toBe(2) // the settlement of the lap and the tow
+        ->and(LedgerEntry::query()->where('user_id', $run->user_id)->where('reason', '!=', 'settlement')->count())->toBe(0);
+});
+
 it('settles, refuels and repairs in parallel without deadlocks and keeps the books straight', function () {
     // The car breaks down after 3 laps and after that with a chance of 30% per lap, so repairs really happen.
     $run = committedRun($this, ['fuel_ml' => 6_000, 'break_after_laps' => 3]);
