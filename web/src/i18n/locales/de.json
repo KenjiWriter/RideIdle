@@ -9,7 +9,8 @@
     "city": "Stadt",
     "workshop": "Werkstatt",
     "shop": "Shop",
-    "label": "Spielnavigation"
+    "label": "Spielnavigation",
+    "race": "Turnier"
   },
   "language": {
     "label": "Sprache"
@@ -390,5 +391,39 @@
     "skip": "Überspringen",
     "choose": "Wrack wählen",
     "role": "Leiter der Werkstatt"
+  },
+  "weather": {
+    "dry": "trocken",
+    "cloudy": "bewölkt",
+    "rain": "Regen",
+    "downpour": "Starkregen",
+    "fog": "Nebel"
+  },
+  "race": {
+    "live": "LIVE",
+    "lapNow": "Runde {lap}",
+    "lapsDone": "Gefahren: {laps}",
+    "lapLabel": "Runde",
+    "lapsDoneLabel": "Gefahrene Runden",
+    "lapPays": "Gewinn pro Runde",
+    "toEnd": "NOCH",
+    "ring": {
+      "lap": "Runde zu {percent} Prozent gefahren, noch {time}",
+      "towed": "Das Auto wartet auf den Abschleppdienst",
+      "stands": "Das Auto steht, keine Runde läuft"
+    },
+    "weather": {
+      "changes": "Jetzt: {now}. In {time}: {next}.",
+      "stays": "Jetzt: {now}, und auch nach dem Wechsel in {time} so.",
+      "lap": "Eine Runde bei diesem Wetter: {time}, Gewinn {cash} (trocken: {dry})."
+    },
+    "board": {
+      "driver": "Fahrer",
+      "kind": "Typ",
+      "time": "Zeit",
+      "you": "Du · {car}",
+      "youTag": "DU",
+      "later": "Bots und Geister anderer Fahrer kommen später. Vorerst fährst du allein."
+    }
   }
 }

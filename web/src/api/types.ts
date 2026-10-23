@@ -61,6 +61,10 @@ export interface Run {
     xp: Record<string, number>
     fuel_ml: number
   }
+  /** The weather of the region now, when this segment of 22.5 minutes ends, and what comes next. */
+  weather: { now: string; ends_ms: number; next: string }
+  /** The lap in progress, in ms of the clock of the server; null for a car that stands or waits for a tow. */
+  current_lap: { start_ms: number; finish_ms: number; ms: number; weather: string } | null
   server_time_ms: number
 }
 

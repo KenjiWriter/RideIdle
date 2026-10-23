@@ -9,7 +9,8 @@
     "city": "Ville",
     "workshop": "Atelier",
     "shop": "Boutique",
-    "label": "Navigation du jeu"
+    "label": "Navigation du jeu",
+    "race": "Tournoi"
   },
   "language": {
     "label": "Langue"
@@ -390,5 +391,39 @@
     "skip": "Passer",
     "choose": "Choisir une épave",
     "role": "Gérant de l’atelier"
+  },
+  "weather": {
+    "dry": "sec",
+    "cloudy": "nuageux",
+    "rain": "pluie",
+    "downpour": "averse",
+    "fog": "brouillard"
+  },
+  "race": {
+    "live": "EN DIRECT",
+    "lapNow": "Tour {lap}",
+    "lapsDone": "Terminés : {laps}",
+    "lapLabel": "Tour",
+    "lapsDoneLabel": "Tours terminés",
+    "lapPays": "Gain par tour",
+    "toEnd": "RESTANT",
+    "ring": {
+      "lap": "Tour terminé à {percent} pour cent, il reste {time}",
+      "towed": "La voiture attend le remorquage",
+      "stands": "La voiture est à l’arrêt, aucun tour n’est en cours"
+    },
+    "weather": {
+      "changes": "Maintenant : {now}. Dans {time} : {next}.",
+      "stays": "Maintenant : {now}, et pareil après le changement dans {time}.",
+      "lap": "Un tour par ce temps : {time}, pour {cash} (sec : {dry})."
+    },
+    "board": {
+      "driver": "Pilote",
+      "kind": "Type",
+      "time": "Temps",
+      "you": "Vous · {car}",
+      "youTag": "VOUS",
+      "later": "Les bots et les fantômes des autres pilotes arriveront plus tard. Pour l’instant, vous roulez seul."
+    }
   }
 }

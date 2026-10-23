@@ -9,7 +9,8 @@
     "city": "Miasto",
     "workshop": "Warsztat",
     "shop": "Sklep",
-    "label": "Nawigacja gry"
+    "label": "Nawigacja gry",
+    "race": "Turniej"
   },
   "language": {
     "label": "Język"
@@ -390,5 +391,39 @@
     "skip": "Pomiń",
     "choose": "Wybierz wraka",
     "role": "Zarządca dziupli"
+  },
+  "weather": {
+    "dry": "sucho",
+    "cloudy": "pochmurno",
+    "rain": "deszcz",
+    "downpour": "ulewa",
+    "fog": "mgła"
+  },
+  "race": {
+    "live": "NA ŻYWO",
+    "lapNow": "Okrążenie {lap}",
+    "lapsDone": "Ukończone: {laps}",
+    "lapLabel": "Okrążenie",
+    "lapsDoneLabel": "Ukończone",
+    "lapPays": "Zysk na okrążenie",
+    "toEnd": "DO KOŃCA",
+    "ring": {
+      "lap": "Okrążenie ukończone w {percent} procentach, do końca {time}",
+      "towed": "Auto czeka na holowanie",
+      "stands": "Auto stoi, żadne okrążenie nie trwa"
+    },
+    "weather": {
+      "changes": "Teraz: {now}. Za {time}: {next}.",
+      "stays": "Teraz: {now}, także po zmianie za {time}.",
+      "lap": "Okrążenie w tej pogodzie: {time}, nagroda {cash} (w suchym: {dry})."
+    },
+    "board": {
+      "driver": "Zawodnik",
+      "kind": "Typ",
+      "time": "Czas",
+      "you": "Ty · {car}",
+      "youTag": "TY",
+      "later": "Boty i duchy innych kierowców dojdą później. Na razie jedziesz sam."
+    }
   }
 }

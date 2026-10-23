@@ -8,6 +8,7 @@ import { i18n, setLocale } from '@/i18n'
 import { FLASH_MS } from '@/features/run/useFlash'
 import { useRunStore } from '@/stores/run'
 import { respond } from '@/test/fetchServer'
+import { liveFields } from '@/test/runFixtures'
 
 import RefuelControl from './RefuelControl.vue'
 
@@ -26,6 +27,7 @@ function aRun(overrides: Partial<Run> = {}): Run {
     prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
     lap: { ms: { dry: 75_000 }, cash_cents: { dry: 1_550 }, xp: { dry: 25 }, fuel_ml: 1_500 },
     server_time_ms: 1_792_692_000_000,
+    ...liveFields(1_792_692_000_000),
     ...overrides,
   }
 }

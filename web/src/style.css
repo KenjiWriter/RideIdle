@@ -358,6 +358,49 @@ body {
     filter: drop-shadow(0 0 6px rgba(255, 178, 36, 0.75));
   }
 
+  /* ---------- the board of a race: a row for each racer ---------- */
+  .lb {
+    @apply flex flex-col overflow-hidden;
+    background: #0c0f14;
+    border: 1px solid #333b49;
+    border-radius: 12px;
+    box-shadow: 0 3px 0 #06070a;
+  }
+
+  .lbr {
+    @apply grid min-h-9 items-center gap-2 px-3 text-[13px] text-muted;
+    grid-template-columns: 30px 1fr 54px 64px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .lbr:last-child {
+    border-bottom: 0;
+  }
+
+  .lbr b {
+    @apply font-mono text-xs;
+  }
+
+  .lbr .tm {
+    @apply text-right font-mono text-xs text-ink;
+  }
+
+  .lbr.me {
+    @apply text-ink;
+    background: var(--color-amber-bg);
+  }
+
+  .lbr.me b {
+    @apply text-amber;
+  }
+
+  .lbh {
+    @apply min-h-7 font-mono text-[10px] uppercase;
+    background: var(--color-surface-2);
+    color: var(--color-faint);
+    letter-spacing: 0.1em;
+  }
+
   /* ---------- statistics and parts ---------- */
   .st {
     @apply grid min-h-[26px] items-center gap-2.5 text-[13px] text-muted;

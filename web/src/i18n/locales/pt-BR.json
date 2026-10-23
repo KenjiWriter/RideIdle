@@ -9,7 +9,8 @@
     "city": "Cidade",
     "workshop": "Oficina",
     "shop": "Loja",
-    "label": "Navegação do jogo"
+    "label": "Navegação do jogo",
+    "race": "Torneio"
   },
   "language": {
     "label": "Idioma"
@@ -390,5 +391,39 @@
     "skip": "Pular",
     "choose": "Escolher uma carcaça",
     "role": "Gerente da oficina"
+  },
+  "weather": {
+    "dry": "seco",
+    "cloudy": "nublado",
+    "rain": "chuva",
+    "downpour": "temporal",
+    "fog": "neblina"
+  },
+  "race": {
+    "live": "AO VIVO",
+    "lapNow": "Volta {lap}",
+    "lapsDone": "Concluídas: {laps}",
+    "lapLabel": "Volta",
+    "lapsDoneLabel": "Voltas concluídas",
+    "lapPays": "Ganho por volta",
+    "toEnd": "RESTANTE",
+    "ring": {
+      "lap": "Volta {percent} por cento concluída, faltam {time}",
+      "towed": "O carro espera o reboque",
+      "stands": "O carro está parado, nenhuma volta em andamento"
+    },
+    "weather": {
+      "changes": "Agora: {now}. Em {time}: {next}.",
+      "stays": "Agora: {now}, e igual depois da mudança em {time}.",
+      "lap": "Uma volta com este tempo: {time}, pagando {cash} (seco: {dry})."
+    },
+    "board": {
+      "driver": "Piloto",
+      "kind": "Tipo",
+      "time": "Tempo",
+      "you": "Você · {car}",
+      "youTag": "VOCÊ",
+      "later": "Bots e fantasmas de outros pilotos chegam depois. Por enquanto, você corre sozinho."
+    }
   }
 }

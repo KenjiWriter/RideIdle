@@ -22,12 +22,20 @@ export const useRunStore = defineStore('run', () => {
   const loaded = ref(false)
   /** What happened while the driver was away. It stays until the driver dismisses it, even over a reload. */
   const away = ref<RunSummary | null>(null)
+  /** The clock of the server minus the clock of this device, as it was at the last answer. */
+  const clockOffsetMs = ref(0)
 
   const starters = ref<StarterCar[]>([])
   const startTrack = ref<{ slug: string; name: string } | null>(null)
 
+  /** What time it is for the server now: a countdown counts with this, not with the clock of the device. */
+  function serverNow(): number {
+    return Date.now() + clockOffsetMs.value
+  }
+
   function apply(response: RunResponse): void {
     run.value = response.data
+    clockOffsetMs.value = response.data.server_time_ms - Date.now()
     wallet.value = response.wallet
     tow.value = response.tow ?? null
     loaded.value = true
@@ -215,9 +223,10 @@ export const useRunStore = defineStore('run', () => {
     away.value = null
     starters.value = []
     startTrack.value = null
+    clockOffsetMs.value = 0
     pending = null
     clearSeen()
   }
 
-  return { run, wallet, tow, loaded, away, starters, startTrack, loadStarters, start, load, refresh, refuel, repair, towCar, dismissAway, reset }
+  return { run, wallet, tow, loaded, away, starters, startTrack, serverNow, loadStarters, start, load, refresh, refuel, repair, towCar, dismissAway, reset }
 })

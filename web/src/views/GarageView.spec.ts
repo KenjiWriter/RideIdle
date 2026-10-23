@@ -11,6 +11,7 @@ import { mountView } from '@/test/mountView'
 import { aStep, aTutorial } from '@/test/tutorialFixtures'
 
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
+import { liveFields } from '@/test/runFixtures'
 
 import GarageView from './GarageView.vue'
 
@@ -33,6 +34,7 @@ function aRun(overrides: Partial<Run> = {}): Run {
     prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
     lap: { ms: { dry: 75_000, rain: 84_391 }, cash_cents: { dry: 1_550, rain: 1_442 }, xp: { dry: 25, rain: 23 }, fuel_ml: 1_500 },
     server_time_ms: NOW,
+    ...liveFields(NOW),
     ...overrides,
   }
 }

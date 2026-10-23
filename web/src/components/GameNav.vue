@@ -7,6 +7,7 @@ const { t } = useI18n()
 /** The icons are the ones of the design canvas (24 x 24, drawn with a line). */
 const links = [
   { name: 'garage', label: 'nav.garage', icon: 'M3 20V9l9-5 9 5v11M7 20v-7h10v7M7 16h10' },
+  { name: 'race', label: 'nav.race', icon: 'M5 21V4M5 4h12l-2 4 2 4H5' },
   {
     name: 'workshop',
     label: 'nav.workshop',

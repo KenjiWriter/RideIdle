@@ -9,7 +9,8 @@
     "city": "City",
     "workshop": "Workshop",
     "shop": "Shop",
-    "label": "Game navigation"
+    "label": "Game navigation",
+    "race": "Tournament"
   },
   "language": {
     "label": "Language"
@@ -390,5 +391,39 @@
     "skip": "Skip",
     "choose": "Choose a wreck",
     "role": "Manager of the workshop"
+  },
+  "weather": {
+    "dry": "dry",
+    "cloudy": "cloudy",
+    "rain": "rain",
+    "downpour": "downpour",
+    "fog": "fog"
+  },
+  "race": {
+    "live": "LIVE",
+    "lapNow": "Lap {lap}",
+    "lapsDone": "Done: {laps}",
+    "lapLabel": "Lap",
+    "lapsDoneLabel": "Laps done",
+    "lapPays": "Profit per lap",
+    "toEnd": "TO GO",
+    "ring": {
+      "lap": "Lap {percent} percent done, {time} to go",
+      "towed": "The car waits for the tow",
+      "stands": "The car stands, no lap is in progress"
+    },
+    "weather": {
+      "changes": "Now: {now}. In {time}: {next}.",
+      "stays": "Now: {now}, and the same after the change in {time}.",
+      "lap": "A lap in this weather: {time}, paying {cash} (dry: {dry})."
+    },
+    "board": {
+      "driver": "Racer",
+      "kind": "Type",
+      "time": "Time",
+      "you": "You · {car}",
+      "youTag": "YOU",
+      "later": "Bots and the ghosts of other drivers come later. For now you race alone."
+    }
   }
 }

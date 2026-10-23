@@ -9,6 +9,7 @@ import { FLASH_MS } from '@/features/run/useFlash'
 import { i18n, setLocale } from '@/i18n'
 import { useRunStore } from '@/stores/run'
 import { respond } from '@/test/fetchServer'
+import { liveFields } from '@/test/runFixtures'
 
 import TowControl from './TowControl.vue'
 
@@ -29,6 +30,7 @@ function aRun(overrides: Partial<Run> = {}): Run {
     prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
     lap: { ms: { dry: 75_000 }, cash_cents: { dry: 1_550 }, xp: { dry: 25 }, fuel_ml: 1_500 },
     server_time_ms: NOW,
+    ...liveFields(NOW),
     ...overrides,
   }
 }

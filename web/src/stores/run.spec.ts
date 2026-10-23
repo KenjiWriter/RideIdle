@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '@/api/client'
 import type { Run, RunResponse, RunSummary, StarterCarsResponse } from '@/api/types'
 import { readSeen, storeSeen } from '@/features/run/seen'
+import { liveFields } from '@/test/runFixtures'
 
 import { AWAY_MIN_MS, REQUEST_ID_LIFETIME_MS, useRunStore } from './run'
 import { useSessionStore } from './session'
@@ -29,6 +30,7 @@ function aRun(overrides: Partial<Run> = {}): Run {
     prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
     lap: { ms: { dry: 75_000 }, cash_cents: { dry: 1_550 }, xp: { dry: 25 }, fuel_ml: 1_500 },
     server_time_ms: NOW,
+    ...liveFields(NOW),
     ...overrides,
   }
 }
@@ -69,6 +71,24 @@ describe('run store', () => {
 
     expect(store.run).toBeNull()
     expect(store.loaded).toBe(false)
+  })
+
+  it('tells the time of the server by the clock of the last answer, and goes on keeping it', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(1_000_000)
+    // The clock of the server is 5 s ahead of the one of the device.
+    fetchMock.mockResolvedValue(respond(200, aResponse(aRun({ server_time_ms: 1_005_000 }))))
+    const store = useRunStore()
+
+    await store.load()
+    expect(store.serverNow()).toBe(1_005_000)
+
+    vi.setSystemTime(1_030_000)
+    expect(store.serverNow()).toBe(1_035_000)
+
+    store.reset()
+    expect(store.serverNow()).toBe(1_030_000)
+    vi.useRealTimers()
   })
 
   it('loads the wrecks and the starting track', async () => {

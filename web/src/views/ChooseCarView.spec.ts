@@ -7,6 +7,7 @@ import { readSeen } from '@/features/run/seen'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { mountView } from '@/test/mountView'
+import { liveFields } from '@/test/runFixtures'
 
 import ChooseCarView from './ChooseCarView.vue'
 
@@ -51,6 +52,7 @@ const run: Run = {
   prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
   lap: { ms: { dry: 75_000 }, cash_cents: { dry: 1_550 }, xp: { dry: 25 }, fuel_ml: 1_500 },
   server_time_ms: 1_792_692_000_000,
+  ...liveFields(1_792_692_000_000),
 }
 
 const fetchMock = vi.fn()
