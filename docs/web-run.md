@@ -42,8 +42,20 @@ Ekran nie decyduje sam, czy holowanie przysługuje: czyta `tow.available`, któr
 - Błędy i wyniki są ogłaszane czytnikom ekranu (`role="status"` i `role="alert"`). Odmowę z powodu braku gotówki serwer podaje w języku kierowcy.
 - Token, którego serwer nie zna (401), kończy sesję i odsyła na stronę startową.
 
+## Sklep i warsztat (`/shop`, `/workshop`)
+
+Nad ekranami gry jest nawigacja `GameNav` (Garaż, Warsztat, Sklep). API i zasady są w `docs/api-runs.md` (część „Garaż, sklep i warsztat”), a stan trzyma sklep Pinia `garage`.
+
+**Sklep.** Lista części z reguł: nazwa w języku kierowcy, gniazdo, tier, co część robi (`PartStats`: „Moc +2%”, „Przyczepność 100”), cena i przycisk „Kup”. Kupuje się jedną część naraz. Przycisk jest nieaktywny, gdy brakuje gotówki, a pod częścią, której auto nie zamontuje z powodu poziomu, jest „Wymaga poziomu auta 3” i poziom auta kierowcy (część i tak można kupić na zapas). Po zakupie komunikat mówi, co dodano, i prowadzi do warsztatu; to, czego odmawia serwer, pokazuje się jego własnym tekstem w języku kierowcy. Zakup ma `request_id`, który zostaje ten sam, dopóki nie ma odpowiedzi (jak przy tankowaniu), więc powtórzone kliknięcie po zgubionej odpowiedzi kupuje raz.
+
+**Warsztat.** Kolejka mechanika (zlecenie w toku z odliczaniem, reszta „Czeka”), auto z poziomem i statystykami razem z tym, co zmieniają części („Przyczepność 100 +10”), dziewięć gniazd (z przyciskiem „Zdejmij” przy zamontowanej części; silnik jest na razie częścią nadwozia) i inwentarz z przyciskiem „Załóż”. Część, która już czeka w kolejce, ma przyciski nieaktywne. Gdy auto stoi w warsztacie, jest o tym komunikat, a ekran garażu pokazuje status „W warsztacie” i nie oferuje naprawy ani holowania.
+
+**Czas.** Zlecenia mają czasy w zegarze serwera, więc odliczanie liczy się z przesunięciem między zegarem serwera a urządzenia z ostatniej odpowiedzi, a nie z samego zegara urządzenia. Serwer wykonuje zlecenia dopiero wtedy, gdy ktoś go pyta, dlatego otwarty warsztat pyta o garaż, gdy czas zlecenia minął (najwyżej co 3 s, żeby spóźnione zlecenie nie wywołało lawiny zapytań) oraz co 15 s, gdy karta jest widoczna.
+
 ## Sprawdzenie
 
 Testy komponentów i sklepów: `cd web && npm test`. Dodatkowo ścieżka została sprawdzona ręcznie w przeglądarce na lokalnym API (tymczasowa baza SQLite): wybór wraku na telefonie po polsku i na szerokim ekranie po angielsku, start, nieobecność dwóch godzin (28 okrążeń, 434 $, 700 XP, koniec paliwa), tankowanie, awaria wykryta przez odpytywanie bez odświeżania strony i naprawa. To sprawdzenie ujawniło jedną wadę, poprawioną osobnym commitem: wynik tankowania zostawał pod licznikiem bez końca.
 
 Holowanie sprawdzone tak samo, w najgorszym przypadku: awaria na pierwszym okrążeniu, 15,50 $ w kieszeni przy naprawie za 30 $. Przycisk naprawy jest wtedy nieaktywny, a pod nim pojawia się holowanie; po kliknięciu auto ma status „Holowane”, gotówka się nie zmienia, a po upływie czasu auto samo jedzie dalej i zarabia. Ujawniło to wadę kosmetyczną (puste kontrolki zostawiały przerwy w karcie), poprawioną osobnym commitem.
+
+Od tego sprawdzenia ścieżka sklepu i warsztatu: na telefonie (375 px) po polsku kupiłem opony uliczne T2 za 570 $ z kieszeni 3000 $, założyłem je w warsztacie (auto stanęło, a kolejka pokazała „Zakładanie: Opony uliczne, W toku: Zostało 3 min 51 s”), skróciłem czas zlecenia w bazie i warsztat sam odświeżył się po jego końcu: kolejka pusta, przyczepność, prowadzenie i hamowanie +10, a czas okrążenia w garażu spadł z 1:15.0 do 1:09.2 i auto znów jechało. To sprawdzenie wykryło dwie wady poprawione osobnym commitem: komunikat „Opony uliczne jest w Twoim inwentarzu” (część w liczbie mnogiej) i dziewięć gniazd w jednej kolumnie na telefonie.
