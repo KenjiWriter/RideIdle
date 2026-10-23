@@ -7,6 +7,8 @@ import { baseLapMs, lapsOfFuel } from '@/features/run/laps'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 
+import RefuelControl from './RefuelControl.vue'
+
 const props = defineProps<{ run: Run }>()
 
 const { t } = useI18n()
@@ -44,5 +46,7 @@ function liters(ml: number): string {
     <p class="text-sm text-muted" data-test="fuel-range">
       {{ laps > 0 ? t('run.fuel.range', { laps: t('run.laps', { n: number(laps) }, laps), time }) : t('run.fuel.empty') }}
     </p>
+
+    <RefuelControl :run="run" />
   </section>
 </template>

@@ -97,6 +97,17 @@
       "range": "Assez pour {laps} (environ {time})",
       "empty": "Le réservoir est vide."
     },
+    "refuel": {
+      "full": "Faire le plein · {cost}",
+      "partial": "Acheter {liters} · {cost}",
+      "busy": "Ravitaillement…",
+      "tankFull": "Le réservoir est plein.",
+      "noCash": "Pas assez d’argent pour du carburant.",
+      "price": "Le carburant coûte {price} le litre.",
+      "done": "{liters} ajoutés pour {cost}.",
+      "nothing": "Le réservoir était déjà plein.",
+      "repeated": "Ce ravitaillement a déjà été fait."
+    },
     "away": {
       "title": "Pendant votre absence",
       "duration": "Durée d’absence",

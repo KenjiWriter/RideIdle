@@ -48,6 +48,7 @@ const run: Run = {
   tank_ml: 45_000,
   cursor_ms: 1_792_692_000_000,
   state_version: 0,
+  prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
   lap: { ms: { dry: 75_000 }, cash_cents: { dry: 1_550 }, xp: { dry: 25 }, fuel_ml: 1_500 },
   server_time_ms: 1_792_692_000_000,
 }

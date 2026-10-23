@@ -39,6 +39,8 @@ export interface Run {
   cursor_ms: number
   /** Grows with every change of the run. The client sends the one it saw last as since_version. */
   state_version: number
+  /** What the actions of the run cost, in cents. */
+  prices: { fuel_cents_per_liter: number; repair_cents: number }
   /** Per weather: lap time in ms, reward in cents, XP; and the fuel use per lap in ml. */
   lap: {
     ms: Record<string, number>
@@ -83,12 +85,28 @@ export interface RunSummary {
   stop_reason: StopReason | null
 }
 
+/** What a refuel did. `repeated` means the same request had already been done, so nothing was added or charged now. */
+export interface RefuelResult {
+  added_ml: number
+  cost_cents: number
+  repeated: boolean
+}
+
+/** What a repair did. `repaired` is false when the car had not broken down. */
+export interface RepairResult {
+  repaired: boolean
+  cost_cents: number
+  repeated: boolean
+}
+
 /** Answer of every call that touches the run. Which of the extra parts are there depends on the call. */
 export interface RunResponse {
   data: Run
   wallet: Wallet
   settlements?: Settlement[]
   summary?: RunSummary
+  refuel?: RefuelResult
+  repair?: RepairResult
 }
 
 /** A wreck a new driver can start with (GET /api/v1/starter-cars), and what it does on the starting track. */

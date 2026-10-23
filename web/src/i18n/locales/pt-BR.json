@@ -97,6 +97,17 @@
       "range": "Dá para {laps} (cerca de {time})",
       "empty": "O tanque está vazio."
     },
+    "refuel": {
+      "full": "Encher o tanque · {cost}",
+      "partial": "Comprar {liters} · {cost}",
+      "busy": "Abastecendo…",
+      "tankFull": "O tanque está cheio.",
+      "noCash": "Dinheiro insuficiente para combustível.",
+      "price": "O combustível custa {price} por litro.",
+      "done": "{liters} adicionados por {cost}.",
+      "nothing": "O tanque já estava cheio.",
+      "repeated": "Esse abastecimento já foi feito."
+    },
     "away": {
       "title": "Enquanto você esteve fora",
       "duration": "Tempo fora",

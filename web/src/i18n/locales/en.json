@@ -97,6 +97,17 @@
       "range": "Enough for {laps} (about {time})",
       "empty": "The tank is empty."
     },
+    "refuel": {
+      "full": "Fill up · {cost}",
+      "partial": "Buy {liters} · {cost}",
+      "busy": "Refuelling…",
+      "tankFull": "The tank is full.",
+      "noCash": "Not enough cash to buy fuel.",
+      "price": "Fuel costs {price} per liter.",
+      "done": "Added {liters} for {cost}.",
+      "nothing": "The tank was already full.",
+      "repeated": "That refuel was already done."
+    },
     "away": {
       "title": "While you were away",
       "duration": "Time away",

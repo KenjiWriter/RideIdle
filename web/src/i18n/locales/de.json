@@ -97,6 +97,17 @@
       "range": "Reicht für {laps} (etwa {time})",
       "empty": "Der Tank ist leer."
     },
+    "refuel": {
+      "full": "Volltanken · {cost}",
+      "partial": "{liters} kaufen · {cost}",
+      "busy": "Wird getankt…",
+      "tankFull": "Der Tank ist voll.",
+      "noCash": "Nicht genug Geld für Kraftstoff.",
+      "price": "Kraftstoff kostet {price} pro Liter.",
+      "done": "{liters} für {cost} getankt.",
+      "nothing": "Der Tank war schon voll.",
+      "repeated": "Dieses Tanken wurde schon erledigt."
+    },
     "away": {
       "title": "Während du weg warst",
       "duration": "Abwesenheit",

@@ -5,7 +5,7 @@ import { ApiError } from '@/api/client'
 import type { Run, RunResponse, RunSummary, StarterCarsResponse } from '@/api/types'
 import { readSeen, storeSeen } from '@/features/run/seen'
 
-import { AWAY_MIN_MS, useRunStore } from './run'
+import { AWAY_MIN_MS, REQUEST_ID_LIFETIME_MS, useRunStore } from './run'
 import { useSessionStore } from './session'
 
 const NOW = 1_792_692_000_000
@@ -26,6 +26,7 @@ function aRun(overrides: Partial<Run> = {}): Run {
     tank_ml: 45_000,
     cursor_ms: NOW,
     state_version: 0,
+    prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
     lap: { ms: { dry: 75_000 }, cash_cents: { dry: 1_550 }, xp: { dry: 25 }, fuel_ml: 1_500 },
     server_time_ms: NOW,
     ...overrides,
@@ -238,6 +239,134 @@ describe('run store', () => {
       expect(store.run?.laps_done).toBe(9)
       expect(store.away).toEqual(long)
       expect(readSeen()).toEqual({ runId: 7, version: 3 })
+    })
+  })
+
+  describe('refuelling', () => {
+    const refuelAnswer = (run: Run, refuel = { added_ml: 30_000, cost_cents: 6_000, repeated: false }) => ({
+      ...aResponse(run),
+      wallet: { cash_cents: 1_000, xp: 75 },
+      refuel,
+    })
+
+    async function loaded(overrides: Partial<Run> = {}) {
+      fetchMock.mockResolvedValueOnce(respond(200, aResponse(aRun({ state_version: 2, fuel_ml: 15_000, ...overrides }))))
+      const store = useRunStore()
+      await store.load()
+      fetchMock.mockReset()
+
+      return store
+    }
+
+    function lastBody(): Record<string, unknown> {
+      return JSON.parse((fetchMock.mock.calls.at(-1) as [string, RequestInit])[1].body as string)
+    }
+
+    it('fills the tank: sends a request id and no amount, and takes over the answer', async () => {
+      const store = await loaded()
+      fetchMock.mockResolvedValue(respond(200, refuelAnswer(aRun({ state_version: 3, fuel_ml: 45_000 }))))
+
+      const result = await store.refuel(null)
+
+      expect(lastUrl()).toBe('/api/v1/runs/7/refuel')
+      expect((fetchMock.mock.calls.at(-1) as [string, RequestInit])[1].method).toBe('POST')
+      expect(Object.keys(lastBody()).sort()).toEqual(['request_id'])
+      expect(typeof lastBody().request_id).toBe('string')
+      expect(result).toEqual({ added_ml: 30_000, cost_cents: 6_000, repeated: false })
+      expect(store.run?.fuel_ml).toBe(45_000)
+      expect(store.wallet?.cash_cents).toBe(1_000)
+      expect(readSeen()).toEqual({ runId: 7, version: 3 })
+    })
+
+    it('buys the liters asked for', async () => {
+      const store = await loaded()
+      fetchMock.mockResolvedValue(respond(200, refuelAnswer(aRun({ state_version: 3 }), { added_ml: 10_000, cost_cents: 2_000, repeated: false })))
+
+      await store.refuel(10)
+
+      expect(lastBody()).toMatchObject({ liters: 10 })
+    })
+
+    it('does not move what was seen while a summary of an absence waits', async () => {
+      storeSeen({ runId: 7, version: 1 })
+      fetchMock.mockResolvedValueOnce(
+        respond(200, aResponse(aRun({ state_version: 2 }), aSummary({ laps: 50, cash_cents: 1, xp: 1, from_ms: NOW - 3_600_000, to_ms: NOW }))),
+      )
+      const store = useRunStore()
+      await store.load()
+      fetchMock.mockResolvedValue(respond(200, refuelAnswer(aRun({ state_version: 3 }))))
+
+      await store.refuel(null)
+
+      expect(store.away).not.toBeNull()
+      expect(readSeen()).toEqual({ runId: 7, version: 1 })
+    })
+
+    it('repeats a request whose answer was lost with the same id, and uses a new one for the next refuel', async () => {
+      const store = await loaded()
+      fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      await expect(store.refuel(null)).rejects.toBeInstanceOf(TypeError)
+      const lost = lastBody().request_id
+
+      fetchMock.mockResolvedValueOnce(respond(200, refuelAnswer(aRun({ state_version: 3 }), { added_ml: 0, cost_cents: 0, repeated: true })))
+      await store.refuel(null)
+      expect(lastBody().request_id).toBe(lost)
+
+      fetchMock.mockResolvedValueOnce(respond(200, refuelAnswer(aRun({ state_version: 4 }))))
+      await store.refuel(null)
+      expect(lastBody().request_id).not.toBe(lost)
+    })
+
+    it('keeps the id after a refused refuel, so trying again is the same intention', async () => {
+      const store = await loaded()
+      fetchMock.mockResolvedValueOnce(respond(422, { message: 'Not enough cash.', code: 'insufficient_funds' }))
+
+      const failure = await store.refuel(null).catch((error: unknown) => error)
+
+      expect((failure as ApiError).code).toBe('insufficient_funds')
+      const refused = lastBody().request_id
+
+      fetchMock.mockResolvedValueOnce(respond(200, refuelAnswer(aRun({ state_version: 3 }))))
+      await store.refuel(null)
+
+      expect(lastBody().request_id).toBe(refused)
+    })
+
+    it('uses another id for another amount', async () => {
+      const store = await loaded()
+      fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      await store.refuel(null).catch(() => undefined)
+      const full = lastBody().request_id
+
+      fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      await store.refuel(10).catch(() => undefined)
+
+      expect(lastBody().request_id).not.toBe(full)
+    })
+
+    it('uses a new id once the old one is a minute old, because the driver means a new refuel', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] })
+
+      try {
+        const store = await loaded()
+        fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        await store.refuel(null).catch(() => undefined)
+        const old = lastBody().request_id
+
+        vi.setSystemTime(Date.now() + REQUEST_ID_LIFETIME_MS + 1)
+        fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+        await store.refuel(null).catch(() => undefined)
+
+        expect(lastBody().request_id).not.toBe(old)
+      } finally {
+        vi.useRealTimers()
+      }
+    })
+
+    it('cannot refuel without a run', async () => {
+      await expect(useRunStore().refuel(null)).rejects.toThrow('no run')
+
+      expect(fetchMock).not.toHaveBeenCalled()
     })
   })
 

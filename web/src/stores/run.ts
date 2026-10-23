@@ -2,11 +2,15 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { ApiError, api } from '@/api/client'
-import type { Run, RunResponse, RunSummary, StarterCar, StarterCarsResponse, Wallet } from '@/api/types'
+import type { RefuelResult, Run, RunResponse, RunSummary, StarterCar, StarterCarsResponse, Wallet } from '@/api/types'
+import { newRequestId } from '@/features/run/requestId'
 import { clearSeen, readSeen, storeSeen } from '@/features/run/seen'
 
 /** An absence shorter than this is not worth a summary: the driver was only reloading the page. */
 export const AWAY_MIN_MS = 2 * 60 * 1000
+
+/** How long a request id is reused for the same action. Later, pressing the button again is a new intention. */
+export const REQUEST_ID_LIFETIME_MS = 60 * 1000
 
 /** The run of the driver. The server settles it whenever it is asked, so the store only has to ask. */
 export const useRunStore = defineStore('run', () => {
@@ -28,6 +32,17 @@ export const useRunStore = defineStore('run', () => {
 
   function remember(current: Run): void {
     storeSeen({ runId: current.id, version: current.state_version })
+  }
+
+  /** The request id of the intention that is on its way: the same one for the same action, until it is answered. */
+  let pending: { key: string; id: string; at: number } | null = null
+
+  function pendingRequest(key: string): string {
+    if (pending === null || pending.key !== key || Date.now() - pending.at > REQUEST_ID_LIFETIME_MS) {
+      pending = { key, id: newRequestId(), at: Date.now() }
+    }
+
+    return pending.id
   }
 
   function noRun(error: unknown): boolean {
@@ -112,6 +127,36 @@ export const useRunStore = defineStore('run', () => {
     }
   }
 
+  /**
+   * Buys fuel: `liters` of it, or a full tank when null. Every intention gets a request id that stays the same
+   * while the answer is missing, so pressing the button again after a lost answer cannot charge twice. After a
+   * minute the old id is dropped, because then the driver means a new refuel.
+   */
+  async function refuel(liters: number | null): Promise<RefuelResult> {
+    const current = run.value
+
+    if (!current) {
+      throw new Error('There is no run to refuel.')
+    }
+
+    const key = `refuel:${current.id}:${liters ?? 'full'}`
+    const request = pendingRequest(key)
+
+    const response = await api<RunResponse>(`/v1/runs/${current.id}/refuel`, {
+      method: 'POST',
+      body: JSON.stringify({ request_id: request, ...(liters !== null ? { liters } : {}) }),
+    })
+
+    pending = null
+    apply(response)
+
+    if (away.value === null) {
+      remember(response.data)
+    }
+
+    return response.refuel as RefuelResult
+  }
+
   /** The driver has read the summary: from now on everything up to the present counts as seen. */
   function dismissAway(): void {
     away.value = null
@@ -129,8 +174,9 @@ export const useRunStore = defineStore('run', () => {
     away.value = null
     starters.value = []
     startTrack.value = null
+    pending = null
     clearSeen()
   }
 
-  return { run, wallet, loaded, away, starters, startTrack, loadStarters, start, load, refresh, dismissAway, reset }
+  return { run, wallet, loaded, away, starters, startTrack, loadStarters, start, load, refresh, refuel, dismissAway, reset }
 })

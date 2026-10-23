@@ -97,6 +97,17 @@
       "range": "Wystarczy na {laps} (ok. {time})",
       "empty": "Bak jest pusty."
     },
+    "refuel": {
+      "full": "Zatankuj do pełna · {cost}",
+      "partial": "Kup {liters} · {cost}",
+      "busy": "Tankowanie…",
+      "tankFull": "Bak jest pełny.",
+      "noCash": "Za mało gotówki na paliwo.",
+      "price": "Paliwo kosztuje {price} za litr.",
+      "done": "Dolano {liters} za {cost}.",
+      "nothing": "Bak był już pełny.",
+      "repeated": "To tankowanie już się odbyło."
+    },
     "away": {
       "title": "Pod Twoją nieobecność",
       "duration": "Czas nieobecności",
