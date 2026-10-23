@@ -226,5 +226,18 @@
     "add": "Adicionar outra forma de entrar",
     "addDescription": "Vincule mais uma forma de acessar esta garagem, para que perder uma não deixe você de fora.",
     "close": "Fechar"
+  },
+  "legal": {
+    "version": "Versão de {date}",
+    "operator": "Quem mantém o jogo",
+    "name": "Nome",
+    "address": "Endereço",
+    "email": "E-mail de contato",
+    "notSet": "ainda não informado",
+    "contents": "Índice",
+    "terms": "Termos de uso",
+    "privacy": "Política de privacidade",
+    "loadError": "Não foi possível carregar a página.",
+    "back": "Voltar ao início"
   }
 }

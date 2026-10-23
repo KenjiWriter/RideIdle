@@ -5,6 +5,8 @@ import { ApiError, api } from '@/api/client'
 import type {
   EmailConfirmation,
   EmailLinkResponse,
+  LegalInfo,
+  LegalResponse,
   ProviderFinish,
   ProviderStart,
   ProvidersResponse,
@@ -28,6 +30,9 @@ export const useAccountStore = defineStore('account', () => {
   const providers = ref<SocialProvider[]>([])
   const providersLoaded = ref(false)
 
+  /** What the legal texts need from the server. Asked once; null until then. */
+  const legal = ref<LegalInfo | null>(null)
+
   /** Asks the server which providers are on. If it cannot be asked, the e-mail link is still there to offer. */
   async function loadProviders(): Promise<void> {
     try {
@@ -36,6 +41,13 @@ export const useAccountStore = defineStore('account', () => {
       providers.value = []
     } finally {
       providersLoaded.value = true
+    }
+  }
+
+  /** Asks the server for the age, the version and the operator of the legal texts, unless they are known. A failure is passed on. */
+  async function loadLegal(): Promise<void> {
+    if (legal.value === null) {
+      legal.value = (await api<LegalResponse>('/v1/meta/legal')).data
     }
   }
 
@@ -140,5 +152,5 @@ export const useAccountStore = defineStore('account', () => {
     return response.purpose
   }
 
-  return { providers, providersLoaded, loadProviders, requestEmailLink, requestLoginLink, startProvider, finishProvider, confirmEmail }
+  return { providers, providersLoaded, loadProviders, legal, loadLegal, requestEmailLink, requestLoginLink, startProvider, finishProvider, confirmEmail }
 })

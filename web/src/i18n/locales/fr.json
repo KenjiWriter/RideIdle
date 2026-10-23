@@ -226,5 +226,18 @@
     "add": "Ajouter un autre moyen de connexion",
     "addDescription": "Liez un moyen de plus pour accéder à ce garage, afin que la perte de l’un ne vous en ferme pas l’accès.",
     "close": "Fermer"
+  },
+  "legal": {
+    "version": "Version du {date}",
+    "operator": "Qui exploite le jeu",
+    "name": "Nom",
+    "address": "Adresse",
+    "email": "E-mail de contact",
+    "notSet": "pas encore renseigné",
+    "contents": "Sommaire",
+    "terms": "Conditions d’utilisation",
+    "privacy": "Politique de confidentialité",
+    "loadError": "La page n’a pas pu être chargée.",
+    "back": "Retour au début"
   }
 }

@@ -22,6 +22,9 @@ export const routes: RouteRecordRaw[] = [
   // Where the API sends the browser back from Google, Facebook or Apple. A driver linking an account and a visitor
   // signing in both come here, so it is open to everybody.
   { path: '/auth/callback', name: 'auth-callback', component: () => import('@/views/AuthCallbackView.vue') },
+  // The terms and the privacy policy are read before there is an account, and from the window that asks for consent.
+  { path: '/terms', name: 'terms', component: () => import('@/views/LegalView.vue'), props: { document: 'terms' } },
+  { path: '/privacy', name: 'privacy', component: () => import('@/views/LegalView.vue'), props: { document: 'privacy' } },
   { path: '/choose', name: 'choose', component: () => import('@/views/ChooseCarView.vue'), meta: { requiresAuth: true } },
   { path: '/garage', name: 'garage', component: () => import('@/views/GarageView.vue'), meta: { requiresAuth: true } },
 ]

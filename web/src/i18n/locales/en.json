@@ -226,5 +226,18 @@
     "add": "Add another sign-in",
     "addDescription": "Link one more way to get into this garage, so losing one does not lock you out.",
     "close": "Close"
+  },
+  "legal": {
+    "version": "Version of {date}",
+    "operator": "Who runs the game",
+    "name": "Name",
+    "address": "Address",
+    "email": "Contact e-mail",
+    "notSet": "not set yet",
+    "contents": "Contents",
+    "terms": "Terms of service",
+    "privacy": "Privacy policy",
+    "loadError": "The page could not be loaded.",
+    "back": "Back to the start"
   }
 }

@@ -226,5 +226,18 @@
     "add": "Dodaj kolejny sposób logowania",
     "addDescription": "Połącz jeszcze jeden sposób wejścia do garażu, żeby utrata jednego nie zamknęła Ci drogi.",
     "close": "Zamknij"
+  },
+  "legal": {
+    "version": "Wersja z dnia {date}",
+    "operator": "Kto prowadzi grę",
+    "name": "Nazwa",
+    "address": "Adres",
+    "email": "E-mail do kontaktu",
+    "notSet": "jeszcze nie podano",
+    "contents": "Spis treści",
+    "terms": "Regulamin",
+    "privacy": "Polityka prywatności",
+    "loadError": "Nie udało się wczytać strony.",
+    "back": "Wróć na początek"
   }
 }

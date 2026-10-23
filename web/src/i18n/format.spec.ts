@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatDuration, formatLapTime, formatMoney, formatNumber } from './format'
+import { formatDay, formatDuration, formatLapTime, formatMoney, formatNumber } from './format'
 import { SUPPORTED_LOCALES } from './locales'
 
 describe('formatMoney', () => {
@@ -22,6 +22,27 @@ describe('formatMoney', () => {
     expect(formatMoney(1442, 'en', 2)).toBe('$14.42')
     expect(formatMoney(0, 'en', 2)).toBe('$0.00')
     expect(formatMoney(1550, 'pl', 2).replace(/\s/g, ' ')).toBe('15,50 $')
+  })
+})
+
+describe('formatDay', () => {
+  it('writes a day the way the language does', () => {
+    expect(formatDay('2026-10-23', 'en')).toBe('October 23, 2026')
+    expect(formatDay('2026-10-23', 'pl')).toBe('23 października 2026')
+    expect(formatDay('2026-10-23', 'de')).toBe('23. Oktober 2026')
+    expect(formatDay('2026-10-23', 'fr')).toBe('23 octobre 2026')
+    expect(formatDay('2026-10-23', 'pt-BR')).toBe('23 de outubro de 2026')
+  })
+
+  it('does not move the day with the time zone of the machine', () => {
+    // The first and the last day of a year are where a shift of a few hours would show.
+    expect(formatDay('2027-01-01', 'en')).toBe('January 1, 2027')
+    expect(formatDay('2026-12-31', 'en')).toBe('December 31, 2026')
+  })
+
+  it('returns what is not a day as it is', () => {
+    expect(formatDay('v3', 'en')).toBe('v3')
+    expect(formatDay('', 'en')).toBe('')
   })
 })
 

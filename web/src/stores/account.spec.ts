@@ -61,6 +61,42 @@ describe('account store', () => {
     })
   })
 
+  describe('what the legal texts need', () => {
+    const info = {
+      min_age: 16,
+      version: '2026-10-23',
+      guest_expiry_days: 90,
+      operator: { name: null, address: null, email: null },
+    }
+
+    it('is not known until it is asked for', () => {
+      expect(useAccountStore().legal).toBeNull()
+    })
+
+    it('is asked for once, and kept', async () => {
+      const calls = serveApi(fetchMock, { 'GET /api/v1/meta/legal': () => respond(200, { data: info }) })
+      const account = useAccountStore()
+
+      await account.loadLegal()
+      await account.loadLegal()
+
+      expect(account.legal).toEqual(info)
+      expect(calls).toHaveLength(1)
+    })
+
+    it('passes a failure on, and asks again next time', async () => {
+      fetchMock.mockRejectedValueOnce(new TypeError('offline'))
+      const account = useAccountStore()
+
+      await expect(account.loadLegal()).rejects.toBeInstanceOf(TypeError)
+      expect(account.legal).toBeNull()
+
+      serveApi(fetchMock, { 'GET /api/v1/meta/legal': () => respond(200, { data: info }) })
+      await account.loadLegal()
+      expect(account.legal).toEqual(info)
+    })
+  })
+
   describe('the links by e-mail', () => {
     it('asks for a link that secures the account, saying the terms were accepted and the age confirmed', async () => {
       storeToken('device-token')

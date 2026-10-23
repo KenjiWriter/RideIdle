@@ -155,6 +155,22 @@ export interface StarterCarsResponse {
   track: { slug: string; name: string }
 }
 
+/** What the terms and the privacy policy need from the server (GET /api/v1/meta/legal). */
+export interface LegalInfo {
+  /** The age a driver confirms to have reached. */
+  min_age: number
+  /** The day the texts were last changed. It is saved with the acceptance. */
+  version: string
+  /** How many days a guest account is kept without activity. */
+  guest_expiry_days: number
+  /** Who runs the game. A detail that was not set is null. */
+  operator: { name: string | null; address: string | null; email: string | null }
+}
+
+export interface LegalResponse {
+  data: LegalInfo
+}
+
 /** The sign-ins with another service that the server has set up (GET /api/v1/auth/providers). */
 export interface ProvidersResponse {
   data: SocialProvider[]

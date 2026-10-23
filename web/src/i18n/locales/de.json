@@ -226,5 +226,18 @@
     "add": "Weitere Anmeldeart hinzufügen",
     "addDescription": "Verknüpfe eine weitere Möglichkeit, in diese Garage zu kommen, damit der Verlust einer dich nicht aussperrt.",
     "close": "Schließen"
+  },
+  "legal": {
+    "version": "Version vom {date}",
+    "operator": "Wer das Spiel betreibt",
+    "name": "Name",
+    "address": "Adresse",
+    "email": "Kontakt-E-Mail",
+    "notSet": "noch nicht angegeben",
+    "contents": "Inhalt",
+    "terms": "Nutzungsbedingungen",
+    "privacy": "Datenschutzerklärung",
+    "loadError": "Die Seite konnte nicht geladen werden.",
+    "back": "Zurück zum Start"
   }
 }

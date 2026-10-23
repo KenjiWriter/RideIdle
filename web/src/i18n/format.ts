@@ -15,6 +15,20 @@ export function formatMoney(cents: number, locale: AppLocale, fractionDigits = 0
   }).format(fractionDigits === 0 ? Math.round(cents / 100) : cents / 100)
 }
 
+/**
+ * A day as the language writes it ("23 października 2026"). The version of the legal texts is a day such as
+ * 2026-10-23; a text that is not one is returned as it is.
+ */
+export function formatDay(value: string, locale: AppLocale): string {
+  const day = new Date(`${value}T00:00:00Z`)
+
+  if (Number.isNaN(day.getTime())) {
+    return value
+  }
+
+  return new Intl.DateTimeFormat(locale, { dateStyle: 'long', timeZone: 'UTC' }).format(day)
+}
+
 export function formatNumber(value: number, locale: AppLocale, maximumFractionDigits = 0): string {
   return new Intl.NumberFormat(locale, { maximumFractionDigits }).format(value)
 }
