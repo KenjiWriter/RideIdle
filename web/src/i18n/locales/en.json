@@ -79,7 +79,8 @@
     "status": {
       "running": "Racing",
       "fuel_empty": "Out of fuel",
-      "breakdown": "Broken down"
+      "breakdown": "Broken down",
+      "towed": "Towed"
     },
     "stat": {
       "cash": "Cash",
@@ -116,6 +117,14 @@
       "doneRunning": "Repaired for {cost}. The car is back on the track.",
       "notNeeded": "The car did not need a repair.",
       "repeated": "That repair was already done."
+    },
+    "tow": {
+      "breakdown": "You cannot afford the repair. The tow is free, but the car waits {time} before it drives again.",
+      "fuel_empty": "You cannot afford fuel for a lap. The tow is free: the car waits {time} and leaves with a little fuel.",
+      "button": "Tow the car · free",
+      "busy": "Towing…",
+      "notNeeded": "The tow was not needed.",
+      "underway": "The car is being towed. It drives again in about {time}."
     },
     "away": {
       "title": "While you were away",

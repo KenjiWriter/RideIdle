@@ -445,6 +445,77 @@ describe('run store', () => {
     })
   })
 
+  describe('towing', () => {
+    const offer = { available: true, delay_ms: 300_000 }
+
+    async function stuck() {
+      fetchMock.mockResolvedValueOnce(
+        respond(200, { ...aResponse(aRun({ state_version: 2, status: 'stopped', stop_reason: 'breakdown' })), tow: offer }),
+      )
+      const store = useRunStore()
+      await store.load()
+      fetchMock.mockReset()
+
+      return store
+    }
+
+    it('knows from every answer whether the tow is on offer', async () => {
+      const store = await stuck()
+      expect(store.tow).toEqual(offer)
+
+      fetchMock.mockResolvedValueOnce(respond(200, { ...aResponse(aRun({ state_version: 3 })), tow: { available: false, delay_ms: 300_000 } }))
+      await store.refresh()
+
+      expect(store.tow?.available).toBe(false)
+    })
+
+    it('asks for the tow without a body and takes over the answer', async () => {
+      const store = await stuck()
+      fetchMock.mockResolvedValue(
+        respond(200, { ...aResponse(aRun({ state_version: 3, cursor_ms: NOW + 300_000 })), tow: { available: false, delay_ms: 300_000 }, towed: true }),
+      )
+
+      const towed = await store.towCar()
+
+      const [url, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit]
+      expect(url).toBe('/api/v1/runs/7/tow')
+      expect(init.method).toBe('POST')
+      expect(init.body).toBeUndefined()
+      expect(towed).toBe(true)
+      expect(store.run?.status).toBe('running')
+      expect(store.run?.cursor_ms).toBe(NOW + 300_000)
+      expect(store.tow?.available).toBe(false)
+      expect(readSeen()).toEqual({ runId: 7, version: 3 })
+    })
+
+    it('says when nothing was done', async () => {
+      const store = await stuck()
+      fetchMock.mockResolvedValue(respond(200, { ...aResponse(aRun({ state_version: 3 })), tow: { available: false, delay_ms: 300_000 }, towed: false }))
+
+      expect(await store.towCar()).toBe(false)
+    })
+
+    it('passes a failure on', async () => {
+      const store = await stuck()
+      fetchMock.mockResolvedValue(respond(500, { message: 'Server error' }))
+
+      await expect(store.towCar()).rejects.toBeInstanceOf(ApiError)
+      expect(store.tow).toEqual(offer)
+    })
+
+    it('cannot tow without a run', async () => {
+      await expect(useRunStore().towCar()).rejects.toThrow('no run')
+    })
+
+    it('forgets the offer on reset', async () => {
+      const store = await stuck()
+
+      store.reset()
+
+      expect(store.tow).toBeNull()
+    })
+  })
+
   it('forgets everything on reset', async () => {
     fetchMock.mockResolvedValue(respond(200, aResponse(aRun())))
     const store = useRunStore()

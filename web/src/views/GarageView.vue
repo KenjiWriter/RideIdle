@@ -7,11 +7,12 @@ import AwaySummary from '@/components/AwaySummary.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RepairControl from '@/components/RepairControl.vue'
+import TowControl from '@/components/TowControl.vue'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
-import { formatLapTime } from '@/i18n/format'
+import { formatDuration, formatLapTime } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useRunStore } from '@/stores/run'
 import { useSessionStore } from '@/stores/session'
@@ -50,8 +51,15 @@ async function open(): Promise<void> {
 
 onMounted(open)
 
-/** Why the car stands, or that it is racing: the key of the status in the messages. */
-const statusKey = computed(() => run.run?.stop_reason ?? 'running')
+/**
+ * A towed car is running, but its start is still in the future: the wait of the tow. Nothing else puts the cursor of
+ * a run ahead of the clock of the server.
+ */
+const towMs = computed(() => (run.run && run.run.status === 'running' ? Math.max(0, run.run.cursor_ms - run.run.server_time_ms) : 0))
+const towing = computed(() => towMs.value > 0)
+
+/** Why the car stands, that it is being towed, or that it is racing: the key of the status in the messages. */
+const statusKey = computed(() => (towing.value ? 'towed' : (run.run?.stop_reason ?? 'running')))
 const stopped = computed(() => run.run?.status === 'stopped')
 </script>
 
@@ -79,7 +87,7 @@ const stopped = computed(() => run.run?.status === 'stopped')
           </div>
           <span
             class="shrink-0 rounded-full border px-3 py-1 text-sm font-bold"
-            :class="stopped ? 'border-danger text-danger' : 'border-cyan text-cyan'"
+            :class="stopped ? 'border-danger text-danger' : towing ? 'border-amber text-amber' : 'border-cyan text-cyan'"
             data-test="status"
           >
             {{ t(`run.status.${statusKey}`) }}
@@ -119,6 +127,12 @@ const stopped = computed(() => run.run?.status === 'stopped')
         </p>
 
         <RepairControl :run="run.run" />
+
+        <TowControl :run="run.run" />
+
+        <p v-if="towing" class="rounded-lg border border-amber bg-surface-2 p-3 text-sm" role="status" data-test="towing">
+          {{ t('run.tow.underway', { time: formatDuration(towMs) }) }}
+        </p>
       </section>
 
       <FuelGauge :run="run.run" />

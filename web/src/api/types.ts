@@ -99,6 +99,15 @@ export interface RepairResult {
   repeated: boolean
 }
 
+/**
+ * Whether the driver may ask for a tow now: the car stands and they cannot pay to get it going. The tow is free,
+ * but the car waits `delay_ms` before it drives again.
+ */
+export interface TowState {
+  available: boolean
+  delay_ms: number
+}
+
 /** Answer of every call that touches the run. Which of the extra parts are there depends on the call. */
 export interface RunResponse {
   data: Run
@@ -107,6 +116,9 @@ export interface RunResponse {
   summary?: RunSummary
   refuel?: RefuelResult
   repair?: RepairResult
+  tow?: TowState
+  /** In the answer of the tow itself: false when nothing was done, because the car was driving or the driver could pay. */
+  towed?: boolean
 }
 
 /** A wreck a new driver can start with (GET /api/v1/starter-cars), and what it does on the starting track. */

@@ -79,7 +79,8 @@
     "status": {
       "running": "Im Rennen",
       "fuel_empty": "Kein Sprit",
-      "breakdown": "Defekt"
+      "breakdown": "Defekt",
+      "towed": "Abgeschleppt"
     },
     "stat": {
       "cash": "Geld",
@@ -116,6 +117,14 @@
       "doneRunning": "Für {cost} repariert. Das Auto ist wieder auf der Strecke.",
       "notNeeded": "Das Auto musste nicht repariert werden.",
       "repeated": "Diese Reparatur wurde schon erledigt."
+    },
+    "tow": {
+      "breakdown": "Du kannst die Reparatur nicht bezahlen. Das Abschleppen ist kostenlos, aber das Auto wartet {time}, bevor es wieder fährt.",
+      "fuel_empty": "Du kannst den Kraftstoff für eine Runde nicht bezahlen. Das Abschleppen ist kostenlos: Das Auto wartet {time} und fährt mit etwas Kraftstoff los.",
+      "button": "Auto abschleppen · kostenlos",
+      "busy": "Wird abgeschleppt…",
+      "notNeeded": "Das Abschleppen war nicht nötig.",
+      "underway": "Das Auto wird abgeschleppt. Es fährt in etwa {time} wieder."
     },
     "away": {
       "title": "Während du weg warst",

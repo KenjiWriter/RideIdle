@@ -199,6 +199,51 @@ describe('GarageView', () => {
     expect(wrapper.get('[data-test="repair-done"]').text()).toBe('Repaired for $30.00. The car is back on the track.')
   })
 
+  it('offers the tow to a driver who cannot pay, and shows the car on its way after it', async () => {
+    const stuck = aRun({ status: 'stopped', stop_reason: 'breakdown', fuel_ml: 30_000 })
+    const calls = serveApi(fetchMock, {
+      'GET /api/v1/me': () => respond(200, { data: profile }),
+      'GET /api/v1/runs/current': () => respond(200, { ...runAnswer(stuck), tow: { available: true, delay_ms: 300_000 } }),
+      'POST /api/v1/runs/7/tow': () =>
+        respond(200, {
+          ...runAnswer(aRun({ status: 'running', stop_reason: null, cursor_ms: NOW + 300_000, state_version: 5 })),
+          tow: { available: false, delay_ms: 300_000 },
+          towed: true,
+        }),
+    })
+    const { wrapper } = await show()
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="status"]').text()).toBe('Broken down')
+    expect(wrapper.get('[data-test="tow-offer"]').text()).toContain('The tow is free')
+
+    await wrapper.get('[data-test="tow-button"]').trigger('click')
+    await flushPromises()
+
+    expect(calls.some((call) => call.method === 'POST' && call.url === '/api/v1/runs/7/tow')).toBe(true)
+    expect(wrapper.find('[data-test="tow-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="banner"]').exists()).toBe(false)
+    expect(wrapper.get('[data-test="status"]').text()).toBe('Towed')
+    expect(wrapper.get('[data-test="towing"]').text()).toBe('The car is being towed. It drives again in about 5 min 00 s.')
+  })
+
+  it('does not call a car towed when its start is not in the future', async () => {
+    const { mounted } = open({ cursor_ms: NOW, server_time_ms: NOW })
+    const { wrapper } = await mounted
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="towing"]').exists()).toBe(false)
+    expect(wrapper.get('[data-test="status"]').text()).toBe('Racing')
+  })
+
+  it('does not offer the tow to a driver who can pay', async () => {
+    const { mounted } = open({ status: 'stopped', stop_reason: 'breakdown' })
+    const { wrapper } = await mounted
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="tow-button"]').exists()).toBe(false)
+  })
+
   describe('the summary of an absence', () => {
     const away = aSummary({ laps: 312, cash_cents: 486_000, xp: 7_800, from_ms: NOW - (8 * 3_600_000 + 12 * 60_000), to_ms: NOW - 60_000, stop_reason: 'fuel_empty' })
 

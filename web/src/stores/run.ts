@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { ApiError, api } from '@/api/client'
-import type { RefuelResult, RepairResult, Run, RunResponse, RunSummary, StarterCar, StarterCarsResponse, Wallet } from '@/api/types'
+import type { RefuelResult, RepairResult, Run, RunResponse, RunSummary, StarterCar, StarterCarsResponse, TowState, Wallet } from '@/api/types'
 import { newRequestId } from '@/features/run/requestId'
 import { clearSeen, readSeen, storeSeen } from '@/features/run/seen'
 
@@ -16,6 +16,8 @@ export const REQUEST_ID_LIFETIME_MS = 60 * 1000
 export const useRunStore = defineStore('run', () => {
   const run = ref<Run | null>(null)
   const wallet = ref<Wallet | null>(null)
+  /** Whether the driver may ask for a tow now, as the server decided with the last answer. */
+  const tow = ref<TowState | null>(null)
   /** The server was asked at least once. Until then `run` being null does not mean the driver has none. */
   const loaded = ref(false)
   /** What happened while the driver was away. It stays until the driver dismisses it, even over a reload. */
@@ -27,6 +29,7 @@ export const useRunStore = defineStore('run', () => {
   function apply(response: RunResponse): void {
     run.value = response.data
     wallet.value = response.wallet
+    tow.value = response.tow ?? null
     loaded.value = true
   }
 
@@ -103,6 +106,7 @@ export const useRunStore = defineStore('run', () => {
       if (noRun(error)) {
         run.value = null
         wallet.value = null
+        tow.value = null
         loaded.value = true
 
         return
@@ -170,6 +174,29 @@ export const useRunStore = defineStore('run', () => {
     return response.repair as RepairResult
   }
 
+  /**
+   * Asks for the tow, the free way out for a driver who cannot pay to get a stopped car going. It costs nothing and
+   * the server decides by the state of the car, so there is no request id: asking twice tows once. Returns false
+   * when nothing was done, because the car was driving or the driver could pay after all.
+   */
+  async function towCar(): Promise<boolean> {
+    const current = run.value
+
+    if (!current) {
+      throw new Error('There is no run to tow.')
+    }
+
+    const response = await api<RunResponse>(`/v1/runs/${current.id}/tow`, { method: 'POST' })
+
+    apply(response)
+
+    if (away.value === null) {
+      remember(response.data)
+    }
+
+    return response.towed === true
+  }
+
   /** The driver has read the summary: from now on everything up to the present counts as seen. */
   function dismissAway(): void {
     away.value = null
@@ -183,6 +210,7 @@ export const useRunStore = defineStore('run', () => {
   function reset(): void {
     run.value = null
     wallet.value = null
+    tow.value = null
     loaded.value = false
     away.value = null
     starters.value = []
@@ -191,5 +219,5 @@ export const useRunStore = defineStore('run', () => {
     clearSeen()
   }
 
-  return { run, wallet, loaded, away, starters, startTrack, loadStarters, start, load, refresh, refuel, repair, dismissAway, reset }
+  return { run, wallet, tow, loaded, away, starters, startTrack, loadStarters, start, load, refresh, refuel, repair, towCar, dismissAway, reset }
 })

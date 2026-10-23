@@ -79,7 +79,8 @@
     "status": {
       "running": "Correndo",
       "fuel_empty": "Sem combustível",
-      "breakdown": "Quebrado"
+      "breakdown": "Quebrado",
+      "towed": "Rebocado"
     },
     "stat": {
       "cash": "Dinheiro",
@@ -116,6 +117,14 @@
       "doneRunning": "Consertado por {cost}. O carro está de volta à pista.",
       "notNeeded": "O carro não precisava de conserto.",
       "repeated": "Esse conserto já foi feito."
+    },
+    "tow": {
+      "breakdown": "Você não pode pagar o conserto. O reboque é grátis, mas o carro espera {time} antes de voltar a correr.",
+      "fuel_empty": "Você não pode pagar o combustível de uma volta. O reboque é grátis: o carro espera {time} e sai com um pouco de combustível.",
+      "button": "Rebocar o carro · grátis",
+      "busy": "Rebocando…",
+      "notNeeded": "O reboque não era necessário.",
+      "underway": "O carro está sendo rebocado. Ele volta a correr em cerca de {time}."
     },
     "away": {
       "title": "Enquanto você esteve fora",

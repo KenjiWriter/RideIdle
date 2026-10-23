@@ -79,7 +79,8 @@
     "status": {
       "running": "En course",
       "fuel_empty": "Panne sèche",
-      "breakdown": "En panne"
+      "breakdown": "En panne",
+      "towed": "Remorquée"
     },
     "stat": {
       "cash": "Argent",
@@ -116,6 +117,14 @@
       "doneRunning": "Réparée pour {cost}. La voiture est de retour sur la piste.",
       "notNeeded": "La voiture n’avait pas besoin d’être réparée.",
       "repeated": "Cette réparation a déjà été faite."
+    },
+    "tow": {
+      "breakdown": "Vous ne pouvez pas payer la réparation. Le remorquage est gratuit, mais la voiture attend {time} avant de rouler de nouveau.",
+      "fuel_empty": "Vous ne pouvez pas payer le carburant d’un tour. Le remorquage est gratuit : la voiture attend {time} et repart avec un peu de carburant.",
+      "button": "Remorquer la voiture · gratuit",
+      "busy": "Remorquage…",
+      "notNeeded": "Le remorquage n’était pas nécessaire.",
+      "underway": "La voiture est remorquée. Elle roulera de nouveau dans environ {time}."
     },
     "away": {
       "title": "Pendant votre absence",

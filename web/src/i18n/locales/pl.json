@@ -79,7 +79,8 @@
     "status": {
       "running": "Jedzie",
       "fuel_empty": "Brak paliwa",
-      "breakdown": "Awaria"
+      "breakdown": "Awaria",
+      "towed": "Holowane"
     },
     "stat": {
       "cash": "Gotówka",
@@ -116,6 +117,14 @@
       "doneRunning": "Naprawiono za {cost}. Auto znów jedzie.",
       "notNeeded": "Auto nie wymagało naprawy.",
       "repeated": "Ta naprawa już się odbyła."
+    },
+    "tow": {
+      "breakdown": "Nie stać Cię na naprawę. Holowanie jest darmowe, ale auto czeka {time}, zanim znów pojedzie.",
+      "fuel_empty": "Nie stać Cię na paliwo na okrążenie. Holowanie jest darmowe: auto czeka {time} i rusza z odrobiną paliwa.",
+      "button": "Holuj auto · za darmo",
+      "busy": "Holowanie…",
+      "notNeeded": "Holowanie nie było potrzebne.",
+      "underway": "Auto jest holowane. Pojedzie za około {time}."
     },
     "away": {
       "title": "Pod Twoją nieobecność",
