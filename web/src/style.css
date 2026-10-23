@@ -476,11 +476,38 @@ body {
   }
 
   .phone .scr2 {
-    @apply flex min-h-0 flex-1 flex-col overflow-hidden;
+    @apply relative flex min-h-0 flex-1 flex-col overflow-hidden;
     border-radius: 6px;
     background: repeating-linear-gradient(90deg, #dce2ec 0 6px, #e7ebf3 6px 12px);
     color: #16181d;
     font-family: Arial, Helvetica, sans-serif;
+  }
+
+  /* The cracks of the screen: lines of the glass over what is written, light enough to read through, on top of every tap. */
+  .phone .crack {
+    @apply pointer-events-none absolute inset-0 h-full w-full;
+  }
+
+  .phone .crack path {
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .phone .crack-shade path {
+    stroke: rgba(0, 0, 0, 0.38);
+    stroke-width: 2.4px;
+  }
+
+  .phone .crack-line path {
+    stroke: rgba(255, 255, 255, 0.85);
+    stroke-width: 0.9px;
+  }
+
+  .phone .crack path.crack-shard {
+    fill: rgba(255, 255, 255, 0.07);
+    stroke: none;
   }
 
   .phone .home {

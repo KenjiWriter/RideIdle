@@ -175,8 +175,8 @@ function onKeydown(event: KeyboardEvent): void {
 
       <div class="pointer-events-none fixed inset-x-0 bottom-[-26px] z-[42] flex justify-center px-[34px]">
         <section
-          class="phone phone-in pointer-events-auto w-full max-w-[412px]"
-          style="height: min(440px, 58svh); transform: rotate(-2deg)"
+          class="phone phone-in pointer-events-auto w-[264px] max-w-full"
+          style="height: min(500px, 64svh); transform: rotate(-2deg)"
           role="dialog"
           aria-modal="true"
           :aria-label="t('tutorial.from', { sender: step.sender })"
@@ -193,9 +193,12 @@ function onKeydown(event: KeyboardEvent): void {
               </span>
             </div>
             <div class="ph-hd">
-              <span class="ph-btn">‹ {{ t('tutorial.messages') }}</span>
-              <span class="whitespace-nowrap text-[11px]" data-test="tutorial-sender">{{ step.sender }}</span>
-              <span class="ph-btn" data-test="tutorial-step">{{ t('tutorial.step', { number: step.number, total: store.tutorial?.total ?? 0 }) }}</span>
+              <span class="ph-btn !px-2">
+                <span aria-hidden="true">‹</span>
+                <span class="sr-only">{{ t('tutorial.messages') }}</span>
+              </span>
+              <span class="min-w-0 flex-1 truncate text-center text-[11px]" data-test="tutorial-sender">{{ step.sender }}</span>
+              <span class="ph-btn !px-1.5 !text-[11px]" data-test="tutorial-step">{{ t('tutorial.step', { number: step.number, total: store.tutorial?.total ?? 0 }) }}</span>
             </div>
 
             <div class="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2 py-2.5" aria-live="polite" data-test="tutorial-thread">
@@ -208,7 +211,7 @@ function onKeydown(event: KeyboardEvent): void {
               <p v-if="error" class="sms-t !text-[#b3261e]" role="alert" data-test="tutorial-error">{{ t('common.error') }}</p>
             </div>
 
-            <div class="flex flex-none gap-1.5 px-2 pb-2">
+            <div class="flex flex-none flex-wrap gap-1.5 px-2 pb-2">
               <button ref="replyButton" type="button" class="ph-send !min-h-11 !border" :disabled="busy" data-test="tutorial-reply" @click="reply">{{ step.reply }}</button>
               <button v-if="!asked" type="button" class="ph-btn !min-h-11" data-test="tutorial-who" @click="asked = true">{{ t('tutorial.who') }}</button>
             </div>
@@ -216,6 +219,35 @@ function onKeydown(event: KeyboardEvent): void {
               <div class="fx">{{ t('tutorial.input') }}</div>
               <span class="ph-send">{{ t('tutorial.send') }}</span>
             </div>
+
+            <!-- The screen is cracked: the phone is old, and it has been dropped. Only for the eye, it never gets in the way of a tap. -->
+            <svg class="crack" viewBox="0 0 100 200" preserveAspectRatio="none" aria-hidden="true" data-test="tutorial-crack">
+              <g class="crack-shade">
+                <path d="M80 34 L66 30 L52 36 L41 31 L22 44 L9 41" />
+                <path d="M80 34 L72 47 L74 63 L63 78 L66 96 L52 120 L55 148" />
+                <path d="M80 34 L88 46 L94 58 L91 76 L100 88" />
+                <path d="M80 34 L84 20 L79 8 L86 0" />
+                <path d="M80 34 L92 28 L100 22" />
+                <path d="M80 34 L61 52 L40 56 L26 74 L0 80" />
+                <path d="M52 36 L47 46 L38 49" />
+                <path d="M63 78 L74 84 L83 99" />
+                <path d="M74 36 L79 43 L87 41 L88 31 L80 26 L73 30 Z" />
+                <path d="M64 36 L72 51 L88 54 L96 40" />
+              </g>
+              <g class="crack-line">
+                <path d="M80 34 L66 30 L52 36 L41 31 L22 44 L9 41" />
+                <path d="M80 34 L72 47 L74 63 L63 78 L66 96 L52 120 L55 148" />
+                <path d="M80 34 L88 46 L94 58 L91 76 L100 88" />
+                <path d="M80 34 L84 20 L79 8 L86 0" />
+                <path d="M80 34 L92 28 L100 22" />
+                <path d="M80 34 L61 52 L40 56 L26 74 L0 80" />
+                <path d="M52 36 L47 46 L38 49" />
+                <path d="M63 78 L74 84 L83 99" />
+                <path d="M74 36 L79 43 L87 41 L88 31 L80 26 L73 30 Z" />
+                <path d="M64 36 L72 51 L88 54 L96 40" />
+              </g>
+              <path class="crack-shard" d="M80 34 L66 30 L61 52 Z M80 34 L88 46 L72 47 Z" />
+            </svg>
           </div>
           <div class="home" />
         </section>
