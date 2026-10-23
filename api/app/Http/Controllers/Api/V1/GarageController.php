@@ -102,9 +102,12 @@ final class GarageController extends Controller
                 'name' => $vehicle !== null ? I18nText::from($vehicle['name'])->for() : $car->vehicle_slug,
                 'engine' => $vehicle !== null ? "{$vehicle['engine']['layout']} {$vehicle['engine']['displacement_l']}" : null,
                 'power_kw' => $vehicle['power_kw'] ?? null,
+                'drivetrain' => $vehicle['drivetrain'] ?? null,
             ],
             'stats' => $this->rounded($this->inputs->stats($car->vehicle_slug, $slugs)->stats),
             'base_stats' => $this->rounded($this->inputs->stats($car->vehicle_slug)->stats),
+            // What counts as normal on the track the car drives: a bar of a statistic is full at 1.6 times this, the cap of the lap formula.
+            'references' => array_map('floatval', $this->rules->track($run?->track_slug ?? $this->rules->startingTrack())['reference'] ?? []),
             'tank_ml' => $this->inputs->tankMl($car->vehicle_slug, $slugs),
             'slots' => array_map(static fn (string $slot): array => [
                 'slot' => $slot,
