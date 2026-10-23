@@ -12,7 +12,8 @@ Projekt (analiza założeń, systemy gry, katalogi, rozliczanie, architektura, r
 | Frontend | Vue 3, TypeScript, Vite, Pinia, Tailwind CSS, vue-i18n |
 | Baza (lokalnie) | MariaDB |
 | Baza (produkcja) | PostgreSQL |
-| Cache, kolejki, blokady | baza w MVP, Redis na produkcji |
+| Cache, kolejki, blokady | lokalnie baza; na produkcji cache (liczniki limitów) w Redisie, a kolejka maili w bazie, żeby `accounts:delete` mogło ją sprzątać |
+| Serwer | Ubuntu, nginx, PHP-FPM, jedna domena (`deploy/`) |
 | Testy | Pest (w tym testy architektury), Vitest |
 | CI | GitHub Actions z macierzą MariaDB i PostgreSQL |
 
@@ -23,6 +24,7 @@ api/       Laravel: logika gry, rozliczanie, API
 web/       Vue 3: aplikacja gracza (PWA)
 content/   Paczki treści (JSON): auta, części, miasta, tory, zestawy reguł
 docker/    Konfiguracja środowiska lokalnego
+deploy/    Wdrożenie na serwer Ubuntu: skrypty, nginx, systemd, kopie bazy (deploy/README.md)
 docs/      Decyzje i specyfikacje przeniesione z płótna projektowego
 ```
 
@@ -71,6 +73,10 @@ Jeśli port 8000 zajmuje inny projekt, uruchom API na innym (`php artisan serve 
 
 Testy API na konkretnej bazie: `DB_CONNECTION=mariadb DB_HOST=127.0.0.1 DB_PORT=3307 DB_DATABASE=ride_idle DB_USERNAME=root DB_PASSWORD=secret vendor/bin/pest`. CI uruchamia je na SQLite, MariaDB i PostgreSQL.
 
+## Wdrożenie
+
+`deploy/` stawia grę na jednym serwerze Ubuntu pod jedną domeną (docelowo `idlerace.cerasusdigital.pl`: aplikacja web pod `/`, API pod `/api`): `deploy/upload.sh bootstrap root@SERWER` i `provision.sh` przygotowują serwer (PHP, PostgreSQL, Redis, nginx, certyfikat Let's Encrypt, kolejka, harmonogram, kopie bazy, zapora), a `deploy/upload.sh release deploy@DOMENA` wydaje zatwierdzony stan repozytorium i w razie nieudanego sprawdzenia wraca do poprzedniego. Kolejność kroków, DNS, poczta, adresy dla Google, Facebooka i Apple, wycofanie i kopie: `deploy/README.md`.
+
 ## Zasady pracy
 
 - Każda zmiana to osobny commit. Komunikaty commitów piszemy po angielsku, w stylu `feat(api): ...`, `fix(web): ...`, `chore: ...`.
@@ -95,5 +101,7 @@ Ekrany biegu w `web` (opis w `docs/web-run.md`): wybór wraku startowego („kro
 Zabezpieczenie konta (opis w `docs/konto.md`): po pierwszym zarobku garaż proponuje połączyć konto, czyli zabezpieczyć gościa linkiem jednorazowym z e-maila albo przez Google, Facebooka lub Apple. API: tożsamości (jedna na dostawcę, konta nigdy się nie łączą), sekrety jednorazowe z samym skrótem w bazie, link w mailu (bez ujawniania, czy adres ma garaż), przepływ dostawców w trzech krokach z weryfikatorem trzymanym przez przeglądarkę (obrona przed login CSRF), limity i zadanie sprzątające. Web: okno „Zapisz swój garaż” z zgodami, cichy baner po „Później”, strony `/account/confirm` i `/auth/callback`, logowanie kontem na ekranie „Mam już konto” (kod odzyskiwania zostaje) i dodawanie kolejnego sposobu logowania w garażu (zgody składa się raz). Przepływ dostawców sprawdzono testami z `Socialite::fake` i z prawdziwymi adresami autoryzacji zbudowanymi offline; **z prawdziwym Google, Facebookiem i Apple nie sprawdzano go** (potrzebne są klucze, opis w `docs/konto.md`).
 
 Strony prawne (opis w `docs/prawo.md`): regulamin (`/terms`) i polityka prywatności (`/privacy`) w pięciu językach, z linkami w stopce, przy tworzeniu kierowcy i w oknie zgód, z wiekiem, wersją i danymi operatora z ustawień API (`LEGAL_*`) i z zapisem wersji przy zgodzie. **Teksty są roboczym projektem napisanym z tego, co aplikacja robi z danymi, i nie przeszły przeglądu prawnego**; próg wieku (16) jest roboczy. Tłumaczenia francuskie, niemieckie i brazylijskie przeszły niezależny przegląd i poprawki (`docs/prawo.md`), ale nie przegląd przez osobę, dla której język jest ojczysty. Kierowca pobiera kopię swoich danych i usuwa konto sam, w garażu w sekcji „Twoje dane”; operator ma te same możliwości jako polecenia `php artisan accounts:export` i `accounts:delete` (procedura w `docs/prawo.md`).
+
+Wdrożenie (opis w `deploy/README.md`): skrypty przygotowania serwera Ubuntu i wydawania wersji pod `idlerace.cerasusdigital.pl`, szablony nginx i systemd, nocne kopie bazy (14 dni), logi dostępu bez zapytania (w adresie bywa sekret linku). Skrypty przeszły `shellcheck`, konfigurację nginx sprawdzono prawdziwym nginx na Windowsie, a zapis `.env` parserem Laravela; **nie były jeszcze uruchomione na prawdziwym serwerze Ubuntu**.
 
 Dalej: tabele definicji i instancji z paczek treści (garaż, części, więcej aut i torów), historia wprowadzająca (samouczek) i przegląd prawny regulaminu i polityki prywatności.

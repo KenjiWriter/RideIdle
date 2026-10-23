@@ -41,7 +41,9 @@ To jest podstawa polityki prywatności i lista, od której prawnik powinien zacz
 | Sekrety jednorazowe: skrót, e-mail, cel, czas | `account_tokens` | linki i logowanie przez dostawcę | ważne 30 min (link), 10 min (stan), 5 min (bilet); sprzątane co godzinę, gdy wygasły albo zostały użyte ponad dobę temu |
 | Liczniki limitów: adres IP, skrót e-maila | cache | ograniczanie nadużyć | najwyżej godzina |
 | Kolejka maili: adres i treść | `jobs`, `failed_jobs` | wysyłka | do wysłania; **nieudane zadania zostają w `failed_jobs`, dopóki ktoś ich nie usunie** (`queue:prune-failed`), więc to trzeba ustawić; `accounts:delete` usuwa te, które dotyczą adresów usuwanego konta (tylko przy kolejce w bazie) |
-| Dzienniki serwera i hostingu | poza aplikacją | bezpieczeństwo | **do ustalenia po wyborze hostingu**; tekst obiecuje tylko „tak długo, jak potrzebuje tego bezpieczeństwo” |
+| Dzienniki serwera: nginx (adres IP, ścieżka **bez zapytania**, status, przeglądarka) i Laravela (ostrzeżenia i błędy) | serwer z `deploy/` | bezpieczeństwo | 14 dni (rotacja nginx w Ubuntu, `LOG_DAILY_DAYS`). Dziennik błędów nginx może zawierać pełny adres nieudanego żądania, z jednorazowym sekretem (`deploy/README.md`). Tekst polityki obiecuje tylko „tak długo, jak potrzebuje tego bezpieczeństwo” |
+| Dzienniki hostingu i dostawcy poczty | poza aplikacją | bezpieczeństwo, wysyłka | **do ustalenia po wyborze hostingu i poczty** |
+| Kopie zapasowe bazy | `/var/backups/rideidle` na serwerze | odtworzenie po awarii | 14 dni na serwerze (`deploy/bin/rideidle-backup`); **usunięte konto zostaje w kopiach do 14 dni**, a w kopiach trzymanych gdzie indziej tak długo, jak operator je trzyma. **Polityka prywatności jeszcze o kopiach nie mówi** |
 
 Aplikacja **nie używa** cookies (token, język i kilka znaczników są w `localStorage`), reklam, analityki ani śledzenia, i nie sprzedaje danych. Tekst polityki to mówi, więc dodanie czegokolwiek z tej listy wymaga zmiany tekstu.
 
@@ -57,7 +59,7 @@ Aplikacja **nie używa** cookies (token, język i kilka znaczników są w `local
 4. **Usunięcie.** Najpierw `php artisan accounts:delete --id=12 --dry-run` pokazuje, co zniknie. Potem `php artisan accounts:delete --id=12` pyta o potwierdzenie (bez odpowiedzi nie usuwa; `--force` pomija pytanie). Usuwa konto, logowania, urządzenia (urządzenia są od razu wylogowane), czekające linki, portfel, biegi, księgę, sesje, prośby o nowe hasło oraz maile do adresów konta, które czekają w kolejce albo się nie wysłały (kolejka w bazie). Wszystko w jednej transakcji: błąd zostawia konto, jak było. Ślad w logu to `Account erased.` z samym id konta.
 5. **Odpowiedz** osobie w ciągu miesiąca (RODO art. 12 ust. 3; w Brazylii LGPD ma krótszy termin: do sprawdzenia).
 
-**Czego te polecenia nie obejmują** (operator musi o tym pamiętać i ewentualnie dopisać do własnej procedury): kopie zapasowe bazy, dzienniki serwera i hostingu, kolejkę w Redisie (polecenie sprząta tylko tabele `jobs` i `failed_jobs`), kopie wysłanych maili u dostawcy poczty, liczniki limitów (znikają same w ciągu godziny) oraz dane u Google, Facebooka i Apple, bo usunięcie konta w grze nie usuwa konta u dostawcy logowania.
+**Czego te polecenia nie obejmują** (operator musi o tym pamiętać i ewentualnie dopisać do własnej procedury): kopie zapasowe bazy (skrypty z `deploy/` robią je co noc i kasują po 14 dniach, ale kopie przeniesione gdzie indziej trzeba usuwać samemu), dzienniki serwera i hostingu, kolejkę w Redisie (polecenie sprząta tylko tabele `jobs` i `failed_jobs`), kopie wysłanych maili u dostawcy poczty, liczniki limitów (znikają same w ciągu godziny) oraz dane u Google, Facebooka i Apple, bo usunięcie konta w grze nie usuwa konta u dostawcy logowania.
 
 ## Pytania do przeglądu prawnego
 
@@ -70,6 +72,7 @@ Aplikacja **nie używa** cookies (token, język i kilka znaczników są w `local
 7. **Zmiany regulaminu** i ponowna zgoda (patrz wyżej) oraz zapis, że dalsze korzystanie oznacza przyjęcie nowej wersji.
 8. **Płatności.** Dziś gra jest darmowa i tak mówi regulamin. Gdy pojawią się zakupy, potrzebne będą osobne warunki (prawo konsumenckie, odstąpienie od umowy, ceny).
 9. **Dostawcy logowania wymagają adresów tych stron.** W konsoli Google (ekran zgody OAuth), w ustawieniach aplikacji Facebooka i przy Services ID Apple trzeba podać adres polityki prywatności (`WEB_URL/privacy`), a Google i Facebook także regulaminu (`WEB_URL/terms`). Bez tego aplikacja nie przejdzie weryfikacji.
+10. **Kopie zapasowe.** Skrypty wdrożenia robią nocną kopię bazy i trzymają ją 14 dni; konto usunięte na prośbę zostaje w kopiach do tego czasu. Polityka prywatności o tym nie mówi, a mówi o usunięciu bez zastrzeżeń. Trzeba zdecydować, czy dopisać zdanie o kopiach i ich okresie (i czy 14 dni jest właściwe), oraz co z kopiami, które operator przenosi poza serwer.
 
 ## Tłumaczenia
 
