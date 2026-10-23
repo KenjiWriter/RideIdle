@@ -60,7 +60,7 @@ describe('CreateDriverView', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('creates the driver and opens the garage', async () => {
+  it('creates the driver and goes on to the choice of a wreck', async () => {
     fetchMock.mockResolvedValue(respond(201, { data: profile, token: 'device-token' }))
     const { submit, router } = await open()
 
@@ -69,8 +69,8 @@ describe('CreateDriverView', () => {
     const body = JSON.parse((fetchMock.mock.calls[0] as [string, RequestInit])[1].body as string)
     expect(body).toEqual({ name: 'Turbo', locale: 'en' })
     expect(readToken()).toBe('device-token')
-    // The garage view is loaded lazily, so wait for the navigation to finish.
-    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('garage'))
+    // The next view is loaded lazily, so wait for the navigation to finish.
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('choose'))
   })
 
   it('shows the message of the server when the name is taken and stays on the page', async () => {

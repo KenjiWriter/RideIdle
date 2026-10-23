@@ -17,5 +17,6 @@ export const routes: RouteRecordRaw[] = [
   { path: '/', name: 'landing', component: () => import('@/views/LandingView.vue') },
   { path: '/create', name: 'create', component: () => import('@/views/CreateDriverView.vue'), meta: { guestOnly: true } },
   { path: '/recover', name: 'recover', component: () => import('@/views/RecoverView.vue'), meta: { guestOnly: true } },
+  { path: '/choose', name: 'choose', component: () => import('@/views/ChooseCarView.vue'), meta: { requiresAuth: true } },
   { path: '/garage', name: 'garage', component: () => import('@/views/GarageView.vue'), meta: { requiresAuth: true } },
 ]

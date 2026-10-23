@@ -44,6 +44,37 @@
     "placeholder": "Sua primeira carcaça já está esperando. A garagem abre na próxima versão.",
     "signOut": "Sair"
   },
+  "choose": {
+    "step": "Etapa 2 de 2",
+    "title": "Escolha sua carcaça",
+    "subtitle": "Você comprará o resto dos carros depois. Esta escolha não é definitiva.",
+    "track": "Você começa em: {track}.",
+    "recommended": "Recomendado para começar",
+    "choose": "Escolher {name}",
+    "starting": "Iniciando…",
+    "loadError": "Não foi possível carregar as carcaças.",
+    "stat": {
+      "lap": "Tempo de volta",
+      "reward": "Ganho por volta",
+      "fuel": "Combustível por volta",
+      "topSpeed": "Velocidade máxima",
+      "mass": "Massa",
+      "tank": "Tanque",
+      "cargo": "Carga"
+    }
+  },
+  "car": {
+    "drivetrain": {
+      "fwd": "Tração dianteira",
+      "rwd": "Tração traseira",
+      "awd": "Tração integral"
+    },
+    "power": "{value} kW",
+    "speed": "{value} km/h",
+    "weight": "{value} kg",
+    "liters": "{value} l",
+    "xp": "{value} XP"
+  },
   "recover": {
     "title": "Restaurar seu piloto",
     "description": "Digite o código de recuperação que você guardou. Você o encontra na sua garagem, em Salvar sua garagem.",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { formatDuration, formatMoney, formatNumber } from './format'
+import { formatDuration, formatLapTime, formatMoney, formatNumber } from './format'
 import { SUPPORTED_LOCALES } from './locales'
 
 describe('formatMoney', () => {
@@ -29,6 +29,23 @@ describe('formatNumber', () => {
   it('groups digits according to the language', () => {
     expect(formatNumber(1234567, 'en')).toBe('1,234,567')
     expect(formatNumber(1234.5, 'de', 1)).toBe('1.234,5')
+  })
+})
+
+describe('formatLapTime', () => {
+  it.each([
+    [75_000, '1:15.0'],
+    [67_015, '1:07.0'],
+    [82_313, '1:22.3'],
+    [59_950, '1:00.0'],
+    [600_000, '10:00.0'],
+    [0, '0:00.0'],
+  ])('shows %i ms as %s', (ms, expected) => {
+    expect(formatLapTime(ms)).toBe(expected)
+  })
+
+  it('never goes below zero', () => {
+    expect(formatLapTime(-5)).toBe('0:00.0')
   })
 })
 

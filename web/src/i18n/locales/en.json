@@ -44,6 +44,37 @@
     "placeholder": "Your first wreck is waiting. The garage opens in the next version.",
     "signOut": "Sign out"
   },
+  "choose": {
+    "step": "Step 2 of 2",
+    "title": "Choose your wreck",
+    "subtitle": "You will buy the rest of your cars later. This choice is not final.",
+    "track": "You start on {track}.",
+    "recommended": "Recommended to start",
+    "choose": "Choose {name}",
+    "starting": "Starting…",
+    "loadError": "The wrecks could not be loaded.",
+    "stat": {
+      "lap": "Lap time",
+      "reward": "Reward per lap",
+      "fuel": "Fuel per lap",
+      "topSpeed": "Top speed",
+      "mass": "Mass",
+      "tank": "Tank",
+      "cargo": "Cargo"
+    }
+  },
+  "car": {
+    "drivetrain": {
+      "fwd": "Front-wheel drive",
+      "rwd": "Rear-wheel drive",
+      "awd": "All-wheel drive"
+    },
+    "power": "{value} kW",
+    "speed": "{value} km/h",
+    "weight": "{value} kg",
+    "liters": "{value} l",
+    "xp": "{value} XP"
+  },
   "recover": {
     "title": "Restore your driver",
     "description": "Enter the recovery code you saved. You can find it in your garage under Save your garage.",

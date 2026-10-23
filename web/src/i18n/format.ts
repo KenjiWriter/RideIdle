@@ -19,6 +19,15 @@ export function formatNumber(value: number, locale: AppLocale, maximumFractionDi
   return new Intl.NumberFormat(locale, { maximumFractionDigits }).format(value)
 }
 
+/** Czas okrążenia w ms jako „1:07.0”: minuty, sekundy i dziesiąte, w zapisie niezależnym od języka. */
+export function formatLapTime(ms: number): string {
+  const tenths = Math.max(0, Math.round(ms / 100))
+  const minutes = Math.floor(tenths / 600)
+  const seconds = Math.floor((tenths % 600) / 10)
+
+  return `${minutes}:${String(seconds).padStart(2, '0')}.${tenths % 10}`
+}
+
 /** Czas trwania w ms jako „1 h 05 min” lub „12 min 30 s”, bez zależności od języka. */
 export function formatDuration(ms: number): string {
   const totalSeconds = Math.max(0, Math.floor(ms / 1000))

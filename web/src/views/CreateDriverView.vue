@@ -56,7 +56,8 @@ async function submit(): Promise<void> {
 
   try {
     await session.createDriver(name.value.trim())
-    await router.push({ name: 'garage' })
+    // A new driver has no car yet: the second step is choosing a wreck.
+    await router.push({ name: 'choose' })
   } catch (failure) {
     serverError.value = describe(failure)
   } finally {

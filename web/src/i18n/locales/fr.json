@@ -44,6 +44,37 @@
     "placeholder": "Votre première épave vous attend. Le garage ouvrira dans la prochaine version.",
     "signOut": "Se déconnecter"
   },
+  "choose": {
+    "step": "Étape 2 sur 2",
+    "title": "Choisissez votre épave",
+    "subtitle": "Vous achèterez le reste de vos voitures plus tard. Ce choix n’est pas définitif.",
+    "track": "Vous commencez sur : {track}.",
+    "recommended": "Conseillée pour débuter",
+    "choose": "Choisir {name}",
+    "starting": "Démarrage…",
+    "loadError": "Impossible de charger les épaves.",
+    "stat": {
+      "lap": "Temps au tour",
+      "reward": "Gain par tour",
+      "fuel": "Carburant par tour",
+      "topSpeed": "Vitesse maximale",
+      "mass": "Masse",
+      "tank": "Réservoir",
+      "cargo": "Chargement"
+    }
+  },
+  "car": {
+    "drivetrain": {
+      "fwd": "Traction avant",
+      "rwd": "Propulsion",
+      "awd": "Transmission intégrale"
+    },
+    "power": "{value} kW",
+    "speed": "{value} km/h",
+    "weight": "{value} kg",
+    "liters": "{value} l",
+    "xp": "{value} XP"
+  },
   "recover": {
     "title": "Récupérer votre pilote",
     "description": "Saisissez le code de récupération que vous avez enregistré. Vous le trouverez dans votre garage, sous Sauvegarder votre garage.",

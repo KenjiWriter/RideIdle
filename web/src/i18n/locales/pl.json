@@ -44,6 +44,37 @@
     "placeholder": "Twój pierwszy wrak już czeka. Garaż otworzy się w następnej wersji.",
     "signOut": "Wyloguj"
   },
+  "choose": {
+    "step": "Krok 2 z 2",
+    "title": "Wybierz swój wrak",
+    "subtitle": "Resztę aut kupisz później. Ten wybór nie jest ostateczny.",
+    "track": "Zaczynasz na torze: {track}.",
+    "recommended": "Polecany na start",
+    "choose": "Wybierz: {name}",
+    "starting": "Uruchamianie…",
+    "loadError": "Nie udało się wczytać wraków.",
+    "stat": {
+      "lap": "Czas okrążenia",
+      "reward": "Nagroda za okrążenie",
+      "fuel": "Paliwo na okrążenie",
+      "topSpeed": "Prędkość maksymalna",
+      "mass": "Masa",
+      "tank": "Bak",
+      "cargo": "Ładunek"
+    }
+  },
+  "car": {
+    "drivetrain": {
+      "fwd": "Napęd przedni",
+      "rwd": "Napęd tylny",
+      "awd": "Napęd na cztery koła"
+    },
+    "power": "{value} kW",
+    "speed": "{value} km/h",
+    "weight": "{value} kg",
+    "liters": "{value} l",
+    "xp": "{value} XP"
+  },
   "recover": {
     "title": "Przywróć kierowcę",
     "description": "Wpisz zapisany kod odzyskiwania. Znajdziesz go w garażu w sekcji Zapisz swój garaż.",

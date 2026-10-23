@@ -44,6 +44,37 @@
     "placeholder": "Dein erstes Wrack wartet schon. Die Garage öffnet in der nächsten Version.",
     "signOut": "Abmelden"
   },
+  "choose": {
+    "step": "Schritt 2 von 2",
+    "title": "Wähle dein Wrack",
+    "subtitle": "Die übrigen Autos kaufst du später. Diese Wahl ist nicht endgültig.",
+    "track": "Du startest auf: {track}.",
+    "recommended": "Empfohlen für den Start",
+    "choose": "{name} wählen",
+    "starting": "Wird gestartet…",
+    "loadError": "Die Wracks konnten nicht geladen werden.",
+    "stat": {
+      "lap": "Rundenzeit",
+      "reward": "Belohnung pro Runde",
+      "fuel": "Kraftstoff pro Runde",
+      "topSpeed": "Höchstgeschwindigkeit",
+      "mass": "Masse",
+      "tank": "Tank",
+      "cargo": "Fracht"
+    }
+  },
+  "car": {
+    "drivetrain": {
+      "fwd": "Frontantrieb",
+      "rwd": "Heckantrieb",
+      "awd": "Allradantrieb"
+    },
+    "power": "{value} kW",
+    "speed": "{value} km/h",
+    "weight": "{value} kg",
+    "liters": "{value} l",
+    "xp": "{value} XP"
+  },
   "recover": {
     "title": "Fahrer wiederherstellen",
     "description": "Gib den gespeicherten Wiederherstellungscode ein. Du findest ihn in deiner Garage unter Garage sichern.",
