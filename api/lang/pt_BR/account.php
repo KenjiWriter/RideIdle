@@ -12,6 +12,10 @@ return [
         'already_linked' => 'Esta conta já tem um e-mail.',
     ],
 
+    'login_link' => [
+        'sent' => 'Se este e-mail pertence a uma garagem, um link está a caminho. Ele funciona uma vez e por :minutes minutos.',
+    ],
+
     'token' => [
         'invalid' => 'Este link não é válido ou expirou.',
     ],

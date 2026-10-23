@@ -9,20 +9,6 @@ use App\Models\User;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 
-function confirmLink(string $secret, array $headers = []): Illuminate\Testing\TestResponse
-{
-    // Public: the link is opened in any browser, with no device token.
-    return test()->postJson('/api/v1/account/email/confirm', ['token' => $secret], $headers);
-}
-
-/** Asks for a claim link for the guest and returns its secret. */
-function claimSecretFor(User $guest, string $email = 'turbo@example.com'): string
-{
-    askForEmailLink($guest, ['email' => $email])->assertStatus(202);
-
-    return secretOf(Mail::queued(AccountLinkMail::class)->last());
-}
-
 beforeEach(fn () => Mail::fake());
 afterEach(fn () => Carbon::setTestNow());
 

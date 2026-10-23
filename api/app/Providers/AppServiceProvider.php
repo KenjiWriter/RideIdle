@@ -39,6 +39,11 @@ class AppServiceProvider extends ServiceProvider
         // The secret of a link has 256 bits, so it cannot be guessed; the limit only keeps a flood of requests away.
         RateLimiter::for('account-confirm', fn (Request $request) => Limit::perHour(30)->by((string) $request->ip()));
 
+        RateLimiter::for('account-login-link', fn (Request $request) => [
+            Limit::perHour(3)->by('address:'.sha1(Accounts::normalizeEmail($request->string('email')->toString()))),
+            Limit::perHour(10)->by('ip:'.$request->ip()),
+        ]);
+
         RateLimiter::for('account-email', fn (Request $request) => [
             Limit::perHour(5)->by('user:'.$request->user()?->getAuthIdentifier()),
             Limit::perHour(3)->by('address:'.sha1(Accounts::normalizeEmail($request->string('email')->toString()))),

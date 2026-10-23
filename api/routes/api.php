@@ -21,6 +21,9 @@ Route::prefix('v1')->group(function (): void {
     // Sign in on a new device with a recovery code.
     Route::post('/account/recover', [AccountRecoveryController::class, 'recover'])->middleware('throttle:recovery-attempts');
 
+    // Ask for a link that signs in on a new device. The answer does not tell whether the address has a garage.
+    Route::post('/account/login-link', [AccountEmailController::class, 'requestLoginLink'])->middleware('throttle:account-login-link');
+
     // Use the link of an e-mail: it secures an account or signs a driver in. The secret in it cannot be guessed.
     Route::post('/account/email/confirm', [AccountEmailController::class, 'confirm'])->middleware('throttle:account-confirm');
 

@@ -56,6 +56,26 @@ final class AccountEmailController extends Controller
     }
 
     /**
+     * Asks for a link that signs a driver in on a new device. The answer is always the same, whether the address
+     * belongs to a garage or not, so nobody can use it to find out who plays: only the owner of the address gets a link.
+     */
+    public function requestLoginLink(Request $request, Accounts $accounts, AccountLinks $links): JsonResponse
+    {
+        $email = Accounts::normalizeEmail($request->validate(['email' => ['required', 'email:rfc', 'max:191']])['email']);
+
+        $owner = $accounts->userFor(AccountIdentity::EMAIL, $email);
+
+        if ($owner !== null) {
+            $links->send(AccountLinkMail::LOGIN, AccountToken::LOGIN, $email, $owner, $owner->id);
+        }
+
+        return response()->json([
+            'message' => __('account.login_link.sent', ['minutes' => intdiv(AccountLinks::ttlSeconds(), 60)]),
+            'expires_in' => AccountLinks::ttlSeconds(),
+        ], 202);
+    }
+
+    /**
      * Uses the link of an e-mail. The link is for one of two things, and the answer says which (`purpose`).
      *
      * A claim link secures the account the link was asked for with the address. It signs nobody in, because the link
