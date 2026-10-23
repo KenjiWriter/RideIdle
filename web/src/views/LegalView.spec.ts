@@ -93,6 +93,12 @@ describe('LegalView', () => {
       expect(wrapper.get('[data-test="other"]').attributes('href')).toBe('/terms')
     })
 
+    it('says that other drivers see the driver name, as the form where it is chosen says too', async () => {
+      const { wrapper } = await open('privacy')
+
+      expect(wrapper.get('section[id="data"]').text()).toContain('the driver name you choose (other drivers can see it)')
+    })
+
     it('says how long a guest account is kept, from the setting of the server', async () => {
       const { wrapper } = await open('privacy', { ...legal, guest_expiry_days: 30 })
 

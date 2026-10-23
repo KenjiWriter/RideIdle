@@ -108,7 +108,7 @@ const texts: LegalTexts = {
         id: 'data',
         heading: 'Quelles données nous utilisons',
         paragraphs: [
-          'Pour un compte invité : le nom de pilote que vous choisissez, la langue du jeu, votre progression (voitures, courses, argent du jeu, expérience et leur historique), l’heure de votre dernière activité et un jeton d’appareil. Le jeton est un secret aléatoire conservé dans votre navigateur ; nous n’en gardons qu’une empreinte cryptographique (hachage).',
+          'Pour un compte invité : le nom de pilote que vous choisissez (les autres pilotes peuvent le voir), la langue du jeu, votre progression (voitures, courses, argent du jeu, expérience et leur historique), l’heure de votre dernière activité et un jeton d’appareil. Le jeton est un secret aléatoire conservé dans votre navigateur ; nous n’en gardons qu’une empreinte cryptographique (hachage).',
           'Lorsque vous sécurisez votre compte : votre adresse e-mail, ou l’identifiant que Google, Facebook ou Apple nous donne pour votre compte, avec l’adresse e-mail que ce fournisseur nous communique. Le jeu n’affiche une adresse que sous forme partiellement masquée, comme t***@example.com.',
           'Nous enregistrons aussi le moment où les conditions ont été acceptées et l’âge confirmé, ainsi que la version des conditions acceptée. Si vous créez un code de récupération, nous n’en gardons qu’une empreinte.',
           'Pour les liens de connexion et les connexions avec un fournisseur, nous gardons un enregistrement de courte durée : une empreinte du secret, votre adresse e-mail et son objet. Il est supprimé peu après son expiration ou son utilisation.',

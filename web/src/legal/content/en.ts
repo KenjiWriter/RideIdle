@@ -108,7 +108,7 @@ const texts: LegalTexts = {
         id: 'data',
         heading: 'What data we use',
         paragraphs: [
-          'As a guest: the driver name you choose, the language of the game, your progress (cars, runs, cash, experience and their history), the time of your last activity and a device token. The token is a random secret kept in your browser; we keep only a fingerprint (hash) of it.',
+          'As a guest: the driver name you choose (other drivers can see it), the language of the game, your progress (cars, runs, cash, experience and their history), the time of your last activity and a device token. The token is a random secret kept in your browser; we keep only a fingerprint (hash) of it.',
           'When you secure your account: your e-mail address, or the identifier that Google, Facebook or Apple gives us for your account together with the e-mail address they report. The game shows an address only in a shortened form, like t***@example.com.',
           'We also save when you accepted the terms and confirmed your age, and which version of the terms you accepted. If you create a recovery code, we keep only a fingerprint of it.',
           'For sign-in links and sign-ins with a provider we keep a short-lived record: a fingerprint of the secret, your e-mail address and what it is for. It is deleted soon after it expires or is used.',

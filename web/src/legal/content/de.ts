@@ -108,7 +108,7 @@ const texts: LegalTexts = {
         id: 'data',
         heading: 'Welche Daten wir verwenden',
         paragraphs: [
-          'Als Gast: den Fahrernamen, den du wählst, die Sprache des Spiels, deinen Fortschritt (Autos, Fahrten, Spielgeld, Erfahrung und deren Verlauf), den Zeitpunkt deiner letzten Aktivität und ein Gerätetoken. Das Token ist ein zufälliger geheimer Wert in deinem Browser; wir speichern nur einen Hash-Wert davon.',
+          'Als Gast: den Fahrernamen, den du wählst (andere Fahrer können ihn sehen), die Sprache des Spiels, deinen Fortschritt (Autos, Fahrten, Spielgeld, Erfahrung und deren Verlauf), den Zeitpunkt deiner letzten Aktivität und ein Gerätetoken. Das Token ist ein zufälliger geheimer Wert in deinem Browser; wir speichern nur einen Hash-Wert davon.',
           'Wenn du dein Konto sicherst: deine E-Mail-Adresse oder die Kennung, die Google, Facebook oder Apple uns für dein Konto gibt, zusammen mit der E-Mail-Adresse, die sie melden. Das Spiel zeigt eine Adresse nur in gekürzter Form, etwa t***@example.com.',
           'Wir speichern außerdem, wann die Bedingungen akzeptiert und das Alter bestätigt wurden und welche Version der Bedingungen akzeptiert wurde. Wenn du einen Wiederherstellungscode erstellst, speichern wir nur einen Hash-Wert davon.',
           'Für Anmeldelinks und Anmeldungen über einen Anbieter speichern wir einen kurzlebigen Eintrag: einen Hash-Wert des geheimen Werts, deine E-Mail-Adresse und den Zweck. Er wird kurz nach Ablauf oder Verwendung gelöscht.',

@@ -108,7 +108,7 @@ const texts: LegalTexts = {
         id: 'data',
         heading: 'Quais dados usamos',
         paragraphs: [
-          'Como convidado: o nome de piloto que você escolhe, o idioma do jogo, seu progresso (carros, corridas, dinheiro do jogo, experiência e o histórico deles), o momento da sua última atividade e um token do aparelho. O token é um segredo aleatório guardado no seu navegador; guardamos apenas um hash dele (um código que não permite recuperá-lo).',
+          'Como convidado: o nome de piloto que você escolhe (os outros pilotos podem vê-lo), o idioma do jogo, seu progresso (carros, corridas, dinheiro do jogo, experiência e o histórico deles), o momento da sua última atividade e um token do aparelho. O token é um segredo aleatório guardado no seu navegador; guardamos apenas um hash dele (um código que não permite recuperá-lo).',
           'Quando você vincula sua conta: seu e-mail, ou o identificador que Google, Facebook ou Apple nos dá para a sua conta, junto com o e-mail que eles informam. O jogo mostra um endereço apenas de forma abreviada, como t***@example.com.',
           'Também registramos quando os termos foram aceitos e a idade confirmada, e qual versão dos termos foi aceita. Se você criar um código de recuperação, guardamos apenas o hash dele.',
           'Para links de login e logins com Google, Facebook ou Apple, guardamos um registro de curta duração: um hash do segredo, seu e-mail e a finalidade. Ele é excluído logo depois de expirar ou ser usado.',

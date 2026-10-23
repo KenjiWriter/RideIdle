@@ -108,7 +108,7 @@ const texts: LegalTexts = {
         id: 'data',
         heading: 'Jakich danych używamy',
         paragraphs: [
-          'Jako gość: imię kierowcy, które wybierasz, język gry, Twój postęp (auta, biegi, gotówka, doświadczenie i ich historia), czas ostatniej aktywności oraz token urządzenia. Token to losowy sekret przechowywany w Twojej przeglądarce; my przechowujemy tylko jego odcisk (skrót).',
+          'Jako gość: imię kierowcy, które wybierasz (widzą je inni kierowcy), język gry, Twój postęp (auta, biegi, gotówka, doświadczenie i ich historia), czas ostatniej aktywności oraz token urządzenia. Token to losowy sekret przechowywany w Twojej przeglądarce; my przechowujemy tylko jego odcisk (skrót).',
           'Gdy zabezpieczasz konto: Twój adres e-mail albo identyfikator, który Google, Facebook lub Apple nadaje Twojemu kontu, razem z adresem e-mail, który zgłaszają. Gra pokazuje adres tylko w skróconej postaci, na przykład t***@example.com.',
           'Zapisujemy też moment akceptacji regulaminu i potwierdzenia wieku oraz wersję regulaminu, którą zaakceptowano. Jeśli utworzysz kod odzyskiwania, przechowujemy tylko jego odcisk.',
           'Dla linków do logowania i logowania przez dostawcę przechowujemy krótkotrwały zapis: odcisk sekretu, Twój adres e-mail i cel. Jest usuwany wkrótce po wygaśnięciu lub użyciu.',
