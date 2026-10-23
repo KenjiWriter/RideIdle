@@ -26,8 +26,8 @@ const texts: LegalTexts = {
         id: 'account',
         heading: 'Votre pilote et votre compte',
         paragraphs: [
-          'Vous commencez avec un compte invité : vous choisissez un nom de pilote et le jeu crée ce compte sans demander de données personnelles. Un compte invité est supprimé, avec tout son contenu, après {guestDays} jours sans activité.',
-          'Vous pouvez sécuriser votre compte avec une adresse e-mail, Google, Facebook ou Apple. Un compte sécurisé n’expire pas et peut être ouvert sur un autre appareil. Vous pouvez aussi garder un code de récupération. Toute personne qui possède votre code de récupération ou un lien de connexion peut accéder à votre compte : gardez-les pour vous.',
+          'Vous commencez avec un compte invité : vous choisissez un nom de pilote et le jeu crée ce compte sans demander de données personnelles. Un compte invité est supprimé, avec tout son contenu, après {guestDays} jours sans activité.',
+          'Vous pouvez sécuriser votre compte avec une adresse e-mail, Google, Facebook ou Apple. Un compte sécurisé n’expire pas et peut être ouvert sur un autre appareil. Vous pouvez aussi garder un code de récupération. Toute personne qui possède votre code de récupération ou un lien de connexion peut accéder à votre compte : gardez-les pour vous.',
           'Choisissez un nom de pilote qui ne soit pas offensant et qui n’usurpe pas l’identité d’une autre personne. Nous pouvons modifier ou supprimer un nom qui enfreint cette règle.',
           'Vous êtes responsable de toute activité effectuée depuis votre compte. Donnez-nous des informations exactes lorsque vous le sécurisez.',
         ],
@@ -82,20 +82,20 @@ const texts: LegalTexts = {
         id: 'changes',
         heading: 'Modification des conditions',
         paragraphs: [
-          'Nous pouvons modifier ces conditions, par exemple lorsque le jeu change. La date en haut indique la version. Lorsqu’un changement est important, nous l’indiquerons dans le jeu. Si vous continuez à utiliser le jeu après un changement, la nouvelle version s’applique à vous ; si vous ne l’acceptez pas, vous pouvez arrêter de jouer et nous demander de supprimer votre compte.',
+          'Nous pouvons modifier ces conditions, par exemple lorsque le jeu change. La date en haut indique la version. Lorsqu’un changement est important, nous l’indiquerons dans le jeu. Si vous continuez à utiliser le jeu après un changement, la nouvelle version s’applique à vous ; si vous ne l’acceptez pas, vous pouvez arrêter de jouer et nous demander de supprimer votre compte.',
         ],
       },
       {
         id: 'contact',
         heading: 'Contact',
-        paragraphs: ['Questions sur ces conditions : écrivez à l’adresse de contact indiquée en haut de cette page.'],
+        paragraphs: ['Questions sur ces conditions : écrivez à l’adresse de contact indiquée en haut de cette page.'],
       },
     ],
   },
   privacy: {
     title: 'Politique de confidentialité',
     intro:
-      'Cette politique explique quelles données personnelles RideIdle utilise, pourquoi, pendant combien de temps, et ce que vous pouvez faire à ce sujet. Nous l’avons écrite avec des mots simples ; si quelque chose n’est pas clair, demandez-nous.',
+      'Cette politique explique quelles données personnelles RideIdle utilise, pourquoi, pendant combien de temps, et ce que vous pouvez faire à ce sujet. Nous l’avons écrite avec des mots simples ; si quelque chose n’est pas clair, demandez-nous.',
     sections: [
       {
         id: 'controller',
@@ -108,10 +108,10 @@ const texts: LegalTexts = {
         id: 'data',
         heading: 'Quelles données nous utilisons',
         paragraphs: [
-          'Pour un compte invité : le nom de pilote que vous choisissez (les autres pilotes peuvent le voir), la langue du jeu, votre progression (voitures, courses, argent du jeu, expérience et leur historique), l’heure de votre dernière activité et un jeton d’appareil. Le jeton est un secret aléatoire conservé dans votre navigateur ; nous n’en gardons qu’une empreinte cryptographique (hachage).',
-          'Lorsque vous sécurisez votre compte : votre adresse e-mail, ou l’identifiant que Google, Facebook ou Apple nous donne pour votre compte, avec l’adresse e-mail que ce fournisseur nous communique. Le jeu n’affiche une adresse que sous forme partiellement masquée, comme t***@example.com.',
+          'Pour un compte invité : le nom de pilote que vous choisissez (les autres pilotes peuvent le voir), la langue du jeu, votre progression (voitures, courses, argent du jeu, expérience et leur historique), l’heure de votre dernière activité et un jeton d’appareil. Le jeton est un secret aléatoire conservé dans votre navigateur ; nous n’en gardons qu’une empreinte cryptographique (hachage).',
+          'Lorsque vous sécurisez votre compte : votre adresse e-mail, ou l’identifiant que Google, Facebook ou Apple nous donne pour votre compte, avec l’adresse e-mail que ce fournisseur nous communique. Le jeu n’affiche une adresse que sous forme partiellement masquée, comme t***@example.com.',
           'Nous enregistrons aussi le moment où les conditions ont été acceptées et l’âge confirmé, ainsi que la version des conditions acceptée. Si vous créez un code de récupération, nous n’en gardons qu’une empreinte.',
-          'Pour les liens de connexion et les connexions avec un fournisseur, nous gardons un enregistrement de courte durée : une empreinte du secret, votre adresse e-mail et son objet. Il est supprimé peu après son expiration ou son utilisation.',
+          'Pour les liens de connexion et les connexions avec un fournisseur, nous gardons un enregistrement de courte durée : une empreinte du secret, votre adresse e-mail et son objet. Il est supprimé peu après son expiration ou son utilisation.',
           'Pour empêcher les abus, nous comptons les requêtes par adresse IP et par empreinte de l’adresse e-mail, pendant une heure au plus. Nos serveurs et notre hébergeur peuvent aussi conserver des journaux techniques, comme l’adresse IP et l’heure d’une requête.',
           'Nous n’utilisons ni publicité, ni outils d’analyse ou de suivi, et nous ne vendons pas vos données.',
         ],
@@ -120,16 +120,16 @@ const texts: LegalTexts = {
         id: 'why',
         heading: 'Pourquoi nous les utilisons, et sur quelle base',
         paragraphs: [
-          'Pour vous fournir le jeu et gérer votre compte : le pilote, votre progression, la connexion et les e-mails que vous demandez, par exemple un lien de connexion. Base légale : c’est nécessaire à l’exécution du service que vous avez demandé (article 6, paragraphe 1, point b, du RGPD).',
-          'Pour que le jeu reste sûr et équitable, pour empêcher les abus et la triche, et pour corriger les erreurs. Base légale : notre intérêt légitime à exploiter un jeu sûr (article 6, paragraphe 1, point f, du RGPD).',
-          'Pour pouvoir démontrer l’acceptation des conditions et la confirmation de l’âge. Base légale : notre intérêt légitime à pouvoir le démontrer (article 6, paragraphe 1, point f, du RGPD).',
+          'Pour vous fournir le jeu et gérer votre compte : le pilote, votre progression, la connexion et les e-mails que vous demandez, par exemple un lien de connexion. Base légale : c’est nécessaire à l’exécution du service que vous avez demandé (article 6, paragraphe 1, point b, du RGPD).',
+          'Pour que le jeu reste sûr et équitable, pour empêcher les abus et la triche, et pour corriger les erreurs. Base légale : notre intérêt légitime à exploiter un jeu sûr (article 6, paragraphe 1, point f, du RGPD).',
+          'Pour pouvoir démontrer l’acceptation des conditions et la confirmation de l’âge. Base légale : notre intérêt légitime à pouvoir le démontrer (article 6, paragraphe 1, point f, du RGPD).',
         ],
       },
       {
         id: 'recipients',
         heading: 'Qui les reçoit',
         paragraphs: [
-          'Les entreprises qui nous aident à exploiter le jeu : hébergement et infrastructure, et le service qui envoie les e-mails. Elles ne peuvent utiliser les données que sur nos instructions.',
+          'Les entreprises qui nous aident à exploiter le jeu : hébergement et infrastructure, et le service qui envoie les e-mails. Elles ne peuvent utiliser les données que sur nos instructions.',
           'Google, Facebook (Meta) ou Apple, seulement si vous choisissez de vous connecter avec eux. Nous ne leur envoyons rien sur votre jeu. Ils nous communiquent votre identifiant et votre adresse e-mail, et ils utilisent vos données selon leurs propres politiques de confidentialité.',
           'Nous ne transmettons vos données à personne d’autre, sauf si la loi l’exige.',
         ],
@@ -163,7 +163,7 @@ const texts: LegalTexts = {
         id: 'storage',
         heading: 'Ce qui reste dans votre navigateur',
         paragraphs: [
-          'RideIdle n’utilise pas de cookies. Il enregistre quelques éléments dans le stockage local de votre navigateur : le jeton d’appareil, la langue choisie, un repère du dernier état de votre course que vous avez vu, le fait que vous avez reporté la fenêtre qui vous invite à sauvegarder votre garage et, pendant quelques minutes lors d’une connexion avec un fournisseur, un secret à usage unique. Ces éléments sont nécessaires au jeu et ne servent pas à vous suivre.',
+          'RideIdle n’utilise pas de cookies. Il enregistre quelques éléments dans le stockage local de votre navigateur : le jeton d’appareil, la langue choisie, un repère du dernier état de votre course que vous avez vu, le fait que vous avez reporté la fenêtre qui vous invite à sauvegarder votre garage et, pendant quelques minutes lors d’une connexion avec un fournisseur, un secret à usage unique. Ces éléments sont nécessaires au jeu et ne servent pas à vous suivre.',
           'Si vous effacez les données de votre navigateur, votre session se ferme. Un compte invité sans code de récupération ne peut plus être rouvert.',
         ],
       },
@@ -176,7 +176,7 @@ const texts: LegalTexts = {
         id: 'security',
         heading: 'Sécurité',
         paragraphs: [
-          'Nous ne gardons les secrets du jeu (codes de récupération, liens de connexion, jetons d’appareil) que sous forme d’empreintes, et nous limitons le nombre d’essais. Aucun système n’est parfaitement sûr : gardez donc votre code de récupération et vos liens de connexion pour vous.',
+          'Nous ne gardons les secrets du jeu (codes de récupération, liens de connexion, jetons d’appareil) que sous forme d’empreintes, et nous limitons le nombre d’essais. Aucun système n’est parfaitement sûr : gardez donc votre code de récupération et vos liens de connexion pour vous.',
         ],
       },
       {
@@ -187,7 +187,7 @@ const texts: LegalTexts = {
       {
         id: 'contact',
         heading: 'Contact',
-        paragraphs: ['Questions ou demandes concernant vos données : écrivez à l’adresse de contact indiquée en haut de cette page.'],
+        paragraphs: ['Questions ou demandes concernant vos données : écrivez à l’adresse de contact indiquée en haut de cette page.'],
       },
     ],
   },

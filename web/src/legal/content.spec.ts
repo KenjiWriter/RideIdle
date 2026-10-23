@@ -91,6 +91,14 @@ describe('the legal texts', () => {
     expect(has('privacy', 'retention', 'guestDays')).toBe(true)
   })
 
+  it('have a no-break space before : ; ? ! in French, so that a line never starts with one of them', () => {
+    for (const name of DOCUMENTS) {
+      for (const text of strings(document('fr', name))) {
+        expect(text, text.slice(0, 60)).not.toMatch(/\S [:;?!](?=\s|$)/)
+      }
+    }
+  })
+
   it('are told apart: no language repeats the English text by mistake', () => {
     for (const locale of SUPPORTED_LOCALES.filter((code) => code !== 'en')) {
       expect(document(locale, 'terms').title).not.toBe(document('en', 'terms').title)

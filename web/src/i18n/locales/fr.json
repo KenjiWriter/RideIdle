@@ -29,7 +29,7 @@
   "create": {
     "title": "Créer votre pilote",
     "nameLabel": "Nom du pilote",
-    "nameHint": "3 à 16 caractères : lettres, chiffres, _ ou -. Les autres pilotes le verront.",
+    "nameHint": "3 à 16 caractères : lettres, chiffres, _ ou -. Les autres pilotes le verront.",
     "submit": "C’est parti",
     "submitting": "Création…",
     "back": "Retour",
@@ -48,7 +48,7 @@
     "step": "Étape 2 sur 2",
     "title": "Choisissez votre épave",
     "subtitle": "Vous achèterez les autres voitures plus tard. Ce choix n’est pas définitif.",
-    "track": "Vous commencez sur : {track}.",
+    "track": "Vous commencez sur : {track}.",
     "recommended": "Conseillée pour débuter",
     "choose": "Choisir {name}",
     "starting": "Démarrage…",
@@ -121,7 +121,7 @@
     },
     "tow": {
       "breakdown": "Vous ne pouvez pas payer la réparation. Le remorquage est gratuit, mais la voiture attend {time} avant de rouler de nouveau.",
-      "fuel_empty": "Vous ne pouvez pas payer le carburant d’un tour. Le remorquage est gratuit : la voiture attend {time} et repart avec un peu de carburant.",
+      "fuel_empty": "Vous ne pouvez pas payer le carburant d’un tour. Le remorquage est gratuit : la voiture attend {time} et repart avec un peu de carburant.",
       "button": "Remorquer la voiture · gratuit",
       "busy": "Remorquage…",
       "notNeeded": "Le remorquage n’était pas nécessaire.",
@@ -226,7 +226,7 @@
   "linked": {
     "title": "Vos moyens de connexion",
     "add": "Ajouter un autre moyen de connexion",
-    "addDescription": "Liez un moyen de connexion supplémentaire pour accéder à ce garage : si vous en perdez un, vous pourrez utiliser l’autre.",
+    "addDescription": "Liez un moyen de connexion supplémentaire pour accéder à ce garage : si vous en perdez un, vous pourrez utiliser l’autre.",
     "close": "Fermer"
   },
   "legal": {

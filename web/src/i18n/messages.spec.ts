@@ -32,6 +32,12 @@ describe('translation files', () => {
     expect(Object.keys(messages[locale] ?? {}).sort()).toEqual(Object.keys(messages.en ?? {}).sort())
   })
 
+  it('has a no-break space before : ; ? ! in French, so that a line never starts with one of them', () => {
+    for (const [key, text] of Object.entries(messages.fr ?? {})) {
+      expect(text, `fr: ${key}`).not.toMatch(/\S [:;?!](?=\s|$)/)
+    }
+  })
+
   it.each([...SUPPORTED_LOCALES])('%s has no empty strings and keeps the placeholders', (locale) => {
     for (const [key, english] of Object.entries(messages.en ?? {})) {
       const translated = messages[locale]?.[key] ?? ''

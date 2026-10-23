@@ -24,8 +24,8 @@ return [
             'action' => 'Se connecter',
         ],
         'expires' => 'Le lien n’est utilisable qu’une fois et reste valable :minutes minutes.',
-        'ignore' => 'Si ce n’était pas vous, ignorez ce message : rien ne change sans le lien.',
-        'fallback' => 'Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :',
+        'ignore' => 'Si ce n’était pas vous, ignorez ce message : rien ne change sans le lien.',
+        'fallback' => 'Si le bouton ne fonctionne pas, copiez cette adresse dans votre navigateur :',
     ],
 
 ];
