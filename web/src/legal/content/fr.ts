@@ -19,17 +19,17 @@ const texts: LegalTexts = {
         heading: 'Âge minimum',
         paragraphs: [
           'Vous devez avoir au moins {minAge} ans pour utiliser RideIdle. Lorsque vous sécurisez votre compte, nous vous demandons de confirmer votre âge et nous enregistrons le moment de cette confirmation.',
-          'Si nous apprenons qu’une personne plus jeune possède un compte, nous pouvons le supprimer.',
+          'Si nous apprenons qu’une personne n’ayant pas l’âge minimum possède un compte, nous pouvons le supprimer.',
         ],
       },
       {
         id: 'account',
         heading: 'Votre pilote et votre compte',
         paragraphs: [
-          'Vous commencez en invité : vous choisissez un nom de pilote et le jeu crée un compte invité sans demander de données personnelles. Un compte invité est supprimé, avec tout son contenu, après {guestDays} jours sans activité.',
+          'Vous commencez avec un compte invité : vous choisissez un nom de pilote et le jeu crée ce compte sans demander de données personnelles. Un compte invité est supprimé, avec tout son contenu, après {guestDays} jours sans activité.',
           'Vous pouvez sécuriser votre compte avec une adresse e-mail, Google, Facebook ou Apple. Un compte sécurisé n’expire pas et peut être ouvert sur un autre appareil. Vous pouvez aussi garder un code de récupération. Toute personne qui possède votre code de récupération ou un lien de connexion peut accéder à votre compte : gardez-les pour vous.',
-          'Choisissez un nom de pilote qui n’est pas offensant et qui ne se fait pas passer pour quelqu’un d’autre. Nous pouvons modifier ou supprimer un nom qui enfreint cette règle.',
-          'Vous êtes responsable de ce qui se passe sous votre compte. Donnez-nous des informations exactes lorsque vous le sécurisez.',
+          'Choisissez un nom de pilote qui ne soit pas offensant et qui n’usurpe pas l’identité d’une autre personne. Nous pouvons modifier ou supprimer un nom qui enfreint cette règle.',
+          'Vous êtes responsable de toute activité effectuée depuis votre compte. Donnez-nous des informations exactes lorsque vous le sécurisez.',
         ],
       },
       {
@@ -43,9 +43,9 @@ const texts: LegalTexts = {
       },
       {
         id: 'virtual-items',
-        heading: 'Objets virtuels',
+        heading: 'Biens virtuels',
         paragraphs: [
-          'L’argent du jeu, l’expérience, les voitures et les pièces font partie du jeu. Ils n’ont aucune valeur en dehors de lui, ne peuvent pas être échangés contre de l’argent réel et ne deviennent pas votre propriété.',
+          'L’argent du jeu, l’expérience, les voitures et les pièces font partie du jeu. Ils n’ont aucune valeur en dehors du jeu, ne peuvent pas être échangés contre de l’argent réel et ne deviennent pas votre propriété.',
           'RideIdle est gratuit pour le moment et n’a pas de fonctions payantes. Si cela change, nous vous le dirons, et des conditions distinctes s’appliqueront aux achats.',
         ],
       },
@@ -69,8 +69,8 @@ const texts: LegalTexts = {
         id: 'liability',
         heading: 'Notre responsabilité',
         paragraphs: [
-          'Nous sommes responsables comme la loi l’exige. Rien dans ces conditions ne limite un droit que la loi vous accorde et qui ne peut pas être limité, par exemple en tant que consommateur, ni notre responsabilité en cas de faute intentionnelle, de faute lourde ou d’atteinte à la vie ou à la santé.',
-          'Pour le reste, et dans la mesure permise par la loi, nous ne sommes pas responsables des pertes indirectes, comme la perte de progression dans le jeu, car le jeu est gratuit et proposé pour le divertissement.',
+          'Notre responsabilité est engagée dans les conditions prévues par la loi. Rien dans ces conditions ne limite un droit que la loi vous accorde et qui ne peut pas être limité, par exemple en tant que consommateur, ni notre responsabilité en cas de faute intentionnelle, de faute lourde ou de dommage corporel.',
+          'Pour le reste, et dans la mesure permise par la loi, nous ne sommes pas responsables des dommages indirects, comme la perte de progression dans le jeu, car le jeu est gratuit et proposé pour le divertissement.',
         ],
       },
       {
@@ -108,8 +108,8 @@ const texts: LegalTexts = {
         id: 'data',
         heading: 'Quelles données nous utilisons',
         paragraphs: [
-          'En tant qu’invité : le nom de pilote que vous choisissez, la langue du jeu, votre progression (voitures, courses, argent du jeu, expérience et leur historique), l’heure de votre dernière activité et un jeton d’appareil. Le jeton est un secret aléatoire conservé dans votre navigateur ; nous n’en gardons qu’une empreinte (hachage).',
-          'Lorsque vous sécurisez votre compte : votre adresse e-mail, ou l’identifiant que Google, Facebook ou Apple nous donne pour votre compte, avec l’adresse e-mail qu’ils communiquent. Le jeu n’affiche une adresse que sous forme abrégée, comme t***@example.com.',
+          'Pour un compte invité : le nom de pilote que vous choisissez, la langue du jeu, votre progression (voitures, courses, argent du jeu, expérience et leur historique), l’heure de votre dernière activité et un jeton d’appareil. Le jeton est un secret aléatoire conservé dans votre navigateur ; nous n’en gardons qu’une empreinte cryptographique (hachage).',
+          'Lorsque vous sécurisez votre compte : votre adresse e-mail, ou l’identifiant que Google, Facebook ou Apple nous donne pour votre compte, avec l’adresse e-mail que ce fournisseur nous communique. Le jeu n’affiche une adresse que sous forme partiellement masquée, comme t***@example.com.',
           'Nous enregistrons aussi le moment où les conditions ont été acceptées et l’âge confirmé, ainsi que la version des conditions acceptée. Si vous créez un code de récupération, nous n’en gardons qu’une empreinte.',
           'Pour les liens de connexion et les connexions avec un fournisseur, nous gardons un enregistrement de courte durée : une empreinte du secret, votre adresse e-mail et son objet. Il est supprimé peu après son expiration ou son utilisation.',
           'Pour empêcher les abus, nous comptons les requêtes par adresse IP et par empreinte de l’adresse e-mail, pendant une heure au plus. Nos serveurs et notre hébergeur peuvent aussi conserver des journaux techniques, comme l’adresse IP et l’heure d’une requête.',
@@ -120,9 +120,9 @@ const texts: LegalTexts = {
         id: 'why',
         heading: 'Pourquoi nous les utilisons, et sur quelle base',
         paragraphs: [
-          'Pour vous donner le jeu et votre compte : le pilote, votre progression, la connexion et les e-mails que vous demandez, par exemple un lien de connexion. Base : c’est nécessaire pour fournir le jeu que vous avez demandé (article 6, paragraphe 1, point b, du RGPD).',
-          'Pour que le jeu reste sûr et équitable, pour empêcher les abus et la triche, et pour corriger les erreurs. Base : notre intérêt légitime à exploiter un jeu sûr (article 6, paragraphe 1, point f, du RGPD).',
-          'Pour pouvoir démontrer l’acceptation des conditions et la confirmation de l’âge. Base : notre intérêt légitime à pouvoir le démontrer (article 6, paragraphe 1, point f, du RGPD).',
+          'Pour vous fournir le jeu et gérer votre compte : le pilote, votre progression, la connexion et les e-mails que vous demandez, par exemple un lien de connexion. Base légale : c’est nécessaire à l’exécution du service que vous avez demandé (article 6, paragraphe 1, point b, du RGPD).',
+          'Pour que le jeu reste sûr et équitable, pour empêcher les abus et la triche, et pour corriger les erreurs. Base légale : notre intérêt légitime à exploiter un jeu sûr (article 6, paragraphe 1, point f, du RGPD).',
+          'Pour pouvoir démontrer l’acceptation des conditions et la confirmation de l’âge. Base légale : notre intérêt légitime à pouvoir le démontrer (article 6, paragraphe 1, point f, du RGPD).',
         ],
       },
       {
@@ -156,21 +156,21 @@ const texts: LegalTexts = {
         paragraphs: [
           'Vous pouvez nous demander l’accès à vos données, leur rectification, leur effacement, la limitation de leur utilisation et leur portabilité. Vous pouvez aussi vous opposer à l’utilisation fondée sur notre intérêt légitime.',
           'Écrivez à l’adresse de contact indiquée en haut de cette page. Nous répondons dans un délai d’un mois. Pour protéger votre compte, nous pouvons vous demander de prouver qu’il est bien le vôtre, par exemple par un lien envoyé à l’adresse e-mail du compte. Pour l’instant, les demandes sont traitées par e-mail.',
-          'Vous pouvez aussi déposer une plainte auprès de l’autorité de protection des données de votre pays.',
+          'Vous pouvez aussi introduire une réclamation auprès de l’autorité de contrôle de votre pays.',
         ],
       },
       {
         id: 'storage',
         heading: 'Ce qui reste dans votre navigateur',
         paragraphs: [
-          'RideIdle n’utilise pas de cookies. Il enregistre quelques éléments dans le stockage local de votre navigateur : le jeton d’appareil, la langue choisie, un repère du dernier état de votre course qui vous a été montré, l’information que la fenêtre qui vous invite à sauvegarder votre garage a été reportée, et, pendant quelques minutes lors d’une connexion avec un fournisseur, un secret à usage unique. Le jeu en a besoin pour fonctionner, et ils ne servent pas à vous suivre.',
-          'Si vous effacez les données de votre navigateur, vous êtes déconnecté. Un compte invité sans code de récupération ne peut plus être rouvert.',
+          'RideIdle n’utilise pas de cookies. Il enregistre quelques éléments dans le stockage local de votre navigateur : le jeton d’appareil, la langue choisie, un repère du dernier état de votre course que vous avez vu, le fait que vous avez reporté la fenêtre qui vous invite à sauvegarder votre garage et, pendant quelques minutes lors d’une connexion avec un fournisseur, un secret à usage unique. Ces éléments sont nécessaires au jeu et ne servent pas à vous suivre.',
+          'Si vous effacez les données de votre navigateur, votre session se ferme. Un compte invité sans code de récupération ne peut plus être rouvert.',
         ],
       },
       {
         id: 'age',
         heading: 'Âge',
-        paragraphs: ['Le jeu s’adresse aux personnes qui ont au moins {minAge} ans. Si vous pensez qu’une personne plus jeune possède un compte, écrivez-nous et nous le supprimerons.'],
+        paragraphs: ['Le jeu s’adresse aux personnes qui ont au moins {minAge} ans. Si vous pensez qu’une personne n’ayant pas l’âge minimum possède un compte, écrivez-nous et nous le supprimerons.'],
       },
       {
         id: 'security',

@@ -84,7 +84,7 @@ it('writes in the language of the driver', function (string $locale, string $sub
 })->with([
     'polish' => ['pl', 'Potwierdź e-mail, żeby zabezpieczyć garaż'],
     'english' => ['en', 'Confirm your e-mail to secure your garage'],
-    'french' => ['fr', 'Confirmez votre e-mail pour sécuriser votre garage'],
+    'french' => ['fr', 'Confirmez votre adresse e-mail pour sécuriser votre garage'],
     'german' => ['de', 'Bestätige deine E-Mail, um deine Garage zu sichern'],
     'brazilian portuguese' => ['pt-BR', 'Confirme seu e-mail para salvar sua garagem'],
 ]);
@@ -195,7 +195,7 @@ describe('an account that accepted the terms and confirmed its age already', fun
     })->with([
         'polish' => ['pl', 'Potwierdź e-mail, żeby dodać go do garażu'],
         'english' => ['en', 'Confirm your e-mail to add it to your garage'],
-        'french' => ['fr', 'Confirmez votre e-mail pour l’ajouter à votre garage'],
+        'french' => ['fr', 'Confirmez votre adresse e-mail pour l’ajouter à votre garage'],
         'german' => ['de', 'Bestätige deine E-Mail, um sie deiner Garage hinzuzufügen'],
         'brazilian portuguese' => ['pt-BR', 'Confirme seu e-mail para adicioná-lo à sua garagem'],
     ]);

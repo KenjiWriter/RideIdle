@@ -47,7 +47,7 @@
   "choose": {
     "step": "Étape 2 sur 2",
     "title": "Choisissez votre épave",
-    "subtitle": "Vous achèterez le reste de vos voitures plus tard. Ce choix n’est pas définitif.",
+    "subtitle": "Vous achèterez les autres voitures plus tard. Ce choix n’est pas définitif.",
     "track": "Vous commencez sur : {track}.",
     "recommended": "Conseillée pour débuter",
     "choose": "Choisir {name}",
@@ -60,7 +60,7 @@
       "topSpeed": "Vitesse maximale",
       "mass": "Masse",
       "tank": "Réservoir",
-      "cargo": "Chargement"
+      "cargo": "Charge utile"
     }
   },
   "car": {
@@ -106,7 +106,7 @@
       "tankFull": "Le réservoir est plein.",
       "noCash": "Pas assez d’argent pour du carburant.",
       "price": "Le carburant coûte {price} le litre.",
-      "done": "{liters} ajoutés pour {cost}.",
+      "done": "Vous avez ajouté {liters} pour {cost}.",
       "nothing": "Le réservoir était déjà plein.",
       "repeated": "Ce ravitaillement a déjà été fait."
     },
@@ -130,7 +130,7 @@
     "away": {
       "title": "Pendant votre absence",
       "duration": "Durée d’absence",
-      "earned": "Gagné",
+      "earned": "Gains",
       "fuel_empty": "Le réservoir s’est vidé.",
       "breakdown": "La voiture est tombée en panne.",
       "dismiss": "Compris"
@@ -139,7 +139,7 @@
   },
   "recover": {
     "title": "Récupérer votre pilote",
-    "description": "Saisissez le code de récupération que vous avez enregistré. Vous le trouverez dans votre garage, sous Sauvegarder votre garage.",
+    "description": "Saisissez le code de récupération que vous avez enregistré. Vous le trouverez dans votre garage, sous « Sauvegarder votre garage ».",
     "codeLabel": "Code de récupération",
     "submit": "Récupérer",
     "submitting": "Récupération…",
@@ -149,12 +149,12 @@
     },
     "intro": "Connectez-vous avec le compte lié à votre garage, ou utilisez le code de récupération que vous avez enregistré.",
     "accountTitle": "Se connecter avec votre compte",
-    "accountDescription": "Utilisez le moyen de connexion lié à votre garage. Un lien reçu par e-mail ne fonctionne qu’une fois, pour une courte durée.",
+    "accountDescription": "Utilisez le moyen de connexion lié à votre garage. Un lien reçu par e-mail n’est utilisable qu’une fois et pendant peu de temps.",
     "codeTitle": "Utiliser un code de récupération"
   },
   "recovery": {
     "title": "Sauvegarder votre garage",
-    "description": "Si vous effacez les données du navigateur ou changez d’appareil, ce code rend votre pilote. Sans lui, un compte invité est perdu.",
+    "description": "Si vous effacez les données du navigateur ou changez d’appareil, ce code vous permet de retrouver votre pilote. Sans ce code, un compte invité est perdu.",
     "generate": "Afficher mon code de récupération",
     "regenerate": "Créer un nouveau code",
     "regenerateHint": "Vous avez déjà un code. Un nouveau code rend l’ancien inutilisable.",
@@ -168,12 +168,12 @@
   "confirm": {
     "checking": "Vérification de votre lien…",
     "claimTitle": "Votre garage est sauvegardé",
-    "claimBody": "Désormais, vous pouvez vous connecter sur n’importe quel appareil avec un lien envoyé à votre e-mail.",
+    "claimBody": "Désormais, vous pouvez vous connecter sur n’importe quel appareil avec un lien envoyé à votre adresse e-mail.",
     "failedTitle": "Ce lien ne fonctionne pas",
     "invalid": "Il a déjà été utilisé, il a expiré ou il est incomplet. Demandez-en un nouveau.",
     "garage": "Aller au garage",
     "newLink": "Demander un nouveau lien",
-    "home": "Retour au début"
+    "home": "Retour à l’accueil"
   },
   "provider": {
     "email": "E-mail",
@@ -182,13 +182,13 @@
     "apple": "Apple"
   },
   "callback": {
-    "checking": "Fin de la connexion…",
+    "checking": "Finalisation de la connexion…",
     "linkedTitle": "Le compte {provider} est lié",
     "linkedBody": "Votre garage est sauvegardé. Désormais, vous pouvez vous connecter avec {provider}.",
     "cancelledTitle": "Connexion annulée",
     "cancelledBody": "Vous n’avez pas autorisé l’accès chez {provider}, rien n’a donc été modifié.",
     "failedTitle": "La connexion a échoué",
-    "failed": "Un problème est survenu au retour de {provider}. Réessayez.",
+    "failed": "Un problème est survenu lors du retour depuis {provider}. Réessayez.",
     "missingVerifier": "Cette connexion n’a pas été démarrée dans ce navigateur, ou elle a pris trop de temps. Recommencez.",
     "expired": "Cette connexion a expiré ou a déjà été utilisée. Recommencez.",
     "signedOut": "Votre session est terminée. Connectez-vous à votre garage et réessayez.",
@@ -201,21 +201,21 @@
     "age": "Je confirme avoir au moins {age} ans.",
     "consentRequired": "Acceptez les conditions et confirmez votre âge pour continuer.",
     "continueWith": "Continuer avec {provider}",
-    "opening": "Ouverture de {provider}…",
-    "or": "ou avec un e-mail",
+    "opening": "Redirection vers {provider}…",
+    "or": "ou avec une adresse e-mail",
     "emailLabel": "E-mail",
     "sendLink": "Envoyez-moi un lien",
     "sending": "Envoi…",
     "another": "Utiliser une autre adresse",
     "errors": {
-      "emailRequired": "Saisissez votre e-mail.",
+      "emailRequired": "Saisissez votre adresse e-mail.",
       "emailInvalid": "Cela ne ressemble pas à une adresse e-mail."
     },
-    "ageUnknown": "Je confirme avoir l’âge requis pour avoir un compte."
+    "ageUnknown": "Je confirme avoir l’âge requis pour créer un compte."
   },
   "linkAccount": {
     "title": "Sauvegarder votre garage",
-    "description": "Liez un compte pour retrouver votre garage sur un autre appareil ou après avoir effacé votre navigateur. Sans cela, un compte invité peut être perdu.",
+    "description": "Liez un compte pour retrouver votre garage sur un autre appareil ou après avoir effacé les données du navigateur. Sans cela, un compte invité peut être perdu.",
     "useCode": "Je préfère un code de récupération",
     "later": "Plus tard"
   },
@@ -226,7 +226,7 @@
   "linked": {
     "title": "Vos moyens de connexion",
     "add": "Ajouter un autre moyen de connexion",
-    "addDescription": "Liez un moyen de plus pour accéder à ce garage, afin que la perte de l’un ne vous en ferme pas l’accès.",
+    "addDescription": "Liez un moyen de connexion supplémentaire pour accéder à ce garage : si vous en perdez un, vous pourrez utiliser l’autre.",
     "close": "Fermer"
   },
   "legal": {
@@ -240,7 +240,7 @@
     "terms": "Conditions d’utilisation",
     "privacy": "Politique de confidentialité",
     "loadError": "La page n’a pas pu être chargée.",
-    "back": "Retour au début",
+    "back": "Retour à l’accueil",
     "termsLink": "les conditions d’utilisation",
     "privacyLink": "la politique de confidentialité"
   }

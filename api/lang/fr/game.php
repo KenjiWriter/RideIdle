@@ -14,7 +14,7 @@ return [
 
     'fuel' => [
         'empty' => 'Le réservoir est vide.',
-        'low' => 'Le carburant est presque épuisé.',
+        'low' => 'Le niveau de carburant est bas.',
     ],
 
     'rarity' => [
@@ -26,7 +26,7 @@ return [
     ],
 
     'drivetrain' => [
-        'fwd' => 'Traction',
+        'fwd' => 'Traction avant',
         'rwd' => 'Propulsion',
         'awd' => 'Transmission intégrale',
     ],

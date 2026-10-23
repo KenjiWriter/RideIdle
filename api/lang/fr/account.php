@@ -8,12 +8,12 @@ return [
     ],
 
     'email' => [
-        'sent' => 'Nous avons envoyé un lien à :email. Il fonctionne une seule fois, pendant :minutes minutes.',
-        'already_linked' => 'Ce compte a déjà un e-mail.',
+        'sent' => 'Nous avons envoyé un lien à :email. Il n’est utilisable qu’une fois et reste valable :minutes minutes.',
+        'already_linked' => 'Ce compte a déjà une adresse e-mail.',
     ],
 
     'login_link' => [
-        'sent' => 'Si cet e-mail appartient à un garage, un lien est en route. Il fonctionne une seule fois, pendant :minutes minutes.',
+        'sent' => 'Si cette adresse e-mail est associée à un garage, un lien vous a été envoyé. Il n’est utilisable qu’une fois et reste valable :minutes minutes.',
     ],
 
     'oauth' => [
@@ -28,8 +28,8 @@ return [
     ],
 
     'identity' => [
-        'taken' => 'Cette connexion appartient déjà à un autre garage. Connectez-vous à ce garage ou utilisez-en une autre.',
-        'provider_linked' => 'Ce compte a déjà une connexion de ce type.',
+        'taken' => 'Ce moyen de connexion est déjà associé à un autre garage. Connectez-vous à ce garage ou utilisez-en un autre.',
+        'provider_linked' => 'Ce compte a déjà un moyen de connexion de ce type.',
     ],
 
     'name' => [
