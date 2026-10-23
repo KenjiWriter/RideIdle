@@ -377,7 +377,8 @@
     "cancelConfirm": "Tak, anuluj",
     "cancelKeep": "Zostaw",
     "cancelled": "Zlecenie anulowane.",
-    "cancelledWith": "Zlecenie anulowane. Odpadło też zakładanie części: {part}."
+    "cancelledWith": "Zlecenie anulowane. Odpadło też zakładanie części: {part}.",
+    "city": "Warsztat w mieście {city}"
   },
   "hud": {
     "level": "LV",
@@ -475,7 +476,7 @@
     "label": "Mapa miast",
     "loadError": "Nie udało się wczytać mapy.",
     "noCar": "Najpierw wybierz auto, potem ruszysz w drogę.",
-    "here": "Tu jesteś",
+    "here": "Tu stoi twoje auto",
     "target": "Cel podróży",
     "onTheWay": "W drodze: {from} → {to}",
     "eta": "za {time}",
@@ -493,6 +494,43 @@
     },
     "lit": "Oświetlony",
     "unlit": "Bez świateł",
-    "node": "{name}, poziom gracza {level}"
+    "node": "{name}, poziom gracza {level}",
+    "garage": "Garaż: {used} / {capacity} miejsc",
+    "noGarage": "Nie masz tu garażu.",
+    "buyGarage": "Kup garaż · {price}",
+    "blockedNoGarage": "Nie masz garażu w mieście {city}. Najpierw kup go tam, wtedy auto będzie mogło pojechać.",
+    "blockedFull": "Garaż w mieście {city} jest pełny."
+  },
+  "fleet": {
+    "tabs": "Sekcje garażu",
+    "tabCar": "Auto",
+    "tabFleet": "Flota",
+    "title": "Flota",
+    "summary": "Auta: {cars} · Garaże: {garages}",
+    "loadError": "Nie udało się wczytać floty.",
+    "selected": "Wybrane",
+    "play": "Graj tym autem",
+    "chosen": "Grasz teraz: {car}.",
+    "places": "{used} / {capacity} miejsc",
+    "fuel": "{fuel} / {tank} l",
+    "laps": "Okrążenia: {count}",
+    "onTheRoad": "W drodze: {from} → {to}, dojedzie za {time}",
+    "free": "Wolne miejsca: {count}",
+    "garagesToBuy": "Garaże do kupienia",
+    "garageIn": "Garaż w mieście {city}",
+    "garagePlaces": "Miejsc: {capacity}",
+    "garageLocked": "Wymaga poziomu gracza {required}.",
+    "buyGarage": "Kup · {price}",
+    "garageBought": "Kupiono garaż w mieście {city}.",
+    "yard": "Złomowisko",
+    "target": "Do garażu w mieście",
+    "noRoom": "W żadnym garażu nie ma wolnego miejsca. Najpierw kup garaż w innym mieście.",
+    "buyWreck": "Kup · {price}",
+    "carBought": "{car} stoi w garażu w mieście {city}.",
+    "class": {
+      "hatchback": "Hatchback",
+      "muscle": "Muscle car",
+      "pickup": "Pickup"
+    }
   }
 }

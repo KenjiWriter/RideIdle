@@ -10,6 +10,7 @@ import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
+import { useFleetStore } from '@/stores/fleet'
 import { useMapStore } from '@/stores/map'
 import { useRunStore } from '@/stores/run'
 
@@ -33,8 +34,9 @@ const ICONS = {
 }
 
 const { t } = useI18n()
-const { fixed } = useFormat()
+const { fixed, money } = useFormat()
 const map = useMapStore()
+const fleet = useFleetStore()
 const run = useRunStore()
 const { message: started, show: showStarted, clear: clearStarted } = useFlash()
 
@@ -149,10 +151,65 @@ const blocked = computed(() => {
     return t('map.locked', { required: city.level_required, level: map.map?.level ?? 1 })
   }
 
-  return run.run ? null : t('map.noCar')
+  if (!run.run) {
+    return t('map.noCar')
+  }
+
+  // A car needs a place to stand where it goes: the server says it again, with the same words, when asked.
+  if (!city.garage.owned) {
+    return t('map.blockedNoGarage', { city: city.name })
+  }
+
+  return city.garage.free === 0 ? t('map.blockedFull', { city: city.name }) : null
 })
 
-const canGo = computed(() => !!selected.value && !selected.value.here && !!selected.value.route && !!selected.value.open && !travel.value && !busy.value)
+const canGo = computed(
+  () =>
+    !!selected.value &&
+    !selected.value.here &&
+    !!selected.value.route &&
+    !!selected.value.open &&
+    selected.value.garage.owned &&
+    selected.value.garage.free > 0 &&
+    !travel.value &&
+    !busy.value,
+)
+
+/** Whether the driver can pay for the garage of the selected city. */
+const canBuyGarage = computed(() => !!selected.value && selected.value.open && !selected.value.garage.owned && !busy.value && (run.wallet?.cash_cents ?? 0) >= (selected.value.garage.price_cents ?? 0))
+
+/** What a refusal of the server says, in the language of the driver: the level, the fuel, the cash, a full garage. */
+function refusal(failure: unknown): string {
+  return failure instanceof ApiError && failure.status === 429 ? t('common.tooManyRequests') : failure instanceof ApiError && failure.status === 422 ? failure.message : t('common.error')
+}
+
+async function buyGarage(city: MapCity): Promise<void> {
+  if (!canBuyGarage.value) {
+    return
+  }
+
+  busy.value = true
+  error.value = null
+  clearStarted()
+
+  try {
+    await fleet.buyGarage(city.slug)
+    await load()
+    showStarted(t('fleet.garageBought', { city: city.name }))
+  } catch (failure) {
+    if (endSessionIfUnauthorized(failure)) {
+      return
+    }
+
+    error.value = refusal(failure)
+
+    if (failure instanceof ApiError && failure.status === 422) {
+      void load()
+    }
+  } finally {
+    busy.value = false
+  }
+}
 
 async function go(city: MapCity): Promise<void> {
   if (!canGo.value) {
@@ -173,7 +230,7 @@ async function go(city: MapCity): Promise<void> {
     }
 
     // The server says what is wrong in the language of the driver: the level, the fuel, a car that stands.
-    error.value = failure instanceof ApiError && failure.status === 429 ? t('common.tooManyRequests') : failure instanceof ApiError && failure.status === 422 ? failure.message : t('common.error')
+    error.value = refusal(failure)
 
     if (failure instanceof ApiError && failure.status === 422) {
       void load()
@@ -283,6 +340,13 @@ async function go(city: MapCity): Promise<void> {
         </div>
 
         <p v-if="selected.route" class="text-[13px] text-muted" data-test="route">{{ t('map.route', { km: selected.route.km, time: formatDuration(selected.route.ms), fuel: fixed(selected.route.fuel_ml / 1000, 1) }) }}</p>
+
+        <div class="flex items-center justify-between gap-2.5 text-[13px] text-muted" data-test="garage">
+          <span>{{ selected.garage.owned ? t('map.garage', { used: selected.garage.used, capacity: selected.garage.capacity }) : t('map.noGarage') }}</span>
+          <button v-if="!selected.garage.owned && selected.open" type="button" class="btn btn-secondary btn-sm flex-none" :disabled="!canBuyGarage" data-test="buy-garage" @click="buyGarage(selected)">
+            {{ t('map.buyGarage', { price: money(selected.garage.price_cents ?? 0) }) }}
+          </button>
+        </div>
 
         <button v-if="!selected.here" type="button" class="btn btn-primary" :disabled="!canGo" data-test="go" @click="go(selected)">{{ t('map.go') }}</button>
         <p v-if="blocked" class="text-sm text-muted" data-test="reason">{{ blocked }}</p>

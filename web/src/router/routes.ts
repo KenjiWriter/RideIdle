@@ -33,6 +33,8 @@ export const routes: RouteRecordRaw[] = [
   { path: '/map', name: 'map', component: () => import('@/views/MapView.vue'), meta: { requiresAuth: true } },
   { path: '/race', name: 'race', component: () => import('@/views/RaceView.vue'), meta: { requiresAuth: true } },
   { path: '/garage', name: 'garage', component: () => import('@/views/GarageView.vue'), meta: { requiresAuth: true } },
+  // The fleet is a part of the garage: the navigation keeps "Garage" lit, and the tabs of the garage lead here and back.
+  { path: '/garage/fleet', name: 'fleet', component: () => import('@/views/FleetView.vue'), meta: { requiresAuth: true } },
   { path: '/workshop', name: 'workshop', component: () => import('@/views/WorkshopView.vue'), meta: { requiresAuth: true } },
   { path: '/shop', name: 'shop', component: () => import('@/views/ShopView.vue'), meta: { requiresAuth: true } },
 ]

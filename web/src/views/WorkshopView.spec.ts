@@ -48,6 +48,7 @@ describe('WorkshopView', () => {
     await flushPromises()
 
     expect(wrapper.get('h1').text()).toBe('Workshop')
+    expect(wrapper.get('[data-test="city"]').text()).toBe('Workshop in Złomowo')
     expect(wrapper.get('[data-test="mechanic"]').text()).toBe('Mechanic of level 1: jobs take 2% less time.')
     expect(wrapper.get('[data-test="car"] h2').text()).toBe('Rdzak GT-4')
     expect(wrapper.get('[data-test="car-level"]').text()).toBe('Level 3')
@@ -76,7 +77,7 @@ describe('WorkshopView', () => {
           201,
           aGarage({
             inventory: [tires],
-            workshop: { queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ id: 3, part: tires, finish_ms: NOW + 235_200 })] },
+            workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ id: 3, part: tires, finish_ms: NOW + 235_200 })] },
             car: aCar({ run: { id: 7, status: 'stopped', stop_reason: 'workshop' } }),
           }),
         ),
@@ -104,7 +105,7 @@ describe('WorkshopView', () => {
   it('takes a part off the car', async () => {
     const calls = serve({
       'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust }) })),
-      'POST /api/v1/garage/jobs': () => respond(201, aGarage({ car: aCar({}, { exhaust }), workshop: { queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ kind: 'unmount', part: exhaust })] } })),
+      'POST /api/v1/garage/jobs': () => respond(201, aGarage({ car: aCar({}, { exhaust }), workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ kind: 'unmount', part: exhaust })] } })),
       'GET /api/v1/runs/current': noRun,
     })
 
@@ -125,6 +126,7 @@ describe('WorkshopView', () => {
           200,
           aGarage({
             workshop: {
+              city: { slug: 'zlomowo', name: 'Złomowo' },
               queue_max: 4,
               mechanic: { level: 1, time_cut_ppm: 20_000 },
               jobs: [aJob({ id: 1, finish_ms: NOW + 65_000 }), aJob({ id: 2, status: 'queued', part: tires, start_ms: NOW + 65_000, finish_ms: NOW + 300_200 })],
@@ -153,7 +155,7 @@ describe('WorkshopView', () => {
         return respond(
           200,
           asked === 1
-            ? aGarage({ workshop: { queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ finish_ms: NOW + 4_000 })] } })
+            ? aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ finish_ms: NOW + 4_000 })] } })
             : aGarage({ car: aCar({}, { exhaust }) }, NOW + 10_000),
         )
       },
@@ -178,7 +180,7 @@ describe('WorkshopView', () => {
       'GET /api/v1/garage': () => {
         asked += 1
 
-        return respond(200, aGarage({ workshop: { queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ finish_ms: NOW - 1_000 })] } }))
+        return respond(200, aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ finish_ms: NOW - 1_000 })] } }))
       },
     })
 
@@ -206,7 +208,7 @@ describe('WorkshopView', () => {
 
   describe('cancelling a job', () => {
     const factoryTires = aPart({ id: 31, slug: 'street-tires-t1', name: 'Street tires T1', slot: 'tires', tier: 1, mounted: true, car_id: 5 })
-    const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+    const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
     const takeOff = aJob({ id: 1, kind: 'unmount', part: factoryTires, finish_ms: NOW + 60_000 })
     const putOn = aJob({ id: 2, status: 'queued', part: tires, start_ms: NOW + 60_000, finish_ms: NOW + 295_200 })
     const exhaustJob = aJob({ id: 3, status: 'queued', part: aPart({ id: 12, name: 'Sport exhaust' }), start_ms: NOW + 295_200, finish_ms: NOW + 530_400 })
@@ -372,6 +374,7 @@ describe('WorkshopView', () => {
     await flushPromises()
 
     expect(wrapper.get('h1').text()).toBe('Warsztat')
+    expect(wrapper.get('[data-test="city"]').text()).toBe('Warsztat w mieście Złomowo')
     expect(wrapper.get('[data-test="mechanic"]').text()).toBe('Mechanik poziomu 1: zlecenia trwają o 2% krócej.')
     expect(wrapper.get('[data-test="slot-tires"]').text()).toContain('Fabryczne')
     expect(wrapper.get('[data-test="put-on-21"]').text()).toBe('Załóż')

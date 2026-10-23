@@ -171,7 +171,7 @@ describe('garage store', () => {
 
   it('queues a job and takes the garage from the answer', async () => {
     const calls = serveApi(fetchMock, {
-      'POST /api/v1/garage/jobs': () => respond(201, aGarage({ workshop: { queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob()] } })),
+      'POST /api/v1/garage/jobs': () => respond(201, aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob()] } })),
       'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }),
     })
     const store = useGarageStore()
@@ -194,7 +194,7 @@ describe('garage store', () => {
   describe('cancelling a job', () => {
     const takeOff = aJob({ id: 1, kind: 'unmount', part: aPart({ id: 11, slot: 'tires', mounted: true, car_id: 5 }) })
     const putOn = aJob({ id: 2, status: 'queued', part: aPart({ id: 21, slot: 'tires', name: 'Street tires T2' }) })
-    const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+    const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
 
     it('cancels on the server, takes the garage from the answer and asks for the run again', async () => {
       const calls = serveApi(fetchMock, {

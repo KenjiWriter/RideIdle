@@ -7,6 +7,7 @@ import type { CarStatKey } from '@/api/types'
 import AccountData from '@/components/AccountData.vue'
 import AwaySummary from '@/components/AwaySummary.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
+import GarageTabs from '@/components/GarageTabs.vue'
 import GameShell from '@/components/GameShell.vue'
 import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
 import LinkAccountDialog from '@/components/LinkAccountDialog.vue'
@@ -176,6 +177,8 @@ async function useCode(): Promise<void> {
     <p class="sub" data-test="welcome">
       {{ session.me ? t('garage.welcome', { name: session.me.name }) : t('common.loading') }}
     </p>
+
+    <GarageTabs />
 
     <p v-if="rewardMessage" class="card card-hi text-sm" role="status" data-test="tutorial-reward">{{ rewardMessage }}</p>
     <p v-if="levelUpMessage" class="card card-hi text-sm" role="status" data-test="level-up">{{ levelUpMessage }}</p>

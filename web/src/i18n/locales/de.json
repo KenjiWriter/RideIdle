@@ -377,7 +377,8 @@
     "cancelConfirm": "Ja, abbrechen",
     "cancelKeep": "Behalten",
     "cancelled": "Auftrag abgebrochen.",
-    "cancelledWith": "Auftrag abgebrochen, und der Einbau von {part} entfällt damit."
+    "cancelledWith": "Auftrag abgebrochen, und der Einbau von {part} entfällt damit.",
+    "city": "Werkstatt in {city}"
   },
   "hud": {
     "level": "LV",
@@ -475,7 +476,7 @@
     "label": "Karte der Städte",
     "loadError": "Die Karte konnte nicht geladen werden.",
     "noCar": "Wähle zuerst ein Auto, dann kannst du losfahren.",
-    "here": "Du bist hier",
+    "here": "Dein Auto steht hier",
     "target": "Ziel",
     "onTheWay": "Unterwegs: {from} → {to}",
     "eta": "in {time}",
@@ -493,6 +494,43 @@
     },
     "lit": "Beleuchtet",
     "unlit": "Ohne Licht",
-    "node": "{name}, Spielerstufe {level}"
+    "node": "{name}, Spielerstufe {level}",
+    "garage": "Garage: {used} / {capacity} Plätze",
+    "noGarage": "Du hast hier keine Garage.",
+    "buyGarage": "Garage kaufen · {price}",
+    "blockedNoGarage": "Du hast keine Garage in {city}. Kaufe dort zuerst eine, dann kann das Auto losfahren.",
+    "blockedFull": "Die Garage in {city} ist voll."
+  },
+  "fleet": {
+    "tabs": "Bereiche der Garage",
+    "tabCar": "Auto",
+    "tabFleet": "Flotte",
+    "title": "Flotte",
+    "summary": "Autos: {cars} · Garagen: {garages}",
+    "loadError": "Die Flotte konnte nicht geladen werden.",
+    "selected": "Gewählt",
+    "play": "Mit diesem Auto fahren",
+    "chosen": "Du fährst jetzt {car}.",
+    "places": "{used} / {capacity} Plätze",
+    "fuel": "{fuel} / {tank} l",
+    "laps": "Runden: {count}",
+    "onTheRoad": "Unterwegs: {from} → {to}, Ankunft in {time}",
+    "free": "Freie Plätze: {count}",
+    "garagesToBuy": "Garagen zu kaufen",
+    "garageIn": "Garage in {city}",
+    "garagePlaces": "Plätze: {capacity}",
+    "garageLocked": "Erfordert Spielerstufe {required}.",
+    "buyGarage": "Kaufen · {price}",
+    "garageBought": "Du hast eine Garage in {city} gekauft.",
+    "yard": "Schrottplatz",
+    "target": "In die Garage in",
+    "noRoom": "Keine Garage hat einen freien Platz. Kaufe zuerst eine Garage in einer anderen Stadt.",
+    "buyWreck": "Kaufen · {price}",
+    "carBought": "{car} steht in der Garage in {city}.",
+    "class": {
+      "hatchback": "Kleinwagen",
+      "muscle": "Muscle Car",
+      "pickup": "Pick-up"
+    }
   }
 }

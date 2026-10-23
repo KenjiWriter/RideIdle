@@ -52,7 +52,7 @@ export function aGarage(data: Partial<GarageResponse['data']> = {}, nowMs = NOW)
     data: {
       car: aCar(),
       inventory: [],
-      workshop: { queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [] },
+      workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [] },
       ...data,
     },
     now_ms: nowMs,

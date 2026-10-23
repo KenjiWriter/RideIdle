@@ -1,11 +1,12 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { MapCity, MapResponse } from '@/api/types'
+import type { MapCity, MapResponse, Run, RunResponse } from '@/api/types'
 import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { mountView } from '@/test/mountView'
+import { liveFields } from '@/test/runFixtures'
 
 import MapView from './MapView.vue'
 
@@ -14,12 +15,34 @@ const fetchMock = vi.fn()
 const serve = (routes: Record<string, () => Response | Promise<Response>>) => serveApi(fetchMock, routes)
 const noRun = () => respond(404, { message: 'No run', code: 'no_run' })
 
+function aRunResponse(cashCents = 1_000_000): RunResponse {
+  const run: Run = {
+    id: 7,
+    car: { slug: 'rdzak-gt-4', name: 'Rdzak GT-4' },
+    track: { slug: 'zlomowo-street', name: 'Złomowo Street Sprint' },
+    status: 'running',
+    stop_reason: null,
+    laps_done: 0,
+    fuel_ml: 45_000,
+    tank_ml: 45_000,
+    cursor_ms: NOW,
+    state_version: 0,
+    prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
+    lap: { ms: { dry: 75_000 }, cash_cents: { dry: 1_550 }, xp: { dry: 25 }, fuel_ml: 1_500, car_xp: 10, night_ppm: 1_000_000 },
+    server_time_ms: NOW,
+    ...liveFields(NOW),
+  }
+
+  return { data: run, wallet: { cash_cents: cashCents, xp: 0 }, settlements: [] }
+}
+
 function aCity(overrides: Partial<MapCity> & Pick<MapCity, 'slug' | 'name' | 'x' | 'y'>): MapCity {
   return {
     home: false,
     here: false,
     level_required: 3,
     open: true,
+    garage: { owned: true, capacity: 3, used: 0, free: 3, price_cents: null },
     track: { slug: `${overrides.slug}-track`, name: `${overrides.name} Track`, surface: 'gravel', lit: false, base_lap_ms: 95_000, demand: { accel: 5, grip: 25, handling: 25, braking: 10, clearance: 35 } },
     fit_percent: 52,
     route: { km: 38, ms: 1_563_429, fuel_ml: 2_280 },
@@ -33,9 +56,9 @@ function aMap(overrides: Partial<MapResponse['data']> = {}, nowMs = NOW): MapRes
       here: 'zlomowo',
       level: 3,
       cities: [
-        aCity({ slug: 'zlomowo', name: 'Złomowo', x: 78, y: 290, home: true, here: true, level_required: 1, track: { slug: 'zlomowo-street', name: 'Złomowo Street Sprint', surface: 'asphalt', lit: true, base_lap_ms: 75_000, demand: { accel: 20, top_speed: 15, grip: 25, handling: 25, braking: 15 } }, fit_percent: 100, route: null }),
+        aCity({ slug: 'zlomowo', name: 'Złomowo', x: 78, y: 290, home: true, here: true, level_required: 1, garage: { owned: true, capacity: 3, used: 1, free: 2, price_cents: null }, track: { slug: 'zlomowo-street', name: 'Złomowo Street Sprint', surface: 'asphalt', lit: true, base_lap_ms: 75_000, demand: { accel: 20, top_speed: 15, grip: 25, handling: 25, braking: 15 } }, fit_percent: 100, route: null }),
         aCity({ slug: 'kruszyn', name: 'Kruszyn', x: 196, y: 185 }),
-        aCity({ slug: 'autodrom', name: 'Autodrome', x: 90, y: 110, level_required: 12, open: false, route: { km: 68, ms: 2_800_000, fuel_ml: 4_080 } }),
+        aCity({ slug: 'autodrom', name: 'Autodrome', x: 90, y: 110, level_required: 12, open: false, garage: { owned: false, capacity: 3, used: 0, free: 0, price_cents: 500_000 }, route: { km: 68, ms: 2_800_000, fuel_ml: 4_080 } }),
       ],
       roads: [
         { from: 'zlomowo', to: 'kruszyn', km: 38 },
@@ -73,9 +96,9 @@ describe('MapView', () => {
     expect(wrapper.get('h1').text()).toBe('Map')
     expect(wrapper.findAll('[data-test="road"]')).toHaveLength(2)
     expect(wrapper.get('[data-test="city-kruszyn"]').attributes('aria-label')).toBe('Kruszyn, player level 3')
-    expect(wrapper.get('[data-test="city-zlomowo"]').attributes('aria-label')).toBe('Złomowo, player level 1. You are here')
+    expect(wrapper.get('[data-test="city-zlomowo"]').attributes('aria-label')).toBe('Złomowo, player level 1. Your car is here')
     expect(wrapper.get('[data-test="sheet-name"]').text()).toBe('Złomowo')
-    expect(wrapper.get('[data-test="sheet-tag"]').text()).toBe('You are here')
+    expect(wrapper.get('[data-test="sheet-tag"]').text()).toBe('Your car is here')
     // The car is in this city already: there is no button to go there.
     expect(wrapper.find('[data-test="go"]').exists()).toBe(false)
   })
@@ -97,6 +120,77 @@ describe('MapView', () => {
     expect(wrapper.get('[data-test="fit"]').text()).toContain('52% · Change the tires or the car')
     expect(wrapper.get('[data-test="route"]').text()).toBe('38 km · 26 min 03 s · 2.3 l of fuel')
     expect(wrapper.get('[data-test="go"]').attributes('disabled')).toBeUndefined()
+  })
+
+  it('shows how full the garage of the city is, and that there is none where the driver has none', async () => {
+    const cities = aMap().data.cities.map((city) => (city.slug === 'kruszyn' ? { ...city, garage: { owned: false, capacity: 3, used: 0, free: 0, price_cents: 500_000 } } : city))
+    serve({ 'GET /api/v1/map': () => respond(200, aMap({ cities })), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(MapView, '/map')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="garage"]').text()).toBe('Garage: 1 / 3 places')
+    expect(wrapper.find('[data-test="buy-garage"]').exists()).toBe(false)
+
+    await wrapper.get('[data-test="city-kruszyn"]').trigger('click')
+
+    expect(wrapper.get('[data-test="garage"]').text()).toContain('You have no garage here.')
+    expect(wrapper.get('[data-test="buy-garage"]').text()).toBe('Buy a garage · $5,000')
+  })
+
+  it('does not let the car go where there is no garage or no free place, and says why', async () => {
+    const cities = aMap().data.cities.map((city) =>
+      city.slug === 'kruszyn' ? { ...city, garage: { owned: false, capacity: 3, used: 0, free: 0, price_cents: 500_000 } } : city.slug === 'autodrom' ? { ...city, open: true, garage: { owned: true, capacity: 3, used: 3, free: 0, price_cents: null } } : city,
+    )
+    serve({ 'GET /api/v1/map': () => respond(200, aMap({ cities })), 'GET /api/v1/runs/current': () => respond(200, aRunResponse()) })
+
+    const { wrapper } = await mountView(MapView, '/map')
+    await flushPromises()
+    await wrapper.get('[data-test="city-kruszyn"]').trigger('click')
+
+    expect(wrapper.get('[data-test="reason"]').text()).toBe('You have no garage in Kruszyn. Buy one there first, then the car can go.')
+    expect(wrapper.get('[data-test="go"]').attributes('disabled')).toBeDefined()
+
+    await wrapper.get('[data-test="city-autodrom"]').trigger('click')
+
+    expect(wrapper.get('[data-test="reason"]').text()).toBe('The garage in Autodrome is full.')
+    expect(wrapper.get('[data-test="go"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('buys the garage of a city from its sheet, and then the car may go there', async () => {
+    let bought = false
+    const kruszyn = (garage: MapCity['garage']) => aMap().data.cities.map((city) => (city.slug === 'kruszyn' ? { ...city, garage } : city))
+    const calls = serve({
+      'GET /api/v1/map': () => respond(200, aMap({ cities: kruszyn(bought ? { owned: true, capacity: 3, used: 0, free: 3, price_cents: null } : { owned: false, capacity: 3, used: 0, free: 0, price_cents: 500_000 }) })),
+      'POST /api/v1/garages': () => {
+        bought = true
+
+        return respond(201, { data: { selected: 5, cars: [], garages: [], yard: [] }, wallet: { cash_cents: 500_000, xp: 0 }, now_ms: NOW })
+      },
+      'GET /api/v1/runs/current': () => respond(200, aRunResponse()),
+    })
+
+    const { wrapper } = await mountView(MapView, '/map')
+    await flushPromises()
+    await wrapper.get('[data-test="city-kruszyn"]').trigger('click')
+    await wrapper.get('[data-test="buy-garage"]').trigger('click')
+    await flushPromises()
+
+    expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ city: 'kruszyn' })
+    expect(wrapper.get('[data-test="started"]').text()).toBe('You bought a garage in Kruszyn.')
+    expect(wrapper.get('[data-test="garage"]').text()).toBe('Garage: 0 / 3 places')
+    expect(wrapper.get('[data-test="go"]').attributes('disabled')).toBeUndefined()
+  })
+
+  it('does not offer a garage the driver cannot pay for', async () => {
+    const cities = aMap().data.cities.map((city) => (city.slug === 'kruszyn' ? { ...city, garage: { owned: false, capacity: 3, used: 0, free: 0, price_cents: 500_000 } } : city))
+    serve({ 'GET /api/v1/map': () => respond(200, aMap({ cities })), 'GET /api/v1/runs/current': () => respond(200, aRunResponse(120_000)) })
+
+    const { wrapper } = await mountView(MapView, '/map')
+    await flushPromises()
+    await wrapper.get('[data-test="city-kruszyn"]').trigger('click')
+
+    expect(wrapper.get('[data-test="buy-garage"]').attributes('disabled')).toBeDefined()
   })
 
   it('says why a city is closed, with the level it takes, and does not let the car go', async () => {
@@ -172,7 +266,7 @@ describe('MapView', () => {
 
     expect(asked).toBe(2)
     expect(wrapper.find('[data-test="travel-banner"]').exists()).toBe(false)
-    expect(wrapper.get('[data-test="city-kruszyn"]').attributes('aria-label')).toContain('You are here')
+    expect(wrapper.get('[data-test="city-kruszyn"]').attributes('aria-label')).toContain('Your car is here')
   })
 
   it('shows what the server says when it refuses, and asks for the map again', async () => {

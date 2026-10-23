@@ -320,7 +320,8 @@ export interface GarageResponse {
   data: {
     car: GarageCar | null
     inventory: OwnedPart[]
-    workshop: { queue_max: number; mechanic: { level: number; time_cut_ppm: number }; jobs: WorkshopJob[] }
+    /** The workshop of the city the car stands in: its queue, and the mechanic who works the cars of the driver there one after another. */
+    workshop: { city: { slug: string; name: string }; queue_max: number; mechanic: { level: number; time_cut_ppm: number }; jobs: WorkshopJob[] }
   }
   now_ms: number
 }
@@ -361,6 +362,17 @@ export interface TutorialResponse {
   }
 }
 
+/** What a city holds for the driver: whether they have a garage there, how full it is, and what one costs. */
+export interface CityGarageState {
+  owned: boolean
+  capacity: number
+  /** The cars that stand there, and the ones on their way: a car on the road keeps its place at the destination. */
+  used: number
+  free: number
+  /** What a garage costs, null when the driver has it. */
+  price_cents: number | null
+}
+
 /** A city of the map: where it is, what its track asks of a car, and what the way there costs from the city the car is in. */
 export interface MapCity {
   slug: string
@@ -372,6 +384,7 @@ export interface MapCity {
   here: boolean
   level_required: number
   open: boolean
+  garage: CityGarageState
   track: { slug: string; name: string; surface: 'asphalt' | 'gravel'; lit: boolean; base_lap_ms: number; demand: Record<string, number> }
   /** How well the car, with its parts, runs the track in the dry: 100 is the lap of a car that matches what the track asks. Null without a car. */
   fit_percent: number | null
@@ -389,4 +402,43 @@ export interface MapResponse {
     travel: { from: string; to: string; distance_km: number; start_ms: number; arrive_ms: number } | null
   }
   now_ms: number
+}
+
+/** A car of the driver as the list of the fleet has it: where it stands, and what its run is doing. */
+export interface FleetCar {
+  id: number
+  level: number
+  /** The car the driver plays. */
+  selected: boolean
+  vehicle: { slug: string; name: string }
+  city: { slug: string; name: string }
+  run: { id: number; status: RunStatus; stop_reason: StopReason | null; laps_done: number; fuel_ml: number; tank_ml: number; track: string } | null
+  /** The journey the car is on, if it is. */
+  travel: { to: string; to_name: string; arrive_ms: number } | null
+}
+
+/** A garage the driver can have in a city, with how full it is. */
+export interface FleetGarage extends CityGarageState {
+  city: string
+  name: string
+  level_required: number
+  /** The level of the driver opens the city, so a garage can be bought there. */
+  open: boolean
+}
+
+/** A wreck the yard sells. */
+export interface YardCar {
+  slug: string
+  name: string
+  class: string
+  price_cents: number
+}
+
+/** GET /api/v1/cars, and the answer of the calls that change the fleet. `repeated` says that a purchase came a second time and bought nothing. */
+export interface FleetResponse {
+  data: { selected: number | null; cars: FleetCar[]; garages: FleetGarage[]; yard: YardCar[] }
+  wallet: Wallet
+  now_ms: number
+  repeated?: boolean
+  bought?: number | null
 }

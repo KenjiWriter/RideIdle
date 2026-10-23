@@ -358,6 +358,31 @@ body {
     filter: drop-shadow(0 0 6px rgba(255, 178, 36, 0.75));
   }
 
+  /* ---------- a row of tabs inside a screen (Auto, Flota): pressed keys in a recess ---------- */
+  .seg {
+    @apply grid gap-1 p-1;
+    grid-template-columns: repeat(2, 1fr);
+    background: #090b0f;
+    border: 1px solid #333b49;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 4px #000;
+  }
+
+  .seg a {
+    @apply flex min-h-11 items-center justify-center text-[13px] font-semibold no-underline;
+    background: linear-gradient(#272e3a, #181d25);
+    border: 1px solid #3a4252;
+    border-bottom-width: 3px;
+    border-radius: 6px;
+    color: #aeb5c2;
+  }
+
+  .seg a.on {
+    background: linear-gradient(#ffd35e, #f5a010);
+    border-color: #a35f00;
+    color: #2a1800;
+  }
+
   /* ---------- the board of a race: a row for each racer ---------- */
   .lb {
     @apply flex flex-col overflow-hidden;

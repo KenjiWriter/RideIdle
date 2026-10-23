@@ -187,6 +187,7 @@ async function cancel(jobId: number): Promise<void> {
   <GameShell>
     <header class="flex flex-col gap-1">
       <h1 class="ttl">{{ t('workshop.title') }}</h1>
+      <p v-if="store.garage" class="sub" data-test="city">{{ t('workshop.city', { city: store.garage.workshop.city.name }) }}</p>
       <p v-if="store.garage" class="sub" data-test="mechanic">
         {{ t('workshop.mechanic', { level: store.garage.workshop.mechanic.level, cut }) }}
       </p>

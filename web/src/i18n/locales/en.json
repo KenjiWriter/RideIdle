@@ -377,7 +377,8 @@
     "cancelConfirm": "Yes, cancel",
     "cancelKeep": "Keep it",
     "cancelled": "Job cancelled.",
-    "cancelledWith": "Job cancelled, and putting on {part} with it."
+    "cancelledWith": "Job cancelled, and putting on {part} with it.",
+    "city": "Workshop in {city}"
   },
   "hud": {
     "level": "LV",
@@ -475,7 +476,7 @@
     "label": "Map of the cities",
     "loadError": "The map could not be loaded.",
     "noCar": "Choose a car first, then you can hit the road.",
-    "here": "You are here",
+    "here": "Your car is here",
     "target": "Destination",
     "onTheWay": "On the road: {from} → {to}",
     "eta": "in {time}",
@@ -493,6 +494,43 @@
     },
     "lit": "Lit",
     "unlit": "No lights",
-    "node": "{name}, player level {level}"
+    "node": "{name}, player level {level}",
+    "garage": "Garage: {used} / {capacity} places",
+    "noGarage": "You have no garage here.",
+    "buyGarage": "Buy a garage · {price}",
+    "blockedNoGarage": "You have no garage in {city}. Buy one there first, then the car can go.",
+    "blockedFull": "The garage in {city} is full."
+  },
+  "fleet": {
+    "tabs": "Garage sections",
+    "tabCar": "Car",
+    "tabFleet": "Fleet",
+    "title": "Fleet",
+    "summary": "Cars: {cars} · Garages: {garages}",
+    "loadError": "The fleet could not be loaded.",
+    "selected": "Selected",
+    "play": "Play this car",
+    "chosen": "You play {car} now.",
+    "places": "{used} / {capacity} places",
+    "fuel": "{fuel} / {tank} l",
+    "laps": "Laps: {count}",
+    "onTheRoad": "On the road: {from} → {to}, arrives in {time}",
+    "free": "Free places: {count}",
+    "garagesToBuy": "Garages to buy",
+    "garageIn": "Garage in {city}",
+    "garagePlaces": "Places: {capacity}",
+    "garageLocked": "Requires player level {required}.",
+    "buyGarage": "Buy · {price}",
+    "garageBought": "You bought a garage in {city}.",
+    "yard": "Wreck yard",
+    "target": "Into the garage in",
+    "noRoom": "No garage has a free place. Buy a garage in another city first.",
+    "buyWreck": "Buy · {price}",
+    "carBought": "{car} is in the garage in {city}.",
+    "class": {
+      "hatchback": "Hatchback",
+      "muscle": "Muscle car",
+      "pickup": "Pickup"
+    }
   }
 }

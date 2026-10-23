@@ -377,7 +377,8 @@
     "cancelConfirm": "Oui, annuler",
     "cancelKeep": "Garder",
     "cancelled": "Travail annulé.",
-    "cancelledWith": "Travail annulé, et le montage de {part} avec lui."
+    "cancelledWith": "Travail annulé, et le montage de {part} avec lui.",
+    "city": "Atelier de {city}"
   },
   "hud": {
     "level": "LV",
@@ -475,7 +476,7 @@
     "label": "Carte des villes",
     "loadError": "Impossible de charger la carte.",
     "noCar": "Choisissez d’abord une voiture, puis prenez la route.",
-    "here": "Vous êtes ici",
+    "here": "Votre voiture est ici",
     "target": "Destination",
     "onTheWay": "En route · {from} → {to}",
     "eta": "dans {time}",
@@ -493,6 +494,43 @@
     },
     "lit": "Éclairée",
     "unlit": "Sans éclairage",
-    "node": "{name}, niveau de joueur {level}"
+    "node": "{name}, niveau de joueur {level}",
+    "garage": "Garage : {used} / {capacity} places",
+    "noGarage": "Vous n’avez pas de garage ici.",
+    "buyGarage": "Acheter un garage · {price}",
+    "blockedNoGarage": "Vous n’avez pas de garage à {city}. Achetez-en un là-bas d’abord, puis la voiture pourra partir.",
+    "blockedFull": "Le garage de {city} est plein."
+  },
+  "fleet": {
+    "tabs": "Sections du garage",
+    "tabCar": "Voiture",
+    "tabFleet": "Flotte",
+    "title": "Flotte",
+    "summary": "Voitures : {cars} · Garages : {garages}",
+    "loadError": "Impossible de charger la flotte.",
+    "selected": "Choisie",
+    "play": "Conduire cette voiture",
+    "chosen": "Vous jouez maintenant {car}.",
+    "places": "{used} / {capacity} places",
+    "fuel": "{fuel} / {tank} l",
+    "laps": "Tours : {count}",
+    "onTheRoad": "En route · {from} → {to}, arrivée dans {time}",
+    "free": "Places libres : {count}",
+    "garagesToBuy": "Garages à acheter",
+    "garageIn": "Garage à {city}",
+    "garagePlaces": "Places : {capacity}",
+    "garageLocked": "Niveau de joueur {required} requis.",
+    "buyGarage": "Acheter · {price}",
+    "garageBought": "Vous avez acheté un garage à {city}.",
+    "yard": "Casse",
+    "target": "Dans le garage de",
+    "noRoom": "Aucun garage n’a de place libre. Achetez d’abord un garage dans une autre ville.",
+    "buyWreck": "Acheter · {price}",
+    "carBought": "{car} est dans le garage de {city}.",
+    "class": {
+      "hatchback": "Compacte",
+      "muscle": "Muscle car",
+      "pickup": "Pick-up"
+    }
   }
 }
