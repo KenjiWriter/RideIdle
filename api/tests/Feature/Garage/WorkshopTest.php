@@ -276,7 +276,7 @@ describe('what the workshop refuses', function () {
             ->assertStatus(422)
             ->assertJsonPath('code', 'car_level_required')
             ->assertJsonPath('details', ['required' => 3, 'current' => 2])
-            ->assertJsonPath('message', 'Requires car level 3 (you have 2).');
+            ->assertJsonPath('message', 'Requires car level 3 (you have 2). You get XP by driving this car.');
 
         expect(WorkshopJob::query()->count())->toBe(0);
     });

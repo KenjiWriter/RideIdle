@@ -7,7 +7,7 @@ return [
         'run_exists' => 'Vous avez déjà une voiture en piste.',
         'no_run' => 'Vous n’avez pas encore de voiture en piste.',
         'player_level_required' => 'Niveau de joueur :required requis (vous avez :current).',
-        'car_level_required' => 'Niveau de voiture :required requis (vous avez :current).',
+        'car_level_required' => 'Niveau de voiture :required requis (vous avez :current). Vous gagnez de l’XP en conduisant cette voiture.',
         'workshop_level_required' => 'Niveau d’atelier :required requis.',
         'car_locked' => 'Cette voiture est verrouillée dans un tournoi et ne peut pas être modifiée.',
         'part_not_for_sale' => 'Cette pièce n’est pas en vente.',

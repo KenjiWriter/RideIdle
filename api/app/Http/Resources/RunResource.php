@@ -59,6 +59,8 @@ final class RunResource extends JsonResource
                 'cash_cents' => $this->config['lap_cash_cents'],
                 'xp' => $this->config['lap_xp'],
                 'fuel_ml' => $this->config['fuel_per_lap_ml'],
+                // What a lap gives the car, which levels on its laps: the same in every weather.
+                'car_xp' => app(Rules::class)->carXpPerLap(),
             ],
             // The weather of the region now and in the next 22.5 minutes: it is drawn from the seed of the climate, so it can be told ahead.
             'weather' => $this->weather($config, $nowMs),

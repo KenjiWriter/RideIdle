@@ -41,6 +41,7 @@ final class RunService
         private readonly Settler $settler = new Settler,
         private readonly RunFreezer $freezer = new RunFreezer,
         private readonly ?Rules $rules = null,
+        private readonly ?CarProgress $progress = null,
     ) {}
 
     /** Milliseconds since the Unix epoch from the (testable) application clock. */
@@ -58,10 +59,13 @@ final class RunService
         $seed = bin2hex(random_bytes(16));
         $frozen = $this->freezer->freeze($inputs, $seed, 0);
 
+        $rules = $this->rules ?? Rules::fromConfig();
+
         $car ??= Car::query()->create([
             'user_id' => $userId,
             'vehicle_slug' => $carSlug,
-            'level' => ($this->rules ?? Rules::fromConfig())->carStartLevel(),
+            'level' => $rules->carStartLevel(),
+            'xp' => $rules->carXpToReach($rules->carStartLevel()),
         ]);
 
         return RaceRun::query()->create([
@@ -417,6 +421,13 @@ final class RunService
             'stop_reason' => $stopReason?->value ?? $run->stop_reason,
             'state_version' => $run->state_version + 1,
         ])->save();
+
+        // The car levels on the laps it drives, so the experience goes with the settlement of them.
+        if ($result->laps > 0 && $run->car_id !== null) {
+            $rules = $this->rules ?? Rules::fromConfig();
+
+            ($this->progress ?? new CarProgress($rules))->award($run->car_id, $result->laps * $rules->carXpPerLap());
+        }
 
         return new Settled($result, $settlement);
     }

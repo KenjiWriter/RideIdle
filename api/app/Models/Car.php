@@ -24,6 +24,7 @@ class Car extends Model
         return [
             'user_id' => 'integer',
             'level' => 'integer',
+            'xp' => 'integer',
         ];
     }
 

@@ -7,7 +7,7 @@ return [
         'run_exists' => 'Du hast bereits ein Auto auf der Strecke.',
         'no_run' => 'Du hast noch kein Auto auf der Strecke.',
         'player_level_required' => 'Erfordert Spielerstufe :required (du hast :current).',
-        'car_level_required' => 'Erfordert Autostufe :required (du hast :current).',
+        'car_level_required' => 'Erfordert Autostufe :required (du hast :current). XP bekommst du, indem du dieses Auto fährst.',
         'workshop_level_required' => 'Erfordert Werkstattstufe :required.',
         'car_locked' => 'Dieses Auto ist in einem Turnier gesperrt und kann nicht geändert werden.',
         'part_not_for_sale' => 'Dieses Teil ist nicht im Angebot.',

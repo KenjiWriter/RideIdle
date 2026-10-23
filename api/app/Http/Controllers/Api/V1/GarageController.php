@@ -97,6 +97,14 @@ final class GarageController extends Controller
         return [
             'id' => $car->id,
             'level' => $car->level,
+            // The experience of the car, and where its level begins and ends: the bar of the garage is `total` between the two.
+            'xp' => [
+                'total' => $car->xp,
+                'level_start' => $this->rules->carXpToReach($car->level),
+                'next_level_at' => $car->level >= $this->rules->carMaxLevel() ? null : $this->rules->carXpToReach($car->level + 1),
+            ],
+            // What the next level that opens a tier of parts opens, so that a locked part can say what it waits for.
+            'tier_unlock' => $this->tierUnlock($car->level),
             'vehicle' => [
                 'slug' => $car->vehicle_slug,
                 'name' => $vehicle !== null ? I18nText::from($vehicle['name'])->for() : $car->vehicle_slug,
@@ -117,6 +125,20 @@ final class GarageController extends Controller
             'lap_ms' => $run?->config['lap_ms'] ?? null,
             'run' => $run === null ? null : ['id' => $run->id, 'status' => $run->status, 'stop_reason' => $run->stop_reason],
         ];
+    }
+
+    /**
+     * The next tier of parts the car does not have yet, and the level it takes to mount it, or null when the highest
+     * level of a car does not reach another tier.
+     *
+     * @return array{tier: int, level: int}|null
+     */
+    private function tierUnlock(int $carLevel): ?array
+    {
+        $tier = $this->rules->maxMountableTier($carLevel) + 1;
+        $level = $this->rules->requiredCarLevel($tier);
+
+        return $level <= $this->rules->carMaxLevel() ? ['tier' => $tier, 'level' => $level] : null;
     }
 
     /**
