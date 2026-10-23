@@ -136,6 +136,7 @@ check_system() {
     [[ $EUID -eq 0 ]] || fail "Run this as root (sudo bash provision.sh)."
     [[ -n "$DOMAIN" ]] || fail "Set DOMAIN, for example DOMAIN=raceidle.cerasusdigital.pl"
     [[ -n "$ADMIN_EMAIL" ]] || fail "Set ADMIN_EMAIL, the address Let's Encrypt writes to about the certificate."
+    [[ "$ADMIN_EMAIL" =~ ^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$ ]] || fail "ADMIN_EMAIL does not look like an e-mail address: $ADMIN_EMAIL (Let's Encrypt would refuse it, after the server was changed)."
     [[ "$DOMAIN" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$ ]] || fail "DOMAIN does not look like a domain: $DOMAIN"
 
     [[ -r /etc/os-release ]] || fail "This is not a system I know."
