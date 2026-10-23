@@ -14,7 +14,11 @@ const props = defineProps<{ run: Run }>()
 const { t } = useI18n()
 const { number } = useFormat()
 
+/** The tank is drawn in cells, as in the design. */
+const CELLS = 10
+
 const percent = computed(() => (props.run.tank_ml ? Math.min(100, Math.round((props.run.fuel_ml / props.run.tank_ml) * 100)) : 0))
+const cells = computed(() => Math.ceil((percent.value / 100) * CELLS))
 const laps = computed(() => lapsOfFuel(props.run))
 const time = computed(() => formatDuration(laps.value * baseLapMs(props.run)))
 
@@ -26,21 +30,22 @@ function liters(ml: number): string {
 <template>
   <section class="card flex flex-col gap-3" aria-labelledby="fuel-title" data-test="fuel">
     <div class="flex items-baseline justify-between gap-3">
-      <h2 id="fuel-title" class="text-xl font-bold">{{ t('run.fuel.title') }}</h2>
+      <h2 id="fuel-title" class="ttl text-2xl">{{ t('run.fuel.title') }}</h2>
       <span class="font-semibold" data-test="fuel-level">
         {{ liters(run.fuel_ml) }}<template v-if="run.tank_ml"> / {{ liters(run.tank_ml) }}</template>
       </span>
     </div>
 
     <div
-      class="h-3 overflow-hidden rounded-full bg-surface-2"
+      class="fuelbar"
       role="progressbar"
       aria-valuemin="0"
       aria-valuemax="100"
       :aria-valuenow="percent"
       :aria-labelledby="'fuel-title'"
+      data-test="fuel-bar"
     >
-      <div class="h-full rounded-full" :class="percent < 15 ? 'bg-danger' : 'bg-amber'" :style="{ width: `${percent}%` }" />
+      <i v-for="cell in CELLS" :key="cell" :class="cell <= cells ? (percent < 15 ? 'lo' : 'on') : ''" />
     </div>
 
     <p class="text-sm text-muted" data-test="fuel-range">

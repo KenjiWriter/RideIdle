@@ -1,16 +1,31 @@
 @import 'tailwindcss';
+@import './assets/fonts/fonts.css';
 
+/*
+ * The look of the game, taken from the design canvas (ride.css, "skórka gry"): dark steel panels, amber for what can be
+ * pressed, cyan for what is in progress, Barlow Condensed for titles and buttons, JetBrains Mono for numbers.
+ */
 @theme {
   --color-bg: #0e1013;
   --color-surface: #151920;
   --color-surface-2: #1c2129;
-  --color-line: #262c36;
+  --color-surface-3: #262c36;
+  --color-line: #2c323d;
+  --color-line-2: #3b4252;
   --color-ink: #eceef2;
-  --color-muted: #939bab;
+  --color-muted: #b3bac7;
+  --color-faint: #939bab;
   --color-amber: #ffb224;
-  --color-amber-ink: #2a1800;
+  --color-amber-ink: #1a1203;
+  --color-amber-bg: #1b1509;
   --color-cyan: #42c9e8;
-  --color-danger: #ff6b6b;
+  --color-cyan-bg: #0a1e25;
+  --color-ok: #6ad487;
+  --color-danger: #ff7a6b;
+
+  --font-display: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
+  --font-sans: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 }
 
 html,
@@ -21,35 +36,316 @@ body,
 
 body {
   margin: 0;
-  background: var(--color-bg);
   color: var(--color-ink);
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
+  line-height: 1.55;
+  text-wrap: pretty;
+  background:
+    radial-gradient(120% 55% at 50% -6%, rgba(255, 178, 36, 0.14), transparent 62%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 7px), #0b0d11;
+  background-attachment: fixed;
 }
 
 @layer components {
+  /* ---------- buttons: a beveled plate, pressed from above ---------- */
   .btn {
-    @apply inline-flex min-h-12 items-center justify-center rounded-lg px-5 text-base font-bold no-underline;
-    @apply cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 px-5 font-display text-xl font-bold uppercase italic no-underline transition;
+    letter-spacing: 0.06em;
+    border: 0;
+    border-bottom: 4px solid #a35f00;
+    border-radius: 4px 4px 0 4px;
+    clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  }
+
+  .btn:disabled {
+    @apply cursor-not-allowed opacity-60;
+    filter: grayscale(0.6);
   }
 
   .btn-primary {
-    @apply bg-amber text-amber-ink hover:brightness-110;
+    background: linear-gradient(#ffd35e, #f5a010);
+    color: #2a1800;
+  }
+
+  .btn-primary:not(:disabled):hover {
+    @apply brightness-110;
   }
 
   .btn-secondary {
-    @apply border border-line bg-surface text-ink hover:border-amber;
+    background: linear-gradient(#2b323e, #1a1f27);
+    color: var(--color-ink);
+    border: 1px solid #3f495a;
+    border-bottom: 4px solid #07080b;
+    text-shadow: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .btn-secondary:not(:disabled):hover {
+    border-color: var(--color-amber);
+    border-bottom-color: #07080b;
   }
 
   .btn-danger {
-    @apply border border-danger bg-surface text-danger hover:bg-danger hover:text-bg;
+    background: linear-gradient(#2b323e, #1a1f27);
+    color: var(--color-danger);
+    border: 1px solid #7a3a34;
+    border-bottom: 4px solid #07080b;
+    text-shadow: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+
+  .btn-danger:not(:disabled):hover {
+    background: var(--color-danger);
+    color: var(--color-bg);
+  }
+
+  /** The smaller button, for a row of a list. */
+  .btn-sm {
+    @apply min-h-11 px-3 text-lg;
+    letter-spacing: 0.04em;
   }
 
   .field {
-    @apply min-h-12 w-full rounded-lg border border-line bg-surface px-3 text-base text-ink;
-    @apply placeholder:text-muted focus:border-amber focus:outline-none;
+    @apply min-h-12 w-full rounded-lg border border-line-2 bg-bg px-3 text-base text-ink;
+    @apply placeholder:text-faint focus:border-amber focus:outline-none;
   }
 
+  /* ---------- panels ---------- */
   .card {
-    @apply rounded-xl border border-line bg-surface p-5;
+    @apply p-5;
+    background: linear-gradient(#1c212b, #12161c);
+    border: 1px solid #333b49;
+    border-radius: 8px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 3px 0 #06070a;
+  }
+
+  .card-hi {
+    border-color: #b77a10;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 200, 80, 0.25),
+      0 0 0 1px rgba(255, 178, 36, 0.25),
+      0 3px 0 #06070a;
+  }
+
+  .card-cy {
+    border-color: #1c8aa6;
+    box-shadow:
+      inset 0 1px 0 rgba(120, 220, 255, 0.18),
+      0 3px 0 #06070a;
+  }
+
+  /** The title of a screen. */
+  .ttl {
+    @apply font-display text-3xl font-bold uppercase italic text-ink;
+    line-height: 1;
+    letter-spacing: 0.03em;
+    text-shadow: 0 2px 0 #000;
+  }
+
+  /** The line under a title, and the small text of a panel. */
+  .sub {
+    @apply text-sm;
+    color: #9aa3b3;
+  }
+
+  /** A small heading in mono type, above a group. */
+  .kick {
+    @apply font-mono text-[11px] uppercase text-faint;
+    letter-spacing: 0.12em;
+  }
+
+  .mono {
+    @apply font-mono;
+  }
+
+  .tag {
+    @apply inline-flex items-center whitespace-nowrap rounded-sm border border-line-2 px-2 py-0.5 font-mono text-[11px] uppercase text-muted;
+    letter-spacing: 0.08em;
+    line-height: 1.3;
+  }
+
+  .chip {
+    @apply inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 font-mono text-[12.5px] text-ink;
+    background: linear-gradient(#242b36, #171c24);
+    border: 1px solid #3a4252;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+
+  .chip-am {
+    border-color: #b77a10;
+    color: #ffc94a;
+  }
+
+  .chip-cy {
+    border-color: #1c8aa6;
+    color: #59d4f2;
+  }
+
+  .chip-bad {
+    border-color: #a8473e;
+    color: var(--color-danger);
+  }
+
+  /* ---------- the HUD and the navigation of the game ---------- */
+  .hud {
+    @apply relative flex min-h-[68px] items-center gap-2.5 px-3.5 py-2.5;
+    background: linear-gradient(#272d39, #161a22);
+    border-bottom: 3px solid #07080b;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.12),
+      inset 0 -2px 0 #3a4252;
+  }
+
+  .lvl {
+    @apply flex h-[54px] w-[50px] flex-none flex-col items-center justify-center font-display font-bold;
+    line-height: 1;
+    clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+    background: linear-gradient(#ffd66a, #e58f00);
+    color: #2a1800;
+  }
+
+  .lvl small {
+    @apply text-[10px];
+    letter-spacing: 0.12em;
+  }
+
+  .lvl strong {
+    @apply text-[21px];
+    color: #2a1800;
+  }
+
+  /** The coin before the cash of the HUD. */
+  .chip-coin::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ffeaa6, #e39400 70%);
+    box-shadow: 0 0 0 1px #6a4300;
+  }
+
+  /** A bar with cells, for XP, fuel and the progress of a job. */
+  .bar {
+    @apply relative h-2.5 overflow-hidden;
+    background: #07080b;
+    border-radius: 2px;
+    box-shadow:
+      inset 0 1px 3px #000,
+      0 0 0 1px #2e3542;
+  }
+
+  .bar > i {
+    @apply block h-full;
+    background: linear-gradient(#ffd66e, #f29a00);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  }
+
+  .bar-cy > i {
+    background: linear-gradient(#8fe9ff, #19a8cc);
+  }
+
+  .bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, transparent 0 11px, rgba(0, 0, 0, 0.5) 11px 12px);
+    pointer-events: none;
+  }
+
+  /** The fuel of the tank, in ten cells. */
+  .fuelbar {
+    @apply flex gap-[3px];
+  }
+
+  .fuelbar > i {
+    @apply h-3 flex-1;
+    border-radius: 2px;
+    background: var(--color-surface-3);
+  }
+
+  .fuelbar > i.on {
+    background: var(--color-cyan);
+  }
+
+  .fuelbar > i.lo {
+    background: var(--color-danger);
+  }
+
+  .navb {
+    @apply sticky bottom-0 z-10 flex;
+    background: linear-gradient(#242b36, #11151b);
+    border-top: 3px solid #3a4252;
+    box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.5);
+  }
+
+  .navb a {
+    @apply flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 text-[10.5px] font-medium uppercase no-underline;
+    color: #8d96a6;
+    letter-spacing: 0.06em;
+  }
+
+  .navb a.on {
+    color: #ffc94a;
+    background: linear-gradient(#2b323f, #1a1f27);
+    box-shadow: inset 0 3px 0 #ffb224;
+  }
+
+  .navb a.on svg {
+    filter: drop-shadow(0 0 6px rgba(255, 178, 36, 0.75));
+  }
+
+  /* ---------- statistics and parts ---------- */
+  .st {
+    @apply grid min-h-[26px] items-center gap-2.5 text-[13px] text-muted;
+    grid-template-columns: 112px 1fr 84px;
+  }
+
+  .st > span:last-child {
+    @apply text-right font-mono text-xs text-ink;
+  }
+
+  .st em {
+    @apply ml-1 text-[11px] not-italic text-ok;
+  }
+
+  .st em.dn {
+    @apply text-danger;
+  }
+
+  .tile {
+    @apply flex min-h-20 flex-col gap-[3px] p-[9px_10px] text-left text-xs text-ink;
+    line-height: 1.25;
+    background: linear-gradient(#1e232c, #12161c);
+    border: 1px solid #38414f;
+    border-radius: 8px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 3px 0 #06070a;
+  }
+
+  .tile .sl {
+    @apply font-mono text-[10px] uppercase text-faint;
+    letter-spacing: 0.1em;
+  }
+
+  .tile .nm {
+    @apply text-[13px] font-semibold text-ink;
+  }
+
+  .tile.lock .nm {
+    @apply text-faint;
+  }
+
+  .tile.on {
+    border-color: #3fa55e;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 3px 0 #06070a,
+      0 0 12px rgba(106, 212, 135, 0.22);
   }
 }

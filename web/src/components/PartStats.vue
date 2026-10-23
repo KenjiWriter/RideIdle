@@ -19,7 +19,7 @@ const lines = computed(() =>
 </script>
 
 <template>
-  <ul class="flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted" data-test="part-stats">
+  <ul class="flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px] text-faint" data-test="part-stats">
     <li v-for="line in lines" :key="line">{{ line }}</li>
   </ul>
 </template>
