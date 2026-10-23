@@ -196,6 +196,55 @@ final class RunService
     }
 
     /**
+     * Tows a stopped car for a driver who cannot pay to get it going (see TowTerms). The run is settled first, so
+     * what the car earned before it stopped counts: a driver who can pay for the repair after all is not towed.
+     *
+     * The tow is free. A car that broke down is repaired as by `repair` (a new seed, so a new plan of the next
+     * breakdown), a car with a tank too empty for a lap gets the fuel of the terms, and the car drives again after
+     * the wait, which is a cursor in the future that settlement simply does not reach before its time.
+     * A car that is not stopped, or whose driver can pay, is left as it is, so asking twice tows once.
+     */
+    public function tow(int $runId, RunInputs $inputs, TowTerms $terms, ?int $nowMs = null): Towed
+    {
+        return $this->locked($runId, $nowMs, function (RaceRun $run, int $now) use ($inputs, $terms): Towed {
+            $this->settleLocked($run, $now);
+
+            if (! $terms->isDue($run, $this->ledger->balance($run->user_id))) {
+                return new Towed($run, false);
+            }
+
+            $changes = [];
+            $config = $run->config;
+
+            if ($run->stop_reason === EventType::Breakdown->value) {
+                $seed = bin2hex(random_bytes(16));
+                $frozen = $this->freezer->freeze($inputs, $seed, $run->laps_done);
+
+                $changes = [
+                    'seed' => $seed,
+                    'config' => $frozen->config,
+                    'break_after_laps' => $frozen->breakAfterLaps,
+                    'ruleset_version' => $this->rulesetVersion(),
+                ];
+                $config = $frozen->config;
+            }
+
+            $fuelPerLap = (int) $config['fuel_per_lap_ml'];
+
+            $run->forceFill([
+                ...$changes,
+                'fuel_ml' => $run->fuel_ml < $fuelPerLap ? $terms->fuelLaps * $fuelPerLap : $run->fuel_ml,
+                'status' => RaceRun::STATUS_RUNNING,
+                'stop_reason' => null,
+                'cursor_ms' => $now + $terms->delayMs,
+                'state_version' => $run->state_version + 1,
+            ])->save();
+
+            return new Towed($run, true);
+        });
+    }
+
+    /**
      * Buys fuel for a run: settles it first (what the car earned so far can pay for the fuel), charges the
      * ledger and fills the tank. Fills the tank when `$addMl` is null, and never more than the tank holds.
      * The price is rounded up to a whole cent.
