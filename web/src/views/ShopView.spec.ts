@@ -191,4 +191,16 @@ describe('ShopView', () => {
     expect(wrapper.get('[data-test="nav-shop"]').classes()).toContain('on')
     expect(wrapper.get('[data-test="nav-workshop"]').classes()).not.toContain('on')
   })
+
+  it('has the tabs of the city, with the shop lit, that lead to the exchange and the dealer', async () => {
+    serve({ 'GET /api/v1/shop': () => shop() })
+
+    const { wrapper } = await mountView(ShopView, '/shop')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="tab-shop"]').classes()).toContain('on')
+    expect(wrapper.get('[data-test="tab-exchange"]').classes()).not.toContain('on')
+    expect(wrapper.get('[data-test="tab-exchange"]').attributes('href')).toBe('/exchange')
+    expect(wrapper.get('[data-test="tab-dealer"]').attributes('href')).toBe('/dealer')
+  })
 })

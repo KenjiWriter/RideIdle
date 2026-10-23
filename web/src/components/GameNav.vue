@@ -16,7 +16,8 @@ const links = [
     label: 'nav.workshop',
     icon: 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z',
   },
-  { name: 'shop', label: 'nav.shop', icon: 'M3 21h18M5 21V9l5-3v15M10 21V4l6 3v14M16 21V11l4 2v8' },
+  // The city: the shop, the exchange and the dealer are its tabs, so it stays lit on all of them, as on the boards.
+  { name: 'shop', label: 'nav.city', icon: 'M3 21h18M5 21V9l5-3v15M10 21V4l6 3v14M16 21V11l4 2v8', also: ['exchange', 'dealer'] },
 ] as const
 
 const lit = (link: (typeof links)[number]): boolean => 'also' in link && (link.also as readonly string[]).includes(String(route.name))

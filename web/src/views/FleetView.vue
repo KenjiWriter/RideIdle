@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRouter } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import type { FleetCar, FleetGarage } from '@/api/types'
@@ -20,7 +20,7 @@ const FLEET_POLL_MS = 15_000
 /** The fleet is asked again at the earliest this long after the last answer, so a journey that is late cannot cause a storm of requests. */
 const MIN_ASK_MS = 3_000
 
-const { t, te } = useI18n()
+const { t } = useI18n()
 const { money, fixed } = useFormat()
 const router = useRouter()
 const store = useFleetStore()
@@ -31,8 +31,6 @@ useLeaveOnSignOut()
 const loadError = ref(false)
 const busy = ref(false)
 const error = ref<string | null>(null)
-/** The garage a bought wreck goes to. */
-const target = ref<string | null>(null)
 
 const now = ref(store.serverNow())
 let ticker: ReturnType<typeof setInterval> | undefined
@@ -43,8 +41,6 @@ const cars = computed(() => store.fleet?.cars ?? [])
 const garages = computed(() => store.fleet?.garages ?? [])
 const owned = computed(() => garages.value.filter((garage) => garage.owned))
 const unowned = computed(() => garages.value.filter((garage) => !garage.owned))
-const withRoom = computed(() => owned.value.filter((garage) => garage.free > 0))
-const yard = computed(() => store.fleet?.yard ?? [])
 const cash = computed(() => store.cash?.cash_cents ?? 0)
 
 async function load(): Promise<void> {
@@ -85,22 +81,8 @@ onBeforeUnmount(() => {
   clearInterval(poller)
 })
 
-// The wreck goes to a garage that has room: the first one until the driver picks another, and another when the picked one fills.
-watch(
-  withRoom,
-  (rooms) => {
-    if (!rooms.some((garage) => garage.city === target.value)) {
-      target.value = rooms[0]?.city ?? null
-    }
-  },
-  { immediate: true },
-)
-
 /** The cars that stand in a garage, or are on their way to it: the place is kept for a car on the road. */
 const carsIn = (garage: FleetGarage): FleetCar[] => cars.value.filter((car) => (car.travel?.to ?? car.city.slug) === garage.city)
-
-/** The class of a car in the language of the driver, or as the server calls it when there is no word for it. */
-const className = (slug: string): string => (te(`fleet.class.${slug}`) ? t(`fleet.class.${slug}`) : slug)
 
 function statusKey(car: FleetCar): string {
   return car.run?.stop_reason ?? 'running'
@@ -161,19 +143,6 @@ const buyGarage = (garage: FleetGarage) =>
 
     return t('fleet.garageBought', { city: garage.name })
   })
-
-const buyCar = (vehicle: { slug: string; name: string }) =>
-  attempt(async () => {
-    if (target.value === null) {
-      throw new Error('There is no garage with a free place.')
-    }
-
-    const garage = garages.value.find((candidate) => candidate.city === target.value)
-
-    await store.buyCar(vehicle.slug, target.value)
-
-    return t('fleet.carBought', { car: vehicle.name, city: garage?.name ?? '' })
-  })
 </script>
 
 <template>
@@ -212,6 +181,7 @@ const buyCar = (vehicle: { slug: string; name: string }) =>
             <span class="chip" data-test="car-fuel">{{ t('fleet.fuel', { fuel: fixed(car.run.fuel_ml / 1000, 0), tank: fixed(car.run.tank_ml / 1000, 0) }) }}</span>
             <span class="chip" data-test="car-laps">{{ t('fleet.laps', { count: car.run.laps_done }) }}</span>
             <span class="chip chip-am">{{ t('garage.carLevel', { level: car.level }) }}</span>
+            <span class="chip" :class="car.condition_percent < 60 ? 'chip-bad' : ''" data-test="car-condition">{{ t('fleet.condition', { percent: car.condition_percent }) }}</span>
           </div>
           <button v-if="!car.selected" type="button" class="btn btn-secondary btn-sm" :disabled="busy" data-test="play" @click="choose(car)">{{ t('fleet.play') }}</button>
         </article>
@@ -237,26 +207,13 @@ const buyCar = (vehicle: { slug: string; name: string }) =>
         </div>
       </section>
 
-      <section v-if="yard.length > 0" class="flex flex-col gap-2" :aria-label="t('fleet.yard')" data-test="yard">
-        <p class="kick !mb-0">{{ t('fleet.yard') }}</p>
 
-        <label v-if="withRoom.length > 0" class="flex flex-col gap-1 text-xs text-muted">
-          {{ t('fleet.target') }}
-          <select v-model="target" class="field" data-test="target">
-            <option v-for="garage in withRoom" :key="garage.city" :value="garage.city">{{ garage.name }} · {{ t('fleet.free', { count: garage.free }) }}</option>
-          </select>
-        </label>
-        <p v-else class="sub" data-test="no-room">{{ t('fleet.noRoom') }}</p>
-
-        <article v-for="wreck in yard" :key="wreck.slug" class="card flex items-center justify-between gap-2.5 !p-3" :data-test="`wreck-${wreck.slug}`">
-          <div class="min-w-0">
-            <b class="text-sm">{{ wreck.name }}</b>
-            <p class="sub">{{ className(wreck.class) }}</p>
-          </div>
-          <button type="button" class="btn btn-secondary btn-sm flex-none" :disabled="busy || target === null || cash < wreck.price_cents" data-test="buy-wreck" @click="buyCar(wreck)">
-            {{ t('fleet.buyWreck', { price: money(wreck.price_cents) }) }}
-          </button>
-        </article>
+      <section class="card flex items-center justify-between gap-2.5 !p-3" data-test="buy-car">
+        <div class="min-w-0">
+          <p class="text-sm text-ink">{{ t('fleet.buyCarTitle') }}</p>
+          <p class="sub">{{ t('fleet.buyCarNote') }}</p>
+        </div>
+        <RouterLink :to="{ name: 'exchange' }" class="btn btn-secondary btn-sm flex-none no-underline" data-test="to-exchange">{{ t('market.tabExchange') }}</RouterLink>
       </section>
     </template>
   </GameShell>

@@ -164,78 +164,44 @@ describe('FleetView', () => {
     expect(offer.get('[data-test="buy-garage"]').attributes('disabled')).toBeDefined()
   })
 
-  it('buys a wreck from the yard into the garage that was picked, with one request id for the intention', async () => {
-    const calls = serve({
-      'GET /api/v1/cars': () => respond(200, aFleet()),
-      'POST /api/v1/cars': () => respond(201, { ...aFleet({}, 461_000), bought: 9, repeated: false }),
+  it('shows what the server says when it refuses, and asks for the fleet again', async () => {
+    let asked = 0
+    const open = aFleet().data.garages.map((garage) => (garage.city === 'autodrom' ? { ...garage, open: true } : garage))
+    serve({
+      'GET /api/v1/cars': () => respond(200, ++asked && aFleet({ garages: open })),
+      'POST /api/v1/garages': () => respond(422, { message: 'Not enough money.', code: 'insufficient_funds' }),
       'GET /api/v1/runs/current': noRun,
     })
 
     const { wrapper } = await mountView(FleetView, '/garage/fleet')
     await flushPromises()
-
-    // The first garage with room is the target until the driver picks another.
-    expect((wrapper.get('[data-test="target"]').element as HTMLSelectElement).value).toBe('zlomowo')
-
-    await wrapper.get('[data-test="target"]').setValue('kruszyn')
-    await wrapper.get('[data-test="wreck-bizon-m-2"] [data-test="buy-wreck"]').trigger('click')
+    await wrapper.get('[data-test="garage-offer-autodrom"] [data-test="buy-garage"]').trigger('click')
     await flushPromises()
 
-    const body = calls.find((call) => call.method === 'POST' && call.url.endsWith('/v1/cars'))?.body as Record<string, string>
-    expect(body).toMatchObject({ vehicle: 'bizon-m-2', city: 'kruszyn' })
-    expect(body.request_id).toEqual(expect.any(String))
-    expect(wrapper.get('[data-test="done"]').text()).toBe('Bizon M-2 is in the garage in Kruszyn.')
-    expect(wrapper.get('[data-test="wreck-bizon-m-2"] [data-test="buy-wreck"]').text()).toBe('Buy · $1,390')
+    expect(wrapper.get('[data-test="error"]').text()).toBe('Not enough money.')
+    expect(asked).toBe(2)
   })
 
-  it('names the class of a wreck, and the price of each', async () => {
+  it('shows the condition of a car, and warns about a worn one', async () => {
+    const worn = aFleetCar({ id: 6, selected: false, condition_percent: 45, city: { slug: 'kruszyn', name: 'Kruszyn' } })
+    serve({ 'GET /api/v1/cars': () => respond(200, aFleet({ cars: [aFleetCar(), worn] })), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="car-5"] [data-test="car-condition"]').text()).toBe('Condition 100%')
+    expect(wrapper.get('[data-test="car-5"] [data-test="car-condition"]').classes()).not.toContain('chip-bad')
+    expect(wrapper.get('[data-test="car-6"] [data-test="car-condition"]').text()).toBe('Condition 45%')
+    expect(wrapper.get('[data-test="car-6"] [data-test="car-condition"]').classes()).toContain('chip-bad')
+  })
+
+  it('leads to the exchange, where the cars are bought', async () => {
     serve({ 'GET /api/v1/cars': () => respond(200, aFleet()), 'GET /api/v1/runs/current': noRun })
 
     const { wrapper } = await mountView(FleetView, '/garage/fleet')
     await flushPromises()
 
-    expect(wrapper.get('[data-test="wreck-rdzak-gt-4"]').text()).toContain('Hatchback')
-    expect(wrapper.get('[data-test="wreck-bizon-m-2"]').text()).toContain('Pickup')
-    expect(wrapper.get('[data-test="wreck-rdzak-gt-4"] [data-test="buy-wreck"]').text()).toBe('Buy · $1,140')
-  })
-
-  it('does not offer a wreck when no garage has a free place, and when the driver cannot pay', async () => {
-    const full = aFleet().data.garages.map((garage) => (garage.owned ? { ...garage, used: garage.capacity, free: 0 } : garage))
-    serve({ 'GET /api/v1/cars': () => respond(200, aFleet({ garages: full })), 'GET /api/v1/runs/current': noRun })
-
-    const { wrapper } = await mountView(FleetView, '/garage/fleet')
-    await flushPromises()
-
-    expect(wrapper.get('[data-test="no-room"]').text()).toBe('No garage has a free place. Buy a garage in another city first.')
-    expect(wrapper.find('[data-test="target"]').exists()).toBe(false)
-    expect(wrapper.get('[data-test="wreck-rdzak-gt-4"] [data-test="buy-wreck"]').attributes('disabled')).toBeDefined()
-  })
-
-  it('does not let the driver buy a wreck that costs more than the cash', async () => {
-    serve({ 'GET /api/v1/cars': () => respond(200, aFleet({}, 120_000)), 'GET /api/v1/runs/current': noRun })
-
-    const { wrapper } = await mountView(FleetView, '/garage/fleet')
-    await flushPromises()
-
-    expect(wrapper.get('[data-test="wreck-rdzak-gt-4"] [data-test="buy-wreck"]').attributes('disabled')).toBeUndefined()
-    expect(wrapper.get('[data-test="wreck-bizon-m-2"] [data-test="buy-wreck"]').attributes('disabled')).toBeDefined()
-  })
-
-  it('shows what the server says when it refuses, and asks for the fleet again', async () => {
-    let asked = 0
-    serve({
-      'GET /api/v1/cars': () => respond(200, ++asked && aFleet()),
-      'POST /api/v1/cars': () => respond(422, { message: 'The garage in Złomowo is full.', code: 'garage_full' }),
-      'GET /api/v1/runs/current': noRun,
-    })
-
-    const { wrapper } = await mountView(FleetView, '/garage/fleet')
-    await flushPromises()
-    await wrapper.get('[data-test="wreck-rdzak-gt-4"] [data-test="buy-wreck"]').trigger('click')
-    await flushPromises()
-
-    expect(wrapper.get('[data-test="error"]').text()).toBe('The garage in Złomowo is full.')
-    expect(asked).toBe(2)
+    expect(wrapper.get('[data-test="to-exchange"]').attributes('href')).toBe('/exchange')
   })
 
   it('sends a driver without a car to choose one', async () => {
@@ -272,6 +238,6 @@ describe('FleetView', () => {
     expect(wrapper.get('h1').text()).toBe('Flota')
     expect(wrapper.get('[data-test="garage-zlomowo"] [data-test="garage-title"]').text()).toBe('Złomowo · 1 / 3 miejsc')
     expect(wrapper.get('[data-test="car-6"] [data-test="play"]').text()).toBe('Graj tym autem')
-    expect(wrapper.get('[data-test="wreck-bizon-m-2"] [data-test="buy-wreck"]').text()).toMatch(/^Kup · /)
+    expect(wrapper.get('[data-test="car-5"] [data-test="car-condition"]').text()).toBe('Kondycja 100%')
   })
 })

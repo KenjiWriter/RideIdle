@@ -7,6 +7,7 @@ export function aFleetCar(overrides: Partial<FleetCar> = {}): FleetCar {
     id: 5,
     level: 3,
     selected: true,
+    condition_percent: 100,
     vehicle: { slug: 'rdzak-gt-4', name: 'Rdzak GT-4' },
     city: { slug: 'zlomowo', name: 'Złomowo' },
     run: { id: 7, status: 'running', stop_reason: null, laps_done: 12, fuel_ml: 31_000, tank_ml: 45_000, track: 'Złomowo Street Sprint' },

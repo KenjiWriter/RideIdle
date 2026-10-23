@@ -5,6 +5,7 @@ import { RouterLink } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import type { ShopOffer } from '@/api/types'
+import CityTabs from '@/components/CityTabs.vue'
 import GameShell from '@/components/GameShell.vue'
 import PartStats from '@/components/PartStats.vue'
 import { useFlash } from '@/features/run/useFlash'
@@ -81,6 +82,8 @@ async function buy(offer: ShopOffer): Promise<void> {
       <p class="sub">{{ t('shop.intro') }}</p>
       <p v-if="store.cash" class="sr-only" data-test="cash">{{ t('shop.cash', { money: money(store.cash.cash_cents, 2) }) }}</p>
     </header>
+
+    <CityTabs />
 
     <div v-if="loadError" class="flex flex-col items-start gap-3" data-test="load-error">
       <p class="text-danger" role="alert">{{ t('shop.loadError') }}</p>

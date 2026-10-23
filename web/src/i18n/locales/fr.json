@@ -523,14 +523,52 @@
     "buyGarage": "Acheter · {price}",
     "garageBought": "Vous avez acheté un garage à {city}.",
     "yard": "Casse",
-    "target": "Dans le garage de",
-    "noRoom": "Aucun garage n’a de place libre. Achetez d’abord un garage dans une autre ville.",
     "buyWreck": "Acheter · {price}",
     "carBought": "{car} est dans le garage de {city}.",
     "class": {
       "hatchback": "Compacte",
       "muscle": "Muscle car",
-      "pickup": "Pick-up"
-    }
+      "pickup": "Pick-up",
+      "sedan": "Berline",
+      "coupe": "Coupé",
+      "van": "Fourgonnette",
+      "hot_hatch": "Hot hatch",
+      "gt": "GT",
+      "super": "Supercar",
+      "hyper": "Hypercar"
+    },
+    "condition": "État {percent} %",
+    "buyCarTitle": "Acheter une voiture",
+    "buyCarNote": "La bourse, le concessionnaire et la casse sont dans la ville où se trouve la voiture que vous jouez."
+  },
+  "market": {
+    "tabs": "Services de la ville",
+    "tabShop": "Boutique",
+    "tabExchange": "Bourse",
+    "tabDealer": "Concessionnaire",
+    "loadError": "Impossible de charger le marché.",
+    "garage": "Garage à {city} : {used} / {capacity} places",
+    "noRoom": "Le garage de {city} est plein. Faites de la place ou achetez un garage dans l’onglet Flotte.",
+    "buy": "Acheter",
+    "year": "Année {year}",
+    "exchangeTitle": "Bourse auto",
+    "exchangeSub": "{city} · occasion · actualisation dans {time}",
+    "exchangeEmpty": "Il n’y a rien à la bourse pour le moment.",
+    "inspect": "Inspection {price}",
+    "inspected": "Inspection faite",
+    "inspection": "Inspection : en état à {percent} %",
+    "defects": "Défauts : {count}",
+    "word": {
+      "good": "annonce : bon état",
+      "fair": "annonce : état moyen",
+      "poor": "annonce : à remettre en état"
+    },
+    "dealerTitle": "Concessionnaire",
+    "dealerSub": "{city} · voitures neuves · kilométrage 0–15 km",
+    "dealerNew": "Kilométrage 0–15 km · état 100 % · sans défauts cachés",
+    "dealerLocked": "Niveau de joueur {level} requis",
+    "km": "{km} km",
+    "speed": "{value} km/h",
+    "mass": "{value} kg"
   }
 }

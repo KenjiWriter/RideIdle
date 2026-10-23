@@ -523,14 +523,52 @@
     "buyGarage": "Kaufen · {price}",
     "garageBought": "Du hast eine Garage in {city} gekauft.",
     "yard": "Schrottplatz",
-    "target": "In die Garage in",
-    "noRoom": "Keine Garage hat einen freien Platz. Kaufe zuerst eine Garage in einer anderen Stadt.",
     "buyWreck": "Kaufen · {price}",
     "carBought": "{car} steht in der Garage in {city}.",
     "class": {
       "hatchback": "Kleinwagen",
       "muscle": "Muscle Car",
-      "pickup": "Pick-up"
-    }
+      "pickup": "Pick-up",
+      "sedan": "Limousine",
+      "coupe": "Coupé",
+      "van": "Lieferwagen",
+      "hot_hatch": "Hot Hatch",
+      "gt": "GT",
+      "super": "Supersportwagen",
+      "hyper": "Hypersportwagen"
+    },
+    "condition": "Zustand {percent} %",
+    "buyCarTitle": "Auto kaufen",
+    "buyCarNote": "Börse, Händler und Schrottplatz sind in der Stadt, in der das Auto steht, mit dem du spielst."
+  },
+  "market": {
+    "tabs": "Dienste der Stadt",
+    "tabShop": "Shop",
+    "tabExchange": "Börse",
+    "tabDealer": "Händler",
+    "loadError": "Der Markt konnte nicht geladen werden.",
+    "garage": "Garage in {city}: {used} / {capacity} Plätze",
+    "noRoom": "Die Garage in {city} ist voll. Schaffe Platz oder kaufe eine Garage im Reiter Flotte.",
+    "buy": "Kaufen",
+    "year": "Baujahr {year}",
+    "exchangeTitle": "Autobörse",
+    "exchangeSub": "{city} · gebraucht · Aktualisierung in {time}",
+    "exchangeEmpty": "Auf der Börse ist gerade nichts.",
+    "inspect": "Inspektion {price}",
+    "inspected": "Inspektion erledigt",
+    "inspection": "Inspektion: zu {percent} % intakt",
+    "defects": "Mängel: {count}",
+    "word": {
+      "good": "Anzeige: guter Zustand",
+      "fair": "Anzeige: mittlerer Zustand",
+      "poor": "Anzeige: reparaturbedürftig"
+    },
+    "dealerTitle": "Händler",
+    "dealerSub": "{city} · Neuwagen · Laufleistung 0–15 km",
+    "dealerNew": "Laufleistung 0–15 km · Zustand 100 % · keine versteckten Mängel",
+    "dealerLocked": "Erfordert Spielerstufe {level}",
+    "km": "{km} km",
+    "speed": "{value} km/h",
+    "mass": "{value} kg"
   }
 }

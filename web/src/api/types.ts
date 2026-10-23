@@ -410,6 +410,8 @@ export interface FleetCar {
   level: number
   /** The car the driver plays. */
   selected: boolean
+  /** How worn the car is: 100 is perfect, and a worn car breaks down more. */
+  condition_percent: number
   vehicle: { slug: string; name: string }
   city: { slug: string; name: string }
   run: { id: number; status: RunStatus; stop_reason: StopReason | null; laps_done: number; fuel_ml: number; tank_ml: number; track: string } | null
@@ -439,6 +441,60 @@ export interface FleetResponse {
   data: { selected: number | null; cars: FleetCar[]; garages: FleetGarage[]; yard: YardCar[] }
   wallet: Wallet
   now_ms: number
+  repeated?: boolean
+  bought?: number | null
+}
+
+/** A car of the market as the screens show it: the body, and what it is made of. */
+export interface MarketVehicle {
+  slug: string
+  name: string
+  class: string
+  drivetrain: 'fwd' | 'rwd' | 'awd'
+  engine: string
+  power_kw: number
+  top_speed_kmh: number
+  mass_kg: number
+}
+
+/** What a listing says of the condition of a car, which is only roughly the truth: an inspection tells it. */
+export type ListingWord = 'good' | 'fair' | 'poor'
+
+/** A car on the used-car exchange. The condition is there once the driver has paid for the inspection. */
+export interface ExchangeListing {
+  key: string
+  vehicle: MarketVehicle
+  age_years: number
+  mileage_km: number
+  word: ListingWord
+  price_cents: number
+  inspected: boolean
+  /** What the inspection costs, null once it is done. */
+  inspection_cost_cents: number | null
+  condition: { percent: number; defects: number } | null
+}
+
+/** A new car of the dealer, and whether the level of the driver opens it. */
+export interface DealerOffer {
+  vehicle: MarketVehicle
+  price_cents: number
+  level_required: number
+  open: boolean
+}
+
+/** GET /api/v1/market, and the answer of the calls that buy or inspect a car. The market is the one of the city where the car the driver plays stands. */
+export interface MarketResponse {
+  data: {
+    city: { slug: string; name: string }
+    level: number
+    garage: { owned: boolean; capacity: number; used: number; free: number }
+    exchange: { refresh_ms: number; next_refresh_ms: number; listings: ExchangeListing[] }
+    dealer: DealerOffer[]
+    wrecks: YardCar[]
+  }
+  wallet: Wallet
+  now_ms: number
+  /** A purchase that came a second time bought nothing. */
   repeated?: boolean
   bought?: number | null
 }

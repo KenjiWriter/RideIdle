@@ -523,14 +523,52 @@
     "buyGarage": "Buy · {price}",
     "garageBought": "You bought a garage in {city}.",
     "yard": "Wreck yard",
-    "target": "Into the garage in",
-    "noRoom": "No garage has a free place. Buy a garage in another city first.",
     "buyWreck": "Buy · {price}",
     "carBought": "{car} is in the garage in {city}.",
     "class": {
       "hatchback": "Hatchback",
       "muscle": "Muscle car",
-      "pickup": "Pickup"
-    }
+      "pickup": "Pickup",
+      "sedan": "Sedan",
+      "coupe": "Coupe",
+      "van": "Delivery van",
+      "hot_hatch": "Hot hatch",
+      "gt": "GT",
+      "super": "Supercar",
+      "hyper": "Hypercar"
+    },
+    "condition": "Condition {percent}%",
+    "buyCarTitle": "Buy a car",
+    "buyCarNote": "The exchange, the dealer and the wrecks are in the city where the car you play stands."
+  },
+  "market": {
+    "tabs": "City services",
+    "tabShop": "Shop",
+    "tabExchange": "Exchange",
+    "tabDealer": "Dealer",
+    "loadError": "The market could not be loaded.",
+    "garage": "Garage in {city}: {used} / {capacity} places",
+    "noRoom": "The garage in {city} is full. Make room, or buy a garage in the Fleet tab.",
+    "buy": "Buy",
+    "year": "Model year {year}",
+    "exchangeTitle": "Car exchange",
+    "exchangeSub": "{city} · used · refreshes in {time}",
+    "exchangeEmpty": "Nothing is on the exchange right now.",
+    "inspect": "Inspection {price}",
+    "inspected": "Inspection done",
+    "inspection": "Inspection: {percent}% fit",
+    "defects": "Defects: {count}",
+    "word": {
+      "good": "listing: good condition",
+      "fair": "listing: fair condition",
+      "poor": "listing: needs work"
+    },
+    "dealerTitle": "Dealer",
+    "dealerSub": "{city} · new cars · mileage 0–15 km",
+    "dealerNew": "Mileage 0–15 km · condition 100% · no hidden defects",
+    "dealerLocked": "Requires player level {level}",
+    "km": "{km} km",
+    "speed": "{value} km/h",
+    "mass": "{value} kg"
   }
 }

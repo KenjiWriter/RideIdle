@@ -197,7 +197,7 @@ describe('GarageView', () => {
 
     expect(wrapper.get('[data-test="nav-garage"]').classes()).toContain('on')
     expect(wrapper.get('[data-test="nav-workshop"]').text()).toBe('Workshop')
-    expect(wrapper.get('[data-test="nav-shop"]').text()).toBe('Shop')
+    expect(wrapper.get('[data-test="nav-shop"]').text()).toBe('City')
   })
 
   it('offers the repair only to a car that broke down', async () => {

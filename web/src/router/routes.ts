@@ -37,4 +37,6 @@ export const routes: RouteRecordRaw[] = [
   { path: '/garage/fleet', name: 'fleet', component: () => import('@/views/FleetView.vue'), meta: { requiresAuth: true } },
   { path: '/workshop', name: 'workshop', component: () => import('@/views/WorkshopView.vue'), meta: { requiresAuth: true } },
   { path: '/shop', name: 'shop', component: () => import('@/views/ShopView.vue'), meta: { requiresAuth: true } },
+  { path: '/exchange', name: 'exchange', component: () => import('@/views/ExchangeView.vue'), meta: { requiresAuth: true } },
+  { path: '/dealer', name: 'dealer', component: () => import('@/views/DealerView.vue'), meta: { requiresAuth: true } },
 ]

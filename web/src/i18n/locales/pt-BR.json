@@ -523,14 +523,52 @@
     "buyGarage": "Comprar · {price}",
     "garageBought": "Você comprou uma garagem em {city}.",
     "yard": "Ferro-velho",
-    "target": "Para a garagem em",
-    "noRoom": "Nenhuma garagem tem vaga livre. Compre primeiro uma garagem em outra cidade.",
     "buyWreck": "Comprar · {price}",
     "carBought": "{car} está na garagem em {city}.",
     "class": {
       "hatchback": "Hatch",
       "muscle": "Muscle car",
-      "pickup": "Picape"
-    }
+      "pickup": "Picape",
+      "sedan": "Sedã",
+      "coupe": "Cupê",
+      "van": "Van de entregas",
+      "hot_hatch": "Hot hatch",
+      "gt": "GT",
+      "super": "Superesportivo",
+      "hyper": "Hiperesportivo"
+    },
+    "condition": "Condição {percent}%",
+    "buyCarTitle": "Comprar um carro",
+    "buyCarNote": "A bolsa, a concessionária e o ferro-velho ficam na cidade onde está o carro que você joga."
+  },
+  "market": {
+    "tabs": "Serviços da cidade",
+    "tabShop": "Loja",
+    "tabExchange": "Bolsa",
+    "tabDealer": "Concessionária",
+    "loadError": "Não foi possível carregar o mercado.",
+    "garage": "Garagem em {city}: {used} / {capacity} vagas",
+    "noRoom": "A garagem em {city} está cheia. Abra espaço ou compre uma garagem na aba Frota.",
+    "buy": "Comprar",
+    "year": "Ano {year}",
+    "exchangeTitle": "Bolsa de carros",
+    "exchangeSub": "{city} · usados · atualiza em {time}",
+    "exchangeEmpty": "Não há nada na bolsa agora.",
+    "inspect": "Inspeção {price}",
+    "inspected": "Inspeção feita",
+    "inspection": "Inspeção: {percent}% em ordem",
+    "defects": "Defeitos: {count}",
+    "word": {
+      "good": "anúncio: bom estado",
+      "fair": "anúncio: estado regular",
+      "poor": "anúncio: precisa de reforma"
+    },
+    "dealerTitle": "Concessionária",
+    "dealerSub": "{city} · carros novos · quilometragem 0–15 km",
+    "dealerNew": "Quilometragem 0–15 km · condição 100% · sem defeitos ocultos",
+    "dealerLocked": "Requer nível de jogador {level}",
+    "km": "{km} km",
+    "speed": "{value} km/h",
+    "mass": "{value} kg"
   }
 }

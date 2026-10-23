@@ -358,10 +358,11 @@ body {
     filter: drop-shadow(0 0 6px rgba(255, 178, 36, 0.75));
   }
 
-  /* ---------- a row of tabs inside a screen (Auto, Flota): pressed keys in a recess ---------- */
+  /* ---------- a row of tabs inside a screen (Auto | Flota, Sklep | Giełda | Dealer): pressed keys in a recess ---------- */
   .seg {
     @apply grid gap-1 p-1;
-    grid-template-columns: repeat(2, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
     background: #090b0f;
     border: 1px solid #333b49;
     border-radius: 8px;

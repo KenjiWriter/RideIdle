@@ -523,14 +523,52 @@
     "buyGarage": "Kup · {price}",
     "garageBought": "Kupiono garaż w mieście {city}.",
     "yard": "Złomowisko",
-    "target": "Do garażu w mieście",
-    "noRoom": "W żadnym garażu nie ma wolnego miejsca. Najpierw kup garaż w innym mieście.",
     "buyWreck": "Kup · {price}",
     "carBought": "{car} stoi w garażu w mieście {city}.",
     "class": {
       "hatchback": "Hatchback",
       "muscle": "Muscle car",
-      "pickup": "Pickup"
-    }
+      "pickup": "Pickup",
+      "sedan": "Sedan",
+      "coupe": "Coupe",
+      "van": "Dostawczy",
+      "hot_hatch": "Hot hatch",
+      "gt": "GT",
+      "super": "Superauto",
+      "hyper": "Hiperauto"
+    },
+    "condition": "Kondycja {percent}%",
+    "buyCarTitle": "Kup auto",
+    "buyCarNote": "Giełda, dealer i złomowisko są w mieście, w którym stoi auto, którym grasz."
+  },
+  "market": {
+    "tabs": "Usługi miasta",
+    "tabShop": "Sklep",
+    "tabExchange": "Giełda",
+    "tabDealer": "Dealer",
+    "loadError": "Nie udało się wczytać rynku.",
+    "garage": "Garaż w mieście {city}: {used} / {capacity} miejsc",
+    "noRoom": "Garaż w mieście {city} jest pełny. Zrób miejsce albo kup garaż w zakładce Flota.",
+    "buy": "Kup",
+    "year": "Rocznik {year}",
+    "exchangeTitle": "Giełda aut",
+    "exchangeSub": "{city} · używane · odświeżenie za {time}",
+    "exchangeEmpty": "Na giełdzie nic teraz nie ma.",
+    "inspect": "Inspekcja {price}",
+    "inspected": "Inspekcja gotowa",
+    "inspection": "Inspekcja: sprawny w {percent}%",
+    "defects": "Usterki: {count}",
+    "word": {
+      "good": "opis: stan dobry",
+      "fair": "opis: stan średni",
+      "poor": "opis: do remontu"
+    },
+    "dealerTitle": "Dealer",
+    "dealerSub": "{city} · nowe auta · przebieg 0–15 km",
+    "dealerNew": "Przebieg 0–15 km · stan 100% · bez ukrytych wad",
+    "dealerLocked": "Wymaga poziomu gracza {level}",
+    "km": "{km} km",
+    "speed": "{value} km/h",
+    "mass": "{value} kg"
   }
 }
