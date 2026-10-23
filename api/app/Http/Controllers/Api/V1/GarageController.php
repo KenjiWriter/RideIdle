@@ -66,7 +66,21 @@ final class GarageController extends Controller
         return $this->respond($userId, 201);
     }
 
-    private function respond(int $userId, int $status = 200): JsonResponse
+    /**
+     * Cancels a job: one that waits, or one that the mechanic is at (the work done on it is lost, and its part stays where it
+     * was). A job that goes only with it goes too: cancelling the taking off of a part cancels the putting on of the one that was
+     * to take its place. Nothing is paid or given back. `cancelled` lists the jobs that were cancelled, the asked one first.
+     */
+    public function cancelJob(Request $request, int $job): JsonResponse
+    {
+        $userId = (int) $request->user()->getAuthIdentifier();
+        $cancelled = $this->workshop->cancel($userId, $job);
+
+        return $this->respond($userId, 200, ['cancelled' => array_map(static fn (WorkshopJob $gone): int => $gone->id, $cancelled)]);
+    }
+
+    /** @param  array<string, mixed>  $extra  more keys of the top level of the answer */
+    private function respond(int $userId, int $status = 200, array $extra = []): JsonResponse
     {
         $car = $this->garage->carOf($userId);
         $run = RaceRun::query()->where('user_id', $userId)->orderByDesc('id')->first();
@@ -84,6 +98,7 @@ final class GarageController extends Controller
                 ],
             ],
             'now_ms' => RunService::nowMs(),
+            ...$extra,
         ], $status)->header('Cache-Control', 'no-store');
     }
 

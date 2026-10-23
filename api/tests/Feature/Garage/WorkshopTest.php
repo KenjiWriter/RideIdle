@@ -29,6 +29,11 @@ function getGarage(User $driver): TestResponse
     return test()->getJson('/api/v1/garage', bearerFor($driver));
 }
 
+function cancelJob(User $driver, int $jobId, array $headers = []): TestResponse
+{
+    return test()->deleteJson("/api/v1/garage/jobs/{$jobId}", [], [...bearerFor($driver), ...$headers]);
+}
+
 /** A part of the driver in the inventory. */
 function inventoryPart(User $driver, string $slug = 'street-tires-t2', string $slot = 'tires'): Part
 {
@@ -360,6 +365,192 @@ describe('what the workshop refuses', function () {
         test()->postJson('/api/v1/garage/jobs', ['kind' => 'mount', 'part' => 999_999], [...bearerFor($driver), 'X-Locale' => 'de'])
             ->assertStatus(422)
             ->assertJsonPath('message', 'Du besitzt dieses Teil nicht.');
+    });
+});
+
+describe('cancelling a job', function () {
+    it('requires a token', function () {
+        $this->deleteJson('/api/v1/garage/jobs/1')->assertUnauthorized();
+    });
+
+    it('cancels a job that waits, and leaves the part where it was', function () {
+        [$driver, $run] = garageDriver();
+        $tires = inventoryPart($driver);
+        $exhaust = inventoryPart($driver, 'sport-exhaust-t2', 'exhaust');
+        $queued = queueJob($driver, 'mount', $tires->id)->assertCreated();
+        $second = queueJob($driver, 'mount', $exhaust->id)->assertCreated()->json('data.workshop.jobs.1.id');
+
+        cancelJob($driver, $second)
+            ->assertOk()
+            ->assertJsonPath('cancelled', [$second])
+            ->assertJsonCount(1, 'data.workshop.jobs')
+            ->assertJsonPath('data.workshop.jobs.0.id', $queued->json('data.workshop.jobs.0.id'))
+            ->assertJsonPath('data.workshop.jobs.0.status', 'working')
+            ->assertJsonPath('data.workshop.jobs.0.finish_ms', RUN_T0 + MOUNT_T2_MS)
+            // The part is in the inventory, and the car is still in the workshop for the job that was not cancelled.
+            ->assertJsonPath('data.inventory.1.slug', 'sport-exhaust-t2')
+            ->assertJsonPath('data.car.run.stop_reason', 'workshop');
+
+        expect(WorkshopJob::query()->count())->toBe(1)->and($exhaust->refresh()->car_id)->toBeNull()->and(cashOf($run))->toBe(0);
+    });
+
+    it('moves the jobs behind it up, each lasting what it did', function () {
+        [$driver] = garageDriver();
+        $jobs = [];
+
+        foreach ([['street-tires-t2', 'tires'], ['sport-exhaust-t2', 'exhaust'], ['sport-suspension-t1', 'suspension']] as [$slug, $slot]) {
+            $jobs = queueJob($driver, 'mount', inventoryPart($driver, $slug, $slot)->id)->assertCreated()->json('data.workshop.jobs');
+        }
+
+        $last = $jobs[2];
+        $duration = $last['finish_ms'] - $last['start_ms'];
+
+        cancelJob($driver, $jobs[1]['id'])->assertOk()->assertJsonCount(2, 'data.workshop.jobs')
+            ->assertJsonPath('data.workshop.jobs.1.id', $last['id'])
+            ->assertJsonPath('data.workshop.jobs.1.status', 'queued')
+            ->assertJsonPath('data.workshop.jobs.1.start_ms', RUN_T0 + MOUNT_T2_MS)
+            ->assertJsonPath('data.workshop.jobs.1.finish_ms', RUN_T0 + MOUNT_T2_MS + $duration);
+    });
+
+    it('cancels the job the mechanic is at: the work is lost and the next job starts at once', function () {
+        [$driver, $run] = garageDriver();
+        $tires = inventoryPart($driver);
+        $exhaust = inventoryPart($driver, 'sport-exhaust-t2', 'exhaust');
+        $first = queueJob($driver, 'mount', $tires->id)->assertCreated()->json('data.workshop.jobs.0.id');
+        $duration = queueJob($driver, 'mount', $exhaust->id)->assertCreated()->json('data.workshop.jobs.1.finish_ms') - (RUN_T0 + MOUNT_T2_MS);
+
+        clockAt(100_000);
+        cancelJob($driver, $first)
+            ->assertOk()
+            ->assertJsonPath('cancelled', [$first])
+            ->assertJsonCount(1, 'data.workshop.jobs')
+            ->assertJsonPath('data.workshop.jobs.0.part.slug', 'sport-exhaust-t2')
+            ->assertJsonPath('data.workshop.jobs.0.status', 'working')
+            ->assertJsonPath('data.workshop.jobs.0.start_ms', RUN_T0 + 100_000)
+            ->assertJsonPath('data.workshop.jobs.0.finish_ms', RUN_T0 + 100_000 + $duration)
+            // The car did not leave the workshop between the two jobs.
+            ->assertJsonPath('data.car.run.status', 'stopped')
+            ->assertJsonPath('data.car.run.stop_reason', 'workshop');
+
+        expect($tires->refresh()->car_id)->toBeNull()->and($run->refresh()->stop_reason)->toBe(RaceRun::STOP_WORKSHOP);
+    });
+
+    it('sends the car back on the track from now when it was the only job', function () {
+        [$driver, $run] = garageDriver();
+        $tires = inventoryPart($driver);
+        $job = queueJob($driver, 'mount', $tires->id)->assertCreated()->json('data.workshop.jobs.0.id');
+
+        clockAt(100_000);
+        cancelJob($driver, $job)
+            ->assertOk()
+            ->assertJsonPath('data.workshop.jobs', [])
+            ->assertJsonPath('data.car.run.status', 'running')
+            ->assertJsonPath('data.car.run.stop_reason', null)
+            ->assertJsonPath('data.car.slots.0.part', null);
+
+        // It earned nothing while it stood, and its first lap starts at the moment the job was cancelled.
+        $run->refresh();
+        expect($run->cursor_ms)->toBe(RUN_T0 + 100_000)->and($run->laps_done)->toBe(0)->and(cashOf($run))->toBe(0);
+
+        clockAt(100_000 + 2 * $run->config['lap_ms']['dry']);
+        getRun($driver)->assertOk()->assertJsonPath('data.status', 'running');
+
+        expect($run->refresh()->laps_done)->toBeGreaterThan(0)->and($tires->refresh()->car_id)->toBeNull();
+    });
+
+    it('does not start the car when the job that was cancelled had not stopped it', function () {
+        [$driver, $run] = garageDriver(['status' => RaceRun::STATUS_STOPPED, 'stop_reason' => 'breakdown']);
+        $job = queueJob($driver, 'mount', inventoryPart($driver)->id)->assertCreated()->json('data.workshop.jobs.0.id');
+
+        cancelJob($driver, $job)->assertOk();
+
+        expect($run->refresh()->status)->toBe(RaceRun::STATUS_STOPPED)->and($run->stop_reason)->toBe('breakdown');
+    });
+
+    it('cancels the putting on of the part that was to replace the one whose taking off is cancelled', function () {
+        [$driver, , $car] = garageDriver();
+        $old = mountedPart($car, 'street-tires-t1', 'tires');
+        $new = inventoryPart($driver);
+        [$unmount, $mount] = queueJob($driver, 'mount', $new->id)->assertCreated()->json('data.workshop.jobs');
+
+        cancelJob($driver, $unmount['id'])
+            ->assertOk()
+            ->assertJsonPath('cancelled', [$unmount['id'], $mount['id']])
+            ->assertJsonPath('data.workshop.jobs', [])
+            ->assertJsonPath('data.car.slots.0.part.slug', 'street-tires-t1')
+            ->assertJsonPath('data.inventory.0.slug', 'street-tires-t2')
+            ->assertJsonPath('data.car.run.status', 'running');
+
+        expect($old->refresh()->isMounted())->toBeTrue()->and(WorkshopJob::query()->count())->toBe(0);
+    });
+
+    it('keeps the taking off of the old part when only the putting on of the new one is cancelled', function () {
+        [$driver, , $car] = garageDriver();
+        $old = mountedPart($car, 'street-tires-t1', 'tires');
+        [$unmount, $mount] = queueJob($driver, 'mount', inventoryPart($driver)->id)->assertCreated()->json('data.workshop.jobs');
+
+        cancelJob($driver, $mount['id'])
+            ->assertOk()
+            ->assertJsonPath('cancelled', [$mount['id']])
+            ->assertJsonCount(1, 'data.workshop.jobs')
+            ->assertJsonPath('data.workshop.jobs.0.id', $unmount['id'])
+            ->assertJsonPath('data.workshop.jobs.0.finish_ms', RUN_T0 + UNMOUNT_TIRES_T1_MS);
+
+        clockAt(UNMOUNT_TIRES_T1_MS + 1_000);
+        getGarage($driver)->assertOk()->assertJsonPath('data.car.slots.0.part', null)->assertJsonPath('data.car.run.status', 'running');
+
+        expect($old->refresh()->isMounted())->toBeFalse();
+    });
+
+    it('lets the part be queued again, and gives the place in the queue back', function () {
+        [$driver] = garageDriver();
+        $jobs = [];
+
+        foreach ([['sport-exhaust-t2', 'exhaust'], ['street-tires-t2', 'tires'], ['sport-suspension-t1', 'suspension'], ['disc-brakes-t2', 'brakes']] as [$slug, $slot]) {
+            $part = inventoryPart($driver, $slug, $slot);
+            $jobs[$slot] = [$part, queueJob($driver, 'mount', $part->id)->assertCreated()->json('data.workshop.jobs.'.count($jobs).'.id')];
+        }
+
+        [$tires, $tiresJob] = $jobs['tires'];
+        cancelJob($driver, $tiresJob)->assertOk()->assertJsonCount(3, 'data.workshop.jobs');
+
+        queueJob($driver, 'mount', $tires->id)->assertCreated()->assertJsonCount(4, 'data.workshop.jobs');
+    });
+
+    it('refuses a job that is done, and does not undo it', function () {
+        [$driver, , $car] = garageDriver();
+        $job = queueJob($driver, 'mount', inventoryPart($driver)->id)->assertCreated()->json('data.workshop.jobs.0.id');
+
+        clockAt(MOUNT_T2_MS + 1_000);
+        cancelJob($driver, $job)
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'job_done')
+            ->assertJsonPath('message', 'That job is already done.');
+
+        getGarage($driver)->assertOk()->assertJsonPath('data.car.slots.0.part.slug', 'street-tires-t2');
+
+        expect($car->mountedSlugs())->toHaveCount(1);
+    });
+
+    it('refuses a job that is not there, a job of another driver, and a job that was cancelled already', function () {
+        [$driver] = garageDriver();
+        [$other] = driverWithRun();
+        $mine = queueJob($driver, 'mount', inventoryPart($driver)->id)->assertCreated()->json('data.workshop.jobs.0.id');
+        $theirs = queueJob($other, 'mount', inventoryPart($other)->id)->assertCreated()->json('data.workshop.jobs.0.id');
+
+        cancelJob($driver, 999_999)->assertStatus(422)->assertJsonPath('code', 'job_not_found');
+        cancelJob($driver, $theirs)->assertStatus(422)->assertJsonPath('code', 'job_not_found');
+        cancelJob($driver, $mine)->assertOk();
+        cancelJob($driver, $mine)->assertStatus(422)->assertJsonPath('code', 'job_not_found');
+
+        // The job of the other driver is where it was.
+        expect(WorkshopJob::query()->where('user_id', $other->id)->count())->toBe(1);
+    });
+
+    it('answers in the language of the driver', function () {
+        [$driver] = garageDriver();
+
+        cancelJob($driver, 999_999, ['X-Locale' => 'pl'])->assertStatus(422)->assertJsonPath('message', 'Nie ma takiego zlecenia.');
     });
 });
 

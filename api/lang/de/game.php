@@ -17,6 +17,8 @@ return [
         'part_not_mounted' => 'Dieses Teil ist nicht am Auto montiert.',
         'queue_full' => 'Die Warteschlange der Werkstatt ist voll.',
         'slot_busy' => 'Ein anderes Teil für diesen Platz wartet bereits in der Werkstatt.',
+        'job_not_found' => 'Diesen Auftrag gibt es nicht.',
+        'job_done' => 'Dieser Auftrag ist bereits erledigt.',
         'no_car' => 'Du hast noch kein Auto.',
         'request_reused' => 'Diese Anfrage wurde bereits für etwas anderes verwendet.',
     ],

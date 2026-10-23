@@ -114,6 +114,56 @@ final class Workshop
     }
 
     /**
+     * Cancels a job that waits for the mechanic or that the mechanic is at, and the jobs that cannot happen without it: the
+     * part that was to take the place of the one whose taking off is cancelled. Nothing is paid and nothing is given back,
+     * because a job costs only time; the work done on the job at work is lost, and its part stays where it was. The jobs that
+     * wait move up, one after the other, from the end of the job still at work, or from now when none is. When no job is left,
+     * the car drives again from now.
+     *
+     * @return list<WorkshopJob> the jobs that were cancelled, the one that was asked for first
+     *
+     * @throws RuleRefusedException the job is not the driver's, or is done already
+     */
+    public function cancel(int $userId, int $jobId, ?int $nowMs = null): array
+    {
+        return $this->locked($userId, $nowMs, function (?RaceRun $run, int $now) use ($userId, $jobId): array {
+            // What is due comes first: a job that was done in the meantime cannot be taken back.
+            $this->advanceLocked($userId, $run, $now);
+
+            $job = WorkshopJob::query()->where('user_id', $userId)->with('part')->find($jobId) ?? throw new RuleRefusedException('job_not_found');
+
+            if ($job->status === WorkshopJob::STATUS_DONE) {
+                throw new RuleRefusedException('job_done');
+            }
+
+            $pending = WorkshopJob::query()
+                ->where('user_id', $userId)
+                ->where('status', '!=', WorkshopJob::STATUS_DONE)
+                ->orderBy('start_ms')
+                ->orderBy('id')
+                ->with('part')
+                ->lockForUpdate()
+                ->get()
+                ->values();
+
+            $cancelled = $pending->filter(fn (WorkshopJob $other): bool => $other->id === $job->id || $this->cannotHappenWithout($other, $job))->values();
+            WorkshopJob::query()->whereIn('id', $cancelled->modelKeys())->delete();
+
+            $remaining = $pending->reject(fn (WorkshopJob $other): bool => $cancelled->contains('id', $other->id))->values();
+            $this->moveUp($remaining, $now);
+
+            if ($remaining->isEmpty()) {
+                $this->leaveWorkshopAfterCancel($job->car_id, $run, $now);
+            } else {
+                // The first of the jobs that wait starts at once when the mechanic has just been freed.
+                $this->advanceLocked($userId, $run, $now);
+            }
+
+            return [$job, ...$cancelled->reject(fn (WorkshopJob $other): bool => $other->id === $job->id)->values()->all()];
+        });
+    }
+
+    /**
      * The jobs that are not done, in the order they are carried out.
      *
      * @return list<WorkshopJob>
@@ -183,6 +233,53 @@ final class Workshop
         }
 
         return [[WorkshopJob::KIND_UNMOUNT, $part]];
+    }
+
+    /**
+     * Whether a job is there only for the sake of another: a part is put on a slot after the part that sat there has been
+     * taken off, so that job goes when the one that empties the slot does.
+     */
+    private function cannotHappenWithout(WorkshopJob $job, WorkshopJob $cancelled): bool
+    {
+        return $cancelled->kind === WorkshopJob::KIND_UNMOUNT
+            && $job->kind === WorkshopJob::KIND_MOUNT
+            && $job->part->slot === $cancelled->part->slot
+            && ($job->start_ms > $cancelled->start_ms || ($job->start_ms === $cancelled->start_ms && $job->id > $cancelled->id));
+    }
+
+    /**
+     * Puts the jobs that wait one after the other from the end of the job at work, or from now when none is: each lasts
+     * what it did before, so only its times move.
+     *
+     * @param  Collection<int, WorkshopJob>  $remaining  in the order they are carried out
+     */
+    private function moveUp(Collection $remaining, int $now): void
+    {
+        $cursor = $now;
+
+        foreach ($remaining as $job) {
+            if ($job->status === WorkshopJob::STATUS_WORKING) {
+                $cursor = $job->finish_ms;
+
+                continue;
+            }
+
+            $duration = $job->finish_ms - $job->start_ms;
+            $job->forceFill(['start_ms' => $cursor, 'finish_ms' => $cursor + $duration])->save();
+            $cursor += $duration;
+        }
+    }
+
+    /** Nothing is left to do on the car: it leaves the workshop, and drives from now with the parts it has. */
+    private function leaveWorkshopAfterCancel(int $carId, ?RaceRun $run, int $now): void
+    {
+        if ($run === null || $run->car_id !== $carId || $run->stop_reason !== RaceRun::STOP_WORKSHOP) {
+            return;
+        }
+
+        $car = Car::query()->findOrFail($carId);
+
+        $this->runs->leaveWorkshop($run, $this->inputs->make($run->car_slug, $run->track_slug, $car->mountedSlugs()), $now);
     }
 
     private function hasPendingJobs(int $userId): bool

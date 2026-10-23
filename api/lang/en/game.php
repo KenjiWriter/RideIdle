@@ -17,6 +17,8 @@ return [
         'part_not_mounted' => 'This part is not on the car.',
         'queue_full' => 'The workshop queue is full.',
         'slot_busy' => 'Another part for this slot is already waiting in the workshop.',
+        'job_not_found' => 'There is no such job.',
+        'job_done' => 'That job is already done.',
         'no_car' => 'You have no car yet.',
         'request_reused' => 'This request was already used for something else.',
     ],
