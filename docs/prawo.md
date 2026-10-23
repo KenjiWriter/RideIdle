@@ -59,4 +59,21 @@ Aplikacja **nie używa** cookies (token, język i kilka znaczników są w `local
 
 ## Tłumaczenia
 
-Wszystkie teksty (interfejs, komunikaty API, maile, regulamin i polityka) powstały jako angielski i polski wzorzec, a francuskie, niemieckie i brazylijskie są moim tłumaczeniem. Nie są sprawdzone przez osoby, dla których te języki są ojczyste. Testy pilnują tylko struktury (klucze, symbole zastępcze), nie jakości.
+Teksty (interfejs, komunikaty API, maile, treści gry, regulamin i polityka) powstały jako angielski i polski wzorzec. Francuski, niemiecki i brazylijski to moje tłumaczenie, więc przeszły **niezależny przegląd**: trzy osobne, tylko czytające przebiegi (po jednym na język) porównały wszystkie te pliki z angielskim i polskim. Poprawki zrobiłem w osobnych commitach (`fix(i18n)`), a testy pilnują struktury (klucze, symbole zastępcze, ta sama liczba akapitów w tekstach prawnych) i dwóch rzeczy, które przegląd wykrył: liczba mnoga zera w portugalskim i twarda spacja przed `: ; ? !` we francuskim.
+
+**To nie jest przegląd przez osobę, dla której język jest ojczysty.** Przegląd wychwycił realne błędy (m.in. „rend votre pilote”, „Fingerabdruck” w polityce prywatności, „operador” w znaczeniu LGPD, brak reguły liczby mnogiej `pt-BR`, „0 voltas”), ale to wciąż model sprawdzający model. Co wyłapano i poprawiono:
+
+- **Kalki z angielskiego i polskiego** (niemiecki „funktioniert einmal und X Minuten lang”, francuski „pour une courte durée”, brazylijski „você não pode pagar”).
+- **Jedno słowo na jedno pojęcie**: w brazylijskim „login” (zamiast „entrada / acesso / forma de entrar”), w niemieckim „Anmeldemethode”, we francuskim „adresse e-mail”, gdy chodzi o adres.
+- **Terminy prawne**: „hash” zamiast „odcisk palca” (w portugalskim i niemieckim to brzmi jak biometria), „responsável pelo jogo” zamiast „operador” (w LGPD operador to podmiot przetwarzający), „base legal”, „mittelbare Schäden”, „dommages indirects”.
+- **Gramatyka w czasie działania**: nazwy zaczynające się od samogłoski i „Apple” („du pilote :driver”, „Redirection vers {provider}”), forma męska zamiast neutralnej.
+
+**Czego celowo nie zmieniłem** (wątpliwe albo do decyzji): „carcaça” i „Massa” w brazylijskim, „gesperrt” w komunikacie o aucie zablokowanym w turnieju, długość kilku przycisków (francuski i niemiecki są ok. 30–80% dłuższe od angielskiego, warto sprawdzić zawijanie na 360 px) oraz nazwanie krajowych organów nadzorczych (CNIL, ANPD, UODO): tekst mówi ogólnie „organ w Twoim kraju”, bo język nie wyznacza kraju.
+
+### Wskazówki dla prawnika z przeglądów
+
+To uwagi modelu, **niezweryfikowane**; traktuj je jak listę pytań, nie ustaleń.
+
+- **Niemcy/Austria:** uznanie zgody za udzieloną przez dalsze korzystanie po zmianie regulaminu jest oceniane restrykcyjnie (przepisy o ogólnych warunkach umów, § 308 nr 5 BGB); „brak plików cookie” a pamięć lokalna (§ 25 TDDDG); pełne Impressum (§ 5 DDG); próg wieku w RODO to 16 w Niemczech i 14 w Austrii; zdolność małoletnich do zawierania umów.
+- **Francja:** cyfrowy wiek zgody to 15 lat; „akceptacja polityki prywatności” jest wątpliwa, bo polityka jest informacją, a nie czymś, co się akceptuje; wyłączenie odpowiedzialności i jednostronna zmiana warunków mogą być klauzulami niedozwolonymi wobec konsumentów; brak mediacji konsumenckiej; „mentions légales” (LCEN) wymagają wydawcy; obowiązki przechowywania logów.
+- **Brazylia:** polityka powołuje się tylko na RODO (GDPR), a użytkownicy w Brazylii podlegają LGPD (podstawy z art. 7, art. 14 o dzieciach i nastolatkach, ECA Digital, art. 18 prawa osób, art. 19 termin odpowiedzi 15 dni zamiast „miesiąca”, art. 33 transfery, art. 41 encarregado, Marco Civil art. 15 o logach); prawo konsumenckie (CDC) wobec „darmowej” gry; klauzula o prawie właściwym i sądzie (brakuje jej też w wersji angielskiej).
