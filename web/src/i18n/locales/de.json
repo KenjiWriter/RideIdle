@@ -37,7 +37,8 @@
       "required": "Gib einen Namen ein.",
       "length": "Der Name braucht 3–16 Zeichen.",
       "characters": "Verwende nur Buchstaben, Ziffern, _ und -."
-    }
+    },
+    "consent": "Mit dem Anlegen eines Fahrers akzeptierst du die {terms} und die {privacy}."
   },
   "garage": {
     "welcome": "Willkommen, {name}",
@@ -196,8 +197,8 @@
   },
   "account": {
     "consentLegend": "Bevor du ein Konto verknüpfst",
-    "terms": "Ich akzeptiere die Nutzungsbedingungen und die Datenschutzerklärung.",
-    "age": "Ich bestätige, dass ich alt genug für ein Konto bin.",
+    "terms": "Ich akzeptiere die {terms} und die {privacy}.",
+    "age": "Ich bestätige, dass ich mindestens {age} Jahre alt bin.",
     "consentRequired": "Akzeptiere die Bedingungen und bestätige dein Alter, um fortzufahren.",
     "continueWith": "Weiter mit {provider}",
     "opening": "{provider} wird geöffnet…",
@@ -209,7 +210,8 @@
     "errors": {
       "emailRequired": "Gib deine E-Mail-Adresse ein.",
       "emailInvalid": "Das sieht nicht nach einer E-Mail-Adresse aus."
-    }
+    },
+    "ageUnknown": "Ich bestätige, dass ich alt genug für ein Konto bin."
   },
   "linkAccount": {
     "title": "Garage sichern",
@@ -238,6 +240,8 @@
     "terms": "Nutzungsbedingungen",
     "privacy": "Datenschutzerklärung",
     "loadError": "Die Seite konnte nicht geladen werden.",
-    "back": "Zurück zum Start"
+    "back": "Zurück zum Start",
+    "termsLink": "Nutzungsbedingungen",
+    "privacyLink": "Datenschutzerklärung"
   }
 }

@@ -13,4 +13,8 @@ const { t } = useI18n()
     <LanguageSwitcher />
   </header>
   <RouterView />
+  <footer class="mx-auto flex max-w-2xl flex-wrap justify-center gap-x-6 gap-y-2 px-4 pb-10 pt-4 text-sm text-muted" data-test="footer">
+    <RouterLink to="/terms" class="underline" data-test="footer-terms">{{ t('legal.terms') }}</RouterLink>
+    <RouterLink to="/privacy" class="underline" data-test="footer-privacy">{{ t('legal.privacy') }}</RouterLink>
+  </footer>
 </template>

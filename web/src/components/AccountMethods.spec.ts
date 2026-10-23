@@ -25,6 +25,11 @@ async function show(mode: 'link' | 'add' | 'login', extra: Record<string, () => 
   return { ...mounted, calls }
 }
 
+/** What the server says for the legal texts. */
+function legal(minAge: number) {
+  return { min_age: minAge, version: '2026-10-23', guest_expiry_days: 90, operator: { name: null, address: null, email: null } }
+}
+
 function made(calls: Call[], method: string, url: string): Call[] {
   return calls.filter((call) => call.method === method && call.url === url)
 }
@@ -54,6 +59,31 @@ describe('AccountMethods', () => {
         'Continue with Facebook',
         'Continue with Apple',
       ])
+    })
+
+    it('says the age the server says, and links the terms and the privacy policy', async () => {
+      const { wrapper } = await show('link', { 'GET /api/v1/meta/legal': () => respond(200, { data: legal(18) }) })
+
+      expect(wrapper.get('[data-test="age-text"]').text()).toBe('I confirm that I am at least 18 years old.')
+      expect(wrapper.get('[data-test="terms-link"]').attributes('href')).toBe('/terms')
+      expect(wrapper.get('[data-test="privacy-link"]').attributes('href')).toBe('/privacy')
+    })
+
+    it('says it generally when the age cannot be asked, and still lets the driver go on', async () => {
+      const { wrapper } = await show('link')
+
+      expect(wrapper.get('[data-test="age-text"]').text()).toBe('I confirm that I am old enough to have an account.')
+      expect(wrapper.find('[data-test="send"]').exists()).toBe(true)
+    })
+
+    it('asks for the age only when it asks for consent', async () => {
+      const link = await show('link', { 'GET /api/v1/meta/legal': () => respond(200, { data: legal(16) }) })
+      const login = await show('login', { 'GET /api/v1/meta/legal': () => respond(200, { data: legal(16) }) })
+      const add = await show('add', { 'GET /api/v1/meta/legal': () => respond(200, { data: legal(16) }) })
+
+      expect(made(link.calls, 'GET', '/api/v1/meta/legal')).toHaveLength(1)
+      expect(made(login.calls, 'GET', '/api/v1/meta/legal')).toHaveLength(0)
+      expect(made(add.calls, 'GET', '/api/v1/meta/legal')).toHaveLength(0)
     })
 
     it('offers only the e-mail when the server has no provider on', async () => {

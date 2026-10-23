@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
+import LegalLinks from '@/components/LegalLinks.vue'
 import { NAME_MAX, validateName } from '@/features/driver/validateName'
 import { useSessionStore } from '@/stores/session'
 
@@ -94,6 +95,9 @@ async function submit(): Promise<void> {
       <button type="submit" class="btn btn-primary" :disabled="submitting" data-test="submit">
         {{ submitting ? t('create.submitting') : t('create.submit') }}
       </button>
+
+      <!-- A guest asks for no account and gives no personal data, so there is no box to tick: the way in says what it means. -->
+      <p class="text-sm text-muted" data-test="consent"><LegalLinks keypath="create.consent" /></p>
     </form>
 
     <RouterLink to="/" class="text-muted underline" data-test="back">{{ t('create.back') }}</RouterLink>

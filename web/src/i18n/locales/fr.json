@@ -37,7 +37,8 @@
       "required": "Saisissez un nom.",
       "length": "Le nom doit comporter 3 à 16 caractères.",
       "characters": "Utilisez uniquement des lettres, des chiffres, _ et -."
-    }
+    },
+    "consent": "En créant un pilote, vous acceptez {terms} et {privacy}."
   },
   "garage": {
     "welcome": "Bienvenue, {name}",
@@ -196,8 +197,8 @@
   },
   "account": {
     "consentLegend": "Avant de lier un compte",
-    "terms": "J’accepte les conditions d’utilisation et la politique de confidentialité.",
-    "age": "Je confirme avoir l’âge requis pour avoir un compte.",
+    "terms": "J’accepte {terms} et {privacy}.",
+    "age": "Je confirme avoir au moins {age} ans.",
     "consentRequired": "Acceptez les conditions et confirmez votre âge pour continuer.",
     "continueWith": "Continuer avec {provider}",
     "opening": "Ouverture de {provider}…",
@@ -209,7 +210,8 @@
     "errors": {
       "emailRequired": "Saisissez votre e-mail.",
       "emailInvalid": "Cela ne ressemble pas à une adresse e-mail."
-    }
+    },
+    "ageUnknown": "Je confirme avoir l’âge requis pour avoir un compte."
   },
   "linkAccount": {
     "title": "Sauvegarder votre garage",
@@ -238,6 +240,8 @@
     "terms": "Conditions d’utilisation",
     "privacy": "Politique de confidentialité",
     "loadError": "La page n’a pas pu être chargée.",
-    "back": "Retour au début"
+    "back": "Retour au début",
+    "termsLink": "les conditions d’utilisation",
+    "privacyLink": "la politique de confidentialité"
   }
 }

@@ -37,7 +37,8 @@
       "required": "Wpisz imię.",
       "length": "Imię musi mieć 3–16 znaków.",
       "characters": "Użyj tylko liter, cyfr, _ i -."
-    }
+    },
+    "consent": "Tworząc kierowcę, akceptujesz {terms} i {privacy}."
   },
   "garage": {
     "welcome": "Witaj, {name}",
@@ -196,8 +197,8 @@
   },
   "account": {
     "consentLegend": "Zanim połączysz konto",
-    "terms": "Akceptuję regulamin i politykę prywatności.",
-    "age": "Potwierdzam, że mam wiek wymagany do założenia konta.",
+    "terms": "Akceptuję {terms} i {privacy}.",
+    "age": "Potwierdzam, że mam co najmniej {age} lat.",
     "consentRequired": "Zaakceptuj regulamin i potwierdź wiek, aby kontynuować.",
     "continueWith": "Kontynuuj przez {provider}",
     "opening": "Otwieramy {provider}…",
@@ -209,7 +210,8 @@
     "errors": {
       "emailRequired": "Podaj swój e-mail.",
       "emailInvalid": "To nie wygląda na adres e-mail."
-    }
+    },
+    "ageUnknown": "Potwierdzam, że mam wiek wymagany do założenia konta."
   },
   "linkAccount": {
     "title": "Zapisz swój garaż",
@@ -238,6 +240,8 @@
     "terms": "Regulamin",
     "privacy": "Polityka prywatności",
     "loadError": "Nie udało się wczytać strony.",
-    "back": "Wróć na początek"
+    "back": "Wróć na początek",
+    "termsLink": "regulamin",
+    "privacyLink": "politykę prywatności"
   }
 }

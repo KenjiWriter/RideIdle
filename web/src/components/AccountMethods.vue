@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
 import type { SocialProvider } from '@/api/types'
+import LegalLinks from '@/components/LegalLinks.vue'
 import { useAccountStore } from '@/stores/account'
 import { useSessionStore } from '@/stores/session'
 
@@ -39,6 +40,11 @@ const error = ref<string | null>(null)
 onMounted(() => {
   if (!account.providersLoaded) {
     void account.loadProviders()
+  }
+
+  // The age is the server's to say. If it cannot be asked, the checkbox says it generally and the server still asks.
+  if (asksConsent.value) {
+    void account.loadLegal().catch(() => undefined)
   }
 })
 
@@ -150,11 +156,13 @@ async function another(): Promise<void> {
       <legend class="sr-only">{{ t('account.consentLegend') }}</legend>
       <label class="flex items-start gap-3">
         <input v-model="terms" type="checkbox" class="mt-1 size-5 shrink-0 accent-amber" data-test="terms" />
-        <span class="text-sm">{{ t('account.terms') }}</span>
+        <LegalLinks keypath="account.terms" class="text-sm" />
       </label>
       <label class="flex items-start gap-3">
         <input v-model="age" type="checkbox" class="mt-1 size-5 shrink-0 accent-amber" data-test="age" />
-        <span class="text-sm">{{ t('account.age') }}</span>
+        <span class="text-sm" data-test="age-text">
+          {{ account.legal ? t('account.age', { age: account.legal.min_age }) : t('account.ageUnknown') }}
+        </span>
       </label>
     </fieldset>
 

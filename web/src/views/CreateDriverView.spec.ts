@@ -39,6 +39,15 @@ describe('CreateDriverView', () => {
     vi.unstubAllGlobals()
   })
 
+  it('says that creating a driver means accepting the terms and the privacy policy, with a link to each', async () => {
+    const { wrapper } = await open()
+
+    expect(wrapper.get('[data-test="consent"]').text()).toBe('By creating a driver you accept the terms of service and the privacy policy.')
+    expect(wrapper.get('[data-test="consent"] [data-test="terms-link"]').attributes('href')).toBe('/terms')
+    expect(wrapper.get('[data-test="consent"] [data-test="privacy-link"]').attributes('href')).toBe('/privacy')
+    expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false)
+  })
+
   it('does not scold before the first submit', async () => {
     const { wrapper, error } = await open()
 

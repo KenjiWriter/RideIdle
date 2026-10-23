@@ -37,7 +37,8 @@
       "required": "Digite um nome.",
       "length": "O nome precisa ter de 3 a 16 caracteres.",
       "characters": "Use apenas letras, números, _ e -."
-    }
+    },
+    "consent": "Ao criar um piloto, você aceita os {terms} e a {privacy}."
   },
   "garage": {
     "welcome": "Bem-vindo, {name}",
@@ -196,8 +197,8 @@
   },
   "account": {
     "consentLegend": "Antes de vincular uma conta",
-    "terms": "Aceito os termos de uso e a política de privacidade.",
-    "age": "Confirmo que tenho idade suficiente para ter uma conta.",
+    "terms": "Aceito os {terms} e a {privacy}.",
+    "age": "Confirmo que tenho pelo menos {age} anos.",
     "consentRequired": "Aceite os termos e confirme sua idade para continuar.",
     "continueWith": "Continuar com {provider}",
     "opening": "Abrindo {provider}…",
@@ -209,7 +210,8 @@
     "errors": {
       "emailRequired": "Digite seu e-mail.",
       "emailInvalid": "Isso não parece um endereço de e-mail."
-    }
+    },
+    "ageUnknown": "Confirmo que tenho idade suficiente para ter uma conta."
   },
   "linkAccount": {
     "title": "Salvar sua garagem",
@@ -238,6 +240,8 @@
     "terms": "Termos de uso",
     "privacy": "Política de privacidade",
     "loadError": "Não foi possível carregar a página.",
-    "back": "Voltar ao início"
+    "back": "Voltar ao início",
+    "termsLink": "termos de uso",
+    "privacyLink": "política de privacidade"
   }
 }

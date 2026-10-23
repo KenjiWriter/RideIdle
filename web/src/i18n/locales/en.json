@@ -37,7 +37,8 @@
       "required": "Enter a name.",
       "length": "The name needs 3–16 characters.",
       "characters": "Use only letters, digits, _ and -."
-    }
+    },
+    "consent": "By creating a driver you accept the {terms} and the {privacy}."
   },
   "garage": {
     "welcome": "Welcome, {name}",
@@ -196,8 +197,8 @@
   },
   "account": {
     "consentLegend": "Before you link an account",
-    "terms": "I accept the terms of service and the privacy policy.",
-    "age": "I confirm that I am old enough to have an account.",
+    "terms": "I accept the {terms} and the {privacy}.",
+    "age": "I confirm that I am at least {age} years old.",
     "consentRequired": "Accept the terms and confirm your age to continue.",
     "continueWith": "Continue with {provider}",
     "opening": "Opening {provider}…",
@@ -209,7 +210,8 @@
     "errors": {
       "emailRequired": "Enter your e-mail.",
       "emailInvalid": "This does not look like an e-mail address."
-    }
+    },
+    "ageUnknown": "I confirm that I am old enough to have an account."
   },
   "linkAccount": {
     "title": "Save your garage",
@@ -238,6 +240,8 @@
     "terms": "Terms of service",
     "privacy": "Privacy policy",
     "loadError": "The page could not be loaded.",
-    "back": "Back to the start"
+    "back": "Back to the start",
+    "termsLink": "terms of service",
+    "privacyLink": "privacy policy"
   }
 }
