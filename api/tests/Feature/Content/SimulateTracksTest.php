@@ -140,7 +140,8 @@ describe('the gates of the track simulator', function () {
         $wins = trackReportJson()['wins'];
 
         expect(trackReportJson()['gates']['no_car_wins_more_than_two'])->toBeTrue()
-            ->and(array_map('count', $wins))->toBe(['bizon-m-2' => 2, 'rdzak-gt-4' => 2, 'kuna-4x4' => 1]);
+            // With the cars of the dealer and the exchange the wins are spread over four cars, and the lightest Rdzak takes the track in the snow.
+            ->and(array_map('count', $wins))->toBe(['bizon-m-2' => 2, 'kuna-4x4' => 1, 'rdzak-gt-2' => 1, 'rdzak-gt-4' => 1]);
 
         $this->artisan('tracks:simulate', ['--strict' => true])->assertSuccessful();
     });

@@ -14,6 +14,7 @@ use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\Travel as Journey;
 use App\Models\WorkshopJob;
+use App\Support\I18nText;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -152,25 +153,73 @@ final class CityGarages
                 throw new RuleRefusedException('wreck_not_for_sale');
             }
 
-            if (! isset($this->rules->regions()[$region])) {
-                throw new RuleRefusedException('city_not_found');
-            }
-
-            if (! $this->of($userId)->contains('region', $region)) {
-                throw new RuleRefusedException('no_garage', ['city' => $this->rules->cityName($region)]);
-            }
-
-            if (! $this->hasRoomIn($userId, $region)) {
-                throw new RuleRefusedException('garage_full', ['city' => $this->rules->cityName($region)]);
-            }
+            $this->assertRoomIn($userId, $region);
 
             $this->ledger->post($userId, -$price, 'wreck', $key);
 
-            $track = $this->rules->tracksOf($region)[0];
-            $run = $this->runs->start($userId, $vehicle, $track, $this->inputs->make($vehicle, $track), $this->inputs->tankMl($vehicle), $nowMs);
-
-            return Car::query()->findOrFail($run->car_id);
+            return $this->park($userId, $vehicle, $region, $nowMs);
         }, Ledger::DEADLOCK_ATTEMPTS);
+    }
+
+    /**
+     * Whether a car can be put in the garage of a city: the city exists, the driver has a garage there and it has a free place.
+     *
+     * @throws RuleRefusedException `city_not_found`, `no_garage` or `garage_full`
+     */
+    public function assertRoomIn(int $userId, string $region): void
+    {
+        if (! isset($this->rules->regions()[$region])) {
+            throw new RuleRefusedException('city_not_found');
+        }
+
+        if (! $this->of($userId)->contains('region', $region)) {
+            throw new RuleRefusedException('no_garage', ['city' => $this->rules->cityName($region)]);
+        }
+
+        if (! $this->hasRoomIn($userId, $region)) {
+            throw new RuleRefusedException('garage_full', ['city' => $this->rules->cityName($region)]);
+        }
+    }
+
+    /**
+     * Puts a new car in the garage of a city, with the run that drives it on the first track of the city and a full tank. The caller holds
+     * the lock of the wallet and has checked the room (`assertRoomIn`) and taken the money.
+     *
+     * @param  int  $conditionPpm  the condition of the car (1 000 000 is perfect): a worn car breaks down more
+     */
+    public function park(int $userId, string $vehicle, string $region, ?int $nowMs = null, int $conditionPpm = 1_000_000): Car
+    {
+        $track = $this->rules->tracksOf($region)[0];
+
+        $car = Car::query()->create([
+            'user_id' => $userId,
+            'vehicle_slug' => $vehicle,
+            'level' => $this->rules->carStartLevel(),
+            'xp' => $this->rules->carXpToReach($this->rules->carStartLevel()),
+            'condition_ppm' => $conditionPpm,
+        ]);
+
+        $this->runs->start($userId, $vehicle, $track, $this->inputs->make($vehicle, $track, [], $conditionPpm), $this->inputs->tankMl($vehicle), $nowMs, $car);
+
+        return $car;
+    }
+
+    /**
+     * The wrecks the yard sells, the cheapest first: the cars of the start whose price the rules give.
+     *
+     * @return list<array{slug: string, name: string, class: string, price_cents: int}>
+     */
+    public function yard(): array
+    {
+        return collect($this->catalog->startingVehicles())
+            ->filter(fn (array $vehicle): bool => $this->rules->wreckPriceCents($vehicle['slug']) !== null)
+            ->sortBy(fn (array $vehicle): int => $this->rules->wreckPriceCents($vehicle['slug']))
+            ->map(fn (array $vehicle): array => [
+                'slug' => $vehicle['slug'],
+                'name' => I18nText::from($vehicle['name'])->for(),
+                'class' => $vehicle['class'],
+                'price_cents' => $this->rules->wreckPriceCents($vehicle['slug']),
+            ])->values()->all();
     }
 
     /** Whether a car has a job waiting for the mechanic, or one that is done now: such a car cannot leave the city. */

@@ -117,15 +117,7 @@ final class FleetController extends Controller
             ];
         }
 
-        $yard = collect($this->catalog->startingVehicles())
-            ->filter(fn (array $vehicle): bool => $this->rules->wreckPriceCents($vehicle['slug']) !== null)
-            ->sortBy(fn (array $vehicle): int => $this->rules->wreckPriceCents($vehicle['slug']))
-            ->map(fn (array $vehicle): array => [
-                'slug' => $vehicle['slug'],
-                'name' => I18nText::from($vehicle['name'])->for(),
-                'class' => $vehicle['class'],
-                'price_cents' => $this->rules->wreckPriceCents($vehicle['slug']),
-            ])->values()->all();
+        $yard = $this->garages->yard();
 
         return response()->json([
             'data' => [
@@ -152,6 +144,7 @@ final class FleetController extends Controller
             'id' => $car->id,
             'level' => $car->level,
             'selected' => $selected?->id === $car->id,
+            'condition_percent' => (int) round($car->conditionPpm() / 10_000),
             'vehicle' => [
                 'slug' => $car->vehicle_slug,
                 'name' => $vehicle !== null ? I18nText::from($vehicle['name'])->for() : $car->vehicle_slug,

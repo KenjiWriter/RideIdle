@@ -1,0 +1,32 @@
+{
+  "slug": "kornet-v6",
+  "name": {
+    "en": "Kornet V6",
+    "pl": "Kornet V6",
+    "fr": "Kornet V6",
+    "de": "Kornet V6",
+    "pt-BR": "Kornet V6"
+  },
+  "description": {
+    "en": "A rear-drive coupe with a V6. Quick, light on cargo and hard on tires.",
+    "pl": "Coupe z napędem na tył i V6. Szybkie, mało ładowne i niedelikatne dla opon.",
+    "fr": "Un coupé propulsion à moteur V6. Rapide, peu chargeable et dur avec les pneus.",
+    "de": "Ein Heckantriebs-Coupé mit V6. Schnell, wenig Ladung und hart zu den Reifen.",
+    "pt-BR": "Um cupê com tração traseira e V6. Rápido, com pouca carga e duro com os pneus."
+  },
+  "class": "coupe",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "V6", "displacement_l": 2.5, "tune": 0.95 },
+  "power_kw": 160,
+  "mass_kg": 1380,
+  "top_speed_kmh": 210,
+  "clearance": 12,
+  "cargo_kg": 90,
+  "seats": 2,
+  "tank_l": 60,
+  "tier": 4,
+  "min_player_level": 9,
+  "price_cents": 3000000,
+  "sources": ["exchange", "dealer"]
+}

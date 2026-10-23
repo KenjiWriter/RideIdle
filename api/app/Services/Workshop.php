@@ -303,7 +303,7 @@ final class Workshop
 
         $car = Car::query()->findOrFail($carId);
 
-        $this->runs->leaveWorkshop($run, $this->inputs->make($run->car_slug, $run->track_slug, $car->mountedSlugs()), $now);
+        $this->runs->leaveWorkshop($run, $this->inputs->make($run->car_slug, $run->track_slug, $car->mountedSlugs(), $car->conditionPpm()), $now);
     }
 
     private function hasPendingJobs(int $userId): bool
@@ -359,7 +359,7 @@ final class Workshop
 
                 $this->runs->leaveWorkshop(
                     $run,
-                    $this->inputs->make($run->car_slug, $run->track_slug, $car->mountedSlugs()),
+                    $this->inputs->make($run->car_slug, $run->track_slug, $car->mountedSlugs(), $car->conditionPpm()),
                     $job->finish_ms,
                 );
             }

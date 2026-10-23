@@ -3,7 +3,7 @@
   "version": "2026.10.0",
   "fuel": { "price_cents_per_liter": 200, "reference_power_kw": 97 },
   "repair": { "cost_cents": 3000 },
-  "breakdown": { "chance_per_lap_ppm": 3000 },
+  "breakdown": { "chance_per_lap_ppm": 3000, "condition_factor": 9 },
   "tow": { "delay_ms": 300000, "fuel_laps": 2 },
   "stock_tires": "street-tires-t1",
   "car": {
@@ -19,6 +19,42 @@
     "capacity": 3,
     "price_cents": 500000,
     "wreck_price_cents": { "rdzak-gt-4": 114000, "bizon-m-2": 139000, "kuna-4x4": 151000 }
+  },
+  "market": {
+    "exchange": {
+      "refresh_ms": 1800000,
+      "listings": 4,
+      "mileage_km": { "min": 40000, "max": 280000 },
+      "km_per_year": { "min": 8000, "max": 18000 },
+      "age_years": { "min": 3, "max": 25 },
+      "defect_ppm": { "min": 150000, "max": 250000 },
+      "defects": [
+        { "up_to_km": 100000, "weights": [15, 60, 25] },
+        { "up_to_km": 180000, "weights": [8, 40, 40, 12] },
+        { "up_to_km": 280000, "weights": [3, 10, 35, 32, 20] }
+      ],
+      "description": { "noise_ppm": 150000, "good_from_ppm": 750000, "fair_from_ppm": 500000 },
+      "inspection_ppm": 30000
+    },
+    "pricing": {
+      "age_kept_ppm": 890000,
+      "class_floor_ppm": {
+        "hatchback": 60000,
+        "van": 60000,
+        "pickup": 60000,
+        "muscle": 60000,
+        "sedan": 80000,
+        "coupe": 200000,
+        "hot_hatch": 200000,
+        "gt": 450000,
+        "super": 800000,
+        "hyper": 900000
+      },
+      "mileage_per_year_km": 15000,
+      "mileage_span_km": 300000,
+      "mileage_floor_ppm": 700000,
+      "condition_base_ppm": 350000
+    }
   },
   "clock": { "night_lap_ppm": 1030000 },
   "player": { "xp_base": 45, "xp_exponent": 2.3, "max_level": 30 },

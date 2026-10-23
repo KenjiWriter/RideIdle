@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
+use App\Domain\Settlement\Ppm;
 use App\Exceptions\RuleRefusedException;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\RunResource;
@@ -120,7 +121,7 @@ final class RunController extends Controller
             throw new RuleRefusedException('track_elsewhere');
         }
 
-        $changed = $this->runs->reconfigure($found->id, $this->inputs->make($found->car_slug, $data['track'], $this->mountedOn($found)), trackSlug: $data['track']);
+        $changed = $this->runs->reconfigure($found->id, $this->inputs->make($found->car_slug, $data['track'], $this->mountedOn($found), $this->conditionOf($found)), trackSlug: $data['track']);
 
         return $this->respond($changed);
     }
@@ -145,7 +146,7 @@ final class RunController extends Controller
 
         $repaired = $this->runs->repair(
             $found->id,
-            $this->inputs->make($found->car_slug, $found->track_slug, $this->mountedOn($found)),
+            $this->inputs->make($found->car_slug, $found->track_slug, $this->mountedOn($found), $this->conditionOf($found)),
             costCents: $this->rules->repairCostCents(),
             requestId: $data['request_id'],
         );
@@ -169,7 +170,7 @@ final class RunController extends Controller
             return $this->noRun();
         }
 
-        $towed = $this->runs->tow($found->id, $this->inputs->make($found->car_slug, $found->track_slug, $this->mountedOn($found)), TowTerms::fromRules($this->rules));
+        $towed = $this->runs->tow($found->id, $this->inputs->make($found->car_slug, $found->track_slug, $this->mountedOn($found), $this->conditionOf($found)), TowTerms::fromRules($this->rules));
 
         return $this->respond($towed->run, 200, ['towed' => $towed->towed]);
     }
@@ -213,6 +214,12 @@ final class RunController extends Controller
     private function mountedOn(RaceRun $run): array
     {
         return $run->car?->mountedSlugs() ?? [];
+    }
+
+    /** The condition of the car of a run: a worn one breaks down more. */
+    private function conditionOf(RaceRun $run): int
+    {
+        return $run->car?->conditionPpm() ?? Ppm::ONE;
     }
 
     /**

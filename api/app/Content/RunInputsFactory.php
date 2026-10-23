@@ -31,8 +31,11 @@ final class RunInputsFactory
 
     public function __construct(private readonly Catalog $catalog, private readonly Rules $rules) {}
 
-    /** @param  array<string, string>  $mounted  slugs of the parts on the car, by slot */
-    public function make(string $carSlug, string $trackSlug, array $mounted = []): RunInputs
+    /**
+     * @param  array<string, string>  $mounted  slugs of the parts on the car, by slot
+     * @param  int  $conditionPpm  the condition of the car (1 000 000 is perfect): a worn car breaks down more
+     */
+    public function make(string $carSlug, string $trackSlug, array $mounted = [], int $conditionPpm = Ppm::ONE): RunInputs
     {
         $this->vehicle($carSlug);
         $track = $this->rules->track($trackSlug) ?? throw new InvalidArgumentException("Unknown track {$trackSlug}.");
@@ -80,7 +83,7 @@ final class RunInputsFactory
             weatherChancesPpm: $region['weather_ppm'],
             weatherEffects: $effects,
             climateSeed: $region['climate_seed'],
-            breakChancePerLapPpm: $this->rules->breakChancePerLapPpm(),
+            breakChancePerLapPpm: $this->rules->breakChancePerLapPpmFor($conditionPpm),
             nightLapPpm: $track['lit'] ? Ppm::ONE : $this->rules->nightLapPpm(),
         );
     }

@@ -58,6 +58,18 @@ final class Rules
         return $this->data['breakdown']['chance_per_lap_ppm'];
     }
 
+    /**
+     * The chance of a breakdown after a lap for a car in a condition (1 000 000 is a perfect one): the base chance multiplied by
+     * 1 + factor * (1 - condition), so a worn car breaks down more, and a perfect one as often as the base says.
+     */
+    public function breakChancePerLapPpmFor(int $conditionPpm): int
+    {
+        $worn = Ppm::ONE - max(0, min(Ppm::ONE, $conditionPpm));
+        $multiplier = Ppm::ONE + $this->data['breakdown']['condition_factor'] * $worn;
+
+        return min(Ppm::ONE, intdiv($this->breakChancePerLapPpm() * $multiplier + intdiv(Ppm::ONE, 2), Ppm::ONE));
+    }
+
     /** How long a towed car waits before it drives again, in ms. */
     public function towDelayMs(): int
     {
@@ -174,6 +186,26 @@ final class Rules
     public function wreckPriceCents(string $slug): ?int
     {
         return $this->data['garage']['wreck_price_cents'][$slug] ?? null;
+    }
+
+    /**
+     * The used-car exchange: how often it is refreshed, how many cars it lists, and how a listed car is made (`market.exchange`).
+     *
+     * @return array<string, mixed>
+     */
+    public function marketExchange(): array
+    {
+        return $this->data['market']['exchange'];
+    }
+
+    /**
+     * The formula that prices a used car (`market.pricing`).
+     *
+     * @return array<string, mixed>
+     */
+    public function marketPricing(): array
+    {
+        return $this->data['market']['pricing'];
     }
 
     /** How much longer a lap of a track that is not lit takes at night, in ppm of its time (1 030 000 is 3% longer). */

@@ -1,0 +1,32 @@
+{
+  "slug": "furgon-z-3",
+  "name": {
+    "en": "Furgon Z-3",
+    "pl": "Furgon Z-3",
+    "fr": "Furgon Z-3",
+    "de": "Furgon Z-3",
+    "pt-BR": "Furgon Z-3"
+  },
+  "description": {
+    "en": "A newer van with a little more power. Still slow, still huge.",
+    "pl": "Nowszy furgon z odrobiną więcej mocy. Nadal wolny i nadal ogromny.",
+    "fr": "Une fourgonnette plus récente avec un peu plus de puissance. Toujours lente, toujours énorme.",
+    "de": "Ein neuerer Lieferwagen mit etwas mehr Leistung. Immer noch langsam, immer noch riesig.",
+    "pt-BR": "Uma van mais nova com um pouco mais de potência. Ainda lenta, ainda enorme."
+  },
+  "class": "van",
+  "drivetrain": "fwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R4", "displacement_l": 2.0, "tune": 0.75 },
+  "power_kw": 86,
+  "mass_kg": 1820,
+  "top_speed_kmh": 140,
+  "clearance": 30,
+  "cargo_kg": 1100,
+  "seats": 3,
+  "tank_l": 75,
+  "tier": 3,
+  "min_player_level": 6,
+  "price_cents": 3800000,
+  "sources": ["dealer"]
+}

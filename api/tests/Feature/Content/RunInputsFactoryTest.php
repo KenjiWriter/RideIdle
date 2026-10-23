@@ -303,3 +303,18 @@ describe('the night and the lights of a track', function () {
         'the autodrome has lights' => ['autodrom-circuit', 1_000_000],
     ]);
 });
+
+it('breaks down more the worse the condition of the car is, and as the rules say for a perfect one', function () {
+    $chance = fn (int $conditionPpm): int => runInputsFactory()->make('rdzak-gt-4', 'zlomowo-street', [], $conditionPpm)->breakChancePerLapPpm;
+
+    // 1 + 9 * (1 - condition) times the 3 000 ppm of the rules: a car in no condition at all breaks down ten times as often.
+    expect($chance(1_000_000))->toBe(3_000)
+        ->and($chance(500_000))->toBe(16_500)
+        ->and($chance(0))->toBe(30_000)
+        ->and($chance(300_000))->toBe(21_900);
+});
+
+it('does not take a condition over perfect or under nothing for more than it is', function () {
+    expect(app(Rules::class)->breakChancePerLapPpmFor(2_000_000))->toBe(3_000)
+        ->and(app(Rules::class)->breakChancePerLapPpmFor(-5))->toBe(30_000);
+});

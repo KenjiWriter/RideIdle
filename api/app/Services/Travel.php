@@ -9,6 +9,7 @@ use App\Content\RunInputsFactory;
 use App\Domain\Run\CarStats;
 use App\Domain\Run\RoadMap;
 use App\Domain\Run\RunFreezer;
+use App\Domain\Settlement\Ppm;
 use App\Exceptions\RuleRefusedException;
 use App\Models\Car;
 use App\Models\RaceRun;
@@ -246,7 +247,7 @@ final class Travel
             if ($run !== null) {
                 $track = $this->rules->tracksOf($journey->to_region)[0];
 
-                $this->runs->arrive($run, $this->inputs->make($run->car_slug, $track, $run->car?->mountedSlugs() ?? []), $track, $journey->arrive_ms);
+                $this->runs->arrive($run, $this->inputs->make($run->car_slug, $track, $run->car?->mountedSlugs() ?? [], $run->car?->conditionPpm() ?? Ppm::ONE), $track, $journey->arrive_ms);
             }
 
             $journey->forceFill(['status' => Journey::STATUS_ARRIVED])->save();

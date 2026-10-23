@@ -44,6 +44,14 @@ function rulesSchemaErrors(array $rules): array
         $data->roads = array_values((array) $data->roads);
     }
 
+    if (isset($data->market->exchange->defects) && is_object($data->market->exchange->defects)) {
+        $data->market->exchange->defects = array_values(array_map(function (object $band): object {
+            $band->weights = array_values((array) $band->weights);
+
+            return $band;
+        }, (array) $data->market->exchange->defects));
+    }
+
     $outcome = $validator->validate($data, 'https://rideidle.local/schema/rules.schema.json');
 
     return $outcome->isValid() ? [] : (new ErrorFormatter)->formatKeyed($outcome->error());

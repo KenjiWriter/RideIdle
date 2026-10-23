@@ -1,0 +1,32 @@
+{
+  "slug": "rdzak-gt-2",
+  "name": {
+    "en": "Rdzak GT-2",
+    "pl": "Rdzak GT-2",
+    "fr": "Rdzak GT-2",
+    "de": "Rdzak GT-2",
+    "pt-BR": "Rdzak GT-2"
+  },
+  "description": {
+    "en": "The cheapest hatchback of the Rdzak line: light, frugal and slow.",
+    "pl": "Najtańszy hatchback linii Rdzak: lekki, oszczędny i wolny.",
+    "fr": "Le hatchback le moins cher de la gamme Rdzak : léger, économe et lent.",
+    "de": "Der günstigste Kleinwagen der Rdzak-Reihe: leicht, sparsam und langsam.",
+    "pt-BR": "O hatch mais barato da linha Rdzak: leve, econômico e lento."
+  },
+  "class": "hatchback",
+  "drivetrain": "fwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R4", "displacement_l": 1.3, "tune": 1.0 },
+  "power_kw": 65,
+  "mass_kg": 880,
+  "top_speed_kmh": 150,
+  "clearance": 8,
+  "cargo_kg": 90,
+  "seats": 4,
+  "tank_l": 38,
+  "tier": 1,
+  "min_player_level": 1,
+  "price_cents": 1550000,
+  "sources": ["exchange", "dealer"]
+}

@@ -1,0 +1,32 @@
+{
+  "slug": "liman-2-0",
+  "name": {
+    "en": "Liman 2.0",
+    "pl": "Liman 2.0",
+    "fr": "Liman 2.0",
+    "de": "Liman 2.0",
+    "pt-BR": "Liman 2.0"
+  },
+  "description": {
+    "en": "A roomy rear-wheel-drive sedan. Fast in a straight line, comfortable everywhere.",
+    "pl": "Przestronny sedan z napędem na tył. Szybki na prostej, wygodny wszędzie.",
+    "fr": "Une berline propulsion spacieuse. Rapide en ligne droite, confortable partout.",
+    "de": "Eine geräumige Limousine mit Hinterradantrieb. Schnell auf der Geraden, überall bequem.",
+    "pt-BR": "Um sedã espaçoso com tração traseira. Rápido na reta, confortável em qualquer lugar."
+  },
+  "class": "sedan",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R4", "displacement_l": 2.0, "tune": 1.0 },
+  "power_kw": 115,
+  "mass_kg": 1350,
+  "top_speed_kmh": 195,
+  "clearance": 18,
+  "cargo_kg": 450,
+  "seats": 5,
+  "tank_l": 55,
+  "tier": 3,
+  "min_player_level": 6,
+  "price_cents": 3800000,
+  "sources": ["exchange", "dealer"]
+}

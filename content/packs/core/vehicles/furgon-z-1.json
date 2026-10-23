@@ -1,0 +1,32 @@
+{
+  "slug": "furgon-z-1",
+  "name": {
+    "en": "Furgon Z-1",
+    "pl": "Furgon Z-1",
+    "fr": "Furgon Z-1",
+    "de": "Furgon Z-1",
+    "pt-BR": "Furgon Z-1"
+  },
+  "description": {
+    "en": "A tired delivery van. Slow, heavy and very roomy; it does not mind the mud.",
+    "pl": "Zmęczony furgon dostawczy. Wolny, ciężki i bardzo pojemny; błota się nie boi.",
+    "fr": "Une fourgonnette de livraison fatiguée. Lente, lourde et très spacieuse ; la boue ne lui fait pas peur.",
+    "de": "Ein müder Lieferwagen. Langsam, schwer und sehr geräumig; Schlamm stört ihn nicht.",
+    "pt-BR": "Uma van de entregas cansada. Lenta, pesada e muito espaçosa; a lama não a assusta."
+  },
+  "class": "van",
+  "drivetrain": "fwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R4", "displacement_l": 2.0, "tune": 0.75 },
+  "power_kw": 81,
+  "mass_kg": 1750,
+  "top_speed_kmh": 130,
+  "clearance": 30,
+  "cargo_kg": 900,
+  "seats": 3,
+  "tank_l": 70,
+  "tier": 2,
+  "min_player_level": 3,
+  "price_cents": 2600000,
+  "sources": ["exchange", "dealer"]
+}

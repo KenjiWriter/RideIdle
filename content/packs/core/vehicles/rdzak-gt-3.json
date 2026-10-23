@@ -1,0 +1,32 @@
+{
+  "slug": "rdzak-gt-3",
+  "name": {
+    "en": "Rdzak GT-3",
+    "pl": "Rdzak GT-3",
+    "fr": "Rdzak GT-3",
+    "de": "Rdzak GT-3",
+    "pt-BR": "Rdzak GT-3"
+  },
+  "description": {
+    "en": "Lighter and a little weaker than the GT-4. A sensible used buy.",
+    "pl": "Lżejszy i nieco słabszy od GT-4. Rozsądny zakup z giełdy.",
+    "fr": "Plus léger et un peu moins puissant que la GT-4. Un achat d’occasion raisonnable.",
+    "de": "Leichter und etwas schwächer als der GT-4. Ein vernünftiger Gebrauchtkauf.",
+    "pt-BR": "Mais leve e um pouco mais fraco que o GT-4. Uma compra usada sensata."
+  },
+  "class": "hatchback",
+  "drivetrain": "fwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R4", "displacement_l": 1.6, "tune": 1.0 },
+  "power_kw": 86,
+  "mass_kg": 960,
+  "top_speed_kmh": 168,
+  "clearance": 10,
+  "cargo_kg": 100,
+  "seats": 4,
+  "tank_l": 42,
+  "tier": 2,
+  "min_player_level": 3,
+  "price_cents": 1850000,
+  "sources": ["exchange", "dealer"]
+}

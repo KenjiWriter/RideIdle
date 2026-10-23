@@ -25,7 +25,14 @@ class Car extends Model
             'user_id' => 'integer',
             'level' => 'integer',
             'xp' => 'integer',
+            'condition_ppm' => 'integer',
         ];
+    }
+
+    /** The average condition of the car in ppm (1 000 000 is perfect): a car that was not given one is perfect. */
+    public function conditionPpm(): int
+    {
+        return $this->condition_ppm ?? 1_000_000;
     }
 
     /** @return BelongsTo<User, $this> */

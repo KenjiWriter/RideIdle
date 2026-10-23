@@ -1,0 +1,32 @@
+{
+  "slug": "rdzak-gt-5",
+  "name": {
+    "en": "Rdzak GT-5",
+    "pl": "Rdzak GT-5",
+    "fr": "Rdzak GT-5",
+    "de": "Rdzak GT-5",
+    "pt-BR": "Rdzak GT-5"
+  },
+  "description": {
+    "en": "The newest Rdzak: the GT-4 recipe in a fresher body. Sold by the dealer.",
+    "pl": "Najnowszy Rdzak: przepis GT-4 w świeższym nadwoziu. Sprzedaje go dealer.",
+    "fr": "La Rdzak la plus récente : la recette de la GT-4 dans une caisse plus fraîche. Vendue par le concessionnaire.",
+    "de": "Der neueste Rdzak: das Rezept des GT-4 in frischerer Karosserie. Gibt es beim Händler.",
+    "pt-BR": "O Rdzak mais novo: a receita do GT-4 com uma carroceria mais fresca. Vendido pela concessionária."
+  },
+  "class": "hatchback",
+  "drivetrain": "fwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R4", "displacement_l": 1.6, "tune": 1.0 },
+  "power_kw": 92,
+  "mass_kg": 1020,
+  "top_speed_kmh": 175,
+  "clearance": 20,
+  "cargo_kg": 120,
+  "seats": 4,
+  "tank_l": 45,
+  "tier": 3,
+  "min_player_level": 6,
+  "price_cents": 2450000,
+  "sources": ["dealer"]
+}

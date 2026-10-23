@@ -28,8 +28,11 @@
     },
     "breakdown": {
       "type": "object",
-      "properties": { "chance_per_lap_ppm": { "type": "integer", "minimum": 0, "maximum": 1000000 } },
-      "required": ["chance_per_lap_ppm"],
+      "properties": {
+        "chance_per_lap_ppm": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "condition_factor": { "description": "How much a car in a poor condition breaks down more: the chance of a breakdown is multiplied by 1 + factor * (1 - condition), so a car in no condition at all breaks down factor + 1 times as often.", "type": "integer", "minimum": 0, "maximum": 100 }
+      },
+      "required": ["chance_per_lap_ppm", "condition_factor"],
       "additionalProperties": false
     },
     "tow": {
@@ -97,6 +100,72 @@
         }
       },
       "required": ["capacity", "price_cents", "wreck_price_cents"],
+      "additionalProperties": false
+    },
+    "market": {
+      "description": "The markets of the cities (Systemy III, point 11): the used-car exchange, where a car has a hidden condition that an inspection reveals, and the formula that prices a used car. The dealer sells the cars of the pack at their price, and the yard the wrecks of the garage rules.",
+      "type": "object",
+      "properties": {
+        "exchange": {
+          "type": "object",
+          "properties": {
+            "refresh_ms": { "description": "How long a set of listings lasts before the exchange is refreshed (about 30 minutes).", "type": "integer", "minimum": 1000 },
+            "listings": { "description": "How many cars are on the exchange at a time.", "type": "integer", "minimum": 1, "maximum": 20 },
+            "mileage_km": { "$ref": "#/$defs/range" },
+            "km_per_year": { "description": "How many km a year a car was driven: the age follows from it and the mileage.", "$ref": "#/$defs/range" },
+            "age_years": { "description": "The age of a listed car is kept within this.", "$ref": "#/$defs/range" },
+            "defect_ppm": { "description": "What one defect takes from the condition of a car, from the least to the most.", "$ref": "#/$defs/range" },
+            "defects": {
+              "description": "How many defects a car has, by its mileage: the weights of 0, 1, 2... defects, for the first band the mileage fits in. The weight of 0 is the chance of a car in a perfect condition.",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "up_to_km": { "type": "integer", "minimum": 1 },
+                  "weights": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } }
+                },
+                "required": ["up_to_km", "weights"],
+                "additionalProperties": false
+              }
+            },
+            "description": {
+              "description": "The word on a listing (good, fair, poor) comes from the condition and a random error, so it only roughly tells the truth.",
+              "type": "object",
+              "properties": {
+                "noise_ppm": { "description": "The error of the word, up or down.", "type": "integer", "minimum": 0, "maximum": 1000000 },
+                "good_from_ppm": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+                "fair_from_ppm": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+              },
+              "required": ["noise_ppm", "good_from_ppm", "fair_from_ppm"],
+              "additionalProperties": false
+            },
+            "inspection_ppm": { "description": "What an inspection costs, of the price of the car (about 3%).", "type": "integer", "minimum": 0, "maximum": 1000000 }
+          },
+          "required": ["refresh_ms", "listings", "mileage_km", "km_per_year", "age_years", "defect_ppm", "defects", "description", "inspection_ppm"],
+          "additionalProperties": false
+        },
+        "pricing": {
+          "description": "price = new price * max(floor of the class, age_kept ^ age) * mileage factor * (condition_base + (1 - condition_base) * condition), the formula of Systemy V, point 16.",
+          "type": "object",
+          "properties": {
+            "age_kept_ppm": { "description": "What a car keeps of its value every year.", "type": "integer", "minimum": 1, "maximum": 999999 },
+            "class_floor_ppm": {
+              "description": "The least a car of a class is worth, of its price new: a collector's car does not fall to nothing.",
+              "type": "object",
+              "propertyNames": { "enum": ["hatchback", "hot_hatch", "sedan", "coupe", "muscle", "pickup", "van", "gt", "super", "hyper"] },
+              "additionalProperties": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+            },
+            "mileage_per_year_km": { "description": "The mileage that a year of age explains: only the km above it count against the price.", "type": "integer", "minimum": 1 },
+            "mileage_span_km": { "description": "Over this many km above the norm the car loses its whole mileage factor.", "type": "integer", "minimum": 1 },
+            "mileage_floor_ppm": { "description": "The mileage factor is never lower than this.", "type": "integer", "minimum": 0, "maximum": 1000000 },
+            "condition_base_ppm": { "description": "A car in no condition at all is worth this much of what it would be in a perfect one.", "type": "integer", "minimum": 0, "maximum": 1000000 }
+          },
+          "required": ["age_kept_ppm", "class_floor_ppm", "mileage_per_year_km", "mileage_span_km", "mileage_floor_ppm", "condition_base_ppm"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["exchange", "pricing"],
       "additionalProperties": false
     },
     "clock": {
@@ -275,7 +344,7 @@
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "garage", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "garage", "market", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks"],
   "additionalProperties": false,
   "$defs": {
     "surfaces": {
@@ -291,6 +360,12 @@
       "required": ["asphalt_dry", "asphalt_wet", "gravel_dry", "mud", "snow"],
       "additionalProperties": false
     },
-    "stat": { "enum": ["accel", "top_speed", "grip", "handling", "braking", "clearance"] }
+    "stat": { "enum": ["accel", "top_speed", "grip", "handling", "braking", "clearance"] },
+    "range": {
+      "type": "object",
+      "properties": { "min": { "type": "integer", "minimum": 0 }, "max": { "type": "integer", "minimum": 0 } },
+      "required": ["min", "max"],
+      "additionalProperties": false
+    }
   }
 }

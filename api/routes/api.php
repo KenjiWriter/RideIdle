@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\FleetController;
 use App\Http\Controllers\Api\V1\GarageController;
 use App\Http\Controllers\Api\V1\LegalController;
 use App\Http\Controllers\Api\V1\LocaleController;
+use App\Http\Controllers\Api\V1\MarketController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PlayerController;
 use App\Http\Controllers\Api\V1\RunController;
@@ -61,6 +62,11 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/cars', [FleetController::class, 'buyCar']);
         Route::post('/cars/{car}/select', [FleetController::class, 'select'])->whereNumber('car');
         Route::post('/garages', [FleetController::class, 'buyGarage']);
+
+        Route::get('/market', [MarketController::class, 'show']);
+        Route::post('/market/exchange/{key}/inspect', [MarketController::class, 'inspect'])->where('key', '[a-z0-9.-]+');
+        Route::post('/market/exchange/{key}/buy', [MarketController::class, 'buyListing'])->where('key', '[a-z0-9.-]+');
+        Route::post('/market/dealer', [MarketController::class, 'buyNew']);
 
         Route::get('/map', [WorldController::class, 'show']);
         Route::post('/travel', [WorldController::class, 'travel']);
