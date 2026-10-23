@@ -78,7 +78,7 @@ Uwagi:
 - **Harmonogram**: `accounts:prune-tokens` (co godzinę) usuwa wygasłe i zużyte sekrety, `accounts:prune-guests` (codziennie) nieużywane konta gości. Potrzebny jest cron z `php artisan schedule:run` albo `schedule:work`.
 - **Serwer WWW** musi oddawać `index.html` dla `/account/confirm` i `/auth/callback`, tak jak dla reszty tras aplikacji. Szablon nginx z `deploy/` to robi.
 - **Dzienniki serwera**: w adresie `/account/confirm?token=…` i w adresie powrotu od Google i Facebooka jest sekret, więc log dostępu nginx z `deploy/` zapisuje adres tylko do znaku `?`. Własny serwer powinien robić to samo.
-- **Wdrożenie** pod `idlerace.cerasusdigital.pl`, w tym adresy powrotu do wpisania u dostawców: `deploy/README.md`.
+- **Wdrożenie** pod `raceidle.cerasusdigital.pl`, w tym adresy powrotu do wpisania u dostawców: `deploy/README.md`.
 
 ## Co jest sprawdzone, a co nie
 

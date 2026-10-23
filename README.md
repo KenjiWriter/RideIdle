@@ -75,7 +75,7 @@ Testy API na konkretnej bazie: `DB_CONNECTION=mariadb DB_HOST=127.0.0.1 DB_PORT=
 
 ## Wdrożenie
 
-`deploy/` stawia grę na jednym serwerze Ubuntu pod jedną domeną (docelowo `idlerace.cerasusdigital.pl`: aplikacja web pod `/`, API pod `/api`): `deploy/upload.sh bootstrap root@SERWER` i `provision.sh` przygotowują serwer (PHP, PostgreSQL, Redis, nginx, certyfikat Let's Encrypt, kolejka, harmonogram, kopie bazy, zapora), a `deploy/upload.sh release deploy@DOMENA` wydaje zatwierdzony stan repozytorium i w razie nieudanego sprawdzenia wraca do poprzedniego. Kolejność kroków, DNS, poczta, adresy dla Google, Facebooka i Apple, wycofanie i kopie: `deploy/README.md`.
+`deploy/` stawia grę na jednym serwerze Ubuntu pod jedną domeną (docelowo `raceidle.cerasusdigital.pl`: aplikacja web pod `/`, API pod `/api`): `deploy/upload.sh bootstrap root@SERWER` i `provision.sh` przygotowują serwer (PHP, PostgreSQL, Redis, nginx, certyfikat Let's Encrypt, kolejka, harmonogram, kopie bazy, zapora), a `deploy/upload.sh release deploy@DOMENA` wydaje zatwierdzony stan repozytorium i w razie nieudanego sprawdzenia wraca do poprzedniego. Kolejność kroków, DNS, poczta, adresy dla Google, Facebooka i Apple, wycofanie i kopie: `deploy/README.md`.
 
 ## Zasady pracy
 
@@ -102,6 +102,6 @@ Zabezpieczenie konta (opis w `docs/konto.md`): po pierwszym zarobku garaż propo
 
 Strony prawne (opis w `docs/prawo.md`): regulamin (`/terms`) i polityka prywatności (`/privacy`) w pięciu językach, z linkami w stopce, przy tworzeniu kierowcy i w oknie zgód, z wiekiem, wersją i danymi operatora z ustawień API (`LEGAL_*`) i z zapisem wersji przy zgodzie. **Teksty są roboczym projektem napisanym z tego, co aplikacja robi z danymi, i nie przeszły przeglądu prawnego**; próg wieku (16) jest roboczy. Tłumaczenia francuskie, niemieckie i brazylijskie przeszły niezależny przegląd i poprawki (`docs/prawo.md`), ale nie przegląd przez osobę, dla której język jest ojczysty. Kierowca pobiera kopię swoich danych i usuwa konto sam, w garażu w sekcji „Twoje dane”; operator ma te same możliwości jako polecenia `php artisan accounts:export` i `accounts:delete` (procedura w `docs/prawo.md`).
 
-Wdrożenie (opis w `deploy/README.md`): skrypty przygotowania serwera Ubuntu i wydawania wersji pod `idlerace.cerasusdigital.pl`, szablony nginx i systemd, nocne kopie bazy (14 dni), logi dostępu bez zapytania (w adresie bywa sekret linku). Skrypty przeszły `shellcheck`, konfigurację nginx sprawdzono prawdziwym nginx na Windowsie, a zapis `.env` parserem Laravela; **nie były jeszcze uruchomione na prawdziwym serwerze Ubuntu**.
+Wdrożenie (opis w `deploy/README.md`): skrypty przygotowania serwera Ubuntu i wydawania wersji pod `raceidle.cerasusdigital.pl`, szablony nginx i systemd, nocne kopie bazy (14 dni), logi dostępu bez zapytania (w adresie bywa sekret linku). Skrypty przeszły `shellcheck`, konfigurację nginx sprawdzono prawdziwym nginx na Windowsie, a zapis `.env` parserem Laravela; **nie były jeszcze uruchomione na prawdziwym serwerze Ubuntu**.
 
 Dalej: tabele definicji i instancji z paczek treści (garaż, części, więcej aut i torów), historia wprowadzająca (samouczek) i przegląd prawny regulaminu i polityki prywatności.

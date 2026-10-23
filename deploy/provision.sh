@@ -5,7 +5,7 @@
 # Run it ONCE, as root or with sudo, on the server, from the deploy/ folder of the repository (deploy/upload.sh bootstrap
 # puts it there, or git clone does):
 #
-#   sudo env DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=you@example.com bash provision.sh
+#   sudo env DOMAIN=raceidle.cerasusdigital.pl ADMIN_EMAIL=you@example.com bash provision.sh
 #
 # It is written for a server that has nothing else on it, and then it sets up the whole server (the firewall, the default
 # site of nginx, the default PHP, Redis, the automatic updates). When it sees that the server is in use it stops. A server
@@ -134,7 +134,7 @@ check_system() {
     say "Checking the system"
 
     [[ $EUID -eq 0 ]] || fail "Run this as root (sudo bash provision.sh)."
-    [[ -n "$DOMAIN" ]] || fail "Set DOMAIN, for example DOMAIN=idlerace.cerasusdigital.pl"
+    [[ -n "$DOMAIN" ]] || fail "Set DOMAIN, for example DOMAIN=raceidle.cerasusdigital.pl"
     [[ -n "$ADMIN_EMAIL" ]] || fail "Set ADMIN_EMAIL, the address Let's Encrypt writes to about the certificate."
     [[ "$DOMAIN" =~ ^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$ ]] || fail "DOMAIN does not look like a domain: $DOMAIN"
 

@@ -36,7 +36,7 @@ case "$COMMAND" in
 Now, on the server (ssh $TARGET):
 
   cd ~/rideidle-deploy
-  sudo env DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=you@example.com bash provision.sh
+  sudo env DOMAIN=raceidle.cerasusdigital.pl ADMIN_EMAIL=you@example.com bash provision.sh
 
 (deploy/README.md lists the other settings: the SMTP server, who runs the game ...)
 EOF

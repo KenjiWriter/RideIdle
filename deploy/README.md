@@ -1,6 +1,6 @@
 # Wdrożenie RideIdle na serwer Ubuntu
 
-Ten folder stawia całą grę na jednym serwerze Ubuntu (22.04 albo 24.04) pod jedną domeną, `idlerace.cerasusdigital.pl`: aplikacja web pod `/`, API pod `/api`, certyfikat Let's Encrypt, kolejka maili, harmonogram, kopie bazy i zapora. Zestaw jest sprawdzony statycznie i w części na Windowsie, **ale nie był jeszcze uruchomiony na prawdziwym serwerze Ubuntu** (sekcja „Co sprawdzono, a czego nie” na końcu). Pierwsze uruchomienie zrób na serwerze, który możesz wyrzucić.
+Ten folder stawia całą grę na jednym serwerze Ubuntu (22.04 albo 24.04) pod jedną domeną, `raceidle.cerasusdigital.pl`: aplikacja web pod `/`, API pod `/api`, certyfikat Let's Encrypt, kolejka maili, harmonogram, kopie bazy i zapora. Zestaw jest sprawdzony statycznie i w części na Windowsie, **ale nie był jeszcze uruchomiony na prawdziwym serwerze Ubuntu** (sekcja „Co sprawdzono, a czego nie” na końcu). Pierwsze uruchomienie zrób na serwerze, który możesz wyrzucić.
 
 ## Jak to jest ułożone
 
@@ -43,13 +43,13 @@ U siebie, gdzie jest strefa `cerasusdigital.pl`, dodaj rekord:
 
 | Typ | Nazwa | Wartość | TTL |
 |---|---|---|---|
-| A | `idlerace` | adres IPv4 serwera | 300 |
+| A | `raceidle` | adres IPv4 serwera | 300 |
 
 - **AAAA** dodaj tylko wtedy, gdy serwer ma publiczny adres IPv6, który chcesz obsługiwać (nginx i zapora go obsługują). Błędny AAAA psuje wydanie certyfikatu, bo Let's Encrypt najpierw próbuje IPv6.
-- **CAA** (niewymagany, ale tani): `idlerace.cerasusdigital.pl. CAA 0 issue "letsencrypt.org"`.
+- **CAA** (niewymagany, ale tani): `raceidle.cerasusdigital.pl. CAA 0 issue "letsencrypt.org"`.
 - Jeśli domena jest u Cloudflare, ustaw **„tylko DNS” (szara chmurka)**. Przez proxy API widziałoby adresy Cloudflare, a limity prób są liczone po adresie klienta; zestaw nie ma ustawionego zaufanego proxy.
 
-Poczekaj, aż `nslookup idlerace.cerasusdigital.pl` pokaże adres serwera. `provision.sh` sprawdza to sam i zatrzymuje się z opisem, jeśli rekord jest zły.
+Poczekaj, aż `nslookup raceidle.cerasusdigital.pl` pokaże adres serwera. `provision.sh` sprawdza to sam i zatrzymuje się z opisem, jeśli rekord jest zły.
 
 ## Krok 2. Przygotowanie serwera (raz)
 
@@ -73,7 +73,7 @@ W obu wypadkach potem, na serwerze (`sudo env` przekazuje zmienne; jako `root` p
 
 ```bash
 cd ~/rideidle-deploy   # albo: cd ~/RideIdle/deploy
-sudo env DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=twoj@adres.pl bash provision.sh
+sudo env DOMAIN=raceidle.cerasusdigital.pl ADMIN_EMAIL=twoj@adres.pl bash provision.sh
 ```
 
 `ADMIN_EMAIL` dostaje od Let's Encrypt ostrzeżenia o certyfikacie. Pozostałe ustawienia (zmienne środowiska po `sudo env`, przed `bash provision.sh`):
@@ -93,7 +93,7 @@ sudo env DOMAIN=idlerace.cerasusdigital.pl ADMIN_EMAIL=twoj@adres.pl bash provis
 
 Skrypt: sprawdza system i DNS, dodaje swap, instaluje PHP 8.4 (z PPA ondrej), Composera, Node 24, PostgreSQL, Redis (tylko na 127.0.0.1) i nginx, zakłada bazę i użytkownika, tworzy użytkownika `deploy` (z kluczami SSH konta, z którego uruchomiłeś skrypt, albo roota) i foldery, generuje `.env` z nowym `APP_KEY` i hasłem bazy, dopisuje wąskie uprawnienia `sudo` dla `deploy`, instaluje kolejkę, harmonogram i kopie, zdobywa certyfikat (webroot, odnawiany sam; po odnowieniu nginx jest przeładowywany), a na końcu włącza zaporę `ufw` (SSH, 80, 443), `fail2ban` i automatyczne aktualizacje bezpieczeństwa. Na końcu wypisuje, co zostało do zrobienia.
 
-**Najpierw na próbę:** `CERTBOT_STAGING=1 DOMAIN=... bash provision.sh` daje certyfikat testowy, któremu przeglądarki nie ufają. Wtedy dopisz do `/etc/rideidle/deploy.env` linię `HEALTH_CURL_OPTS=-k`, żeby sprawdzenie po wydaniu go przyjęło. Gdy wszystko działa: `certbot delete --cert-name idlerace.cerasusdigital.pl` i `bash provision.sh` jeszcze raz, bez `CERTBOT_STAGING` (przy okazji `deploy.env` wraca do normalnego).
+**Najpierw na próbę:** `CERTBOT_STAGING=1 DOMAIN=... bash provision.sh` daje certyfikat testowy, któremu przeglądarki nie ufają. Wtedy dopisz do `/etc/rideidle/deploy.env` linię `HEALTH_CURL_OPTS=-k`, żeby sprawdzenie po wydaniu go przyjęło. Gdy wszystko działa: `certbot delete --cert-name raceidle.cerasusdigital.pl` i `bash provision.sh` jeszcze raz, bez `CERTBOT_STAGING` (przy okazji `deploy.env` wraca do normalnego).
 
 SSH nie jest utwardzany (hasła nadal mogą działać), żeby skrypt nie mógł Cię zablokować. Gdy klucz działa dla `deploy`, wyłącz logowanie hasłem sam (`PasswordAuthentication no` w `/etc/ssh/sshd_config.d/`).
 
@@ -124,7 +124,7 @@ Przed pierwszym uruchomieniem sprawdź, czy dotychczasowe strony nie używają b
 ## Krok 3. Uzupełnij `.env`
 
 ```bash
-ssh deploy@idlerace.cerasusdigital.pl
+ssh deploy@raceidle.cerasusdigital.pl
 nano /var/www/idlerace/shared/.env
 ```
 
@@ -149,7 +149,7 @@ sudo systemctl restart rideidle-queue
 Z katalogu repozytorium na Twoim komputerze:
 
 ```bash
-deploy/upload.sh release deploy@idlerace.cerasusdigital.pl
+deploy/upload.sh release deploy@raceidle.cerasusdigital.pl
 ```
 
 Bez klucza SSH na komputerze (droga B z kroku 2) wydanie zrobisz na samym serwerze, jako użytkownik `deploy`; serwer pobierze kod z GitHuba (musi być wypchnięty):
@@ -160,7 +160,7 @@ sudo -iu deploy /var/www/idlerace/bin/deploy.sh --repo https://github.com/KenjiW
 
 Wysyłany przez `upload.sh` jest **zatwierdzony** stan (`HEAD`), nie to, co leży w katalogu roboczym; skrypt ostrzega, jeśli masz niezatwierdzone zmiany. Inny commit lub tag: `deploy/upload.sh release deploy@... v1.0`. Pierwsze wydanie trwa kilka minut (Composer, `npm ci`, budowanie). Kroki: źródła → `composer install --no-dev` → `npm ci` i `npm run build` → `.env` i `storage` z `shared/` → `content:validate` → migracje → pamięci podręczne Laravela → przełączenie linku `current` → przeładowanie PHP-FPM i restart kolejki → **sprawdzenie** (`/up`, `/api/v1/meta/locales` i strona główna z serwera na samego siebie). Jeśli sprawdzenie nie przejdzie, poprzednie wydanie wraca, a skrypt kończy się błędem; nieudane wydanie zostaje w `releases/` do obejrzenia.
 
-Potem sprawdź w przeglądarce `https://idlerace.cerasusdigital.pl`: strona startowa, utworzenie kierowcy, `/terms` i `/privacy` oraz `https://idlerace.cerasusdigital.pl/up`.
+Potem sprawdź w przeglądarce `https://raceidle.cerasusdigital.pl`: strona startowa, utworzenie kierowcy, `/terms` i `/privacy` oraz `https://raceidle.cerasusdigital.pl/up`.
 
 ## Poczta
 
@@ -185,19 +185,19 @@ Klucze zakładasz u dostawców w swoich kontach i wpisujesz do `.env` (opis zmie
 
 | Co | Adres |
 |---|---|
-| Adres powrotu Google | `https://idlerace.cerasusdigital.pl/api/v1/auth/google/callback` |
-| Adres powrotu Facebook | `https://idlerace.cerasusdigital.pl/api/v1/auth/facebook/callback` |
-| Adres powrotu Apple (Services ID; domena: `idlerace.cerasusdigital.pl`) | `https://idlerace.cerasusdigital.pl/api/v1/auth/apple/callback` |
-| Polityka prywatności | `https://idlerace.cerasusdigital.pl/privacy` |
-| Regulamin | `https://idlerace.cerasusdigital.pl/terms` |
+| Adres powrotu Google | `https://raceidle.cerasusdigital.pl/api/v1/auth/google/callback` |
+| Adres powrotu Facebook | `https://raceidle.cerasusdigital.pl/api/v1/auth/facebook/callback` |
+| Adres powrotu Apple (Services ID; domena: `raceidle.cerasusdigital.pl`) | `https://raceidle.cerasusdigital.pl/api/v1/auth/apple/callback` |
+| Polityka prywatności | `https://raceidle.cerasusdigital.pl/privacy` |
+| Regulamin | `https://raceidle.cerasusdigital.pl/terms` |
 
 Po zmianie `.env` zastosuj ją poleceniem z kroku 3. **Przepływ z prawdziwymi dostawcami nie był jeszcze sprawdzony** (`docs/konto.md`); pierwsze sprawdzenie to ten moment.
 
 ## Na co dzień
 
-**Nowe wydanie:** `deploy/upload.sh release deploy@idlerace.cerasusdigital.pl`.
+**Nowe wydanie:** `deploy/upload.sh release deploy@raceidle.cerasusdigital.pl`.
 
-**Wycofanie** do najnowszego wydania starszego od bieżącego (kolejne wywołanie cofa dalej): `deploy/upload.sh rollback deploy@idlerace.cerasusdigital.pl`.
+**Wycofanie** do najnowszego wydania starszego od bieżącego (kolejne wywołanie cofa dalej): `deploy/upload.sh rollback deploy@raceidle.cerasusdigital.pl`.
 
 > **Migracje przed przełączeniem.** Migracje biegną, gdy stare wydanie jeszcze obsługuje ruch, więc muszą działać także ze starym kodem: dodawaj kolumny, nie zmieniaj nazw i nie usuwaj ich w tym samym wydaniu. Wycofanie przywraca stary kod, ale **nie cofa migracji**.
 
@@ -221,7 +221,7 @@ cd /var/www/idlerace/current/api
 sudo -u www-data php8.4 artisan accounts:delete --email=adres@example.com --dry-run
 ```
 
-**Monitoring:** adres `https://idlerace.cerasusdigital.pl/up` wystarczy dowolnemu monitorowi (UptimeRobot i podobne).
+**Monitoring:** adres `https://raceidle.cerasusdigital.pl/up` wystarczy dowolnemu monitorowi (UptimeRobot i podobne).
 
 **Aktualizacje systemu:** poprawki bezpieczeństwa instalują się same. Serwer **nie restartuje się sam**; od czasu do czasu sprawdź `ls /var/run/reboot-required` i zrestartuj w spokojnej chwili (kolejka i nginx wstają same).
 
@@ -231,7 +231,7 @@ sudo -u www-data php8.4 artisan accounts:delete --email=adres@example.com --dry-
 - **Kopie leżą na tym samym serwerze**, więc nie ratują przed jego utratą. Kopiuj je gdzieś indziej, np. z innego komputera lub serwera (folder jest tylko dla roota):
 
 ```bash
-scp -r root@idlerace.cerasusdigital.pl:/var/backups/rideidle ./kopie-rideidle
+scp -r root@raceidle.cerasusdigital.pl:/var/backups/rideidle ./kopie-rideidle
 ```
 
 - **Kopie a usuwanie kont:** konto usunięte przez kierowcę albo `accounts:delete` pozostaje w kopiach do 14 dni, a w kopiach przechowywanych gdzie indziej tak długo, jak je trzymasz. Polityka prywatności jeszcze o kopiach nie mówi (`docs/prawo.md`).
