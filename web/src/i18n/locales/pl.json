@@ -145,7 +145,11 @@
     "back": "Wstecz",
     "errors": {
       "required": "Wpisz kod odzyskiwania."
-    }
+    },
+    "intro": "Zaloguj się kontem połączonym z garażem albo użyj zapisanego kodu odzyskiwania.",
+    "accountTitle": "Zaloguj się kontem",
+    "accountDescription": "Użyj sposobu logowania połączonego z garażem. Link z e-maila działa jeden raz i krótko.",
+    "codeTitle": "Użyj kodu odzyskiwania"
   },
   "recovery": {
     "title": "Zapisz swój garaż",

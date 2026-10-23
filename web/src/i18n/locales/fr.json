@@ -145,7 +145,11 @@
     "back": "Retour",
     "errors": {
       "required": "Saisissez votre code de récupération."
-    }
+    },
+    "intro": "Connectez-vous avec le compte lié à votre garage, ou utilisez le code de récupération que vous avez enregistré.",
+    "accountTitle": "Se connecter avec votre compte",
+    "accountDescription": "Utilisez le moyen de connexion lié à votre garage. Un lien reçu par e-mail ne fonctionne qu’une fois, pour une courte durée.",
+    "codeTitle": "Utiliser un code de récupération"
   },
   "recovery": {
     "title": "Sauvegarder votre garage",

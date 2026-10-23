@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { RouterLink, useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
+import AccountMethods from '@/components/AccountMethods.vue'
 import { useSessionStore } from '@/stores/session'
 
 const { t } = useI18n()
@@ -61,9 +62,18 @@ async function submit(): Promise<void> {
 <template>
   <main class="mx-auto flex max-w-md flex-col gap-6 px-4 py-12">
     <h1 class="text-3xl font-bold tracking-tight">{{ t('recover.title') }}</h1>
-    <p class="text-muted">{{ t('recover.description') }}</p>
+    <p class="text-muted">{{ t('recover.intro') }}</p>
 
-    <form class="card flex flex-col gap-4" novalidate @submit.prevent="submit">
+    <section class="card flex flex-col gap-4" aria-labelledby="recover-account-title" data-test="account">
+      <h2 id="recover-account-title" class="text-xl font-bold">{{ t('recover.accountTitle') }}</h2>
+      <p class="text-sm text-muted">{{ t('recover.accountDescription') }}</p>
+      <AccountMethods mode="login" />
+    </section>
+
+    <form class="card flex flex-col gap-4" aria-labelledby="recover-code-title" novalidate @submit.prevent="submit">
+      <h2 id="recover-code-title" class="text-xl font-bold">{{ t('recover.codeTitle') }}</h2>
+      <p class="text-sm text-muted">{{ t('recover.description') }}</p>
+
       <div class="flex flex-col gap-2">
         <label for="recovery-code" class="font-semibold">{{ t('recover.codeLabel') }}</label>
         <input

@@ -145,7 +145,11 @@
     "back": "Back",
     "errors": {
       "required": "Enter your recovery code."
-    }
+    },
+    "intro": "Sign in with the account linked to your garage, or use the recovery code you saved.",
+    "accountTitle": "Sign in with your account",
+    "accountDescription": "Use the sign-in you linked to your garage. A link from an e-mail works once, for a short time.",
+    "codeTitle": "Use a recovery code"
   },
   "recovery": {
     "title": "Save your garage",

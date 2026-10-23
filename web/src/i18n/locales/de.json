@@ -145,7 +145,11 @@
     "back": "Zurück",
     "errors": {
       "required": "Gib deinen Wiederherstellungscode ein."
-    }
+    },
+    "intro": "Melde dich mit dem Konto an, das mit deiner Garage verknüpft ist, oder nutze den gespeicherten Wiederherstellungscode.",
+    "accountTitle": "Mit deinem Konto anmelden",
+    "accountDescription": "Nutze die Anmeldeart, die du mit deiner Garage verknüpft hast. Ein Link aus einer E-Mail funktioniert nur einmal und nur kurze Zeit.",
+    "codeTitle": "Wiederherstellungscode verwenden"
   },
   "recovery": {
     "title": "Garage sichern",

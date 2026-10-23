@@ -145,7 +145,11 @@
     "back": "Voltar",
     "errors": {
       "required": "Digite seu código de recuperação."
-    }
+    },
+    "intro": "Entre com a conta vinculada à sua garagem ou use o código de recuperação que você guardou.",
+    "accountTitle": "Entrar com sua conta",
+    "accountDescription": "Use a forma de entrar que você vinculou à sua garagem. Um link de e-mail funciona uma vez, por pouco tempo.",
+    "codeTitle": "Usar um código de recuperação"
   },
   "recovery": {
     "title": "Salvar sua garagem",
