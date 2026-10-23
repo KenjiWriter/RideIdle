@@ -57,6 +57,8 @@ class AppServiceProvider extends ServiceProvider
         // A copy of the data is a query over everything the account did, and deleting is not to be tried over and over.
         RateLimiter::for('account-data', fn (Request $request) => Limit::perHour(10)->by('user:'.$request->user()?->getAuthIdentifier()));
 
+        RateLimiter::for('account-erase', fn (Request $request) => Limit::perHour(5)->by('user:'.$request->user()?->getAuthIdentifier()));
+
         RateLimiter::for('account-login-link', fn (Request $request) => [
             Limit::perHour(3)->by('address:'.sha1(Accounts::normalizeEmail($request->string('email')->toString()))),
             Limit::perHour(10)->by('ip:'.$request->ip()),

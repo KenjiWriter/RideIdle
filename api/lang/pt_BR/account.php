@@ -23,6 +23,10 @@ return [
         'wrong_account' => 'Este login foi iniciado para outra garagem. Comece de novo na garagem que você quer vincular.',
     ],
 
+    'delete' => [
+        'name_mismatch' => 'Digite o nome do seu piloto exatamente como está escrito para excluir a conta.',
+    ],
+
     'token' => [
         'invalid' => 'Este link não é válido ou expirou.',
     ],

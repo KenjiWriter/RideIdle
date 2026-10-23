@@ -6,10 +6,12 @@ use App\Domain\Run\TrackProfile;
 use App\Mail\AccountLinkMail;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
+use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
 use App\Models\User;
+use App\Models\Wallet;
 use App\Services\Ledger;
 use App\Services\RunService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,6 +19,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Testing\TestResponse;
+use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use Tests\TestCase;
@@ -308,6 +311,22 @@ function accountWithHistory(): User
     (new Ledger)->post($user->id, 1_550, 'laps', 'export-test:'.$user->id);
 
     return $user;
+}
+
+/** What a table holds for the people it is about. */
+function rowsOf(): array
+{
+    return [
+        'users' => User::query()->count(),
+        'identities' => AccountIdentity::query()->count(),
+        'devices' => PersonalAccessToken::query()->count(),
+        'links' => AccountToken::query()->count(),
+        'wallets' => Wallet::query()->count(),
+        'runs' => RaceRun::query()->count(),
+        'settlements' => Settlement::query()->count(),
+        'events' => SettlementEvent::query()->count(),
+        'ledger' => LedgerEntry::query()->count(),
+    ];
 }
 
 function cashOf(RaceRun $run): int

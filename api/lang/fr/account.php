@@ -23,6 +23,10 @@ return [
         'wrong_account' => 'Cette connexion a été démarrée pour un autre garage. Recommencez depuis le garage que vous voulez lier.',
     ],
 
+    'delete' => [
+        'name_mismatch' => 'Saisissez le nom de votre pilote exactement comme il est écrit pour supprimer le compte.',
+    ],
+
     'token' => [
         'invalid' => 'Ce lien n’est pas valide ou a expiré.',
     ],

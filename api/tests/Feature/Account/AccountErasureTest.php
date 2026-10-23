@@ -3,13 +3,9 @@
 declare(strict_types=1);
 
 use App\Models\AccountIdentity;
-use App\Models\AccountToken;
-use App\Models\LedgerEntry;
-use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
 use App\Models\User;
-use App\Models\Wallet;
 use App\Services\AccountErasure;
 use App\Services\Ledger;
 use Illuminate\Database\Events\QueryExecuted;
@@ -17,7 +13,6 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use Laravel\Sanctum\PersonalAccessToken;
 
 function erasure(): AccountErasure
 {
@@ -34,22 +29,6 @@ function queuedMailTo(string $address, string $table = 'jobs'): int|string
     }
 
     return DB::table('jobs')->insertGetId(['queue' => 'default', 'payload' => $payload, 'attempts' => 0, 'available_at' => time(), 'created_at' => time()]);
-}
-
-/** What a table holds for the people it is about. */
-function rowsOf(): array
-{
-    return [
-        'users' => User::query()->count(),
-        'identities' => AccountIdentity::query()->count(),
-        'devices' => PersonalAccessToken::query()->count(),
-        'links' => AccountToken::query()->count(),
-        'wallets' => Wallet::query()->count(),
-        'runs' => RaceRun::query()->count(),
-        'settlements' => Settlement::query()->count(),
-        'events' => SettlementEvent::query()->count(),
-        'ledger' => LedgerEntry::query()->count(),
-    ];
 }
 
 describe('what is removed', function () {

@@ -23,6 +23,10 @@ return [
         'wrong_account' => 'This sign-in was started for another garage. Start it again from the garage you want to link.',
     ],
 
+    'delete' => [
+        'name_mismatch' => 'Type your driver name exactly as it is written to delete the account.',
+    ],
+
     'token' => [
         'invalid' => 'This link is not valid or has expired.',
     ],

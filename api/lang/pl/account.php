@@ -23,6 +23,10 @@ return [
         'wrong_account' => 'To logowanie zostało rozpoczęte dla innego garażu. Zacznij je od nowa z garażu, który chcesz połączyć.',
     ],
 
+    'delete' => [
+        'name_mismatch' => 'Wpisz imię kierowcy dokładnie tak, jak jest zapisane, żeby usunąć konto.',
+    ],
+
     'token' => [
         'invalid' => 'Ten link jest nieprawidłowy albo wygasł.',
     ],

@@ -23,6 +23,10 @@ return [
         'wrong_account' => 'Diese Anmeldung wurde für eine andere Garage gestartet. Starte sie noch einmal in der Garage, die du verknüpfen willst.',
     ],
 
+    'delete' => [
+        'name_mismatch' => 'Gib deinen Fahrernamen genau so ein, wie er geschrieben ist, um das Konto zu löschen.',
+    ],
+
     'token' => [
         'invalid' => 'Dieser Link ist ungültig oder abgelaufen.',
     ],
