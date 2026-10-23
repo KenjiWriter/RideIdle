@@ -33,6 +33,8 @@ Każda odpowiedź ma `data` (bieg) i `wallet` (gotówka w centach i XP po wywoł
       "xp": { "dry": 25, "rain": 23 },
       "fuel_ml": 1500
     },
+    "weather": { "now": "rain", "ends_ms": 1792693350000, "next": "dry" },
+    "current_lap": { "start_ms": 1792692900000, "finish_ms": 1792692984391, "ms": 84391, "weather": "rain" },
     "server_time_ms": 1792692960123
   },
   "wallet": { "cash_cents": 46500, "xp": 750 },
@@ -40,7 +42,7 @@ Każda odpowiedź ma `data` (bieg) i `wallet` (gotówka w centach i XP po wywoł
 }
 ```
 
-`tow` mówi, czy kierowca może teraz poprosić o holowanie (patrz niżej), liczone tą samą regułą co sama akcja. `status` to `running` albo `stopped`, a `stop_reason` to `fuel_empty`, `breakdown` albo `null`. `prices` to ceny akcji biegu w centach (litr paliwa i naprawa), żeby przycisk mógł podać koszt przed naciśnięciem. `cursor_ms` to początek bieżącego okrążenia. `state_version` rośnie przy każdej zmianie stanu i jest tym, co klient odsyła jako `since_version`.
+`tow` mówi, czy kierowca może teraz poprosić o holowanie (patrz niżej), liczone tą samą regułą co sama akcja. `status` to `running` albo `stopped`, a `stop_reason` to `fuel_empty`, `breakdown` albo `null`. `prices` to ceny akcji biegu w centach (litr paliwa i naprawa), żeby przycisk mógł podać koszt przed naciśnięciem. `cursor_ms` to początek bieżącego okrążenia. `weather` to pogoda regionu teraz (`now`), kiedy kończy się jej odcinek 22,5 minuty (`ends_ms`) i co przyniesie następny (`next`): klimat losuje się z ziarna, więc da się go powiedzieć naprzód. `current_lap` to okrążenie w toku: zaczęło się tam, gdzie rozliczenie zostawiło kursor, trwa tyle, ile okrążenie w pogodzie, w której się zaczęło, i kończy się w `finish_ms`; auto, które stoi (warsztat, pusty bak, awaria) albo czeka na holowanie, ma `null`. Ekran wyścigu liczy po tym odliczanie i pyta serwer o wynik okrążenia, gdy ono mija. `state_version` rośnie przy każdej zmianie stanu i jest tym, co klient odsyła jako `since_version`.
 
 ## Punkty końcowe
 

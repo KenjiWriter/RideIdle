@@ -106,4 +106,6 @@ Własne auta i części, sklep i warsztat (opisy w `docs/api-runs.md` i `docs/we
 
 Wdrożenie (opis w `deploy/README.md`): skrypty przygotowania serwera Ubuntu i wydawania wersji pod `raceidle.cerasusdigital.pl`, szablony nginx i systemd, nocne kopie bazy (14 dni), logi dostępu bez zapytania (w adresie bywa sekret linku). Skrypty przeszły `shellcheck`, konfigurację nginx sprawdzono prawdziwym nginx na Windowsie, a zapis `.env` parserem Laravela; **nie były jeszcze uruchomione na prawdziwym serwerze Ubuntu**.
 
-Dalej według roadmapy (F1): ekran Turniej, symulator ekonomii v0 jako polecenie Artisan, kroki samouczka 1–5 z animacją wprowadzającą, XP i poziomy aut oraz anulowanie kolejki warsztatu; potem F2 (świat, rynek, pogoda), a obok przegląd prawny regulaminu i polityki prywatności.
+Samouczek i ekran Turniej (opisy w `docs/api-runs.md` i `docs/web-run.md`): nowy kierowca ogląda historię (cztery sceny) i wybiera wrak, a w garażu prowadzą go SMS-y od Kuby na starym telefonie, pięć kroków z danych (`content/rules/tutorial.json`): pierwsze okrążenie, nagrody, tankowanie i pierwsza awaria, z wypłatami i pytaniem przy pomijaniu; postęp liczy serwer. Ekran Turniej pokazuje wyścig na żywo: pierścień z odliczaniem okrążenia, pogodę z prognozą na następne 22,5 minuty i tablicę z kierowcą (bez rywali i pozycji, których jeszcze nie ma).
+
+Dalej według roadmapy (F1): symulator ekonomii v0 jako polecenie Artisan, XP i poziomy aut oraz anulowanie kolejki warsztatu; potem F2 (świat, rynek, pogoda), a obok przegląd prawny regulaminu i polityki prywatności.
