@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rideidle.local/schema/economy.schema.json",
+  "title": "The economy of the game: anchors, knobs and the targets of the pace (content/rules/economy.json, schema v0)",
+  "description": "What the economy simulator reads. The anchors are what is written down (the price of a car, the profit of an hour of driving at each rung of the ladder), and everything else follows from them. Provisional: Systemy V and VI of the design, to be calibrated.",
+  "type": "object",
+  "properties": {
+    "schema": { "const": 0 },
+    "version": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$" },
+    "fx_pln_usd": { "description": "The rate the prices of the portals were turned into dollars with. A parameter, not a constant.", "type": "number", "exclusiveMinimum": 0 },
+    "anchors": {
+      "type": "object",
+      "properties": {
+        "net_per_hour": {
+          "description": "The net profit of an hour of driving at rung k of the ladder: base * growth ^ k.",
+          "type": "object",
+          "properties": {
+            "base": { "type": "number", "exclusiveMinimum": 0 },
+            "growth": { "type": "number", "exclusiveMinimum": 1 }
+          },
+          "required": ["base", "growth"],
+          "additionalProperties": false
+        },
+        "ladder": {
+          "description": "The rungs of the ladder of cars, from the repaired wreck up.",
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "properties": {
+              "rung": { "type": "string", "pattern": "^L[0-9]+$" },
+              "car_value": { "description": "What a car in good order of this rung is worth, in dollars.", "type": "number", "exclusiveMinimum": 0 },
+              "min_player_level": { "type": "integer", "minimum": 1 },
+              "laps_per_hour": { "type": "number", "exclusiveMinimum": 0 },
+              "fuel_l_per_lap": { "type": "number", "exclusiveMinimum": 0 },
+              "offline_window_h": { "description": "How long a car of this rung drives on one tank, in hours: what a visit of the driver pays for.", "type": "number", "exclusiveMinimum": 0 }
+            },
+            "required": ["rung", "car_value", "min_player_level", "laps_per_hour", "fuel_l_per_lap", "offline_window_h"],
+            "additionalProperties": false
+          }
+        },
+        "new_car_by_tier": {
+          "description": "The price of a new car of tier 1, 2, 3 and so on, in dollars.",
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "number", "exclusiveMinimum": 0 }
+        },
+        "parts": {
+          "type": "object",
+          "properties": {
+            "set_share": { "description": "The set of parts of a tier costs this share of the price of a new car of the tier.", "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+            "slot_share": {
+              "description": "The share of the set that each slot takes.",
+              "type": "object",
+              "additionalProperties": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+              "minProperties": 1
+            }
+          },
+          "required": ["set_share", "slot_share"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["net_per_hour", "ladder", "new_car_by_tier", "parts"],
+      "additionalProperties": false
+    },
+    "knobs": {
+      "description": "What a regulator turns. A knob of 1 changes nothing.",
+      "type": "object",
+      "properties": {
+        "reward_mult": { "description": "Multiplies the profit of an hour of driving.", "type": "number", "minimum": 0.7, "maximum": 1.4 }
+      },
+      "required": ["reward_mult"],
+      "additionalProperties": false
+    },
+    "model": {
+      "type": "object",
+      "properties": {
+        "fuel_price": { "description": "Dollars a litre.", "type": "number", "exclusiveMinimum": 0 },
+        "resale": { "description": "How much of the value of the old car a driver gets when going up a rung.", "type": "number", "minimum": 0, "maximum": 1 },
+        "upkeep": { "description": "The share of the income that goes on service, repairs and tires.", "type": "number", "minimum": 0, "maximum": 1 },
+        "start_cash": { "description": "Dollars in cash and parts from the rewards of the tutorial.", "type": "number", "minimum": 0 },
+        "xp": {
+          "type": "object",
+          "properties": {
+            "base": { "description": "The experience to reach level n is base * n ^ exponent.", "type": "number", "exclusiveMinimum": 0 },
+            "exponent": { "type": "number", "exclusiveMinimum": 0 },
+            "per_hour": { "description": "The experience of an hour of driving, before the activity of the player.", "type": "number", "minimum": 0 }
+          },
+          "required": ["base", "exponent", "per_hour"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["fuel_price", "resale", "upkeep", "start_cash", "xp"],
+      "additionalProperties": false
+    },
+    "players": {
+      "description": "The kinds of players that are simulated, by a key of their own.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "visits_per_day": { "description": "How many times a day the driver comes back to the game.", "type": "integer", "minimum": 1 },
+          "max_hours_per_day": { "description": "The most hours of driving in a day, however many tanks there are.", "type": "number", "exclusiveMinimum": 0 },
+          "activity": { "description": "Multiplies the income and the experience: tournaments, courses and parts put together on the spot.", "type": "number", "exclusiveMinimum": 0 },
+          "fleet": { "description": "How many cars drive at once, at each rung.", "type": "array", "minItems": 1, "items": { "type": "number", "minimum": 1 } }
+        },
+        "required": ["name", "visits_per_day", "max_hours_per_day", "activity", "fleet"],
+        "additionalProperties": false
+      }
+    },
+    "targets": {
+      "description": "The day on which each kind of player buys the car of rung 1, 2, 3 and so on, that the pace is meant to have.",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 1 } }
+    },
+    "gate": {
+      "type": "object",
+      "properties": {
+        "tolerance": { "description": "How far from the target a day may be, as a share of it.", "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "slack_days": { "description": "A day is the resolution of the model, so a target of a day or two is allowed this many days either way as well.", "type": "number", "minimum": 0 },
+        "max_days": { "description": "How long a player is simulated before it is said to have not got there.", "type": "integer", "minimum": 1 }
+      },
+      "required": ["tolerance", "slack_days", "max_days"],
+      "additionalProperties": false
+    },
+    "consistency": {
+      "type": "object",
+      "properties": {
+        "tolerance": { "description": "How far a number of the rules of the game may be from the one the anchors give.", "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+      },
+      "required": ["tolerance"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["schema", "version", "fx_pln_usd", "anchors", "knobs", "model", "players", "targets", "gate", "consistency"],
+  "additionalProperties": false
+}

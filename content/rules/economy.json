@@ -1,0 +1,55 @@
+{
+  "schema": 0,
+  "version": "2026.10.1",
+  "fx_pln_usd": 3.7,
+  "anchors": {
+    "net_per_hour": { "base": 600, "growth": 1.15 },
+    "ladder": [
+      { "rung": "L0", "car_value": 2000, "min_player_level": 1, "laps_per_hour": 48, "fuel_l_per_lap": 1.5, "offline_window_h": 0.5 },
+      { "rung": "L1", "car_value": 4500, "min_player_level": 3, "laps_per_hour": 45, "fuel_l_per_lap": 1.6, "offline_window_h": 1 },
+      { "rung": "L2", "car_value": 11000, "min_player_level": 6, "laps_per_hour": 42, "fuel_l_per_lap": 1.8, "offline_window_h": 1.5 },
+      { "rung": "L3", "car_value": 22000, "min_player_level": 9, "laps_per_hour": 38, "fuel_l_per_lap": 2.0, "offline_window_h": 2.5 },
+      { "rung": "L4", "car_value": 38000, "min_player_level": 12, "laps_per_hour": 34, "fuel_l_per_lap": 2.3, "offline_window_h": 4 },
+      { "rung": "L5", "car_value": 70000, "min_player_level": 15, "laps_per_hour": 30, "fuel_l_per_lap": 2.6, "offline_window_h": 6 },
+      { "rung": "L6", "car_value": 150000, "min_player_level": 18, "laps_per_hour": 28, "fuel_l_per_lap": 3.0, "offline_window_h": 8 },
+      { "rung": "L7", "car_value": 330000, "min_player_level": 22, "laps_per_hour": 26, "fuel_l_per_lap": 3.4, "offline_window_h": 10 },
+      { "rung": "L8", "car_value": 780000, "min_player_level": 27, "laps_per_hour": 24, "fuel_l_per_lap": 3.8, "offline_window_h": 12 }
+    ],
+    "new_car_by_tier": [15000, 19000, 25000, 34000, 48000, 75000, 100000, 200000, 450000, 800000],
+    "parts": {
+      "set_share": 0.5,
+      "slot_share": {
+        "engine": 0.35,
+        "boost": 0.14,
+        "gearbox": 0.12,
+        "suspension": 0.10,
+        "brakes": 0.08,
+        "tires": 0.06,
+        "exhaust": 0.05,
+        "cooling": 0.04,
+        "tank": 0.03,
+        "ecu": 0.03
+      }
+    }
+  },
+  "knobs": { "reward_mult": 1.0 },
+  "model": {
+    "fuel_price": 2,
+    "resale": 0.7,
+    "upkeep": 0.1,
+    "start_cash": 1200,
+    "xp": { "base": 45, "exponent": 2.3, "per_hour": 90 }
+  },
+  "players": {
+    "A": { "name": "Regular", "visits_per_day": 3, "max_hours_per_day": 14, "activity": 1.25, "fleet": [1, 1, 1.4, 1.6, 1.7, 1.7, 1.7, 1.7, 1.7] },
+    "B": { "name": "Occasional", "visits_per_day": 1, "max_hours_per_day": 12, "activity": 1.0, "fleet": [1, 1, 1, 1, 1, 1, 1, 1, 1] },
+    "C": { "name": "Intensive", "visits_per_day": 8, "max_hours_per_day": 18, "activity": 1.6, "fleet": [1, 1, 1.4, 1.6, 1.7, 1.7, 1.7, 1.7, 1.7] }
+  },
+  "targets": {
+    "A": [4, 11, 19, 27, 34, 42, 55, 76],
+    "B": [13, 38, 70, 99, 125, 147, 175, 212],
+    "C": [1, 3, 6, 9, 12, 17, 25, 37]
+  },
+  "gate": { "tolerance": 0.25, "slack_days": 1, "max_days": 400 },
+  "consistency": { "tolerance": 0.2 }
+}

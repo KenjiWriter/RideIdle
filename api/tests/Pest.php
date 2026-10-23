@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Economy\EconomyRules;
 use App\Domain\Run\CarStats;
 use App\Domain\Run\RunInputs;
 use App\Domain\Run\TrackProfile;
@@ -364,4 +365,38 @@ function dryInputs(float $stat = 100.0, int $rewardCents = 2_000, int $breakChan
 function lapMsOf(RaceRun $run): int
 {
     return $run->config['lap_ms']['dry'];
+}
+
+/**
+ * The anchors of the economy as the repository keeps them (content/rules/economy.json), read straight from the file so
+ * that a test of the pure domain needs no framework.
+ *
+ * @return array<string, mixed>
+ */
+function economyData(): array
+{
+    return json_decode((string) file_get_contents(dirname(__DIR__, 2).'/content/rules/economy.json'), true, 512, JSON_THROW_ON_ERROR);
+}
+
+/**
+ * The ruleset of the economy with some of its values changed: a value is set by the keys of the path, so that
+ * `economyRules(['knobs', 'reward_mult'], 0.7)` turns the knob of the rewards.
+ *
+ * @param  list<string|int>  $path
+ */
+function economyRules(array $path = [], mixed $value = null): EconomyRules
+{
+    $data = economyData();
+
+    if ($path !== []) {
+        $node = &$data;
+
+        foreach ($path as $key) {
+            $node = &$node[$key];
+        }
+
+        $node = $value;
+    }
+
+    return EconomyRules::fromArray($data);
 }
