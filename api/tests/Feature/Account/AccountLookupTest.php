@@ -52,6 +52,13 @@ describe('by e-mail address', function () {
         expect(lookup()->byEmail('turbo@example.com')->pluck('id')->all())->toBe([$user->id]);
     });
 
+    it('finds the account of an e-mail sign-in by its subject, even when no address was saved next to it', function () {
+        $user = User::factory()->guest()->create();
+        identityOf($user, AccountIdentity::EMAIL, 'turbo@example.com');
+
+        expect(lookup()->byEmail('turbo@example.com')->pluck('id')->all())->toBe([$user->id]);
+    });
+
     it('finds the account that signs in with a provider that reported the address', function () {
         $user = User::factory()->guest()->create();
         identityOf($user, AccountIdentity::GOOGLE, '1098765', 'turbo@example.com');
