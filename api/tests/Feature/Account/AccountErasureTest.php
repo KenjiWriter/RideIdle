@@ -192,6 +192,31 @@ describe('when it goes wrong', function () {
     });
 });
 
+describe('the record of it', function () {
+    it('holds the id of the account and nothing else about the person', function () {
+        Log::spy();
+        $user = accountWithHistory();
+
+        erasure()->erase($user);
+
+        Log::shouldHaveReceived('info')->with('Account erased.', ['user_id' => $user->id])->once();
+    });
+
+    it('is not kept when the account was not erased', function () {
+        Log::spy();
+        $user = accountWithHistory();
+        Event::listen(QueryExecuted::class, function (QueryExecuted $query): void {
+            if (str_starts_with(strtolower($query->sql), 'delete from "users"') || str_starts_with(strtolower($query->sql), 'delete from `users`')) {
+                throw new RuntimeException('the database refused');
+            }
+        });
+
+        expect(fn () => erasure()->erase($user))->toThrow(RuntimeException::class);
+
+        Log::shouldNotHaveReceived('info', ['Account erased.', ['user_id' => $user->id]]);
+    });
+});
+
 describe('the command', function () {
     it('deletes the account chosen, with --force, and says what it removed', function () {
         $user = accountWithHistory();

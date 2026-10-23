@@ -8,7 +8,6 @@ use App\Console\Commands\Concerns\ChoosesAnAccount;
 use App\Services\AccountErasure;
 use App\Services\AccountLookup;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 final class EraseAccount extends Command
 {
@@ -48,9 +47,6 @@ final class EraseAccount extends Command
         }
 
         $removed = $erasure->erase($user);
-
-        // The record that the request was carried out holds the id of the account and nothing else about the person.
-        Log::info('Account erased.', ['user_id' => $user->id]);
 
         $this->info("Account {$user->id} was deleted. Removed:");
         $this->table(['kind', 'count'], $this->rows($removed));

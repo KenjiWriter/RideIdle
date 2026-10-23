@@ -13,6 +13,7 @@ use App\Models\SettlementEvent;
 use App\Models\User;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -23,6 +24,9 @@ use Laravel\Sanctum\PersonalAccessToken;
  *
  * Everything goes in one transaction, so a failure leaves the account as it was and not half removed. The order is the
  * order of the foreign keys, from what hangs on a run to the account, so it does not depend on the database cascading.
+ * The wallet is locked first, as every posting of the game does (the wallet, then the run), so that erasing an account
+ * whose car is just being settled waits for it instead of deadlocking with it; if it still does, the transaction is
+ * tried again. A record that the account was erased, with its id and nothing else about the person, is kept when it is done.
  *
  * What it cannot reach: the counters that limit abuse (they live up to an hour and then go), and logs and backups
  * outside the application.
@@ -61,7 +65,10 @@ final class AccountErasure
      */
     public function erase(User $user): array
     {
-        return DB::transaction(function () use ($user): array {
+        $removed = DB::transaction(function () use ($user): array {
+            // The same order as the game: the wallet first. Nothing else of the account may change while it is removed.
+            Wallet::query()->where('user_id', $user->id)->lockForUpdate()->first();
+
             $removed = $this->inventory($user);
             $queued = $this->mailsTo($user, 'jobs');
             $failed = $this->mailsTo($user, 'failed_jobs');
@@ -99,7 +106,11 @@ final class AccountErasure
             $user->delete();
 
             return $removed;
-        });
+        }, attempts: 3);
+
+        Log::info('Account erased.', ['user_id' => $user->id]);
+
+        return $removed;
     }
 
     /**
