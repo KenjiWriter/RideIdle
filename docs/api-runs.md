@@ -123,6 +123,7 @@ Odpowiedź ma `towed`: `false`, gdy auto jedzie albo kierowca jednak może zapł
 | 409 | `run_exists` | Start, gdy kierowca ma już bieg (`run_id` w odpowiedzi) |
 | 422 | `insufficient_funds` | Za mało gotówki na tankowanie lub naprawę (`available_cents`, `required_cents`). Nic się nie zmienia, nawet rozliczenie |
 | 422 | `track_locked` | Start lub zmiana toru poniżej poziomu gracza, którego tor wymaga (`details.required`, `details.current`). Komunikat mówi, jak zdobyć poziom |
+| 422 | `city_locked`, `city_not_found`, `no_road`, `already_there`, `already_travelling`, `car_cannot_travel`, `travel_no_fuel`, `car_travelling`, `track_elsewhere` | Podróż i miasta: patrz „Mapa i podróż”. `city_locked` ma `details` jak `track_locked`, `travel_no_fuel` ma w `details` litry (`required`, `available`) |
 | 422 | | Błędne dane: nieznane auto lub tor, brak `request_id`, `liters` poniżej 1 lub nie całkowite, zła `since_version`. Szczegóły w `errors` |
 
 Komunikaty (`message`) są w języku żądania.
@@ -171,6 +172,23 @@ Anuluje zlecenie, które czeka na mechanika albo które mechanik właśnie robi.
 - Wiersze anulowanych zleceń są usuwane: miejsca w kolejce (cztery) wracają, a część można znów ustawić w kolejce.
 
 Odpowiedź 200 to cały garaż, jak przy ustawianiu w kolejce, z dodatkowym `cancelled`. Błędy 422 z kodem: `job_not_found`, `job_done`.
+
+### Mapa i podróż: `GET /map` i `POST /travel`
+
+Prototyp mapy z projektu (plansza Mapa). **Miasto to region reguł** (`regions` w `rules/starter.json`: nazwa w pięciu językach, położenie na planszy 390 × 716, klimat), a droga łączy dwa miasta i ma długość w km (`roads`). Miasto ma tory (dziś po jednym), a auto stoi w mieście toru, na którym jedzie (`tracks[].region`), więc osobnego pola „miasto” w biegu nie ma. Nowy kierowca zaczyna w mieście toru startowego (Złomowo).
+
+`GET /map` zwraca: `here` (miasto, w którym jest auto; bez biegu miasto startowe), `level` (poziom gracza), `cities` (slug, nazwa w języku kierowcy, `x`, `y`, `home`, `here`, `level_required`, `open`, `track` z nazwą, nawierzchnią, światłami, czasem bazowym i wagami statystyk, `fit_percent` i `route`), `roads` i `travel` (trwająca podróż albo `null`). **`fit_percent`** to dopasowanie auta do toru w suchym: czas bazowy toru przez czas okrążenia tego auta z jego częściami, w procentach (100 to auto, które pasuje dokładnie do wartości odniesienia toru; fabryczny Rdzak ma 100 na Złomowie i ok. 50 w kamieniołomie). **`route`** to droga z miasta, w którym jest auto: `km` (najkrótsza po drogach, Dijkstra w `RoadMap`), `ms` i `fuel_ml`; `null` dla miasta, w którym auto jest, dla kierowcy bez auta i w czasie podróży. Odpowiedź przed odczytem wykonuje to, co należne (przyjazd).
+
+`POST /travel` (`to`: slug miasta) wysyła auto. Odpowiedź 201 to ta sama mapa. Podróż to zlecenie czasowe auta i **wykonuje się leniwie jak zlecenia warsztatu**: nic nie działa w tle, a przyjazd wykonuje się przy następnym pytaniu (`Workshop::advance` wywołuje teraz najpierw `Travel::advance`, więc robi to każdy punkt końcowy biegu i garażu).
+
+- **Co kosztuje.** Auto jedzie ze średnią prędkością równą `travel.speed_share_ppm` (50%) swojej prędkości maksymalnej z częściami, więc mocniejsze auto dojeżdża szybciej (38 km do Kruszyna to 26 min dla Rdzaka), i pali `travel.fuel_ml_per_km` (60 ml) na kilometr razy zużycie paliwa auta. Liczby są robocze, projekt ich nie podaje (Kursy pokazują 35 do 41 minut za 38 do 61 km dla furgonu).
+- **Wyjazd.** Auto zarabia do chwili wyjazdu (rozliczenie), potem stoi (`status: stopped`, `stop_reason: travel`) i nic nie zarabia, a paliwo drogi schodzi z baku. Okrążenie w toku przepada. Holowanie nie jest wtedy oferowane, a tankowanie nie rusza auta (jak w warsztacie): to „postój serwisowy” (`RaceRun::SERVICE_STOPS`), przy którym rozliczenie nie przesuwa kursora.
+- **Przyjazd.** Bieg dostaje tor miasta docelowego (pierwszy tor regionu), zamrożony od nowa z częściami, które auto ma (to samo ziarno, więc zaplanowana awaria się nie przesuwa), i auto jedzie od chwili przyjazdu. W odpowiedzi biegu `travel` (z nazwami miast w języku kierowcy) jest, dopóki auto jest w drodze, a `track.region` mówi, w którym mieście stoi.
+- **Bramka poziomu gracza.** Miasto otwiera najniższy `min_player_level` jego torów (3 Kruszyn, 5 Suchy Pas, 8 Wilcza Przełęcz, 12 Autodrom, z planszy). Zamknięte miasto to 422 `city_locked` z `details` (`required`, `current`) i komunikatem „Wymaga poziomu gracza 8 (masz 1). Zdobywasz XP, jeżdżąc.”.
+- **Inne odmowy (422).** `no_run` (brak biegu), `city_not_found`, `already_there`, `already_travelling`, `no_road` (żadna droga tam nie prowadzi), `car_cannot_travel` (wyjechać może tylko auto, które jedzie: nie to po awarii, z pustym bakiem ani w warsztacie) i `travel_no_fuel` (`details.required` i `details.available` w litrach; paliwo nie wystarcza na drogę). Nic się wtedy nie zmienia.
+- **Warsztat i tor.** Warsztat nie pracuje przy aucie w drodze (422 `car_travelling` przy ustawianiu zlecenia), a `PATCH /runs/{id}` zmienia tor tylko w obrębie miasta, w którym stoi auto (inaczej 422 `track_elsewhere`): do innego miasta jedzie się drogą.
+
+Podróże są w tabeli `travels` (jedna trwająca na kierowcę) i wchodzą do kopii danych konta oraz do usunięcia konta. **Czego nie ma w prototypie:** wielu aut (jest jedno auto i jeden bieg, więc „zostaw auto w mieście A i graj drugim w B” dochodzi z garażami w miastach), garaży i warsztatów w miastach, odwołania podróży, drogi liczonej po odcinkach (pozycja auta na mapie to prosta między miastami, także gdy droga prowadzi przez inne miasto) i zdarzeń w drodze.
 
 ### Zegar gry, pory dnia i noc
 
@@ -234,6 +252,6 @@ Kroki 1–5 to pierwsze pięć z planszy Samouczek, dopasowane do tego, co w grz
 
 ## Znane ograniczenia
 
-- Jeden bieg na kierowcę. Torów jest pięć i otwiera je poziom gracza, ale kierowca zmienia tor tylko tym punktem końcowym: mapy, miast i podróży (czas jazdy między torami, garaż w mieście) jeszcze nie ma, a ekran garażu nie ma wyboru toru.
+- Jeden bieg na kierowcę, więc jedno auto na raz. Torów jest pięć, mapa i podróż między miastami są (prototyp, opis wyżej), ale garaży i warsztatów w miastach jeszcze nie ma, a ekran garażu nie ma wyboru toru: do innego miasta jedzie się z mapy.
 - Wyjście z sytuacji bez wyjścia (kierowca, którego nie stać na ruszenie stojącego auta) to holowanie. Wartości (5 minut czekania, paliwo na dwa okrążenia) są tymczasowe i czekają na kalibrację razem z resztą reguł. Gdy pojawi się sklep, trzeba sprawdzić, czy czas czekania nadal kosztuje więcej niż to, co holowanie oszczędza.
 - `ruleset_version` zapisany w biegu pochodzi z konfiguracji (`RIDE_RULESET_VERSION`), a nie z wersji pliku zasad.

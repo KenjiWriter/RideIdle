@@ -450,3 +450,28 @@ it('says for every track whether it is lit, starts a new driver on a track that 
     expect(rulesSchemaErrors($unlit))->not->toBe([])
         ->and(rulesSchemaErrors($noClock))->not->toBe([]);
 });
+
+it('puts every city on the map with a name in all five languages and a track, and every road between cities that exist', function () {
+    $rules = starterRules();
+    $problems = [];
+
+    foreach ($rules['regions'] as $slug => $region) {
+        foreach (array_diff(Locale::supported(), array_keys($region['name'])) as $locale) {
+            $problems[] = "{$slug}: no name in {$locale}";
+        }
+
+        if (Rules::fromArray($rules)->tracksOf($slug) === []) {
+            $problems[] = "{$slug}: no track";
+        }
+    }
+
+    foreach ($rules['roads'] as $road) {
+        foreach (['from', 'to'] as $end) {
+            if (! isset($rules['regions'][$road[$end]])) {
+                $problems[] = "a road leads {$end} {$road[$end]}, which is not a city";
+            }
+        }
+    }
+
+    expect($problems)->toBe([]);
+});

@@ -79,6 +79,14 @@ Ekran Turniej to plansza Wyscig: wyścig takim, jakim jest teraz. Wejście jest 
 
 Czego z planszy **nie ma**, bo nie ma jeszcze, na czym to oprzeć: turnieju i rund („Runda 3/10”: bieg jedzie, póki jest paliwo), **pozycji** (P3/8) i rywali na tablicy (tablica ma jeden wiersz, z kierowcą, i mówi, że boty i duchy dojdą później: boty to F3, duchy F4), przycisku „Zmień turniej” (jeden tor, mapa to F2), przełącznika auto-powtarzania (auto zawsze jedzie do końca paliwa), zakładek Turnieje i Ranking oraz zegara gry i pogody w HUD. Tytuł „Turniej” w nawigacji jest z planszy: po F6, gdy będą turnieje z drabinką, ten ekran będzie ich zakładką „Wyścig”.
 
+## Mapa (`/map`)
+
+Ekran Mapa (plansza Mapa; w nawigacji jest pierwszy: Mapa, Garaż, Turniej, Warsztat, Sklep) rysuje pięć miast i drogi między nimi na planszy z projektu (ciemne drogi z kreskowaną osią), z przyciskami-węzłami: dom dla miasta startowego, flaga dla pozostałych, kłódka i przygaszenie dla zamkniętych, bursztynowa obwódka dla miasta, w którym jest auto, i turkusowy pierścień dla wybranego. Pod nazwą miasta jest „LV 3 · Żwir”. Kółko auta stoi w jego mieście, a w czasie podróży jedzie po prostej między miastami (drogi przez inne miasto nie rysuje: prototyp).
+
+**Karta miasta** (domyślnie tego, w którym jest auto) ma nazwę, nazwę toru, znacznik „Tu jesteś” albo „Cel podróży”, chipy (nawierzchnia, światła, poziom), „Czego wymaga tor” jako paski wag statystyk (skalowane do największej), „Dopasowanie” auta w procentach (z podpowiedzią „Zmień opony albo auto” poniżej 80%), koszt drogi („38 km · 26 min 03 s · 2,3 l paliwa”) i przycisk **„Jedź tutaj”**. Zamknięte miasto mówi, czego brakuje („Wymaga poziomu gracza 12 (masz 3). Zdobywasz XP, jeżdżąc.”), a przycisk jest nieaktywny; kierowca bez auta dostaje „Najpierw wybierz auto…”. To, czego odmówi serwer (paliwo, auto, które stoi), pokazuje się jego tekstem, a mapa jest pytana od nowa.
+
+**W drodze**: u góry baner „W drodze: Złomowo → Kruszyn” z paskiem i czasem dojazdu odliczanym zegarem serwera. Otwarta mapa pyta o podróż co 15 s i wtedy, gdy czas dojazdu minął (najwyżej co 3 s), jak warsztat. Auto w drodze ma na ekranach garażu i Turniej status „W drodze” (amber) i baner „Auto jedzie do miasta Kruszyn, dojazd za 1 min 30 s. W drodze nic nie zarabia.”, odliczany na żywo.
+
 ## Czas gry, prognoza i noc
 
 **HUD** pokazuje czas gry i pogodę tam, gdzie jedzie auto, jak plansza: „11:20 · sucho” w miejscu, gdzie była nazwa kierowcy (nazwa zostaje w tekście dla czytników ekranu), a po najechaniu „Czas w grze: 11:20, Dzień”. Godzinę liczy klient z zegara serwera i z `clock` z odpowiedzi biegu (trzy godziny realne to doba), odświeża ją co 2 s (minuta gry to 7,5 s) i pokazuje także bez auta, bo wzór jest stały; pogoda jest dopiero z biegu.

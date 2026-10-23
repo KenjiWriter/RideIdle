@@ -108,6 +108,16 @@ Gra to, co gra: bierze każde auto paczki z każdą kombinacją części, które
 - Bramki spójności przechodzą. Na każdej nawierzchni wygrywa rodzaj z projektu: slick 51,4 s na suchym asfalcie (uliczne T2: 69,2 s), deszczowe 68,4 s na mokrym (78,2 s), terenowe 113,6 s na żwirze (165,6 s) i 125,2 s w błocie (209,3 s), zimowe 85,3 s na śniegu (180,9 s). Dobór opon to więc realna decyzja, a nie kosmetyka.
 - **Bramka M3 przechodzi, ale cienko.** Bizon M-2 wygrywa dwa tory (Złomowo, Suchy Pas), Rdzak GT-4 dwa (Wilczą Przełęcz, Autodrom), Kuna 4x4 jeden (Kruszyn). Przewaga nad najlepszym innym autem to 1,4% na Złomowie (Rdzak), 1,5% w Kruszynie (znów Rdzak), 14,9% na Suchym Pasie (Rdzak), 5,8% na Wilczej Przełęczy (Bizon) i 2,1% na Autodromie (Bizon). Trzy tory rozstrzygają więc różnice rzędu 1 do 2 punktów procentowych, które każda zmiana liczb przestawi: to jest odpowiedź, że **różne auta na różne tory dają się wymusić, ale jeszcze niepewnie**, a pewniej będzie z napędem i szerszym katalogiem aut. Zanim doszła masa, ten sam przebieg pokazywał „jeszcze nie”: Bizon wygrywał cztery tory z pięciu, bo przyczepność, prowadzenie i hamowanie brały się z opon i zawieszenia, a nie z auta.
 
+### Miasta, drogi i podróż
+
+Miasto to region reguł. `regions[slug]` ma `name` (pięć języków), `map` (`x`, `y` na planszy 390 × 716 z planszy Mapa: Złomowo 78, 290; Kruszyn 196, 185; Suchy Pas 312, 280; Wilcza Przełęcz 292, 104; Autodrom 90, 110) i klimat. `roads` to drogi dwukierunkowe z długością w km, a `travel` to koszt drogi.
+
+- **Układ dróg z planszy**: Złomowo połączone z Kruszynem, a Kruszyn z pozostałymi trzema (jak na mapie: ciemniejsza droga do zablokowanego Autodromu). **Długości są moje**, dobrane do odległości z planszy Kursy (Złomowo–Kruszyn 38 km, do Suchego Pasa 61 km, do Wilczej Przełęczy 52 km): Złomowo–Kruszyn 38, Kruszyn–Suchy Pas 23 (razem 61), Kruszyn–Wilcza Przełęcz 14 (razem 52), Kruszyn–Autodrom 30. Droga z Kursów do Wilczej Przełęczy wychodzi więc przez Kruszyn, nie osobną drogą.
+- **Czas podróży**: `speed_share_ppm` 500 000, czyli średnio połowa prędkości maksymalnej auta (z częściami). Rdzak (175 km/h) jedzie 38 km w 26 min. **Paliwo**: `fuel_ml_per_km` 60 (6 l na 100 km dla auta o zużyciu toru), razy zużycie paliwa auta. Obie liczby to moje, robocze; projekt ich nie podaje.
+- **Bramka poziomu**: miasto otwiera najniższy `min_player_level` jego torów, więc osobnego poziomu miasta w danych nie ma (plansza Mapa: Kruszyn LV 3, Suchy Pas LV 5, Wilcza Przełęcz LV 8, Autodrom LV 12).
+
+`StarterRulesTest` pilnuje, że każdy region ma nazwę w pięciu językach i tor, a każda droga łączy istniejące miasta.
+
 ## Ekonomia i symulator (`rules/economy.json`)
 
 `economy.json` (schemat `economy.schema.json`) to **kotwice ekonomii** z Systemy V i VI projektu: to, co się wpisuje, a z czego wynika reszta. Czyta je symulator ekonomii v0, polecenie `php artisan economy:simulate` (kod w `api/app/Domain/Economy/`, czysty, bez zegara i losowości, więc ten sam zestaw reguł zawsze daje te same dni).
