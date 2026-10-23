@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\Car;
+use App\Models\CityGarage;
 use App\Models\LedgerEntry;
 use App\Models\Part;
 use App\Models\RaceRun;
@@ -69,6 +70,7 @@ final class AccountExport
             'email' => $user->email,
             'email_verified_at' => $this->day($user->email_verified_at),
             'created_at' => $this->day($user->created_at),
+            'selected_car_id' => $user->selected_car_id,
             'secured_at' => $this->day($user->claimed_at),
             'last_seen_at' => $this->day($user->last_seen_at),
             'terms_accepted_at' => $this->day($user->terms_accepted_at),
@@ -99,6 +101,8 @@ final class AccountExport
             )->all(),
             'inventory' => Part::query()->where('user_id', $user->id)->whereNull('car_id')->orderBy('id')->get()
                 ->map(fn (Part $part): array => $part->makeHidden(['user_id', 'car_id', 'mounted_slot'])->toArray())->all(),
+            'garages' => CityGarage::query()->where('user_id', $user->id)->orderBy('id')->get()
+                ->map(fn (CityGarage $garage): array => $garage->makeHidden(['user_id'])->toArray())->all(),
             'workshop_jobs' => WorkshopJob::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (WorkshopJob $job): array => $job->makeHidden(['user_id'])->toArray())->all(),
             'travels' => Travel::query()->where('user_id', $user->id)->orderBy('id')->get()

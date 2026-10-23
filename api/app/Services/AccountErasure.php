@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\Car;
+use App\Models\CityGarage;
 use App\Models\LedgerEntry;
 use App\Models\Part;
 use App\Models\RaceRun;
@@ -56,6 +57,7 @@ final class AccountErasure
             'wallets' => Wallet::query()->where('user_id', $user->id)->count(),
             'cars' => Car::query()->where('user_id', $user->id)->count(),
             'parts' => Part::query()->where('user_id', $user->id)->count(),
+            'garages' => CityGarage::query()->where('user_id', $user->id)->count(),
             'workshop jobs' => WorkshopJob::query()->where('user_id', $user->id)->count(),
             'travels' => Travel::query()->where('user_id', $user->id)->count(),
             'tutorial steps' => TutorialProgress::query()->where('user_id', $user->id)->count(),
@@ -93,6 +95,7 @@ final class AccountErasure
             Travel::query()->where('user_id', $user->id)->delete();
             RaceRun::query()->where('user_id', $user->id)->delete();
             WorkshopJob::query()->where('user_id', $user->id)->delete();
+            CityGarage::query()->where('user_id', $user->id)->delete();
             TutorialProgress::query()->where('user_id', $user->id)->delete();
             Part::query()->where('user_id', $user->id)->delete();
             Car::query()->where('user_id', $user->id)->delete();

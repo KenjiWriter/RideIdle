@@ -14,6 +14,7 @@ use App\Http\Resources\SettlementResource;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\Wallet;
+use App\Services\Garage;
 use App\Services\Ledger;
 use App\Services\RunService;
 use App\Services\TowTerms;
@@ -40,6 +41,7 @@ final class RunController extends Controller
         private readonly RunInputsFactory $inputs,
         private readonly Workshop $workshop,
         private readonly Ledger $ledger,
+        private readonly Garage $garage,
     ) {}
 
     /** Starts the run of the driver: one of the starter wrecks on a track, with a full tank. */
@@ -175,9 +177,11 @@ final class RunController extends Controller
     /** The run of the driver, settled up to now. */
     public function current(Request $request): JsonResponse
     {
-        $this->workshop->advance((int) $request->user()->getAuthIdentifier());
+        $userId = (int) $request->user()->getAuthIdentifier();
+        $this->workshop->advance($userId);
 
-        $run = RaceRun::query()->where('user_id', $request->user()->getAuthIdentifier())->orderByDesc('id')->first();
+        // The run of the car the driver plays.
+        $run = $this->garage->selectedRun($userId);
 
         return $run === null ? $this->noRun() : $this->summary($request, $run);
     }

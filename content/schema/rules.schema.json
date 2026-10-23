@@ -83,6 +83,22 @@
       "required": ["start_level", "levels_per_tier", "xp_per_lap", "xp_per_level", "max_level", "mass", "stat_ceiling"],
       "additionalProperties": false
     },
+    "garage": {
+      "description": "The garages of the cities: every one holds a number of cars, which drive on the track of the city by themselves. The first is the one of the home city, and the others are bought. A car without a garage has nowhere to stand.",
+      "type": "object",
+      "properties": {
+        "capacity": { "description": "How many cars a garage holds (the board of the garage says 2 of 3).", "type": "integer", "minimum": 1, "maximum": 20 },
+        "price_cents": { "description": "The price of a garage in a city other than the home city.", "$ref": "common.schema.json#/$defs/cents" },
+        "wreck_price_cents": {
+          "description": "What a wreck costs in the yard of a city, by the slug of the car: its market value, which the first one given by the mentor is not charged.",
+          "type": "object",
+          "propertyNames": { "$ref": "common.schema.json#/$defs/slug" },
+          "additionalProperties": { "$ref": "common.schema.json#/$defs/cents" }
+        }
+      },
+      "required": ["capacity", "price_cents", "wreck_price_cents"],
+      "additionalProperties": false
+    },
     "clock": {
       "description": "The clock of the game: three real hours are a day of the game (Systemy II). Only the night changes the laps.",
       "type": "object",
@@ -259,7 +275,7 @@
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "garage", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks"],
   "additionalProperties": false,
   "$defs": {
     "surfaces": {

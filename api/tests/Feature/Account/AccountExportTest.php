@@ -96,6 +96,8 @@ describe('what is exported', function () {
             ->and($game['cars'][0]['parts'][0])->toMatchArray(['part_slug' => 'sport-exhaust-t2', 'mounted_slot' => 'exhaust'])
             ->and($game['inventory'])->toHaveCount(1)
             ->and($game['inventory'][0])->toMatchArray(['part_slug' => 'street-tires-t2'])
+            ->and($game['garages'])->toHaveCount(1)
+            ->and($game['garages'][0])->toMatchArray(['region' => 'zlomowo', 'capacity' => 3])
             ->and($game['workshop_jobs'])->toHaveCount(1)
             ->and($game['workshop_jobs'][0])->toMatchArray(['kind' => 'mount', 'status' => 'queued']);
     });
@@ -111,7 +113,7 @@ describe('what is exported', function () {
     it('has an empty game for an account that never played', function () {
         $game = (new AccountExport)->for(User::factory()->guest()->create())['game'];
 
-        expect($game)->toBe(['wallet' => null, 'cars' => [], 'inventory' => [], 'workshop_jobs' => [], 'travels' => [], 'tutorial' => [], 'runs' => [], 'ledger' => []]);
+        expect($game)->toBe(['wallet' => null, 'cars' => [], 'inventory' => [], 'garages' => [], 'workshop_jobs' => [], 'travels' => [], 'tutorial' => [], 'runs' => [], 'ledger' => []]);
     });
 
     it('is only about the account, and never about another', function () {

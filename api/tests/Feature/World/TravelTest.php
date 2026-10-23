@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Content\Rules;
+use App\Models\CityGarage;
 use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\Travel;
@@ -17,13 +18,19 @@ afterEach(fn () => Carbon::setTestNow());
 const TO_KRUSZYN_MS = 1_563_429;
 const TO_KRUSZYN_FUEL_ML = 2_280;
 
-/** A driver with a run (45 l in the tank, at T0) and the experience of a level. */
-function driverOfLevel(int $level, array $run = []): array
+/** A driver with a run (45 l in the tank, at T0), the experience of a level and, unless told otherwise, a garage in every city. */
+function driverOfLevel(int $level, array $run = [], bool $garages = true): array
 {
     [$driver, $race] = driverWithRun(['seed' => str_repeat('0', 32), ...$run]);
 
     (new Ledger)->ensureWallet($driver->id);
     (new Ledger)->grantXp($driver->id, app(Rules::class)->playerXpToReach($level));
+
+    if ($garages) {
+        foreach (array_keys(app(Rules::class)->regions()) as $region) {
+            CityGarage::query()->firstOrCreate(['user_id' => $driver->id, 'region' => $region], ['capacity' => 3]);
+        }
+    }
 
     return [$driver, $race];
 }
@@ -238,6 +245,31 @@ describe('what stops a journey', function () {
             ->assertJsonPath('message', 'Not enough fuel for the road: it takes 2.3 l and the tank has 1.0 l.');
 
         expect($run->fresh()->fuel_ml)->toBe(1_000);
+    });
+
+    it('needs a garage in the city where the car goes, and says to buy one there', function () {
+        [$driver, $run] = driverOfLevel(3, garages: false);
+
+        travelTo($driver, 'kruszyn', ['X-Locale' => 'en'])
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'no_garage')
+            ->assertJsonPath('message', 'You have no garage in Kruszyn. Buy one there first.');
+
+        expect($run->fresh()->status)->toBe(RaceRun::STATUS_RUNNING)->and(Travel::query()->count())->toBe(0);
+    });
+
+    it('needs room in the garage there, and keeps the place for a car that is on its way', function () {
+        [$driver, $run] = driverOfLevel(3);
+        CityGarage::query()->where('user_id', $driver->id)->where('region', 'kruszyn')->update(['capacity' => 1]);
+
+        // Another car of the driver is on the road to Kruszyn already, and has the only place of the garage.
+        $other = RaceRun::factory()->create(['user_id' => $driver->id, 'status' => RaceRun::STATUS_STOPPED, 'stop_reason' => RaceRun::STOP_TRAVEL]);
+        Travel::factory()->create(['user_id' => $driver->id, 'race_run_id' => $other->id, 'from_region' => 'zlomowo', 'to_region' => 'kruszyn']);
+
+        travelTo($driver, 'kruszyn', ['X-Locale' => 'en'])
+            ->assertStatus(422)
+            ->assertJsonPath('code', 'garage_full')
+            ->assertJsonPath('message', 'The garage in Kruszyn is full.');
     });
 
     it('does not take the car to another city by changing its track', function () {

@@ -15,6 +15,11 @@
     "mass": { "reference_kg": 1000, "exponent": 0.6 },
     "stat_ceiling": { "accel": 400, "top_speed": 450, "grip": 250, "handling": 250, "braking": 250, "clearance": 200 }
   },
+  "garage": {
+    "capacity": 3,
+    "price_cents": 500000,
+    "wreck_price_cents": { "rdzak-gt-4": 114000, "bizon-m-2": 139000, "kuna-4x4": 151000 }
+  },
   "clock": { "night_lap_ppm": 1030000 },
   "player": { "xp_base": 45, "xp_exponent": 2.3, "max_level": 30 },
   "shop": {

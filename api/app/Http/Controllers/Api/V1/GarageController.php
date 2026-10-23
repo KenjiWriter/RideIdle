@@ -84,7 +84,8 @@ final class GarageController extends Controller
     private function respond(int $userId, int $status = 200, array $extra = []): JsonResponse
     {
         $car = $this->garage->carOf($userId);
-        $run = RaceRun::query()->where('user_id', $userId)->orderByDesc('id')->first();
+        $run = $car === null ? null : $this->garage->runOf($car);
+        $city = $run === null ? $this->rules->homeRegion() : $this->garage->cityOf($run);
 
         return response()->json([
             'data' => [
@@ -95,7 +96,8 @@ final class GarageController extends Controller
                 'workshop' => [
                     'queue_max' => $this->rules->workshopMaxQueue(),
                     'mechanic' => $this->rules->mechanic(),
-                    'jobs' => WorkshopJobResource::collection($this->workshop->pendingJobs($userId))->resolve(),
+                    'city' => ['slug' => $city, 'name' => $this->rules->cityName($city)],
+                    'jobs' => WorkshopJobResource::collection($this->workshop->pendingJobs($userId, $city))->resolve(),
                 ],
             ],
             'now_ms' => RunService::nowMs(),

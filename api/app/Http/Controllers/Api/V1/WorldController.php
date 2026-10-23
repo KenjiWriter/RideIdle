@@ -32,16 +32,16 @@ final class WorldController extends Controller
     }
 
     /**
-     * Sends the car to another city: `to` is the slug of a city. The car earns until it leaves, then stands on the road for as long as the
+     * Sends a car to another city: `to` is the slug of a city, `car` the id of the car (the one the driver plays when left out). The car earns until it leaves, then stands on the road for as long as the
      * journey takes, with the fuel of the road out of its tank. The level of the driver must open the city.
      */
     public function travel(Request $request): JsonResponse
     {
-        $data = $request->validate(['to' => ['required', 'string', 'max:64']]);
+        $data = $request->validate(['to' => ['required', 'string', 'max:64'], 'car' => ['nullable', 'integer', 'min:1']]);
 
         $userId = (int) $request->user()->getAuthIdentifier();
         $this->workshop->advance($userId);
-        $this->travel->start($userId, $data['to']);
+        $this->travel->start($userId, $data['to'], $data['car'] ?? null);
 
         return $this->respond($userId, 201);
     }

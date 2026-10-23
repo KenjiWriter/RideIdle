@@ -48,7 +48,7 @@ final class Tutorial
         $userId = (int) $user->getKey();
 
         $this->workshop->advance($userId);
-        $run = RaceRun::query()->where('user_id', $userId)->orderByDesc('id')->first();
+        $run = $this->garage->selectedRun($userId);
 
         if ($run !== null) {
             $this->runs->settle($run->id);

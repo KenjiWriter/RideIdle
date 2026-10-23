@@ -107,7 +107,7 @@ describe('deleting my account', function () {
 
         deleteAccount($user, ['confirm_name' => 'Maciek_Turbo'])->assertOk()->assertExactJson(['deleted' => true]);
 
-        expect(rowsOf())->toBe(['users' => 0, 'identities' => 0, 'devices' => 0, 'links' => 0, 'wallets' => 0, 'cars' => 0, 'parts' => 0, 'jobs' => 0, 'runs' => 0, 'settlements' => 0, 'events' => 0, 'ledger' => 0]);
+        expect(rowsOf())->toBe(['users' => 0, 'identities' => 0, 'devices' => 0, 'links' => 0, 'wallets' => 0, 'cars' => 0, 'parts' => 0, 'garages' => 0, 'jobs' => 0, 'runs' => 0, 'settlements' => 0, 'events' => 0, 'ledger' => 0]);
     });
 
     it('does not mind the case of the name or the spaces around it', function () {

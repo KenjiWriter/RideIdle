@@ -6,6 +6,7 @@ namespace App\Content;
 
 use App\Domain\Run\Surface;
 use App\Domain\Settlement\Ppm;
+use App\Support\I18nText;
 
 /**
  * The rules of a run (content/rules/starter.json): tracks, regional climate, weather effects and prices.
@@ -149,6 +150,30 @@ final class Rules
         }
 
         return $level;
+    }
+
+    /** The name of a city in the language of the driver. */
+    public function cityName(string $region): string
+    {
+        return I18nText::from($this->data['regions'][$region]['name'])->for();
+    }
+
+    /** How many cars a garage holds. */
+    public function garageCapacity(): int
+    {
+        return $this->data['garage']['capacity'];
+    }
+
+    /** The price of a garage in a city that is not the home city, in cents. */
+    public function garagePriceCents(): int
+    {
+        return $this->data['garage']['price_cents'];
+    }
+
+    /** What a wreck costs in the yard, in cents, or null for a car that is not sold there. */
+    public function wreckPriceCents(string $slug): ?int
+    {
+        return $this->data['garage']['wreck_price_cents'][$slug] ?? null;
     }
 
     /** How much longer a lap of a track that is not lit takes at night, in ppm of its time (1 030 000 is 3% longer). */

@@ -8,6 +8,7 @@ use App\Mail\AccountLinkMail;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\Car;
+use App\Models\CityGarage;
 use App\Models\LedgerEntry;
 use App\Models\Part;
 use App\Models\RaceRun;
@@ -307,6 +308,7 @@ function accountWithHistory(): User
     $spare = Part::factory()->create(['user_id' => $user->id]);
     WorkshopJob::factory()->create(['user_id' => $user->id, 'car_id' => $run->car_id, 'part_id' => $spare->id]);
     TutorialProgress::factory()->create(['user_id' => $user->id]);
+    CityGarage::query()->create(['user_id' => $user->id, 'region' => 'zlomowo', 'capacity' => 3]);
 
     $settlement = Settlement::query()->create([
         'race_run_id' => $run->id,
@@ -336,6 +338,7 @@ function rowsOf(): array
         'wallets' => Wallet::query()->count(),
         'cars' => Car::query()->count(),
         'parts' => Part::query()->count(),
+        'garages' => CityGarage::query()->count(),
         'jobs' => WorkshopJob::query()->count(),
         'runs' => RaceRun::query()->count(),
         'settlements' => Settlement::query()->count(),

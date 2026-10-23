@@ -104,7 +104,7 @@ final class RunResource extends JsonResource
     /** @return array{from: string, from_name: string, to: string, to_name: string, start_ms: int, arrive_ms: int}|null */
     private function travel(): ?array
     {
-        $journey = app(Travel::class)->active($this->user_id);
+        $journey = app(Travel::class)->activeOf($this->id);
 
         $rules = app(Rules::class);
 
