@@ -33,6 +33,11 @@ export function formatNumber(value: number, locale: AppLocale, maximumFractionDi
   return new Intl.NumberFormat(locale, { maximumFractionDigits }).format(value)
 }
 
+/** A number with always the same count of decimals, for a size that is written so: the 2.0 of an engine is not a 2. */
+export function formatFixed(value: number, locale: AppLocale, fractionDigits: number): string {
+  return new Intl.NumberFormat(locale, { minimumFractionDigits: fractionDigits, maximumFractionDigits: fractionDigits }).format(value)
+}
+
 /** Czas okrążenia w ms jako „1:07.0”: minuty, sekundy i dziesiąte, w zapisie niezależnym od języka. */
 export function formatLapTime(ms: number): string {
   const tenths = Math.max(0, Math.round(ms / 100))

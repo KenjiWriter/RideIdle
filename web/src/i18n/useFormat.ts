@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { formatDay, formatMoney, formatNumber } from './format'
+import { formatDay, formatFixed, formatMoney, formatNumber } from './format'
 import { DEFAULT_LOCALE, normalizeLocale } from './locales'
 
 /** Money, numbers and days in the language of the interface, which follows it when the driver switches the language. */
@@ -12,6 +12,7 @@ export function useFormat() {
   return {
     money: (cents: number, fractionDigits = 0): string => formatMoney(cents, current.value, fractionDigits),
     number: (value: number, fractionDigits = 0): string => formatNumber(value, current.value, fractionDigits),
+    fixed: (value: number, fractionDigits: number): string => formatFixed(value, current.value, fractionDigits),
     day: (value: string): string => formatDay(value, current.value),
   }
 }
