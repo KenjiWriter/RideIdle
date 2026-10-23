@@ -48,6 +48,40 @@ Kroki samouczka są w osobnym pliku, `rules/tutorial.json` (schemat `tutorial.sc
 - Efekty pogody zakładają opony fabryczne. Gdy dojdzie wybór opon, efekt wyliczy się z macierzy opon i nawierzchni.
 - Schemat to `schema/rules.schema.json`, a zależności, których schemat nie wyrazi (sumy, regiony, tłumaczenia), sprawdza test `StarterRulesTest`.
 
+## Ekonomia i symulator (`rules/economy.json`)
+
+`economy.json` (schemat `economy.schema.json`) to **kotwice ekonomii** z Systemy V i VI projektu: to, co się wpisuje, a z czego wynika reszta. Czyta je symulator ekonomii v0, polecenie `php artisan economy:simulate` (kod w `api/app/Domain/Economy/`, czysty, bez zegara i losowości, więc ten sam zestaw reguł zawsze daje te same dni).
+
+**Kotwice:** zysk netto na godzinę jazdy na szczeblu *k* drabiny aut to `600 · 1,15^k`; drabina ma dziewięć szczebli (L0 to naprawiony wrak za 2 000 $, L8 hiperauto za 780 000 $) z wartością auta, minimalnym poziomem gracza, okrążeniami na godzinę, paliwem na okrążenie i oknem offline (jak długo auto jedzie na jednym baku); ceny nowych aut dla tierów T1–T10 i udział zestawu części (50% ceny auta) z udziałem każdego gniazda. Z nich wynikają: nagroda za okrążenie (`zysk / okrążenia + paliwo · cena`), czas zwrotu auta, koszt kroku w górę (`wartość następnego auta − 70% wartości starego`) i ceny części. **Pokrętło** `knobs.reward_mult` mnoży zysk (zakres 0,7–1,4, jak regulator z projektu).
+
+**Gracze** to trzy typy z projektu: A regularny (3 wizyty dziennie, do 14 h jazdy, aktywność ×1,25), B okazjonalny (1 wizyta, do 12 h, ×1,00) i C intensywny (8 wizyt, do 18 h, ×1,60). Godziny jazdy w dniu to `min(limit, wizyty · okno offline auta)`, dochód to `zysk/h · godziny · aktywność · 90% (serwis i naprawy 10%) · flota`, a XP to `90 · aktywność` na godzinę. Poziom gracza liczy ta sama krzywa co w grze, `45 · n^2,3`. Start to 1 200 $ z nagród samouczka.
+
+**Symulacja** idzie dzień po dniu: dochód i XP z tego dnia, a gdy gotówka pokrywa krok i poziom jest taki, jakiego chce dealer, kierowca kupuje (w tym samym dniu może kupić dwa auta). Dla każdego zakupu zapisuje, na co czekał: gotówkę, poziom czy oba naraz.
+
+**Bramka tempa:** dzień zakupu każdego z ośmiu aut (L1–L8) dla każdego z trzech graczy musi mieścić się w ±25% dnia z projektu (`targets`, 24 liczby). Dzień to rozdzielczość modelu, więc cel jednodniowy lub dwudniowy dopuszcza też dzień w każdą stronę (`gate.slack_days`). Polecenie kończy się kodem 1, gdy któraś liczba jest poza bramką, a kodem 2, gdy zestaw reguł nie daje się wczytać (brak pliku, nie JSON, zła zgodność ze schematem, cele niepasujące do graczy), więc nadaje się do CI.
+
+```
+php artisan economy:simulate                       # zestaw z repozytorium, wszystkie trzy typy
+php artisan economy:simulate --player=B --json     # tylko B, raport jako JSON
+php artisan economy:simulate --ruleset=moj.json    # inny zestaw reguł
+php artisan economy:simulate --strict              # kod 1 także, gdy liczba gry odbiega od kotwic
+```
+
+**Zgodność reguł gry z kotwicami.** Pod bramką polecenie zestawia liczby, na których działa gra (`starter.json` i paczka `packs/core`), z tymi, które dają kotwice, w tolerancji `consistency.tolerance` (20%, jak „seeder sprawdza ±20%” w projekcie): czas okrążenia toru startowego, paliwo na okrążenie, cenę paliwa, nagrodę za okrążenie, XP za okrążenie i cenę każdej części paczki. To raport; kod 1 daje dopiero `--strict`.
+
+**Co pokazał pierwszy przebieg** (zestaw `2026.10.1`):
+
+- Wzory z projektu odtwarzają **wszystkie 24 dni z tabeli celów co do dnia** i tabelę zysków (nagroda za okrążenie, czas zwrotu, dochód dzienny A z flotą od 1 do 1,7 auta). Bramka przechodzi.
+- **Tempo wyznacza poziom gracza, nie gotówka.** W każdym zakupie (poza pierwszym C, gdzie oba naraz) kierowca czeka na poziom, a pieniądze są już na koncie. Wniosek dla regulatorów: `reward_mult` w dozwolonym zakresie 0,7–1,4 **w ogóle nie zmienia tempa** (od 0,5 w dół dopiero zaczyna), a tempem steruje XP na godzinę: bramka przechodzi dla 75–105 XP/h (cel 90), przy 60 XP/h pada prawie wszystko, a przy 120 jedna liczba. Regulator „tempo zakupu aut”, który miałby kręcić nagrodami, w tym modelu nie działa; do rozważenia przy kalibracji, bo projekt mówi, że „na starcie decyduje gotówka”.
+- **XP za okrążenie w grze jest o rząd wielkości za duże.** Kotwica daje 90 XP/h, czyli 1,9 XP na okrążenie toru startowego, a `starter.json` ma 25 (to parametr wektorów testowych rozliczania, przeniesiony do reguł). Z 25 XP na okrążenie (1 200 XP/h) bramka pada w 22 z 24 liczb, a gracz A kupuje ostatnie auto w dniu 35 zamiast 76 (przy 2 XP na okrążenie wychodzi dzień 71 i bramka przechodzi). Pozostałe liczby gry (czas okrążenia, paliwo, cena paliwa, nagroda, ceny części; opony terenowe są o 9% powyżej kotwicy) zgadzają się z kotwicami. **Reguł gry nie zmieniałem:** XP gracza jest na razie tylko pokazywany w HUD, ale zmiana dotknie testów, dokumentów i odczucia pierwszych minut.
+
+**Założenia v0, których projekt nie rozstrzyga** (do potwierdzenia):
+
+- Flota dla B to jedno auto (jeździ „tyle, ile ma paliwa”), a dla C taka sama jak dla A. Na tempo nie ma to wpływu, bo gotówka nie jest ograniczeniem, ale będzie miało, gdy to się zmieni.
+- Zakup następuje w dniu, w którym dochód i XP tego dnia wystarczają; pierwszy dzień liczy się w całości.
+- Okno offline L0 to 0,5 h, a limity godzin (14, 12, 18) są granicą doby, nie liczbą wizyt razy okno.
+- Tytuł „tempo” obejmuje tylko drabinę aut. Planowane przez projekt, a **jeszcze niezrobione**: druga bramka („żaden build nie wygrywa więcej niż dwóch torów”, wymaga torów i buildów, F2), regulatory z audytem i trybem cienia, wskaźniki zdrowia z telemetrii, `reward_mult` osobno dla klas D–X, `price_index_used`, tempo rzadkich części (cele projektowe bez modelu), rynek, kursy i turnieje (siedzą w mnożniku aktywności), VIP.
+
 ## Wersje i zmiany balansu
 
 Zasady wersjonowania definicji, cyklu życia (szkic, aktywna, wycofana) i osłabień opisuje dokument „Treść, konto i płatności” na płótnie projektowym. Schemat v0 obejmuje auta i części; miasta, tory i zestawy reguł dojdą w kolejnych wersjach schematu.

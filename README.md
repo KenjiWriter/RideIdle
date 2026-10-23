@@ -108,4 +108,6 @@ Wdrożenie (opis w `deploy/README.md`): skrypty przygotowania serwera Ubuntu i w
 
 Samouczek i ekran Turniej (opisy w `docs/api-runs.md` i `docs/web-run.md`): nowy kierowca ogląda historię (cztery sceny) i wybiera wrak, a w garażu prowadzą go SMS-y od Kuby na starym telefonie, pięć kroków z danych (`content/rules/tutorial.json`): pierwsze okrążenie, nagrody, tankowanie i pierwsza awaria, z wypłatami i pytaniem przy pomijaniu; postęp liczy serwer. Ekran Turniej pokazuje wyścig na żywo: pierścień z odliczaniem okrążenia, pogodę z prognozą na następne 22,5 minuty i tablicę z kierowcą (bez rywali i pozycji, których jeszcze nie ma).
 
-Dalej według roadmapy (F1): symulator ekonomii v0 jako polecenie Artisan, XP i poziomy aut oraz anulowanie kolejki warsztatu; potem F2 (świat, rynek, pogoda), a obok przegląd prawny regulaminu i polityki prywatności.
+Symulator ekonomii v0 (opis w `content/README.md`): `php artisan economy:simulate` gra trzy typy graczy po drabinie dziewięciu aut z kotwic w `content/rules/economy.json`, mówi, w którym dniu każdy kupuje każde auto, i sprawdza, czy dni mieszczą się w ±25% celu z projektu (kod wyjścia 1, gdy nie; 24 liczby, na tym zestawie wszystkie co do dnia). Zestawia też liczby gry z kotwicami, a pierwszy przebieg wykrył, że XP za okrążenie w grze (25) jest o rząd wielkości za duże wobec kotwic (1,9).
+
+Dalej według roadmapy (F1): XP i poziomy aut oraz anulowanie kolejki warsztatu; potem F2 (świat, rynek, pogoda), a obok przegląd prawny regulaminu i polityki prywatności.
