@@ -20,7 +20,7 @@
   },
   "landing": {
     "title": "Sua oficina está esperando",
-    "subtitle": "Reconstrua carcaças, compre carros melhores e corra mesmo quando você não está.",
+    "subtitle": "Reconstrua carcaças, compre carros melhores e corra mesmo quando você estiver longe.",
     "create": "Criar seu piloto",
     "continue": "Continuar como {name}",
     "continueGeneric": "Continuar",
@@ -29,7 +29,7 @@
   "create": {
     "title": "Criar seu piloto",
     "nameLabel": "Nome do piloto",
-    "nameHint": "3 a 16 caracteres: letras, números, _ ou -. Outros pilotos vão ver.",
+    "nameHint": "3 a 16 caracteres: letras, números, _ ou -. Os outros pilotos vão ver esse nome.",
     "submit": "Vamos lá",
     "submitting": "Criando…",
     "back": "Voltar",
@@ -41,13 +41,13 @@
     "consent": "Ao criar um piloto, você aceita os {terms} e a {privacy}."
   },
   "garage": {
-    "welcome": "Bem-vindo, {name}",
+    "welcome": "Boas-vindas, {name}",
     "signOut": "Sair"
   },
   "choose": {
     "step": "Etapa 2 de 2",
     "title": "Escolha sua carcaça",
-    "subtitle": "Você comprará o resto dos carros depois. Esta escolha não é definitiva.",
+    "subtitle": "Você vai comprar os outros carros depois. Esta escolha não é definitiva.",
     "track": "Você começa em: {track}.",
     "recommended": "Recomendado para começar",
     "choose": "Escolher {name}",
@@ -56,7 +56,7 @@
     "stat": {
       "lap": "Tempo de volta",
       "reward": "Ganho por volta",
-      "fuel": "Combustível por volta",
+      "fuel": "Consumo por volta",
       "topSpeed": "Velocidade máxima",
       "mass": "Massa",
       "tank": "Tanque",
@@ -101,12 +101,12 @@
     },
     "refuel": {
       "full": "Encher o tanque · {cost}",
-      "partial": "Comprar {liters} · {cost}",
+      "partial": "Abastecer {liters} · {cost}",
       "busy": "Abastecendo…",
       "tankFull": "O tanque está cheio.",
       "noCash": "Dinheiro insuficiente para combustível.",
       "price": "O combustível custa {price} por litro.",
-      "done": "{liters} adicionados por {cost}.",
+      "done": "Abastecimento: {liters} por {cost}.",
       "nothing": "O tanque já estava cheio.",
       "repeated": "Esse abastecimento já foi feito."
     },
@@ -120,17 +120,17 @@
       "repeated": "Esse conserto já foi feito."
     },
     "tow": {
-      "breakdown": "Você não pode pagar o conserto. O reboque é grátis, mas o carro espera {time} antes de voltar a correr.",
-      "fuel_empty": "Você não pode pagar o combustível de uma volta. O reboque é grátis: o carro espera {time} e sai com um pouco de combustível.",
+      "breakdown": "Você não tem dinheiro para o conserto. O reboque é grátis, mas o carro fica parado por {time} antes de voltar a correr.",
+      "fuel_empty": "Você não tem dinheiro para abastecer uma volta. O reboque é grátis: o carro fica parado por {time} e sai com um pouco de combustível.",
       "button": "Rebocar o carro · grátis",
       "busy": "Rebocando…",
       "notNeeded": "O reboque não era necessário.",
       "underway": "O carro está sendo rebocado. Ele volta a correr em cerca de {time}."
     },
     "away": {
-      "title": "Enquanto você esteve fora",
+      "title": "Enquanto você estava fora",
       "duration": "Tempo fora",
-      "earned": "Ganho",
+      "earned": "Ganhos",
       "fuel_empty": "O combustível acabou.",
       "breakdown": "O carro quebrou.",
       "dismiss": "Entendi"
@@ -149,13 +149,13 @@
     },
     "intro": "Entre com a conta vinculada à sua garagem ou use o código de recuperação que você guardou.",
     "accountTitle": "Entrar com sua conta",
-    "accountDescription": "Use a forma de entrar que você vinculou à sua garagem. Um link de e-mail funciona uma vez, por pouco tempo.",
+    "accountDescription": "Use o login que você vinculou à sua garagem. Um link recebido por e-mail só funciona uma vez e por pouco tempo.",
     "codeTitle": "Usar um código de recuperação"
   },
   "recovery": {
     "title": "Salvar sua garagem",
     "description": "Se você limpar os dados do navegador ou trocar de aparelho, este código traz seu piloto de volta. Sem ele, uma conta de convidado se perde.",
-    "generate": "Mostrar meu código de recuperação",
+    "generate": "Mostrar código de recuperação",
     "regenerate": "Criar um novo código",
     "regenerateHint": "Você já tem um código. Um novo faz o antigo parar de funcionar.",
     "generating": "Criando…",
@@ -182,18 +182,18 @@
     "apple": "Apple"
   },
   "callback": {
-    "checking": "Concluindo a entrada…",
-    "linkedTitle": "{provider} foi vinculado",
+    "checking": "Concluindo o login…",
+    "linkedTitle": "Conta {provider} vinculada",
     "linkedBody": "Sua garagem está salva. A partir de agora você pode entrar com {provider}.",
-    "cancelledTitle": "Entrada cancelada",
-    "cancelledBody": "Você não permitiu em {provider}, então nada foi alterado.",
-    "failedTitle": "A entrada não funcionou",
-    "failed": "Algo deu errado na volta de {provider}. Tente novamente.",
-    "missingVerifier": "Esta entrada não foi iniciada neste navegador ou demorou demais. Comece de novo.",
-    "expired": "Esta entrada expirou ou já foi usada. Comece de novo.",
-    "signedOut": "Sua sessão terminou. Entre na sua garagem e tente novamente.",
+    "cancelledTitle": "Login cancelado",
+    "cancelledBody": "Você não autorizou o acesso em {provider}, então nada foi alterado.",
+    "failedTitle": "O login não funcionou",
+    "failed": "Algo deu errado no retorno de {provider}. Tente novamente.",
+    "missingVerifier": "Este login não foi iniciado neste navegador ou demorou demais. Comece de novo.",
+    "expired": "Este login expirou ou já foi usado. Comece de novo.",
+    "signedOut": "Sua sessão foi encerrada. Entre na sua garagem e tente novamente.",
     "garage": "Ir para a garagem",
-    "signIn": "Voltar para a entrada"
+    "signIn": "Voltar ao login"
   },
   "account": {
     "consentLegend": "Antes de vincular uma conta",
@@ -204,7 +204,7 @@
     "opening": "Abrindo {provider}…",
     "or": "ou com um e-mail",
     "emailLabel": "E-mail",
-    "sendLink": "Enviar um link para mim",
+    "sendLink": "Receber um link",
     "sending": "Enviando…",
     "another": "Usar outro endereço",
     "errors": {
@@ -224,14 +224,14 @@
     "action": "Salvar agora"
   },
   "linked": {
-    "title": "Suas formas de entrar",
-    "add": "Adicionar outra forma de entrar",
-    "addDescription": "Vincule mais uma forma de acessar esta garagem, para que perder uma não deixe você de fora.",
+    "title": "Seus logins",
+    "add": "Adicionar outro login",
+    "addDescription": "Vincule mais um login para acessar esta garagem e não ficar sem acesso se perder um deles.",
     "close": "Fechar"
   },
   "legal": {
     "version": "Versão de {date}",
-    "operator": "Quem mantém o jogo",
+    "operator": "Responsável pelo jogo",
     "name": "Nome",
     "address": "Endereço",
     "email": "E-mail de contato",

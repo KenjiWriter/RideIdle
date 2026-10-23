@@ -4,7 +4,7 @@ const texts: LegalTexts = {
   terms: {
     title: 'Termos de uso',
     intro:
-      'Estes termos se aplicam ao RideIdle, um jogo de corrida idle que roda no seu navegador. Leia-os junto com a política de privacidade. O operador do jogo está indicado no topo desta página.',
+      'Estes termos se aplicam ao RideIdle, um jogo de corrida idle que roda no seu navegador. Leia-os junto com a política de privacidade. O responsável pelo jogo está indicado no topo desta página.',
     sections: [
       {
         id: 'scope',
@@ -18,7 +18,7 @@ const texts: LegalTexts = {
         id: 'age',
         heading: 'Idade mínima',
         paragraphs: [
-          'Você precisa ter pelo menos {minAge} anos para usar o RideIdle. Quando você protege sua conta, pedimos que confirme sua idade e registramos o momento dessa confirmação.',
+          'Você precisa ter pelo menos {minAge} anos para usar o RideIdle. Quando você vincula sua conta, pedimos que confirme sua idade e registramos o momento dessa confirmação.',
           'Se soubermos que uma pessoa mais jovem tem uma conta, podemos excluí-la.',
         ],
       },
@@ -26,10 +26,10 @@ const texts: LegalTexts = {
         id: 'account',
         heading: 'Seu piloto e sua conta',
         paragraphs: [
-          'Você começa como convidado: escolhe um nome de piloto e o jogo cria uma conta de convidado sem pedir dados pessoais. Uma conta de convidado é excluída, com tudo o que há nela, após {guestDays} dias sem atividade.',
-          'Você pode proteger sua conta com um e-mail, Google, Facebook ou Apple. Uma conta protegida não expira e pode ser aberta em outro aparelho. Você também pode ter um código de recuperação. Quem tiver seu código de recuperação ou um link de acesso pode entrar na sua conta, então guarde-os só para você.',
-          'Escolha um nome de piloto que não seja ofensivo e que não finja ser outra pessoa. Podemos alterar ou remover um nome que viole essa regra.',
-          'Você é responsável pelo que acontece na sua conta. Dê informações verdadeiras ao protegê-la.',
+          'Você começa com uma conta de convidado: escolhe um nome de piloto e o jogo cria a conta sem pedir dados pessoais. Uma conta de convidado é excluída, com tudo o que há nela, após {guestDays} dias sem atividade.',
+          'Você pode vincular sua conta a um e-mail, Google, Facebook ou Apple. Uma conta vinculada não expira e pode ser aberta em outro aparelho. Você também pode ter um código de recuperação. Quem tiver seu código de recuperação ou um link de login pode entrar na sua conta, então guarde-os só para você.',
+          'Escolha um nome de piloto que não seja ofensivo nem se passe por outra pessoa. Podemos alterar ou remover um nome que viole essa regra.',
+          'Você é responsável pelo que acontece na sua conta. Dê informações verdadeiras ao vinculá-la.',
         ],
       },
       {
@@ -69,13 +69,13 @@ const texts: LegalTexts = {
         id: 'liability',
         heading: 'Nossa responsabilidade',
         paragraphs: [
-          'Somos responsáveis como a lei exige. Nada nestes termos limita um direito que você tem por lei e que não pode ser limitado, por exemplo como consumidor, nem a nossa responsabilidade por dolo, culpa grave ou danos à vida ou à saúde.',
+          'Respondemos nos termos da lei. Nada nestes termos limita um direito que você tem por lei e que não pode ser limitado, por exemplo como consumidor, nem a nossa responsabilidade por dolo, culpa grave ou danos à vida ou à saúde.',
           'Fora isso, e na medida em que a lei permitir, não nos responsabilizamos por perdas indiretas, como a perda de progresso no jogo, porque o jogo é gratuito e oferecido para entretenimento.',
         ],
       },
       {
         id: 'law',
-        heading: 'Lei',
+        heading: 'Lei aplicável',
         paragraphs: ['As regras de proteção do consumidor do país onde você mora, às quais não se pode renunciar, continuam valendo para você.'],
       },
       {
@@ -101,28 +101,28 @@ const texts: LegalTexts = {
         id: 'controller',
         heading: 'Quem é o responsável',
         paragraphs: [
-          'O operador indicado no topo desta página decide para que e como seus dados são usados (é o controlador). Você pode falar com ele no endereço de contato informado lá, inclusive para qualquer dúvida ou pedido sobre seus dados.',
+          'O responsável pelo jogo, indicado no topo desta página, decide para que e como seus dados são usados (é o controlador). Você pode falar com ele no endereço de contato informado lá, inclusive para qualquer dúvida ou pedido sobre seus dados.',
         ],
       },
       {
         id: 'data',
         heading: 'Quais dados usamos',
         paragraphs: [
-          'Como convidado: o nome de piloto que você escolhe, o idioma do jogo, seu progresso (carros, corridas, dinheiro do jogo, experiência e o histórico deles), o momento da sua última atividade e um token do aparelho. O token é um segredo aleatório guardado no seu navegador; guardamos apenas uma impressão digital (hash) dele.',
-          'Quando você protege sua conta: seu e-mail, ou o identificador que Google, Facebook ou Apple nos dá para a sua conta, junto com o e-mail que eles informam. O jogo mostra um endereço apenas de forma abreviada, como t***@example.com.',
-          'Também registramos quando os termos foram aceitos e a idade confirmada, e qual versão dos termos foi aceita. Se você criar um código de recuperação, guardamos apenas uma impressão digital dele.',
-          'Para links de acesso e acessos por um provedor, guardamos um registro de curta duração: uma impressão digital do segredo, seu e-mail e a finalidade. Ele é excluído logo depois de expirar ou ser usado.',
-          'Para impedir abusos, contamos as requisições por endereço IP e por uma impressão digital do e-mail, por no máximo uma hora. Nossos servidores e a hospedagem também podem guardar registros técnicos, como o endereço IP e o horário de uma requisição.',
+          'Como convidado: o nome de piloto que você escolhe, o idioma do jogo, seu progresso (carros, corridas, dinheiro do jogo, experiência e o histórico deles), o momento da sua última atividade e um token do aparelho. O token é um segredo aleatório guardado no seu navegador; guardamos apenas um hash dele (um código que não permite recuperá-lo).',
+          'Quando você vincula sua conta: seu e-mail, ou o identificador que Google, Facebook ou Apple nos dá para a sua conta, junto com o e-mail que eles informam. O jogo mostra um endereço apenas de forma abreviada, como t***@example.com.',
+          'Também registramos quando os termos foram aceitos e a idade confirmada, e qual versão dos termos foi aceita. Se você criar um código de recuperação, guardamos apenas o hash dele.',
+          'Para links de login e logins com Google, Facebook ou Apple, guardamos um registro de curta duração: um hash do segredo, seu e-mail e a finalidade. Ele é excluído logo depois de expirar ou ser usado.',
+          'Para impedir abusos, contamos as requisições por endereço IP e por um hash do e-mail, por no máximo uma hora. Nossos servidores e a hospedagem também podem guardar registros técnicos, como o endereço IP e o horário de uma requisição.',
           'Não usamos ferramentas de publicidade, de análise ou de rastreamento e não vendemos seus dados.',
         ],
       },
       {
         id: 'why',
-        heading: 'Para que usamos e com que base',
+        heading: 'Para que usamos os dados e qual é a base legal',
         paragraphs: [
-          'Para dar a você o jogo e a conta: o piloto, o progresso, o acesso e os e-mails que você pede, por exemplo um link de acesso. Base: é necessário para fornecer o jogo que você pediu (artigo 6(1)(b) do GDPR).',
-          'Para manter o jogo seguro e justo, impedir abusos e trapaças e corrigir erros. Base: nosso interesse legítimo em manter um jogo seguro (artigo 6(1)(f) do GDPR).',
-          'Para poder comprovar a aceitação dos termos e a confirmação da idade. Base: nosso interesse legítimo em poder comprová-las (artigo 6(1)(f) do GDPR).',
+          'Para dar a você o jogo e a conta: o piloto, o progresso, o login e os e-mails que você pede, por exemplo um link de login. Base legal: é necessário para fornecer o jogo que você pediu (artigo 6(1)(b) do GDPR, o Regulamento Geral de Proteção de Dados da UE).',
+          'Para manter o jogo seguro e justo, impedir abusos e trapaças e corrigir erros. Base legal: nosso interesse legítimo em manter um jogo seguro (artigo 6(1)(f) do GDPR).',
+          'Para poder comprovar a aceitação dos termos e a confirmação da idade. Base legal: nosso interesse legítimo em poder comprová-las (artigo 6(1)(f) do GDPR).',
         ],
       },
       {
@@ -130,7 +130,7 @@ const texts: LegalTexts = {
         heading: 'Quem recebe',
         paragraphs: [
           'Empresas que nos ajudam a manter o jogo: hospedagem e infraestrutura, e o serviço que entrega os e-mails. Elas só podem usar os dados conforme nossas instruções.',
-          'Google, Facebook (Meta) ou Apple, somente se você escolher entrar por eles. Não enviamos a eles nada sobre o seu jogo. Eles nos informam seu identificador e e-mail e usam seus dados conforme as próprias políticas de privacidade.',
+          'Google, Facebook (Meta) ou Apple, somente se você escolher entrar com eles. Não enviamos a eles nada sobre o seu jogo. Eles nos informam seu identificador e e-mail e usam seus dados conforme as próprias políticas de privacidade.',
           'Não repassamos seus dados a mais ninguém, a menos que a lei exija.',
         ],
       },
@@ -138,7 +138,7 @@ const texts: LegalTexts = {
         id: 'transfers',
         heading: 'Fora do seu país',
         paragraphs: [
-          'Algumas dessas empresas podem tratar dados fora do Espaço Econômico Europeu ou fora do seu país. Nesse caso, contamos com as garantias que a lei exige, por exemplo cláusulas contratuais padrão.',
+          'Algumas dessas empresas podem tratar dados fora do Espaço Econômico Europeu ou fora do seu país. Nesse caso, adotamos as garantias que a lei exige, por exemplo cláusulas-padrão contratuais.',
         ],
       },
       {
@@ -146,8 +146,8 @@ const texts: LegalTexts = {
         heading: 'Por quanto tempo guardamos',
         paragraphs: [
           'Uma conta de convidado, com seus dados de jogo, é excluída após {guestDays} dias sem atividade.',
-          'Uma conta protegida é mantida enquanto existir. Você pode pedir a qualquer momento que a excluamos.',
-          'Links de acesso e registros de acesso são excluídos logo depois de expirar ou ser usados. Os contadores de requisições para evitar abusos duram no máximo uma hora. Os registros técnicos são guardados só pelo tempo que a segurança exigir.',
+          'Uma conta vinculada é mantida enquanto existir. Você pode pedir a qualquer momento que a excluamos.',
+          'Links de login e registros de login são excluídos logo depois de expirar ou ser usados. Os contadores de requisições para evitar abusos duram no máximo uma hora. Os registros técnicos são guardados só pelo tempo que a segurança exigir.',
         ],
       },
       {
@@ -163,8 +163,8 @@ const texts: LegalTexts = {
         id: 'storage',
         heading: 'O que fica no seu navegador',
         paragraphs: [
-          'O RideIdle não usa cookies. Ele guarda algumas coisas no armazenamento local do seu navegador: o token do aparelho, o idioma escolhido, uma marca do último estado da sua corrida que foi mostrado, a informação de que a janela que pede para você salvar sua garagem foi adiada e, por alguns minutos durante um acesso por um provedor, um segredo de uso único. O jogo precisa deles para funcionar, e não são usados para rastrear você.',
-          'Se você limpar os dados do navegador, será desconectado. Uma conta de convidado sem código de recuperação não pode mais ser aberta.',
+          'O RideIdle não usa cookies. Ele guarda algumas coisas no armazenamento local do seu navegador: o token do aparelho, o idioma escolhido, um marcador do último estado da sua corrida que você já viu, a informação de que você adiou a janela que pede para salvar sua garagem e, por alguns minutos durante um login com Google, Facebook ou Apple, um segredo de uso único. O jogo precisa desses dados para funcionar, e eles não são usados para rastrear você.',
+          'Se você limpar os dados do navegador, sua sessão será encerrada. Uma conta de convidado sem código de recuperação não pode mais ser aberta.',
         ],
       },
       {
@@ -176,7 +176,7 @@ const texts: LegalTexts = {
         id: 'security',
         heading: 'Segurança',
         paragraphs: [
-          'Guardamos os segredos do jogo (códigos de recuperação, links de acesso, tokens de aparelho) apenas como impressões digitais e limitamos quantas vezes podem ser tentados. Nenhum sistema é perfeitamente seguro, então guarde seu código de recuperação e seus links de acesso só para você.',
+          'Guardamos os segredos do jogo (códigos de recuperação, links de login, tokens de aparelho) apenas como hashes e limitamos quantas vezes podem ser tentados. Nenhum sistema é perfeitamente seguro, então guarde seu código de recuperação e seus links de login só para você.',
         ],
       },
       {

@@ -8,19 +8,19 @@ return [
     ],
 
     'email' => [
-        'sent' => 'Enviamos um link para :email. Ele funciona uma vez e por :minutes minutos.',
+        'sent' => 'Enviamos um link para :email. Ele só funciona uma vez e vale por :minutes minutos.',
         'already_linked' => 'Esta conta já tem um e-mail.',
     ],
 
     'login_link' => [
-        'sent' => 'Se este e-mail pertence a uma garagem, um link está a caminho. Ele funciona uma vez e por :minutes minutos.',
+        'sent' => 'Se este e-mail pertence a uma garagem, um link está a caminho. Ele só funciona uma vez e vale por :minutes minutos.',
     ],
 
     'oauth' => [
-        'unavailable' => 'Esta forma de entrar não está disponível.',
-        'ticket_invalid' => 'Esta entrada expirou ou já foi usada. Comece de novo.',
-        'no_account' => 'Nenhuma garagem está ligada a esta conta :provider. Comece a jogar como convidado e vincule a conta na sua garagem.',
-        'wrong_account' => 'Esta entrada foi iniciada para outra garagem. Comece de novo na garagem que você quer vincular.',
+        'unavailable' => 'Este tipo de login não está disponível.',
+        'ticket_invalid' => 'Este login expirou ou já foi usado. Comece de novo.',
+        'no_account' => 'Nenhuma garagem está vinculada a esta conta :provider. Comece a jogar como convidado e vincule a conta na sua garagem.',
+        'wrong_account' => 'Este login foi iniciado para outra garagem. Comece de novo na garagem que você quer vincular.',
     ],
 
     'token' => [

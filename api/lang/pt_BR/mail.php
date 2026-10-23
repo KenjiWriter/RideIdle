@@ -4,13 +4,13 @@ return [
 
     'account_link' => [
         'claim' => [
-            'subject' => 'Confirme seu e-mail para proteger sua garagem',
-            'intro' => 'Alguém pediu para proteger a garagem de :driver com este e-mail. Se foi você, confirme abaixo.',
+            'subject' => 'Confirme seu e-mail para salvar sua garagem',
+            'intro' => 'Alguém pediu para salvar a garagem de :driver com este e-mail. Se foi você, confirme abaixo.',
             'action' => 'Confirmar e-mail',
         ],
         'add' => [
             'subject' => 'Confirme seu e-mail para adicioná-lo à sua garagem',
-            'intro' => 'Alguém pediu para adicionar este e-mail como forma de entrar na garagem de :driver. Se foi você, confirme abaixo.',
+            'intro' => 'Alguém pediu para adicionar este e-mail como login da garagem de :driver. Se foi você, confirme abaixo.',
             'action' => 'Confirmar e-mail',
         ],
         'login' => [
@@ -20,12 +20,12 @@ return [
         ],
         'existing' => [
             'subject' => 'Este e-mail já tem uma garagem',
-            'intro' => 'Alguém tentou proteger uma nova garagem com este e-mail, mas ele já pertence à garagem de :driver. Se foi você e quer usar essa garagem neste dispositivo, entre abaixo.',
+            'intro' => 'Alguém tentou salvar uma nova garagem com este e-mail, mas ele já pertence à garagem de :driver. Se foi você e quer usar essa garagem neste aparelho, use o botão abaixo para entrar.',
             'action' => 'Entrar',
         ],
-        'expires' => 'O link funciona uma vez e por :minutes minutos.',
+        'expires' => 'O link só funciona uma vez e vale por :minutes minutos.',
         'ignore' => 'Se não foi você, ignore esta mensagem: nada muda sem o link.',
-        'fallback' => 'Se o botão não funcionar, copie este endereço para o navegador:',
+        'fallback' => 'Se o botão não funcionar, copie e cole este endereço no navegador:',
     ],
 
 ];

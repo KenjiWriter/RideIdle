@@ -86,7 +86,7 @@ it('writes in the language of the driver', function (string $locale, string $sub
     'english' => ['en', 'Confirm your e-mail to secure your garage'],
     'french' => ['fr', 'Confirmez votre e-mail pour sécuriser votre garage'],
     'german' => ['de', 'Bestätige deine E-Mail, um deine Garage zu sichern'],
-    'brazilian portuguese' => ['pt-BR', 'Confirme seu e-mail para proteger sua garagem'],
+    'brazilian portuguese' => ['pt-BR', 'Confirme seu e-mail para salvar sua garagem'],
 ]);
 
 it('renders the e-mail in html and in text, with the name, the link and the time', function () {

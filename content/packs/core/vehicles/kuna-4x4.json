@@ -12,7 +12,7 @@
     "pl": "Teren, deszcz i towary. Słabsza na dragu i w prędkości.",
     "fr": "Tout-terrain, pluie et marchandises. Moins à l’aise en drag et en vitesse de pointe.",
     "de": "Gelände, Regen und Zuladung. Schwächer im Drag-Rennen und bei der Höchstgeschwindigkeit.",
-    "pt-BR": "Fora de estrada, chuva e carga. Mais fraca em arrancadas e em velocidade final."
+    "pt-BR": "Off-road, chuva e carga. Pontos fracos: arrancadas e velocidade máxima."
   },
   "class": "pickup",
   "drivetrain": "awd",
