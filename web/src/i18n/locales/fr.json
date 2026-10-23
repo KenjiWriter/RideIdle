@@ -222,6 +222,9 @@
     "action": "Le sauvegarder"
   },
   "linked": {
-    "title": "Vos moyens de connexion"
+    "title": "Vos moyens de connexion",
+    "add": "Ajouter un autre moyen de connexion",
+    "addDescription": "Liez un moyen de plus pour accéder à ce garage, afin que la perte de l’un ne vous en ferme pas l’accès.",
+    "close": "Fermer"
   }
 }

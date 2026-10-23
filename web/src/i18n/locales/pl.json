@@ -222,6 +222,9 @@
     "action": "Zapisz go"
   },
   "linked": {
-    "title": "Twoje sposoby logowania"
+    "title": "Twoje sposoby logowania",
+    "add": "Dodaj kolejny sposób logowania",
+    "addDescription": "Połącz jeszcze jeden sposób wejścia do garażu, żeby utrata jednego nie zamknęła Ci drogi.",
+    "close": "Zamknij"
   }
 }

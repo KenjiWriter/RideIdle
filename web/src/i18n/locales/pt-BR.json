@@ -222,6 +222,9 @@
     "action": "Salvar agora"
   },
   "linked": {
-    "title": "Suas formas de entrar"
+    "title": "Suas formas de entrar",
+    "add": "Adicionar outra forma de entrar",
+    "addDescription": "Vincule mais uma forma de acessar esta garagem, para que perder uma não deixe você de fora.",
+    "close": "Fechar"
   }
 }

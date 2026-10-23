@@ -587,6 +587,8 @@ describe('GarageView', () => {
       expect(wrapper.findComponent(RecoveryPanel).exists()).toBe(false)
       expect(wrapper.findAll('[data-test="identity-email"] span').map((part) => part.text())).toEqual(['E-mail', 't***@example.com'])
       expect(wrapper.findAll('[data-test="identity-google"] span').map((part) => part.text())).toEqual(['Google', 'm***@gmail.com'])
+      // The server has Google and Apple on and the driver has Google: Apple is left to add.
+      expect(wrapper.get('[data-test="add-toggle"]').text()).toBe('Add another sign-in')
     })
 
     it('does not list sign-ins for a guest, who has none', async () => {

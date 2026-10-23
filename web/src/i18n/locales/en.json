@@ -222,6 +222,9 @@
     "action": "Save it"
   },
   "linked": {
-    "title": "Your sign-ins"
+    "title": "Your sign-ins",
+    "add": "Add another sign-in",
+    "addDescription": "Link one more way to get into this garage, so losing one does not lock you out.",
+    "close": "Close"
   }
 }

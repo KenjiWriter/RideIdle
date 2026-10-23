@@ -222,6 +222,9 @@
     "action": "Jetzt sichern"
   },
   "linked": {
-    "title": "Deine Anmeldearten"
+    "title": "Deine Anmeldearten",
+    "add": "Weitere Anmeldeart hinzufügen",
+    "addDescription": "Verknüpfe eine weitere Möglichkeit, in diese Garage zu kommen, damit der Verlust einer dich nicht aussperrt.",
+    "close": "Schließen"
   }
 }
