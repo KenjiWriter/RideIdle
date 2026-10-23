@@ -378,5 +378,17 @@
     "skipConfirm": "Skip the tutorial",
     "from": "Message from {sender}",
     "reward": "K. sent you {cash}."
+  },
+  "story": {
+    "scene1": "“Listen, I have to disappear for a while.”",
+    "scene2": "“I’m leaving you the workshop: the keys, the tools and three wrecks.”",
+    "scene3": "“Złomowo lives on racing. Pick a car, rebuild it and drive.”",
+    "scene4": "“Manager of the workshop: {name}.”",
+    "sms": "It’s me. Don’t ask. Pick a car, I’ll text you the rest. — K.",
+    "scene": "Scene {number} of {total}",
+    "next": "Tap to move on",
+    "skip": "Skip",
+    "choose": "Choose a wreck",
+    "role": "Manager of the workshop"
   }
 }

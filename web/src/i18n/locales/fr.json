@@ -378,5 +378,17 @@
     "skipConfirm": "Passer le tutoriel",
     "from": "Message de {sender}",
     "reward": "K. vous a envoyé {cash}."
+  },
+  "story": {
+    "scene1": "« Écoute, je dois disparaître un moment. »",
+    "scene2": "« Je te laisse l’atelier : les clés, les outils et trois épaves. »",
+    "scene3": "« Złomowo vit des courses. Choisis une voiture, retape-la et roule. »",
+    "scene4": "« Gérant de l’atelier : {name}. »",
+    "sms": "C’est moi. Ne pose pas de questions. Choisis une voiture, je t’envoie la suite par SMS. — K.",
+    "scene": "Scène {number} sur {total}",
+    "next": "Touchez pour continuer",
+    "skip": "Passer",
+    "choose": "Choisir une épave",
+    "role": "Gérant de l’atelier"
   }
 }

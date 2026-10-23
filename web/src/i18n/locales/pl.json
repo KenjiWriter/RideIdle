@@ -378,5 +378,17 @@
     "skipConfirm": "Pomiń samouczek",
     "from": "Wiadomość od {sender}",
     "reward": "K. przesłał Ci {cash}."
+  },
+  "story": {
+    "scene1": "„Słuchaj, muszę zniknąć na jakiś czas.”",
+    "scene2": "„Zostawiam Ci dziuplę: klucze, narzędzia i trzy wraki.”",
+    "scene3": "„Złomowo żyje z wyścigów. Wybierz auto, odbuduj je i jedź.”",
+    "scene4": "„Zarządca dziupli: {name}.”",
+    "sms": "To ja. Nie pytaj. Wybierz auto, resztę wyślę SMS-em. — K.",
+    "scene": "Scena {number} z {total}",
+    "next": "Dotknij, aby przewinąć",
+    "skip": "Pomiń",
+    "choose": "Wybierz wraka",
+    "role": "Zarządca dziupli"
   }
 }

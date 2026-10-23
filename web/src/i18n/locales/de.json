@@ -378,5 +378,17 @@
     "skipConfirm": "Tutorial überspringen",
     "from": "Nachricht von {sender}",
     "reward": "K. hat dir {cash} geschickt."
+  },
+  "story": {
+    "scene1": "„Hör zu, ich muss für eine Weile verschwinden.“",
+    "scene2": "„Ich lasse dir die Werkstatt: die Schlüssel, das Werkzeug und drei Wracks.“",
+    "scene3": "„Złomowo lebt vom Rennsport. Such dir ein Auto aus, bau es wieder auf und fahr.“",
+    "scene4": "„Leiter der Werkstatt: {name}.“",
+    "sms": "Ich bin’s. Frag nicht. Such dir ein Auto aus, den Rest schicke ich dir per SMS. — K.",
+    "scene": "Szene {number} von {total}",
+    "next": "Tippen zum Weiterschalten",
+    "skip": "Überspringen",
+    "choose": "Wrack wählen",
+    "role": "Leiter der Werkstatt"
   }
 }

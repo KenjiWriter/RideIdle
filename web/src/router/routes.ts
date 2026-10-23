@@ -27,6 +27,8 @@ export const routes: RouteRecordRaw[] = [
   // The terms and the privacy policy are read before there is an account, and from the window that asks for consent.
   { path: '/terms', name: 'terms', component: () => import('@/views/LegalView.vue'), props: { document: 'terms' } },
   { path: '/privacy', name: 'privacy', component: () => import('@/views/LegalView.vue'), props: { document: 'privacy' } },
+  // The story between the name and the choice of a wreck: only for a driver who has just been made.
+  { path: '/story', name: 'story', component: () => import('@/views/StoryView.vue'), meta: { requiresAuth: true, bare: true } },
   { path: '/choose', name: 'choose', component: () => import('@/views/ChooseCarView.vue'), meta: { requiresAuth: true, bare: true } },
   { path: '/garage', name: 'garage', component: () => import('@/views/GarageView.vue'), meta: { requiresAuth: true } },
   { path: '/workshop', name: 'workshop', component: () => import('@/views/WorkshopView.vue'), meta: { requiresAuth: true } },

@@ -552,6 +552,29 @@ body {
     }
   }
 
+  /** The camera over the picture of the story: it goes from one place to another for as long as the scene lasts. */
+  @keyframes camera {
+    from {
+      transform: scale(var(--s0)) translate(var(--x0), var(--y0));
+    }
+
+    to {
+      transform: scale(var(--s1)) translate(var(--x1), var(--y1));
+    }
+  }
+
+  .kb {
+    transform: scale(var(--s0)) translate(var(--x0), var(--y0));
+    animation: camera var(--dur) ease-in-out forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kb {
+      transform: scale(var(--s1)) translate(var(--x1), var(--y1));
+      animation: none;
+    }
+  }
+
   /** The ring round what a step of the tutorial points at: soft while the step only waits. */
   .ring-hl {
     border: 3px solid var(--color-amber);

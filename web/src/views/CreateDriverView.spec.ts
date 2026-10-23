@@ -101,7 +101,7 @@ describe('CreateDriverView', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it('creates the driver and goes on to the choice of a wreck', async () => {
+  it('creates the driver and goes on to the story, which comes before the choice of a wreck', async () => {
     fetchMock.mockResolvedValue(respond(201, { data: profile, token: 'device-token' }))
     const { submit, router } = await open()
 
@@ -111,7 +111,7 @@ describe('CreateDriverView', () => {
     expect(body).toEqual({ name: 'Turbo', locale: 'en' })
     expect(readToken()).toBe('device-token')
     // The next view is loaded lazily, so wait for the navigation to finish.
-    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('choose'))
+    await vi.waitFor(() => expect(router.currentRoute.value.name).toBe('story'))
   })
 
   it('shows the message of the server when the name is taken and stays on the page', async () => {

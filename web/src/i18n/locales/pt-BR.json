@@ -378,5 +378,17 @@
     "skipConfirm": "Pular o tutorial",
     "from": "Mensagem de {sender}",
     "reward": "K. enviou {cash} para você."
+  },
+  "story": {
+    "scene1": "“Escute, preciso sumir por um tempo.”",
+    "scene2": "“Estou deixando a oficina para você: as chaves, as ferramentas e três carcaças.”",
+    "scene3": "“Złomowo vive de corridas. Escolha um carro, reconstrua e corra.”",
+    "scene4": "“Gerente da oficina: {name}.”",
+    "sms": "Sou eu. Não pergunte. Escolha um carro, o resto eu mando por SMS. — K.",
+    "scene": "Cena {number} de {total}",
+    "next": "Toque para avançar",
+    "skip": "Pular",
+    "choose": "Escolher uma carcaça",
+    "role": "Gerente da oficina"
   }
 }
