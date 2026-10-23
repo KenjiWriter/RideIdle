@@ -121,5 +121,5 @@ Auto pochodzi z paczki `content/packs/core`, a tor, klimat regionu, efekty pogod
 ## Znane ograniczenia
 
 - Jeden bieg na kierowcę i jeden tor (Złomowo). Kolejne tory wymagają podróży i poziomów gracza, których jeszcze nie ma.
-- Nie ma ochrony przed sytuacją bez wyjścia: kierowca bez gotówki i bez paliwa albo z awarią, na którą go nie stać, nie może ruszyć. Dziś zawsze zarabia, zanim cokolwiek wyda, ale po wprowadzeniu sklepu trzeba to rozwiązać (na przykład holowanie albo darmowa naprawa).
+- Nie ma ochrony przed sytuacją bez wyjścia: kierowca bez gotówki i bez paliwa albo z awarią, na którą go nie stać, nie może ruszyć, bo stojące auto nie zarabia. Zdarza się już dziś, choć rzadko: awaria na pierwszym okrążeniu (szansa 0,3%) zostawia kierowcę z 15,50 $ przy naprawie za 30 $. Ekran pokazuje wtedy komunikat o braku gotówki, ale wyjścia nie ma. Trzeba to rozwiązać przed sklepem (na przykład holowanie albo darmowa pierwsza naprawa).
 - `ruleset_version` zapisany w biegu pochodzi z konfiguracji (`RIDE_RULESET_VERSION`), a nie z wersji pliku zasad.
