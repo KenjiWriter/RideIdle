@@ -158,7 +158,18 @@ Tankowanie nie rusza auta w warsztacie, a holowanie nie jest wtedy oferowane (`t
 
 Statystyki auta (`RunInputsFactory::stats`): moc nadwozia razy `power_mult` części, przyspieszenie to moc na tonę, prędkość maksymalna rośnie z pierwiastkiem sześciennym zysku mocy i nie przekracza limitu skrzyni, przyczepność, prowadzenie i hamowanie biorą się z opon (fabrycznych, gdy żadnych nie założono), a zawieszenie i hamulce są uśredniane z prowadzeniem i hamowaniem opon. **Uśrednianie to pierwsza reguła do sprawdzenia w symulatorze ekonomii.** Efektów opon na mokrym i na żwirze jeszcze nie ma (macierz opon dojdzie z torami), dlatego sklep sprzedaje tylko opony uliczne T2, zawieszenie, hamulce i wydech: wszystko, co zmienia statystyki.
 
-Kolejki nie da się jeszcze anulować.
+### Anulowanie zlecenia: `DELETE /garage/jobs/{job}`
+
+Anuluje zlecenie, które czeka na mechanika albo które mechanik właśnie robi. **Projekt o tym milczy** (plansza Warsztat nie ma przycisku anulowania), więc reguły poniżej to moja decyzja i są robocze:
+
+- Anulowanie nic nie kosztuje i nic nie zwraca, bo zlecenie kosztuje tylko czas. Praca, którą mechanik już wykonał przy zleceniu w toku, przepada, a część zostaje tam, gdzie była: zdjęcie się nie odbywa, założenie też.
+- Zlecenia wykonanego nie da się anulować (422 `job_done`): część jest już w nowym miejscu. To, czego czas minął od ostatniego pytania, wykonuje się przed sprawdzeniem, więc „wykonane” znaczy wykonane w chwili pytania. Zlecenia, którego nie ma albo które należy do kogoś innego, nie da się odróżnić od siebie (422 `job_not_found`), tak samo jak drugiego anulowania tego samego.
+- Zdjęcie ciągnie za sobą założenie części, która miała zająć to gniazdo (wymiana to dwa zlecenia, a założenie bez zdjęcia nie miałoby się jak odbyć). Anulowanie samego założenia zostawia zdjęcie starej części, więc gniazdo zostanie puste. `cancelled` w odpowiedzi to id anulowanych zleceń, to, o które poproszono, pierwsze.
+- Zlecenia za anulowanym przesuwają się do przodu: każde trwa tyle, co trwało, i startuje od końca zlecenia, które mechanik nadal robi, a gdy takiego nie ma, od teraz. Pierwsze z nich rusza od razu, więc auto nie wychodzi z warsztatu między zleceniami.
+- Gdy po anulowaniu nie zostaje żadne zlecenie, a auto stało przez warsztat (`stop_reason: workshop`), jedzie dalej od teraz z konfiguracją z częściami, które ma; za czas postoju nic nie dostaje. Auto, które stało z innego powodu (awaria), zostaje stojące.
+- Wiersze anulowanych zleceń są usuwane: miejsca w kolejce (cztery) wracają, a część można znów ustawić w kolejce.
+
+Odpowiedź 200 to cały garaż, jak przy ustawianiu w kolejce, z dodatkowym `cancelled`. Błędy 422 z kodem: `job_not_found`, `job_done`.
 
 ### XP i poziom auta
 
