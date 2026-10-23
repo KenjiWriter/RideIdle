@@ -195,6 +195,17 @@ describe('FleetView', () => {
     expect(wrapper.get('[data-test="car-6"] [data-test="car-condition"]').classes()).toContain('chip-bad')
   })
 
+  it('shows a car that waits for the Start as waiting, not as broken', async () => {
+    const parked = aFleetCar({ run: { id: 7, status: 'stopped', stop_reason: 'parked', laps_done: 0, fuel_ml: 45_000, tank_ml: 45_000, track: 'Złomowo Street Sprint' } })
+    serve({ 'GET /api/v1/cars': () => respond(200, aFleet({ cars: [parked] })), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="car-5"] [data-test="car-status"]').text()).toBe('Waiting to start')
+    expect(wrapper.get('[data-test="car-5"] [data-test="car-status"]').classes()).toContain('chip-am')
+  })
+
   it('leads to the exchange, where the cars are bought', async () => {
     serve({ 'GET /api/v1/cars': () => respond(200, aFleet()), 'GET /api/v1/runs/current': noRun })
 

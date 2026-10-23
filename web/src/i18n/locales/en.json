@@ -106,7 +106,8 @@
       "breakdown": "Broken down",
       "towed": "Towed",
       "workshop": "In the workshop",
-      "travel": "On the road"
+      "travel": "On the road",
+      "parked": "Waiting to start"
     },
     "stat": {
       "cash": "Cash",
@@ -119,7 +120,8 @@
       "fuel_empty": "The tank is empty. The car stands until you refuel it.",
       "breakdown": "The car broke down. It stands until it is repaired.",
       "workshop": "The car stands in the workshop while the mechanic works. It drives again when the last job is done.",
-      "travel": "The car is on its way to {city}, arriving in {time}. It earns nothing on the road."
+      "travel": "The car is on its way to {city}, arriving in {time}. It earns nothing on the road.",
+      "parked": "The car is waiting in the garage. It earns nothing until you send it out with Start."
     },
     "fuel": {
       "title": "Fuel",
@@ -162,7 +164,8 @@
       "breakdown": "The car broke down.",
       "dismiss": "Got it"
     },
-    "loadError": "The state of your car could not be loaded."
+    "loadError": "The state of your car could not be loaded.",
+    "goToRace": "Go to the tournament"
   },
   "recover": {
     "title": "Restore your driver",
@@ -459,7 +462,10 @@
       "slower": "This weather slows the car by {percent}%. Other tires may help, have a look at the workshop.",
       "nightNow": "Night: laps on this track are {percent}% longer, because it has no lights.",
       "nightSoon": "Night in {time}: laps on this track will be {percent}% longer, because it has no lights."
-    }
+    },
+    "start": "Start",
+    "startTitle": "The car is waiting in the garage",
+    "startNote": "Tap Start and the car drives lap after lap by itself, also when you are away."
   },
   "clock": {
     "phase": {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { RouterLink, useRoute } from 'vue-router'
 
 import type { Run } from '@/api/types'
 import { useRunStatus } from '@/features/run/useRunStatus'
@@ -13,6 +14,7 @@ import TowControl from './TowControl.vue'
 const props = defineProps<{ run: Run }>()
 
 const { t } = useI18n()
+const route = useRoute()
 const { stopped, towing, towMs } = useRunStatus()
 const store = useRunStore()
 
@@ -35,7 +37,12 @@ const leftMs = computed(() => (props.run.travel ? Math.max(0, props.run.travel.a
     <p v-if="stopped && run.stop_reason === 'travel' && run.travel" class="card card-hi text-sm" role="status" data-test="banner">
       {{ t('run.banner.travel', { city: run.travel.to_name, time: formatDuration(leftMs) }) }}
     </p>
-    <p v-else-if="stopped && run.stop_reason" class="card card-hi text-sm" role="status" data-test="banner">
+    <!-- A car that waits in the garage: on the tournament screen the Start says it, and elsewhere the way to it is here. -->
+    <div v-else-if="stopped && run.stop_reason === 'parked' && route.name !== 'race'" class="card card-hi flex flex-col gap-2.5 text-sm" role="status" data-test="banner">
+      <p>{{ t('run.banner.parked') }}</p>
+      <RouterLink :to="{ name: 'race' }" class="btn btn-primary btn-sm no-underline" data-test="to-race">{{ t('run.goToRace') }}</RouterLink>
+    </div>
+    <p v-else-if="stopped && run.stop_reason && run.stop_reason !== 'parked'" class="card card-hi text-sm" role="status" data-test="banner">
       {{ t(`run.banner.${run.stop_reason}`) }}
     </p>
 

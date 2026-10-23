@@ -179,6 +179,19 @@ describe('GarageView', () => {
     expect(wrapper.get('[data-test="banner"]').text()).toBe('The car broke down. It stands until it is repaired.')
   })
 
+  it('tells that the car waits in the garage, and leads to the Start of the tournament', async () => {
+    const { mounted } = open({ status: 'stopped', stop_reason: 'parked', laps_done: 0 })
+    const { wrapper } = await mounted
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="status"]').text()).toBe('Waiting to start')
+    expect(wrapper.get('[data-test="banner"]').text()).toContain('The car is waiting in the garage. It earns nothing until you send it out with Start.')
+    expect(wrapper.get('[data-test="to-race"]').text()).toBe('Go to the tournament')
+    expect(wrapper.get('[data-test="to-race"]').attributes('href')).toBe('/race')
+    expect(wrapper.find('[data-test="repair-button"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="tow-button"]').exists()).toBe(false)
+  })
+
   it('tells that the car stands in the workshop, and offers neither the repair nor the tow', async () => {
     const { mounted } = open({ status: 'stopped', stop_reason: 'workshop' })
     const { wrapper } = await mounted

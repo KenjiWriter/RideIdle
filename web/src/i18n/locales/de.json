@@ -106,7 +106,8 @@
       "breakdown": "Panne",
       "towed": "Abgeschleppt",
       "workshop": "In der Werkstatt",
-      "travel": "Unterwegs"
+      "travel": "Unterwegs",
+      "parked": "Wartet auf den Start"
     },
     "stat": {
       "cash": "Geld",
@@ -119,7 +120,8 @@
       "fuel_empty": "Der Tank ist leer. Das Auto steht, bis du tankst.",
       "breakdown": "Das Auto hat eine Panne. Es steht, bis es repariert ist.",
       "workshop": "Das Auto steht in der Werkstatt, solange der Mechaniker arbeitet. Es fährt wieder, wenn der letzte Auftrag erledigt ist.",
-      "travel": "Das Auto ist nach {city} unterwegs und kommt in {time} an. Unterwegs verdient es nichts."
+      "travel": "Das Auto ist nach {city} unterwegs und kommt in {time} an. Unterwegs verdient es nichts.",
+      "parked": "Das Auto wartet in der Garage. Es verdient nichts, bis du es mit Start losschickst."
     },
     "fuel": {
       "title": "Kraftstoff",
@@ -162,7 +164,8 @@
       "breakdown": "Das Auto hatte eine Panne.",
       "dismiss": "Verstanden"
     },
-    "loadError": "Der Zustand deines Autos konnte nicht geladen werden."
+    "loadError": "Der Zustand deines Autos konnte nicht geladen werden.",
+    "goToRace": "Zum Turnier"
   },
   "recover": {
     "title": "Fahrer wiederherstellen",
@@ -459,7 +462,10 @@
       "slower": "Dieses Wetter bremst das Auto um {percent} %. Andere Reifen können helfen, schau in die Werkstatt.",
       "nightNow": "Nacht: Runden auf dieser Strecke sind {percent} % länger, weil sie kein Licht hat.",
       "nightSoon": "Nacht in {time}: Runden auf dieser Strecke werden {percent} % länger, weil sie kein Licht hat."
-    }
+    },
+    "start": "Start",
+    "startTitle": "Das Auto wartet in der Garage",
+    "startNote": "Tippe auf Start, und das Auto fährt Runde um Runde von allein, auch wenn du nicht da bist."
   },
   "clock": {
     "phase": {

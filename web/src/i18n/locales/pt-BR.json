@@ -106,7 +106,8 @@
       "breakdown": "Quebrado",
       "towed": "Rebocado",
       "workshop": "Na oficina",
-      "travel": "Na estrada"
+      "travel": "Na estrada",
+      "parked": "Aguardando a largada"
     },
     "stat": {
       "cash": "Dinheiro",
@@ -119,7 +120,8 @@
       "fuel_empty": "O tanque está vazio. O carro fica parado até você abastecer.",
       "breakdown": "O carro quebrou. Ele fica parado até ser consertado.",
       "workshop": "O carro fica parado na oficina enquanto o mecânico trabalha. Volta a andar quando o último serviço terminar.",
-      "travel": "O carro está a caminho de {city}, chegando em {time}. Na estrada ele não ganha nada."
+      "travel": "O carro está a caminho de {city}, chegando em {time}. Na estrada ele não ganha nada.",
+      "parked": "O carro está esperando na garagem. Ele não ganha nada até você enviá-lo com Iniciar."
     },
     "fuel": {
       "title": "Combustível",
@@ -162,7 +164,8 @@
       "breakdown": "O carro quebrou.",
       "dismiss": "Entendi"
     },
-    "loadError": "Não foi possível carregar o estado do seu carro."
+    "loadError": "Não foi possível carregar o estado do seu carro.",
+    "goToRace": "Ir ao torneio"
   },
   "recover": {
     "title": "Restaurar seu piloto",
@@ -459,7 +462,10 @@
       "slower": "Este tempo deixa o carro {percent}% mais lento. Outros pneus podem ajudar, dê uma olhada na oficina.",
       "nightNow": "Noite: as voltas nesta pista são {percent}% mais longas, porque ela não tem iluminação.",
       "nightSoon": "Noite em {time}: as voltas nesta pista serão {percent}% mais longas, porque ela não tem iluminação."
-    }
+    },
+    "start": "Iniciar",
+    "startTitle": "O carro está esperando na garagem",
+    "startNote": "Toque em Iniciar e o carro dá volta após volta sozinho, mesmo quando você não está."
   },
   "clock": {
     "phase": {

@@ -19,6 +19,7 @@ import { carPicture } from '@/features/art'
 import { statFill } from '@/features/car/statFill'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { useFlash } from '@/features/run/useFlash'
+import { useTutorialReward } from '@/features/run/useTutorialReward'
 import { useRunStatus } from '@/features/run/useRunStatus'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -74,27 +75,8 @@ async function open(): Promise<void> {
 
 onMounted(open)
 
-/** What the mentor paid for a step is said once, for a while, and then it is gone: the cash is in the HUD. */
-const { message: rewardMessage, show: showReward } = useFlash()
-
-watch(
-  () => tutorial.reward,
-  (paid) => {
-    if (paid !== null) {
-      showReward(
-        [paid.cashCents > 0 ? t('tutorial.reward', { cash: money(paid.cashCents, 2) }) : null, paid.carXp > 0 ? t('tutorial.rewardCarXp', { xp: number(paid.carXp) }) : null]
-          .filter(Boolean)
-          .join(' '),
-      )
-      tutorial.acknowledgeReward()
-
-      // The experience went to the car, which the bar shows: ask for the garage again, as the run has not moved.
-      if (paid.carXp > 0) {
-        void garage.loadGarage().catch(() => undefined)
-      }
-    }
-  },
-)
+/** What the mentor paid for a step is said once: the experience went to the car, which the bar shows, so the garage is asked for again. */
+const { rewardMessage } = useTutorialReward(() => void garage.loadGarage().catch(() => undefined))
 
 /** A rise of the car is said once, with the tier of parts it opened. */
 const { message: levelUpMessage, show: showLevelUp } = useFlash()

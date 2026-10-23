@@ -205,6 +205,26 @@ export const useRunStore = defineStore('run', () => {
     return response.towed === true
   }
 
+  /**
+   * Sends out the car that waits in the garage (the Start of the tournament screen): it drives from now on. Nothing is paid or owed for the
+   * time it stood, and a car that does not wait is left as it is, so pressing it again is harmless.
+   */
+  async function begin(): Promise<void> {
+    const current = run.value
+
+    if (!current) {
+      throw new Error('There is no run to start.')
+    }
+
+    const response = await api<RunResponse>(`/v1/runs/${current.id}/start`, { method: 'POST' })
+
+    apply(response)
+
+    if (away.value === null) {
+      remember(response.data)
+    }
+  }
+
   /** The driver has read the summary: from now on everything up to the present counts as seen. */
   function dismissAway(): void {
     away.value = null
@@ -228,5 +248,5 @@ export const useRunStore = defineStore('run', () => {
     clearSeen()
   }
 
-  return { run, wallet, tow, loaded, away, starters, startTrack, serverNow, loadStarters, start, load, refresh, refuel, repair, towCar, dismissAway, reset }
+  return { run, wallet, tow, loaded, away, starters, startTrack, serverNow, loadStarters, start, begin, load, refresh, refuel, repair, towCar, dismissAway, reset }
 })

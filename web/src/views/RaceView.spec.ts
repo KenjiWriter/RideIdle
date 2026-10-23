@@ -316,6 +316,79 @@ describe('RaceView', () => {
     await setLocale('en')
   })
 
+  it('shows the Start for a car that waits in the garage, instead of a lap that is not driven', async () => {
+    const { wrapper } = await show(aRun({ status: 'stopped', stop_reason: 'parked', laps_done: 0, current_lap: null }))
+
+    expect(wrapper.get('[data-test="start-title"]').text()).toBe('The car is waiting in the garage')
+    expect(wrapper.get('[data-test="start-card"]').text()).toContain('Tap Start and the car drives lap after lap by itself, also when you are away.')
+    expect(wrapper.get('[data-test="start"]').text()).toBe('Start')
+    // The card is what the tutorial points at, and the status says the car waits (not red: nothing is wrong).
+    expect(wrapper.get('[data-test="start-card"]').attributes('data-tutorial')).toBe('start')
+    expect(wrapper.get('[data-test="status"]').text()).toBe('Waiting to start')
+    expect(wrapper.get('[data-test="status"]').classes()).toContain('chip-am')
+    // The banner of a car in the garage is for the other screens: here the Start says it.
+    expect(wrapper.find('[data-test="banner"]').exists()).toBe(false)
+  })
+
+  it('has no Start for a car that drives', async () => {
+    const { wrapper } = await show()
+
+    expect(wrapper.find('[data-test="start-card"]').exists()).toBe(false)
+  })
+
+  it('sends the car out with the Start: it races from then on', async () => {
+    const parked = aRun({ id: 7, status: 'stopped', stop_reason: 'parked', laps_done: 0, current_lap: null })
+    let started = false
+    const calls = serveApi(fetchMock, {
+      'GET /api/v1/me': () => respond(200, { data: profile }),
+      'GET /api/v1/runs/current': () => respond(200, runAnswer({ ...(started ? aRun({ laps_done: 0 }) : parked), server_time_ms: Date.now() })),
+      'POST /api/v1/runs/7/start': () => {
+        started = true
+
+        return respond(200, runAnswer({ ...aRun({ laps_done: 0 }), server_time_ms: Date.now() }))
+      },
+      'GET /api/v1/garage': () => respond(404, { message: 'none' }),
+    })
+    const view = await mountView(RaceView, '/race')
+    mounted.push(view.wrapper)
+    await flushPromises()
+
+    await view.wrapper.get('[data-test="start"]').trigger('click')
+    await flushPromises()
+
+    expect(calls.some((call) => call.method === 'POST' && call.url === '/api/v1/runs/7/start')).toBe(true)
+    expect(view.wrapper.find('[data-test="start-card"]').exists()).toBe(false)
+    expect(view.wrapper.get('[data-test="status"]').text()).toBe('LIVE')
+  })
+
+  it('says so when the Start did not get through, and leaves it for another try', async () => {
+    serveApi(fetchMock, {
+      'GET /api/v1/me': () => respond(200, { data: profile }),
+      'GET /api/v1/runs/current': () => respond(200, runAnswer({ ...aRun({ id: 7, status: 'stopped', stop_reason: 'parked', laps_done: 0, current_lap: null }), server_time_ms: Date.now() })),
+      'POST /api/v1/runs/7/start': () => respond(500, { message: 'Server error' }),
+      'GET /api/v1/garage': () => respond(404, { message: 'none' }),
+    })
+    const view = await mountView(RaceView, '/race')
+    mounted.push(view.wrapper)
+    await flushPromises()
+
+    await view.wrapper.get('[data-test="start"]').trigger('click')
+    await flushPromises()
+
+    expect(view.wrapper.get('[data-test="start-error"]').text()).toBe('Something went wrong. Try again.')
+    expect(view.wrapper.get('[data-test="start"]').attributes('disabled')).toBeUndefined()
+  })
+
+  it('speaks the language of the driver at the Start', async () => {
+    await setLocale('pl')
+    const { wrapper } = await show(aRun({ status: 'stopped', stop_reason: 'parked', laps_done: 0, current_lap: null }))
+
+    expect(wrapper.get('[data-test="start-title"]').text()).toBe('Auto czeka w garażu')
+    expect(wrapper.get('[data-test="start"]').text()).toBe('Start')
+
+    await setLocale('en')
+  })
+
   it('sends a driver without a run to the choice of a wreck', async () => {
     serveApi(fetchMock, { 'GET /api/v1/runs/current': () => respond(404, { message: 'none', code: 'no_run' }) })
     const { router } = await mountView(RaceView, '/race')

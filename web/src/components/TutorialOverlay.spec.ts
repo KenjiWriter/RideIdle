@@ -92,6 +92,21 @@ describe('TutorialOverlay', () => {
     expect(ring.attributes('style')).toContain('height: 68px')
   })
 
+  it('points the Start at the tab of the tournament while the driver is not there, and at the button when the page has it', async () => {
+    const start = aStep({ key: 'start', number: 2, target: 'start' })
+    putOnPage('race', { top: 700, left: 190, width: 60, height: 56 })
+    const first = await show(aTutorial(start))
+
+    // The button is not on this screen, so the tab that leads to it is ringed.
+    expect(first.wrapper.get('[data-test="tutorial-ring"]').attributes('style')).toContain('top: 694px')
+
+    putOnPage('start', { top: 400, left: 20, width: 340, height: 120 })
+    const second = await show(aTutorial(start))
+
+    // On the tournament screen the button is the one that is ringed.
+    expect(second.wrapper.get('[data-test="tutorial-ring"]').attributes('style')).toContain('top: 394px')
+  })
+
   it('brings the thing into view when the page has it, once, even if the page was still loading when the step came', async () => {
     vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval'] })
     const { wrapper } = await show()

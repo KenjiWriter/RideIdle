@@ -91,7 +91,7 @@ function statusKey(car: FleetCar): string {
 function chipClass(car: FleetCar): string {
   const reason = car.run?.stop_reason ?? null
 
-  return car.run?.status !== 'stopped' ? 'chip-cy' : reason === 'workshop' || reason === 'travel' ? 'chip-am' : 'chip-bad'
+  return car.run?.status !== 'stopped' ? 'chip-cy' : reason === 'workshop' || reason === 'travel' || reason === 'parked' ? 'chip-am' : 'chip-bad'
 }
 
 /** Where the car is, and what it is doing there. */

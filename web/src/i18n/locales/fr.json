@@ -106,7 +106,8 @@
       "breakdown": "En panne",
       "towed": "Remorquée",
       "workshop": "À l’atelier",
-      "travel": "En route"
+      "travel": "En route",
+      "parked": "Attend le départ"
     },
     "stat": {
       "cash": "Argent",
@@ -119,7 +120,8 @@
       "fuel_empty": "Le réservoir est vide. La voiture reste arrêtée tant que vous ne faites pas le plein.",
       "breakdown": "La voiture est tombée en panne. Elle reste arrêtée tant qu’elle n’est pas réparée.",
       "workshop": "La voiture reste à l’atelier pendant que le mécanicien travaille. Elle repart quand le dernier travail est terminé.",
-      "travel": "La voiture roule vers {city}, arrivée dans {time}. Elle ne gagne rien en route."
+      "travel": "La voiture roule vers {city}, arrivée dans {time}. Elle ne gagne rien en route.",
+      "parked": "La voiture attend dans le garage. Elle ne rapporte rien tant que tu ne l’envoies pas avec Démarrer."
     },
     "fuel": {
       "title": "Carburant",
@@ -162,7 +164,8 @@
       "breakdown": "La voiture est tombée en panne.",
       "dismiss": "Compris"
     },
-    "loadError": "Impossible de charger l’état de la voiture."
+    "loadError": "Impossible de charger l’état de la voiture.",
+    "goToRace": "Aller au tournoi"
   },
   "recover": {
     "title": "Récupérer votre pilote",
@@ -459,7 +462,10 @@
       "slower": "Ce temps ralentit la voiture de {percent} %. D’autres pneus peuvent aider, passez à l’atelier.",
       "nightNow": "La nuit, les tours de cette piste sont plus longs de {percent} %, car elle n’a pas d’éclairage.",
       "nightSoon": "La nuit tombe dans {time}, et les tours de cette piste seront plus longs de {percent} %, car elle n’a pas d’éclairage."
-    }
+    },
+    "start": "Démarrer",
+    "startTitle": "La voiture attend dans le garage",
+    "startNote": "Touche Démarrer et la voiture enchaîne les tours toute seule, même en ton absence."
   },
   "clock": {
     "phase": {

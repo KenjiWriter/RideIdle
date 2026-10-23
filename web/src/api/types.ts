@@ -36,8 +36,8 @@ export interface RecoveryCodeResponse extends MeResponse {
 
 export type RunStatus = 'running' | 'stopped'
 
-/** Why a run stopped: the tank is empty, the car broke down, it stands in the workshop while a job is done, or it is on the road to another city. */
-export type StopReason = 'fuel_empty' | 'breakdown' | 'workshop' | 'travel'
+/** Why a run stopped: the tank is empty, the car broke down, it stands in the workshop while a job is done, it is on the road to another city, or it waits in the garage for the Start. */
+export type StopReason = 'fuel_empty' | 'breakdown' | 'workshop' | 'travel' | 'parked'
 
 /** A run: a car driving laps on a track (GET /api/v1/runs/current). Times are ms of the server clock, fuel is in ml. */
 export interface Run {
@@ -334,7 +334,7 @@ export interface CancelJobResponse extends GarageResponse {
 export type TutorialStatus = 'in_progress' | 'finished' | 'skipped'
 
 /** The thing on the garage screen that a step of the tutorial points at. */
-export type TutorialTarget = 'laps' | 'cash' | 'refuel' | 'repair'
+export type TutorialTarget = 'start' | 'laps' | 'cash' | 'refuel' | 'repair'
 
 /** The step that waits: the messages of the mentor, in the language of the driver, and what to highlight. */
 export interface TutorialStep {

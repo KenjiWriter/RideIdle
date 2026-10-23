@@ -106,7 +106,8 @@
       "breakdown": "Awaria",
       "towed": "Holowane",
       "workshop": "W warsztacie",
-      "travel": "W drodze"
+      "travel": "W drodze",
+      "parked": "Czeka na start"
     },
     "stat": {
       "cash": "Gotówka",
@@ -119,7 +120,8 @@
       "fuel_empty": "Bak jest pusty. Auto stoi, dopóki go nie zatankujesz.",
       "breakdown": "Auto się zepsuło. Stoi, dopóki go nie naprawisz.",
       "workshop": "Auto stoi w warsztacie, dopóki mechanik pracuje. Pojedzie dalej, gdy skończy się ostatnie zlecenie.",
-      "travel": "Auto jedzie do miasta {city}, dojazd za {time}. W drodze nic nie zarabia."
+      "travel": "Auto jedzie do miasta {city}, dojazd za {time}. W drodze nic nie zarabia.",
+      "parked": "Auto czeka w garażu. Nic nie zarabia, dopóki nie wyślesz go przyciskiem Start."
     },
     "fuel": {
       "title": "Paliwo",
@@ -162,7 +164,8 @@
       "breakdown": "Auto się zepsuło.",
       "dismiss": "Rozumiem"
     },
-    "loadError": "Nie udało się wczytać stanu auta."
+    "loadError": "Nie udało się wczytać stanu auta.",
+    "goToRace": "Przejdź do Turnieju"
   },
   "recover": {
     "title": "Przywróć kierowcę",
@@ -459,7 +462,10 @@
       "slower": "Ta pogoda spowalnia auto o {percent}%. Inne opony mogą pomóc, zajrzyj do warsztatu.",
       "nightNow": "Noc: okrążenia na tym torze są o {percent}% dłuższe, bo nie ma świateł.",
       "nightSoon": "Noc za {time}: okrążenia na tym torze będą o {percent}% dłuższe, bo nie ma świateł."
-    }
+    },
+    "start": "Start",
+    "startTitle": "Auto czeka w garażu",
+    "startNote": "Dotknij Start, a auto pojedzie okrążenie za okrążeniem samo, także gdy Cię nie będzie."
   },
   "clock": {
     "phase": {

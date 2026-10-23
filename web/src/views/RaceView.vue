@@ -7,17 +7,20 @@ import FuelGauge from '@/components/FuelGauge.vue'
 import GameShell from '@/components/GameShell.vue'
 import LapRing from '@/components/LapRing.vue'
 import RunAlerts from '@/components/RunAlerts.vue'
+import TutorialOverlay from '@/components/TutorialOverlay.vue'
 import { gameTime, untilNight } from '@/features/clock/gameClock'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { formatCountdown, lapProgress } from '@/features/run/lapProgress'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useRunStatus } from '@/features/run/useRunStatus'
+import { useTutorialReward } from '@/features/run/useTutorialReward'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatDuration, formatLapTime } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { currentLocale } from '@/i18n'
 import { useRunStore } from '@/stores/run'
+import { useTutorialStore } from '@/stores/tutorial'
 
 /** How often the countdown is drawn again. */
 const TICK_MS = 250
@@ -34,13 +37,18 @@ const LAP_END_GRACE_MS = 400
 const { t, te } = useI18n()
 const router = useRouter()
 const run = useRunStore()
+const tutorial = useTutorialStore()
 const { money, number } = useFormat()
 const { statusKey, chipClass, towing } = useRunStatus()
 
 useLeaveOnSignOut()
 useRunPolling()
 
+const { rewardMessage } = useTutorialReward()
+
 const loadError = ref(false)
+const starting = ref(false)
+const startError = ref<string | null>(null)
 
 async function open(): Promise<void> {
   loadError.value = false
@@ -51,7 +59,12 @@ async function open(): Promise<void> {
     // A driver without a car on the track has not chosen a wreck yet.
     if (!run.run) {
       await router.replace({ name: 'choose' })
+
+      return
     }
+
+    // The tutorial is no reason for an error: without it the screen is the screen.
+    await tutorial.load().catch(() => undefined)
   } catch (failure) {
     if (!endSessionIfUnauthorized(failure)) {
       loadError.value = true
@@ -73,6 +86,37 @@ onBeforeUnmount(() => {
   clearInterval(ticker)
   clearTimeout(lapTimer)
 })
+
+/** The server brings the tutorial up to date whenever it settles the run, so a new version of the run may mean a new step. */
+watch(
+  () => run.run?.state_version,
+  (version, before) => {
+    if (before !== undefined && version !== before) {
+      void tutorial.load().catch(() => undefined)
+    }
+  },
+)
+
+/** Sends the car that waits in the garage out: from now on it drives by itself. */
+async function start(): Promise<void> {
+  if (starting.value) {
+    return
+  }
+
+  starting.value = true
+  startError.value = null
+
+  try {
+    await run.begin()
+    void tutorial.load().catch(() => undefined)
+  } catch (failure) {
+    if (!endSessionIfUnauthorized(failure)) {
+      startError.value = t('common.error')
+    }
+  } finally {
+    starting.value = false
+  }
+}
 
 /** The lap ends, and the server is asked what it paid, so the cash and the laps are right at the moment, not at the next poll. */
 watch(
@@ -159,6 +203,8 @@ const ring = computed(() => {
     <p v-else-if="!run.run" class="text-muted" data-test="loading">{{ t('common.loading') }}</p>
 
     <template v-else>
+      <p v-if="rewardMessage" class="card card-hi text-sm" role="status" data-test="tutorial-reward">{{ rewardMessage }}</p>
+
       <section class="flex flex-col gap-2.5" aria-labelledby="race-title" data-test="race">
         <div class="flex items-start justify-between gap-2.5">
           <div class="min-w-0">
@@ -169,6 +215,16 @@ const ring = computed(() => {
           </div>
           <span class="chip flex-none" :class="chipClass" data-test="status">{{ statusKey === 'running' ? t('race.live') : t(`run.status.${statusKey}`) }}</span>
         </div>
+
+        <!-- The car waits in the garage: this is where it is sent out. -->
+        <section v-if="run.run.stop_reason === 'parked'" class="card card-hi flex flex-col gap-2.5 !p-3.5" data-tutorial="start" data-test="start-card">
+          <div class="flex flex-col gap-1">
+            <p class="font-display text-xl font-bold text-ink" data-test="start-title">{{ t('race.startTitle') }}</p>
+            <p class="sub">{{ t('race.startNote') }}</p>
+          </div>
+          <p v-if="startError" class="text-danger" role="alert" data-test="start-error">{{ startError }}</p>
+          <button type="button" class="btn btn-primary" :disabled="starting" data-test="start" @click="start">{{ t('race.start') }}</button>
+        </section>
 
         <RunAlerts :run="run.run" />
 
@@ -199,7 +255,7 @@ const ring = computed(() => {
           {{ night.soonMs === null ? t('race.forecast.nightNow', { percent: nightPercent }) : t('race.forecast.nightSoon', { time: formatDuration(night.soonMs), percent: nightPercent }) }}
         </p>
 
-        <div class="card grid grid-cols-[112px_1fr] items-center gap-3.5 !p-3.5" data-test="lap">
+        <div class="card grid grid-cols-[112px_1fr] items-center gap-3.5 !p-3.5" data-tutorial="laps" data-test="lap">
           <LapRing :fraction="ring.fraction" :value="ring.value" :caption="ring.caption" :label="ring.label" />
           <div class="flex min-w-0 flex-col gap-1.5">
             <div class="flex justify-between text-[13px] text-muted">
@@ -232,5 +288,7 @@ const ring = computed(() => {
         <FuelGauge :run="run.run" />
       </section>
     </template>
+
+    <TutorialOverlay />
   </GameShell>
 </template>

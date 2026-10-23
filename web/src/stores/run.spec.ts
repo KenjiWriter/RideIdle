@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ApiError } from '@/api/client'
 import type { Run, RunResponse, RunSummary, StarterCarsResponse } from '@/api/types'
 import { readSeen, storeSeen } from '@/features/run/seen'
+import { serveApi } from '@/test/fetchServer'
 import { liveFields } from '@/test/runFixtures'
 
 import { AWAY_MIN_MS, REQUEST_ID_LIFETIME_MS, useRunStore } from './run'
@@ -534,6 +535,30 @@ describe('run store', () => {
 
       expect(store.tow).toBeNull()
     })
+  })
+
+  it('sends out the car that waits in the garage, and takes the run from the answer', async () => {
+    const parked = aRun({ id: 7, status: 'stopped', stop_reason: 'parked' })
+    const calls = serveApi(fetchMock, {
+      'GET /api/v1/runs/current': () => respond(200, aResponse(parked)),
+      'POST /api/v1/runs/7/start': () => respond(200, aResponse(aRun({ id: 7, status: 'running', stop_reason: null, state_version: 1 }))),
+    })
+    const store = useRunStore()
+    await store.load()
+
+    expect(store.run?.stop_reason).toBe('parked')
+
+    await store.begin()
+
+    expect(calls.at(-1)).toMatchObject({ method: 'POST', url: '/api/v1/runs/7/start' })
+    expect(store.run?.status).toBe('running')
+    expect(store.run?.stop_reason).toBeNull()
+    // What is on the screen counts as seen: no summary of an absence comes for the time the car stood.
+    expect(store.away).toBeNull()
+  })
+
+  it('does not send out a car that there is not', async () => {
+    await expect(useRunStore().begin()).rejects.toThrow('no run')
   })
 
   it('forgets everything on reset', async () => {

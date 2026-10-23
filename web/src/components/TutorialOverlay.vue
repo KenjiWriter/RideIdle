@@ -29,8 +29,19 @@ const keepButton = ref<HTMLButtonElement | null>(null)
 const step = computed(() => store.current)
 const clock = computed(() => new Intl.DateTimeFormat(currentLocale(), { hour: '2-digit', minute: '2-digit' }).format(new Date()))
 
+/** What a step points at, in the order it is looked for: the Start is on the tournament screen, and before the driver is there it is the tab that leads to it. */
+const TARGETS: Record<string, string[]> = { start: ['start', 'race'] }
+
 function targetElement(): HTMLElement | null {
-  return step.value?.target ? document.querySelector<HTMLElement>(`[data-tutorial="${step.value.target}"]`) : null
+  for (const name of step.value?.target ? (TARGETS[step.value.target] ?? [step.value.target]) : []) {
+    const element = document.querySelector<HTMLElement>(`[data-tutorial="${name}"]`)
+
+    if (element) {
+      return element
+    }
+  }
+
+  return null
 }
 
 /** The step whose target has been brought into view: once for each, so that the driver can scroll away. */

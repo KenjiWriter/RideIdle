@@ -18,7 +18,7 @@ export function useRunStatus() {
   const stopped = computed(() => store.run?.status === 'stopped')
 
   /** The class of the chip that says it: red for a car that needs the driver, amber for one that waits, cyan for one that races. */
-  const chipClass = computed(() => (stopped.value && store.run?.stop_reason !== 'workshop' && store.run?.stop_reason !== 'travel' ? 'chip-bad' : stopped.value || towing.value ? 'chip-am' : 'chip-cy'))
+  const chipClass = computed(() => (stopped.value && store.run?.stop_reason !== 'workshop' && store.run?.stop_reason !== 'travel' && store.run?.stop_reason !== 'parked' ? 'chip-bad' : stopped.value || towing.value ? 'chip-am' : 'chip-cy'))
 
   return { towMs, towing, statusKey, stopped, chipClass }
 }
