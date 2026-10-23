@@ -4,9 +4,25 @@ import type { Run } from '@/api/types'
 const SEGMENT_MS = 1_350_000
 
 /** The parts of a run that tell what is happening on the track now: dry weather and a lap of 75 s that has just started. */
-export function liveFields(nowMs: number): Pick<Run, 'weather' | 'current_lap'> {
+export function liveFields(nowMs: number): Pick<Run, 'weather' | 'current_lap' | 'clock'> {
+  const segment = Math.floor(nowMs / SEGMENT_MS)
+
   return {
-    weather: { now: 'dry', ends_ms: (Math.floor(nowMs / SEGMENT_MS) + 1) * SEGMENT_MS, next: 'dry' },
+    clock: {
+      day_ms: 10_800_000,
+      phases: [
+        { key: 'dawn', from_hour: 5 },
+        { key: 'day', from_hour: 8 },
+        { key: 'dusk', from_hour: 18 },
+        { key: 'night', from_hour: 22 },
+      ],
+    },
+    weather: {
+      now: 'dry',
+      ends_ms: (segment + 1) * SEGMENT_MS,
+      next: 'dry',
+      forecast: [0, 1, 2, 3, 4].map((ahead) => ({ weather: 'dry', starts_ms: (segment + ahead) * SEGMENT_MS, ends_ms: (segment + ahead + 1) * SEGMENT_MS, surface: 'asphalt_dry' as const })),
+    },
     current_lap: { start_ms: nowMs, finish_ms: nowMs + 75_000, ms: 75_000, weather: 'dry' },
   }
 }

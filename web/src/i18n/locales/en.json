@@ -420,7 +420,8 @@
     "cloudy": "cloudy",
     "rain": "rain",
     "downpour": "downpour",
-    "fog": "fog"
+    "fog": "fog",
+    "snow": "snow"
   },
   "race": {
     "live": "LIVE",
@@ -448,6 +449,22 @@
       "youTag": "YOU",
       "later": "Bots and the ghosts of other drivers come later. For now you race alone."
     },
-    "carXp": "+{value} car XP"
+    "carXp": "+{value} car XP",
+    "forecast": {
+      "title": "Forecast",
+      "entry": "In {time} · {weather} · lap {lap}",
+      "slower": "This weather slows the car by {percent}%. Other tires may help, have a look at the workshop.",
+      "nightNow": "Night: laps on this track are {percent}% longer, because it has no lights.",
+      "nightSoon": "Night in {time}: laps on this track will be {percent}% longer, because it has no lights."
+    }
+  },
+  "clock": {
+    "phase": {
+      "dawn": "Dawn",
+      "day": "Day",
+      "dusk": "Dusk",
+      "night": "Night"
+    },
+    "label": "Game time: {time}, {phase}"
   }
 }

@@ -420,7 +420,8 @@
     "cloudy": "pochmurno",
     "rain": "deszcz",
     "downpour": "ulewa",
-    "fog": "mgła"
+    "fog": "mgła",
+    "snow": "śnieg"
   },
   "race": {
     "live": "NA ŻYWO",
@@ -448,6 +449,22 @@
       "youTag": "TY",
       "later": "Boty i duchy innych kierowców dojdą później. Na razie jedziesz sam."
     },
-    "carXp": "+{value} XP auta"
+    "carXp": "+{value} XP auta",
+    "forecast": {
+      "title": "Prognoza",
+      "entry": "Za {time} · {weather} · okrążenie {lap}",
+      "slower": "Ta pogoda spowalnia auto o {percent}%. Inne opony mogą pomóc, zajrzyj do warsztatu.",
+      "nightNow": "Noc: okrążenia na tym torze są o {percent}% dłuższe, bo nie ma świateł.",
+      "nightSoon": "Noc za {time}: okrążenia na tym torze będą o {percent}% dłuższe, bo nie ma świateł."
+    }
+  },
+  "clock": {
+    "phase": {
+      "dawn": "Świt",
+      "day": "Dzień",
+      "dusk": "Zmierzch",
+      "night": "Noc"
+    },
+    "label": "Czas w grze: {time}, {phase}"
   }
 }

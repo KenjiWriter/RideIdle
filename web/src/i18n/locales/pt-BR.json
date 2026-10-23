@@ -420,7 +420,8 @@
     "cloudy": "nublado",
     "rain": "chuva",
     "downpour": "temporal",
-    "fog": "neblina"
+    "fog": "neblina",
+    "snow": "neve"
   },
   "race": {
     "live": "AO VIVO",
@@ -448,6 +449,22 @@
       "youTag": "VOCÊ",
       "later": "Bots e fantasmas de outros pilotos chegam depois. Por enquanto, você corre sozinho."
     },
-    "carXp": "+{value} XP do carro"
+    "carXp": "+{value} XP do carro",
+    "forecast": {
+      "title": "Previsão",
+      "entry": "Em {time} · {weather} · volta de {lap}",
+      "slower": "Este tempo deixa o carro {percent}% mais lento. Outros pneus podem ajudar, dê uma olhada na oficina.",
+      "nightNow": "Noite: as voltas nesta pista são {percent}% mais longas, porque ela não tem iluminação.",
+      "nightSoon": "Noite em {time}: as voltas nesta pista serão {percent}% mais longas, porque ela não tem iluminação."
+    }
+  },
+  "clock": {
+    "phase": {
+      "dawn": "Amanhecer",
+      "day": "Dia",
+      "dusk": "Entardecer",
+      "night": "Noite"
+    },
+    "label": "Hora do jogo: {time}, {phase}"
   }
 }

@@ -62,12 +62,24 @@ export interface Run {
     fuel_ml: number
     /** What a lap gives the car, in any weather: the car levels on its laps. */
     car_xp: number
+    /** How much of its time a lap takes when it starts at night, in ppm: 1 000 000 on a track that is lit, 1 030 000 on one that is not. */
+    night_ppm: number
   }
-  /** The weather of the region now, when this segment of 22.5 minutes ends, and what comes next. */
-  weather: { now: string; ends_ms: number; next: string }
+  /** The clock of the game: a day is `day_ms` of the clock of the server, and each phase of it begins at an hour of the game. */
+  clock: { day_ms: number; phases: { key: string; from_hour: number }[] }
+  /** The weather of the region now, when this segment of 22.5 minutes ends, what comes next, and a forecast of this segment and the four after it. */
+  weather: { now: string; ends_ms: number; next: string; forecast: ForecastSegment[] }
   /** The lap in progress, in ms of the clock of the server; null for a car that stands or waits for a tow. */
   current_lap: { start_ms: number; finish_ms: number; ms: number; weather: string } | null
   server_time_ms: number
+}
+
+/** One stretch of 22.5 minutes of the weather, with the surface it makes of the track (a column of the tire matrix). */
+export interface ForecastSegment {
+  weather: string
+  starts_ms: number
+  ends_ms: number
+  surface: SurfaceKey
 }
 
 export interface Wallet {

@@ -26,7 +26,7 @@ function aRun(overrides: Partial<Run> = {}): Run {
     cursor_ms: NOW,
     state_version: 4,
     prices: { fuel_cents_per_liter: 200, repair_cents: 3_000 },
-    lap: { ms: { dry: 75_000, rain: 84_000 }, cash_cents: { dry: 1_550, rain: 1_440 }, xp: { dry: 25, rain: 23 }, fuel_ml: 1_500, car_xp: 10 },
+    lap: { ms: { dry: 75_000, rain: 84_000 }, cash_cents: { dry: 1_550, rain: 1_440 }, xp: { dry: 25, rain: 23 }, fuel_ml: 1_500, car_xp: 10, night_ppm: 1_000_000 },
     server_time_ms: NOW + 10_000,
     ...liveFields(NOW),
     ...overrides,
@@ -112,14 +112,98 @@ describe('RaceView', () => {
   })
 
   it('tells the forecast, and says nothing about the lap when the weather does not change it', async () => {
-    const { wrapper } = await show(aRun({ weather: { now: 'dry', ends_ms: NOW + 10_000 + 750_000, next: 'rain' } }))
+    const { wrapper } = await show(aRun({ weather: { now: 'dry', ends_ms: NOW + 10_000 + 750_000, next: 'rain', forecast: [] } }))
 
     expect(wrapper.get('[data-test="weather-forecast"]').text()).toBe('Now: dry. In 12 min 30 s: rain.')
     expect(wrapper.find('[data-test="weather-lap"]').exists()).toBe(false)
   })
 
+  describe('the forecast and the night', () => {
+    const SEGMENT = 1_350_000
+
+    /** Stretches of the weather after the one that is on at `now`, the first of them starting at `startsMs`. */
+    function forecastFrom(startsMs: number, weathers: string[]) {
+      return weathers.map((weather, index) => ({
+        weather,
+        starts_ms: startsMs + index * SEGMENT,
+        ends_ms: startsMs + (index + 1) * SEGMENT,
+        surface: weather === 'rain' ? ('asphalt_wet' as const) : ('asphalt_dry' as const),
+      }))
+    }
+
+    it('lists the stretches of the weather to come, with when they start and the lap in each', async () => {
+      const start = NOW + 10_000 + 750_000
+      const { wrapper } = await show(
+        aRun({ weather: { now: 'dry', ends_ms: start, next: 'dry', forecast: forecastFrom(NOW + 10_000 - 600_000, ['dry', 'dry', 'rain', 'dry']) } }),
+      )
+
+      expect(wrapper.findAll('[data-test="forecast"] li').map((line) => line.text())).toEqual([
+        'In 12 min 30 s · dry · lap 1:15.0',
+        'In 35 min 00 s · rain · lap 1:24.0',
+        'In 57 min 30 s · dry · lap 1:15.0',
+      ])
+    })
+
+    it('says that a coming weather slows the car, and sends the driver to the workshop, when it slows it by a good part', async () => {
+      const { wrapper } = await show(aRun({ weather: { now: 'dry', ends_ms: NOW + 760_000, next: 'rain', forecast: forecastFrom(NOW + 760_000, ['rain']) } }))
+
+      // The lap of 84 s against 75 s is 12% longer.
+      expect(wrapper.get('[data-test="forecast-slower"]').text()).toBe('This weather slows the car by 12%. Other tires may help, have a look at the workshop.')
+    })
+
+    it('has no word about the tires when the weather ahead is no worse than the weather now', async () => {
+      const { wrapper } = await show(aRun({ weather: { now: 'dry', ends_ms: NOW + 760_000, next: 'dry', forecast: forecastFrom(NOW + 760_000, ['dry', 'dry']) } }))
+
+      expect(wrapper.find('[data-test="forecast"]').exists()).toBe(true)
+      expect(wrapper.find('[data-test="forecast-slower"]').exists()).toBe(false)
+    })
+
+    it('shows no forecast when the server told of none', async () => {
+      const { wrapper } = await show(aRun({ weather: { now: 'dry', ends_ms: NOW + 760_000, next: 'dry', forecast: [] } }))
+
+      expect(wrapper.find('[data-test="forecast"]').exists()).toBe(false)
+    })
+
+    it('says that it is night and the laps are longer, on a track that is not lit', async () => {
+      // The clock starts at the midnight of the game.
+      const run = aRun()
+      const { wrapper } = await show({ ...run, lap: { ...run.lap, night_ppm: 1_030_000 } })
+
+      expect(wrapper.get('[data-test="night-note"]').text()).toBe('Night: laps on this track are 3% longer, because it has no lights.')
+    })
+
+    it('says that the night is coming when it comes within the forecast, and says nothing of it long before', async () => {
+      const run = aRun()
+      // Half an hour of the game before 22:00 is 3 min 45 s of the clock of the server.
+      vi.setSystemTime(NOW + 22 * 450_000 - 225_000)
+      const soon = await show({ ...run, lap: { ...run.lap, night_ppm: 1_030_000 } })
+
+      expect(soon.wrapper.get('[data-test="night-note"]').text()).toBe('Night in 3 min 45 s: laps on this track will be 3% longer, because it has no lights.')
+
+      vi.setSystemTime(NOW + 6 * 450_000)
+      const later = await show({ ...run, lap: { ...run.lap, night_ppm: 1_030_000 } })
+
+      expect(later.wrapper.find('[data-test="night-note"]').exists()).toBe(false)
+    })
+
+    it('says nothing of the night on a track that is lit', async () => {
+      const { wrapper } = await show()
+
+      expect(wrapper.find('[data-test="night-note"]').exists()).toBe(false)
+    })
+
+    it('speaks the language of the driver', async () => {
+      await setLocale('pl')
+      const run = aRun()
+      const { wrapper } = await show({ ...run, lap: { ...run.lap, night_ppm: 1_030_000 }, weather: { now: 'dry', ends_ms: NOW + 760_000, next: 'snow', forecast: forecastFrom(NOW + 760_000, ['snow']) } })
+
+      expect(wrapper.get('[data-test="night-note"]').text()).toBe('Noc: okrążenia na tym torze są o 3% dłuższe, bo nie ma świateł.')
+      expect(wrapper.get('[data-test="forecast-snow"]').text()).toContain('śnieg')
+    })
+  })
+
   it('says that the weather stays, when the next segment is the same', async () => {
-    const { wrapper } = await show(aRun({ weather: { now: 'dry', ends_ms: NOW + 10_000 + 60_000, next: 'dry' } }))
+    const { wrapper } = await show(aRun({ weather: { now: 'dry', ends_ms: NOW + 10_000 + 60_000, next: 'dry', forecast: [] } }))
 
     expect(wrapper.get('[data-test="weather-forecast"]').text()).toBe('Now: dry, and the same after the change in 1 min 00 s.')
   })
@@ -127,7 +211,7 @@ describe('RaceView', () => {
   it('shows the lap of the rain with its own time and pay, and what it is in the dry', async () => {
     const { wrapper } = await show(
       aRun({
-        weather: { now: 'rain', ends_ms: NOW + 10_000 + 300_000, next: 'dry' },
+        weather: { now: 'rain', ends_ms: NOW + 10_000 + 300_000, next: 'dry', forecast: [] },
         current_lap: { start_ms: NOW, finish_ms: NOW + 84_000, ms: 84_000, weather: 'rain' },
       }),
     )

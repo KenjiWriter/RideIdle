@@ -7,6 +7,7 @@ import FuelGauge from '@/components/FuelGauge.vue'
 import GameShell from '@/components/GameShell.vue'
 import LapRing from '@/components/LapRing.vue'
 import RunAlerts from '@/components/RunAlerts.vue'
+import { gameTime, untilNight } from '@/features/clock/gameClock'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { formatCountdown, lapProgress } from '@/features/run/lapProgress'
 import { useRunPolling } from '@/features/run/useRunPolling'
@@ -20,6 +21,12 @@ import { useRunStore } from '@/stores/run'
 
 /** How often the countdown is drawn again. */
 const TICK_MS = 250
+
+/** The forecast tells of the next four stretches of the weather, an hour and a half: a night that comes within it is told of. */
+const FORECAST_WINDOW_MS = 4 * 1_350_000
+
+/** A coming weather that makes the lap this much longer, in percent, is worth a word about the tires. */
+const SLOWER_NOTE_PERCENT = 8
 
 /** The time after the end of a lap at which the server is asked what the lap paid: a moment later, so the lap is surely over there. */
 const LAP_END_GRACE_MS = 400
@@ -95,6 +102,32 @@ const lapCash = computed(() => (run.run ? (run.run.lap.cash_cents[weather.value]
 const lapXp = computed(() => run.run?.lap.xp[weather.value] ?? 0)
 const dryLapMs = computed(() => (run.run ? baseLapMs(run.run) : 0))
 
+/** The stretches of the weather that are still to come, with the lap the car would drive in each. */
+const upcoming = computed(() => run.run?.weather.forecast.filter((segment) => segment.starts_ms > now.value) ?? [])
+
+function lapOf(weather: string): number {
+  return run.run?.lap.ms[weather] ?? dryLapMs.value
+}
+
+/** How much longer than the lap now the longest of the coming laps is, in percent. */
+const slowdown = computed(() => (lapMs.value > 0 ? Math.round((Math.max(0, ...upcoming.value.map((segment) => lapOf(segment.weather))) / lapMs.value - 1) * 100) : 0))
+
+/** On a track that is not lit the night makes the laps longer: it is on now, or it comes within the forecast, or it is not worth a word. */
+const nightPercent = computed(() => Math.round(((run.run?.lap.night_ppm ?? 1_000_000) / 1_000_000 - 1) * 100))
+const night = computed(() => {
+  if (!run.run || nightPercent.value <= 0) {
+    return null
+  }
+
+  if (gameTime(now.value, run.run.clock).phase === 'night') {
+    return { soonMs: null }
+  }
+
+  const until = untilNight(now.value, run.run.clock)
+
+  return until !== null && until <= FORECAST_WINDOW_MS ? { soonMs: until } : null
+})
+
 const untilChangeMs = computed(() => Math.max(0, (run.run?.weather.ends_ms ?? 0) - now.value))
 const weatherChanges = computed(() => run.run !== null && run.run.weather.next !== run.run.weather.now)
 /** The lap is slower or faster than in the dry, which the driver should know when the weather turns. */
@@ -151,6 +184,20 @@ const ring = computed(() => {
             {{ t('race.weather.lap', { time: formatLapTime(lapMs), cash: money(lapCash, 2), dry: formatLapTime(dryLapMs) }) }}
           </p>
         </div>
+
+        <div v-if="upcoming.length" class="card flex flex-col gap-1 !px-3 !py-1.5 text-xs" data-test="forecast">
+          <p class="kick !mb-0">{{ t('race.forecast.title') }}</p>
+          <ul class="flex flex-col gap-0.5 text-ink">
+            <li v-for="segment in upcoming" :key="segment.starts_ms" :data-test="`forecast-${segment.weather}`">
+              {{ t('race.forecast.entry', { time: formatDuration(segment.starts_ms - now), weather: weatherName(segment.weather), lap: formatLapTime(lapOf(segment.weather)) }) }}
+            </li>
+          </ul>
+          <p v-if="slowdown >= SLOWER_NOTE_PERCENT" class="text-amber" data-test="forecast-slower">{{ t('race.forecast.slower', { percent: slowdown }) }}</p>
+        </div>
+
+        <p v-if="night" class="card card-hi !px-3 !py-1.5 text-xs" data-test="night-note">
+          {{ night.soonMs === null ? t('race.forecast.nightNow', { percent: nightPercent }) : t('race.forecast.nightSoon', { time: formatDuration(night.soonMs), percent: nightPercent }) }}
+        </p>
 
         <div class="card grid grid-cols-[112px_1fr] items-center gap-3.5 !p-3.5" data-test="lap">
           <LapRing :fraction="ring.fraction" :value="ring.value" :caption="ring.caption" :label="ring.label" />
