@@ -90,9 +90,23 @@
           },
           "required": ["base", "exponent", "per_hour", "early", "catch_up_level"],
           "additionalProperties": false
+        },
+        "fleet": {
+          "description": "The fleet that the rules of the game let a driver have (the scenario game of the simulator): every car drives at once, a garage holds a few of them, and every run that is settled gives the player experience. A wreck is what a car of the first rung is.",
+          "type": "object",
+          "properties": {
+            "wreck_price": { "description": "What a wreck of the yard costs, in dollars.", "type": "number", "exclusiveMinimum": 0 },
+            "garage_price": { "description": "What a garage in another city costs, in dollars.", "type": "number", "minimum": 0 },
+            "garage_capacity": { "description": "How many cars a garage in another city holds.", "type": "integer", "minimum": 1 },
+            "home_free_places": { "description": "How many places the garage of the home city has besides the one the car of the player takes.", "type": "integer", "minimum": 0 },
+            "garage_city_levels": { "description": "The player levels at which the other cities open, each with a garage to buy.", "type": "array", "items": { "type": "integer", "minimum": 1 } },
+            "other_cars_xp_share": { "description": "How much of the experience of an hour of driving a car gives besides the one the driver plays: 1 is what the game does, 0 is no experience from the others.", "type": "number", "minimum": 0, "maximum": 1 }
+          },
+          "required": ["wreck_price", "garage_price", "garage_capacity", "home_free_places", "garage_city_levels", "other_cars_xp_share"],
+          "additionalProperties": false
         }
       },
-      "required": ["fuel_price", "resale", "upkeep", "start_cash", "xp"],
+      "required": ["fuel_price", "resale", "upkeep", "start_cash", "xp", "fleet"],
       "additionalProperties": false
     },
     "players": {

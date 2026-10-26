@@ -171,6 +171,32 @@ final readonly class EconomyRules
         return $this->netPerHour($rung) * $hours * $player->activity * (1 - $this->data['model']['upkeep']) * $player->fleetAt($rung);
     }
 
+    /**
+     * What a car earns in a day at this rung, after the service, the repairs and the tires, and without the fleet factor of the player: the
+     * income of one car, which the scenario game counts a car at a time (`dailyIncome` is the one of the designed fleet).
+     */
+    public function carDailyIncome(PlayerType $player, int $rung): float
+    {
+        $hours = $player->hoursPerDay($this->offlineWindowHours($rung));
+
+        return $this->netPerHour($rung) * $hours * $player->activity * (1 - $this->data['model']['upkeep']);
+    }
+
+    /** The fleet that the rules of the game let a driver have, for the scenario game. */
+    public function fleetModel(): FleetModel
+    {
+        $fleet = $this->data['model']['fleet'];
+
+        return new FleetModel(
+            (float) $fleet['wreck_price'],
+            (float) $fleet['garage_price'],
+            (int) $fleet['garage_capacity'],
+            (int) $fleet['home_free_places'],
+            array_map('intval', array_values($fleet['garage_city_levels'])),
+            (float) $fleet['other_cars_xp_share'],
+        );
+    }
+
     /** @return array<string, PlayerType> */
     public function players(): array
     {

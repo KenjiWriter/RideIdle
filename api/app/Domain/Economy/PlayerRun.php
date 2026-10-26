@@ -6,7 +6,8 @@ namespace App\Domain\Economy;
 
 /**
  * The way a kind of player went up the ladder of cars: the purchases in order, and the cash and the experience they had
- * left on the last day that was simulated.
+ * left on the last day that was simulated. In the scenario game it also says how many wrecks the player had in the garages by then,
+ * and in how many garages of other cities.
  */
 final readonly class PlayerRun
 {
@@ -17,6 +18,8 @@ final readonly class PlayerRun
         public int $daysSimulated,
         public float $cash,
         public float $xp,
+        public int $wrecks = 0,
+        public int $extraGarages = 0,
     ) {}
 
     /** The day on which the car of this rung (1 is the first after the wreck) was bought, or null when it never was. */
