@@ -1,0 +1,32 @@
+{
+  "slug": "serwal-gt",
+  "name": {
+    "en": "Serwal GT",
+    "pl": "Serwal GT",
+    "fr": "Serwal GT",
+    "de": "Serwal GT",
+    "pt-BR": "Serwal GT"
+  },
+  "description": {
+    "en": "The first real grand tourer: light for its power, fast and precise on dry asphalt. Expensive, and rear-drive means nothing for gravel.",
+    "pl": "Pierwszy prawdziwy gran turismo: lekki jak na swoją moc, szybki i precyzyjny na suchym asfalcie. Drogi, a napęd na tył nie nadaje się na żwir.",
+    "fr": "La première vraie grand tourisme : légère pour sa puissance, rapide et précise sur asphalte sec. Chère, et sa propulsion ne s’aventure pas sur le gravier.",
+    "de": "Der erste echte Gran Turismo: leicht für seine Leistung, schnell und präzise auf trockenem Asphalt. Teuer, und mit Heckantrieb nichts für Schotter.",
+    "pt-BR": "O primeiro grã-turismo de verdade: leve para a potência, rápido e preciso no asfalto seco. Caro, e a tração traseira não serve para cascalho."
+  },
+  "class": "gt",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R6", "displacement_l": 3.0, "tune": 1.05 },
+  "power_kw": 269,
+  "mass_kg": 1400,
+  "top_speed_kmh": 275,
+  "clearance": 12,
+  "cargo_kg": 60,
+  "seats": 2,
+  "tank_l": 62,
+  "tier": 6,
+  "min_player_level": 15,
+  "price_cents": 13500000,
+  "sources": ["dealer"]
+}

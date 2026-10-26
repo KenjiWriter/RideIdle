@@ -1,0 +1,32 @@
+{
+  "slug": "liman-3-0",
+  "name": {
+    "en": "Liman 3.0",
+    "pl": "Liman 3.0",
+    "fr": "Liman 3.0",
+    "de": "Liman 3.0",
+    "pt-BR": "Liman 3.0"
+  },
+  "description": {
+    "en": "A big sedan with a straight-six: fast, quiet and roomy, but heavy in the corners and thirsty.",
+    "pl": "Duży sedan z rzędową szóstką: szybki, cichy i przestronny, ale ciężki w zakrętach i żarłoczny.",
+    "fr": "Une grande berline à six cylindres en ligne : rapide, silencieuse et spacieuse, mais lourde dans les virages et gourmande.",
+    "de": "Eine große Limousine mit Reihensechszylinder: schnell, leise und geräumig, aber schwerfällig in Kurven und durstig.",
+    "pt-BR": "Um sedã grande com seis cilindros em linha: rápido, silencioso e espaçoso, mas pesado nas curvas e beberrão."
+  },
+  "class": "sedan",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R6", "displacement_l": 3.0, "tune": 1.0 },
+  "power_kw": 242,
+  "mass_kg": 1560,
+  "top_speed_kmh": 240,
+  "clearance": 16,
+  "cargo_kg": 420,
+  "seats": 5,
+  "tank_l": 62,
+  "tier": 5,
+  "min_player_level": 12,
+  "price_cents": 6800000,
+  "sources": ["dealer"]
+}

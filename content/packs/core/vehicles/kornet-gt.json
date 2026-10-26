@@ -1,0 +1,32 @@
+{
+  "slug": "kornet-gt",
+  "name": {
+    "en": "Kornet GT",
+    "pl": "Kornet GT",
+    "fr": "Kornet GT",
+    "de": "Kornet GT",
+    "pt-BR": "Kornet GT"
+  },
+  "description": {
+    "en": "The top Kornet: a V8 coupe with serious speed and a price to match. Hard on tires and fuel, best kept to dry asphalt.",
+    "pl": "Szczytowy Kornet: coupe z V8, poważna prędkość i cena adekwatna. Zjada opony i paliwo, najlepiej trzymać je na suchym asfalcie.",
+    "fr": "La Kornet au sommet de la gamme : un coupé V8 à la vitesse sérieuse et au prix assorti. Dur avec les pneus et le carburant, à réserver à l’asphalte sec.",
+    "de": "Der Top-Kornet: ein V8-Coupé mit ernsthaftem Tempo und passendem Preis. Hart zu Reifen und Tank, am besten auf trockenem Asphalt.",
+    "pt-BR": "O Kornet de topo: um cupê V8 com velocidade séria e preço à altura. Duro com pneus e combustível, o ideal é mantê-lo no asfalto seco."
+  },
+  "class": "coupe",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "V8", "displacement_l": 4.5, "tune": 1.0 },
+  "power_kw": 372,
+  "mass_kg": 1620,
+  "top_speed_kmh": 280,
+  "clearance": 12,
+  "cargo_kg": 70,
+  "seats": 2,
+  "tank_l": 70,
+  "tier": 7,
+  "min_player_level": 18,
+  "price_cents": 11000000,
+  "sources": ["dealer"]
+}

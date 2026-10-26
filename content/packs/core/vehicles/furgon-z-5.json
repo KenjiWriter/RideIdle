@@ -1,0 +1,32 @@
+{
+  "slug": "furgon-z-5",
+  "name": {
+    "en": "Furgon Z-5",
+    "pl": "Furgon Z-5",
+    "fr": "Furgon Z-5",
+    "de": "Furgon Z-5",
+    "pt-BR": "Furgon Z-5"
+  },
+  "description": {
+    "en": "The biggest Furgon: a rear-drive van with a straight-six and a huge load bay. It hauls anything, but it is slow and drinks like a truck.",
+    "pl": "Największy Furgon: tylnonapędowy van z rzędową szóstką i ogromną przestrzenią ładunkową. Uniesie wszystko, ale jest wolny i pije jak ciężarówka.",
+    "fr": "Le plus grand des Furgon : une fourgonnette propulsion à six cylindres en ligne et un énorme volume de chargement. Elle porte tout, mais elle est lente et boit comme un camion.",
+    "de": "Der größte Furgon: ein Transporter mit Heckantrieb, Reihensechszylinder und riesigem Laderaum. Er schleppt alles, ist aber langsam und säuft wie ein Lkw.",
+    "pt-BR": "A maior das Furgon: uma van com tração traseira, seis cilindros em linha e um compartimento de carga enorme. Carrega qualquer coisa, mas é lenta e bebe como um caminhão."
+  },
+  "class": "van",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R6", "displacement_l": 3.0, "tune": 0.75 },
+  "power_kw": 181,
+  "mass_kg": 2300,
+  "top_speed_kmh": 160,
+  "clearance": 30,
+  "cargo_kg": 1800,
+  "seats": 3,
+  "tank_l": 90,
+  "tier": 5,
+  "min_player_level": 12,
+  "price_cents": 5500000,
+  "sources": ["dealer"]
+}

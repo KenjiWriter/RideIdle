@@ -82,8 +82,12 @@ describe('the market', function () {
         // The dealer sells the cars that have it among their sources, the lowest level first, and says which ones the level opens.
         $dealer = collect($response->json('data.dealer'));
 
-        expect($dealer->pluck('vehicle.slug')->all())->toBe(['rdzak-gt-2', 'rdzak-gt-3', 'furgon-z-1', 'rdzak-gt-5', 'furgon-z-3', 'liman-2-0', 'kornet-v6'])
-            ->and($dealer->pluck('open')->all())->toBe([true, true, true, false, false, false, false])
+        expect($dealer->pluck('vehicle.slug')->all())->toBe([
+            'rdzak-gt-2', 'rdzak-gt-3', 'furgon-z-1', 'rdzak-gt-5', 'furgon-z-3', 'liman-2-0', 'kornet-v6',
+            // The cars above the fourth tier, by the level they ask and then by the price: 12, 15, 18, 21 and 27.
+            'rdzak-rs', 'bizon-v8', 'zubr-r6', 'furgon-z-5', 'kornet-r6', 'liman-3-0', 'serwal-gt', 'zubr-v8', 'bizon-ss', 'kornet-gt', 'grot-q8', 'serwal-v10', 'orzel-v12',
+        ])
+            ->and($dealer->pluck('open')->all())->toBe([true, true, true, ...array_fill(0, 17, false)])
             ->and($dealer->firstWhere('vehicle.slug', 'kornet-v6'))->toMatchArray(['price_cents' => 3_000_000, 'level_required' => 9])
             ->and($dealer->first()['vehicle'])->toMatchArray(['name' => 'Rdzak GT-2', 'class' => 'hatchback', 'drivetrain' => 'fwd', 'engine' => 'R4 1.3', 'power_kw' => 65, 'top_speed_kmh' => 150, 'mass_kg' => 880]);
     });

@@ -1,0 +1,32 @@
+{
+  "slug": "bizon-ss",
+  "name": {
+    "en": "Bizon SS",
+    "pl": "Bizon SS",
+    "fr": "Bizon SS",
+    "de": "Bizon SS",
+    "pt-BR": "Bizon SS"
+  },
+  "description": {
+    "en": "The wildest Bizon: a 6.2-litre V8 and more power than grip. Brutal on the straights, a gamble in the corners, and it burns fuel like a bonfire.",
+    "pl": "Najdzikszy Bizon: V8 6,2 l i więcej mocy niż przyczepności. Brutalny na prostych, w zakrętach ryzykowny, pali jak ognisko.",
+    "fr": "La plus sauvage des Bizon : un V8 de 6,2 litres et plus de puissance que d’adhérence. Brutale en ligne droite, risquée dans les virages, elle brûle l’essence comme un feu de joie.",
+    "de": "Der wildeste Bizon: ein 6,2-Liter-V8 und mehr Leistung als Grip. Brutal auf den Geraden, ein Risiko in den Kurven, und er verbrennt Sprit wie ein Lagerfeuer.",
+    "pt-BR": "O mais selvagem dos Bizon: um V8 de 6,2 litros e mais potência do que aderência. Brutal nas retas, arriscado nas curvas e queima combustível como uma fogueira."
+  },
+  "class": "muscle",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "V8", "displacement_l": 6.2, "tune": 1.0 },
+  "power_kw": 512,
+  "mass_kg": 1820,
+  "top_speed_kmh": 290,
+  "clearance": 14,
+  "cargo_kg": 90,
+  "seats": 2,
+  "tank_l": 80,
+  "tier": 7,
+  "min_player_level": 18,
+  "price_cents": 8600000,
+  "sources": ["dealer"]
+}

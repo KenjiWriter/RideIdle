@@ -120,8 +120,8 @@ describe('the gates of the track simulator', function () {
 
     it('fails the gate M3 when one car wins more than two tracks, and says which', function () {
         // Three asphalt tracks that ask what a drag strip asks are won by the car that accelerates best, whatever else they are called.
-        $report = simulateTracks(['suchy-pas-drag', 'wilcza-przelecz-switchbacks', 'autodrom-circuit'], function (array $data): array {
-            foreach (['wilcza-przelecz-switchbacks', 'autodrom-circuit'] as $track) {
+        $report = simulateTracks(['zlomowo-street', 'suchy-pas-drag', 'wilcza-przelecz-switchbacks'], function (array $data): array {
+            foreach (['zlomowo-street', 'wilcza-przelecz-switchbacks'] as $track) {
                 $data['tracks'][$track]['demand'] = $data['tracks']['suchy-pas-drag']['demand'];
                 $data['tracks'][$track]['reference'] = $data['tracks']['suchy-pas-drag']['reference'];
             }
@@ -131,7 +131,7 @@ describe('the gates of the track simulator', function () {
 
         expect($report->m3Passed())->toBeFalse()
             ->and(array_keys($report->carsThatWinTooMuch()))->toBe(['bizon-m-2'])
-            ->and($report->carsThatWinTooMuch()['bizon-m-2'])->toBe(['suchy-pas-drag', 'wilcza-przelecz-switchbacks', 'autodrom-circuit'])
+            ->and($report->carsThatWinTooMuch()['bizon-m-2'])->toBe(['zlomowo-street', 'suchy-pas-drag', 'wilcza-przelecz-switchbacks'])
             // The data is coherent all the same: the command fails on this only with --strict.
             ->and($report->passed())->toBeTrue();
     });
@@ -140,8 +140,9 @@ describe('the gates of the track simulator', function () {
         $wins = trackReportJson()['wins'];
 
         expect(trackReportJson()['gates']['no_car_wins_more_than_two'])->toBeTrue()
-            // With the cars of the dealer and the exchange the wins are spread over four cars, and the lightest Rdzak takes the track in the snow.
-            ->and(array_map('count', $wins))->toBe(['bizon-m-2' => 2, 'kuna-4x4' => 1, 'rdzak-gt-2' => 1, 'rdzak-gt-4' => 1]);
+            // With the cars of the dealer and the exchange the wins are spread over four cars: the lightest Rdzak takes the track in the snow, and the Bizon V8,
+            // which asks level 12 like the Autodrom does, the circuit.
+            ->and(array_map('count', $wins))->toBe(['bizon-m-2' => 2, 'kuna-4x4' => 1, 'rdzak-gt-2' => 1, 'bizon-v8' => 1]);
 
         $this->artisan('tracks:simulate', ['--strict' => true])->assertSuccessful();
     });

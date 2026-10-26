@@ -1,0 +1,32 @@
+{
+  "slug": "zubr-v8",
+  "name": {
+    "en": "Żubr V8",
+    "pl": "Żubr V8",
+    "fr": "Żubr V8",
+    "de": "Żubr V8",
+    "pt-BR": "Żubr V8"
+  },
+  "description": {
+    "en": "The strongest Żubr: a V8 pickup that pulls anything and goes anywhere on four driven wheels, but weighs over two tonnes and drinks accordingly.",
+    "pl": "Najmocniejszy Żubr: pickup z V8, który wszystko uciągnie i wjedzie wszędzie na czterech napędzanych kołach, ale waży ponad dwie tony i pije adekwatnie.",
+    "fr": "Le plus puissant des Żubr : un pick-up V8 qui tracte tout et passe partout sur ses quatre roues motrices, mais il pèse plus de deux tonnes et boit en conséquence.",
+    "de": "Der stärkste Żubr: ein V8-Pick-up, der alles zieht und mit vier angetriebenen Rädern überall durchkommt, aber über zwei Tonnen wiegt und entsprechend säuft.",
+    "pt-BR": "O mais forte dos Żubr: uma picape V8 que puxa qualquer coisa e passa por qualquer lugar nas quatro rodas motrizes, mas pesa mais de duas toneladas e bebe de acordo."
+  },
+  "class": "pickup",
+  "drivetrain": "awd",
+  "powertrain": "ice",
+  "engine": { "layout": "V8", "displacement_l": 5.0, "tune": 0.9 },
+  "power_kw": 372,
+  "mass_kg": 2350,
+  "top_speed_kmh": 200,
+  "clearance": 28,
+  "cargo_kg": 900,
+  "seats": 5,
+  "tank_l": 95,
+  "tier": 7,
+  "min_player_level": 18,
+  "price_cents": 6800000,
+  "sources": ["dealer"]
+}

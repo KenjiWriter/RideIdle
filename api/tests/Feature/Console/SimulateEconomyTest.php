@@ -198,27 +198,39 @@ describe('economy:simulate', function () {
             ->and($output)->toContain('the cars the driver does not play give 0% of their experience');
     });
 
-    it('sets the income that the game reaches at each level against the ladder, and names the rungs that nothing in the game reaches', function () {
+    it('sets the income that the game reaches at each level against the ladder, and finds every rung within the anchors', function () {
         Artisan::call('economy:simulate');
         $output = Artisan::output();
 
         expect($output)->toContain('The ladder of the game')
-            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$984\s+\|/')
-            ->and($output)->toContain('rdzak-gt-4 on autodrom-circuit')
-            ->and($output)->toContain('No car and track of the game reach L6, L7, L8.');
+            // A lap pays by the tier of the car, so the best car of a level pays about what its rung asks: the Kornet R6 at the fifth, the Orzeł V12 at the last.
+            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$1 119\s+\|/')
+            ->and($output)->toContain('kornet-r6 on autodrom-circuit')
+            ->and($output)->toMatch('/\| 27\s+\| L8\s+\| \$1 835\s+\| \$1 834\s+\|/')
+            ->and($output)->toContain('orzel-v12 on autodrom-circuit')
+            ->and($output)->toContain('Ladder of the game: every level is within the anchors.')
+            ->and($output)->not->toContain('reach L');
     });
 
     it('does not fail for the game scenario when it is not asked to, and fails when it is: with --strict-game', function () {
+        // The shipped rules pass the gates of the game, the ladder among them.
         $this->artisan('economy:simulate', ['--strict' => true])->assertExitCode(0);
-        $this->artisan('economy:simulate', ['--strict-game' => true])->assertExitCode(1);
+        $this->artisan('economy:simulate', ['--strict-game' => true])->assertExitCode(0);
+
+        // The cars that the driver does not play give all of their experience: the fleet runs away from the pace of the design.
+        $data = economyData();
+        $data['model']['fleet']['other_cars_xp_share'] = 1.0;
+        $file = economyTemporaryFile(json_encode($data, JSON_THROW_ON_ERROR));
+
+        $this->artisan('economy:simulate', ['--ruleset' => $file])->assertExitCode(0);
+        $this->artisan('economy:simulate', ['--ruleset' => $file, '--strict-game' => true])->assertExitCode(1);
     });
 
     it('passes with --strict-game for a ruleset whose fleet is no bigger than the design thinks and whose ladder the game reaches', function () {
         $data = economyData();
-        // No place for a wreck, no garage to buy, and a tolerance that the ladder of the game is within.
+        // No place for a wreck and no garage to buy.
         $data['model']['fleet']['home_free_places'] = 0;
         $data['model']['fleet']['garage_city_levels'] = [];
-        $data['consistency']['tolerance'] = 0.6;
         // And crates and units at a tenth of the income only: without the fleet a third of it moves the days of the occasional player by more than a quarter.
         $data['model']['crates']['spend_sweep'] = [0.1];
         $data['model']['units']['spend_sweep'] = [0.1];
@@ -249,8 +261,8 @@ describe('economy:simulate', function () {
             ->and($report['game_fleet']['players']['B'])->toMatchArray(['wrecks' => 14, 'extra_garages' => 4])
             ->and($report['game_fleet']['gate']['passed'])->toBeTrue()
             ->and(collect($report['game_fleet']['gate']['rows'])->pluck('player')->unique()->all())->toBe(['B'])
-            ->and($report['game_ladder']['unreachable_rungs'])->toBe(['L6', 'L7', 'L8'])
-            ->and($report['game_ladder']['rows'])->toHaveCount(11)
+            ->and($report['game_ladder']['unreachable_rungs'])->toBe([])
+            ->and($report['game_ladder']['rows'])->toHaveCount(12)
             ->and($report['game_ladder']['rows'][0])->toMatchArray(['level' => 1, 'rung' => 'L0', 'car' => 'rdzak-gt-4', 'track' => 'zlomowo-street', 'ok' => true]);
     });
 

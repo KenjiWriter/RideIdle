@@ -1,0 +1,32 @@
+{
+  "slug": "rdzak-rs",
+  "name": {
+    "en": "Rdzak RS",
+    "pl": "Rdzak RS",
+    "fr": "Rdzak RS",
+    "de": "Rdzak RS",
+    "pt-BR": "Rdzak RS"
+  },
+  "description": {
+    "en": "The hot hatch of the Rdzak line: all-wheel drive, quick off the line and sure-footed in the wet. Pricey for a hatchback and hard on its tires.",
+    "pl": "Gorący hatchback linii Rdzak: napęd na cztery koła, żwawy na starcie i pewny na mokrym. Jak na hatchbacka drogi i zjada opony.",
+    "fr": "La compacte sportive de la gamme Rdzak : transmission intégrale, vive au départ et rassurante sur le mouillé. Chère pour une compacte et gourmande en pneus.",
+    "de": "Der heiße Kleinwagen der Rdzak-Reihe: Allradantrieb, spritzig beim Start und sicher bei Nässe. Teuer für einen Kleinwagen und hart zu den Reifen.",
+    "pt-BR": "O hot hatch da linha Rdzak: tração integral, arisco na largada e firme no molhado. Caro para um hatch e duro com os pneus."
+  },
+  "class": "hot_hatch",
+  "drivetrain": "awd",
+  "powertrain": "ice",
+  "engine": { "layout": "R4", "displacement_l": 2.0, "tune": 1.0 },
+  "power_kw": 130,
+  "mass_kg": 1280,
+  "top_speed_kmh": 215,
+  "clearance": 18,
+  "cargo_kg": 100,
+  "seats": 4,
+  "tank_l": 50,
+  "tier": 5,
+  "min_player_level": 12,
+  "price_cents": 4200000,
+  "sources": ["dealer"]
+}

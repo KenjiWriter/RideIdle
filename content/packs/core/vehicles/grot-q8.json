@@ -1,0 +1,32 @@
+{
+  "slug": "grot-q8",
+  "name": {
+    "en": "Grot Q8",
+    "pl": "Grot Q8",
+    "fr": "Grot Q8",
+    "de": "Grot Q8",
+    "pt-BR": "Grot Q8"
+  },
+  "description": {
+    "en": "A grand tourer with a V8 and all-wheel drive: fast on any surface and sure in the rain, but heavy and the dearest car of its class.",
+    "pl": "Gran turismo z V8 i napędem na cztery koła: szybki na każdej nawierzchni i pewny w deszczu, ale ciężki i najdroższy w swojej klasie.",
+    "fr": "Une grand tourisme V8 à transmission intégrale : rapide sur toutes les surfaces et rassurante sous la pluie, mais lourde et la plus chère de sa catégorie.",
+    "de": "Ein Gran Turismo mit V8 und Allradantrieb: schnell auf jedem Untergrund und sicher im Regen, aber schwer und der teuerste seiner Klasse.",
+    "pt-BR": "Um grã-turismo com V8 e tração integral: rápido em qualquer piso e firme na chuva, mas pesado e o mais caro da sua classe."
+  },
+  "class": "gt",
+  "drivetrain": "awd",
+  "powertrain": "ice",
+  "engine": { "layout": "V8", "displacement_l": 4.5, "tune": 1.0 },
+  "power_kw": 372,
+  "mass_kg": 1780,
+  "top_speed_kmh": 285,
+  "clearance": 20,
+  "cargo_kg": 80,
+  "seats": 4,
+  "tank_l": 80,
+  "tier": 7,
+  "min_player_level": 18,
+  "price_cents": 16000000,
+  "sources": ["dealer"]
+}

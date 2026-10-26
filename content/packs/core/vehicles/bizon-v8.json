@@ -1,0 +1,32 @@
+{
+  "slug": "bizon-v8",
+  "name": {
+    "en": "Bizon V8",
+    "pl": "Bizon V8",
+    "fr": "Bizon V8",
+    "de": "Bizon V8",
+    "pt-BR": "Bizon V8"
+  },
+  "description": {
+    "en": "A V8 muscle car: thunderous in a straight line, a handful in the corners and always thirsty.",
+    "pl": "Muscle car z V8: grzmi na prostej, w zakrętach jest wyzwaniem i ciągle chce tankować.",
+    "fr": "Une muscle car à moteur V8 : tonitruante en ligne droite, difficile dans les virages et toujours assoiffée.",
+    "de": "Ein Muscle-Car mit V8: donnernd auf der Geraden, eine Handvoll in den Kurven und immer durstig.",
+    "pt-BR": "Um muscle car com V8: trovejante na reta, um desafio nas curvas e sempre com sede."
+  },
+  "class": "muscle",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "V8", "displacement_l": 5.0, "tune": 1.0 },
+  "power_kw": 371,
+  "mass_kg": 1750,
+  "top_speed_kmh": 250,
+  "clearance": 14,
+  "cargo_kg": 100,
+  "seats": 2,
+  "tank_l": 70,
+  "tier": 5,
+  "min_player_level": 12,
+  "price_cents": 5200000,
+  "sources": ["exchange", "dealer"]
+}

@@ -40,6 +40,23 @@ it('rounds the reward of wet laps like the settlement vector W5, and the XP of a
         ->and($config['lap_xp'])->toBe(['dry' => 20, 'cloudy' => 20, 'rain' => 19, 'downpour' => 19, 'fog' => 20]);
 });
 
+// The reward of the Autodrom is $26.50 a lap, and the rules pay a car by its tier: 1.00 up to tier 4, then 1.09, 1.10, 1.35, 1.47 and 1.70.
+it('pays a lap by the tier of the car, so that the price of a car is what the income of the driver follows', function (string $car, int $dry, int $rain) {
+    $config = frozenConfig($car, 'autodrom-circuit');
+
+    expect($config['lap_cash_cents']['dry'])->toBe($dry)
+        // The weather takes its share of what the car earns, not of what the track pays.
+        ->and($config['lap_cash_cents']['rain'])->toBe($rain);
+})->with([
+    'tier 2 gets the reward of the track' => ['rdzak-gt-4', 2_650, 2_465],
+    'tier 4 gets the reward of the track' => ['kornet-v6', 2_650, 2_465],
+    'tier 5 gets 1.09' => ['kornet-r6', 2_889, 2_687],
+    'tier 6 gets 1.10' => ['serwal-gt', 2_915, 2_711],
+    'tier 7 gets 1.35' => ['kornet-gt', 3_578, 3_328],
+    'tier 8 gets 1.47' => ['serwal-v10', 3_896, 3_623],
+    'tier 10 gets 1.70' => ['orzel-v12', 4_505, 4_190],
+]);
+
 it('takes the climate and the seed from the region of the track', function () {
     $inputs = runInputsFactory()->make('rdzak-gt-4', 'zlomowo-street');
 

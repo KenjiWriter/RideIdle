@@ -1,0 +1,32 @@
+{
+  "slug": "kornet-r6",
+  "name": {
+    "en": "Kornet R6",
+    "pl": "Kornet R6",
+    "fr": "Kornet R6",
+    "de": "Kornet R6",
+    "pt-BR": "Kornet R6"
+  },
+  "description": {
+    "en": "The Kornet with a straight-six: much stronger than the V6 and the best all-rounder for the money. Rear-drive, so gravel and snow are not its thing.",
+    "pl": "Kornet z rzędową szóstką: znacznie mocniejsze coupe niż V6 i najlepszy wszechstronny wybór w swojej cenie. Napęd na tył, więc żwir i śnieg to nie jego żywioł.",
+    "fr": "La Kornet à six cylindres en ligne : bien plus puissante que la V6 et le meilleur compromis pour son prix. Propulsion, donc le gravier et la neige ne sont pas son terrain.",
+    "de": "Der Kornet mit Reihensechszylinder: deutlich stärker als der V6 und der beste Allrounder für sein Geld. Heckantrieb, daher sind Schotter und Schnee nicht sein Revier.",
+    "pt-BR": "O Kornet com seis cilindros em linha: bem mais forte que o V6 e o melhor equilíbrio pelo preço. Tração traseira, então cascalho e neve não são a praia dele."
+  },
+  "class": "coupe",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "R6", "displacement_l": 3.0, "tune": 1.0 },
+  "power_kw": 242,
+  "mass_kg": 1450,
+  "top_speed_kmh": 250,
+  "clearance": 12,
+  "cargo_kg": 80,
+  "seats": 2,
+  "tank_l": 60,
+  "tier": 5,
+  "min_player_level": 12,
+  "price_cents": 5500000,
+  "sources": ["dealer"]
+}

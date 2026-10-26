@@ -1,0 +1,32 @@
+{
+  "slug": "orzel-v12",
+  "name": {
+    "en": "Orzeł V12",
+    "pl": "Orzeł V12",
+    "fr": "Orzeł V12",
+    "de": "Orzeł V12",
+    "pt-BR": "Orzeł V12"
+  },
+  "description": {
+    "en": "The hypercar: a 6.0-litre V12 and 345 km/h. The fastest car you can buy, with a price and a fuel bill to match, and it will not forgive a wet road.",
+    "pl": "Hipersamochód: V12 o pojemności 6,0 l i 345 km/h. Najszybsze auto, jakie można kupić; cena i rachunek za paliwo idą w parze, a mokrej drogi nie wybacza.",
+    "fr": "L’hypercar : un V12 de 6,0 litres et 345 km/h. La voiture la plus rapide que l’on puisse acheter, avec un prix et une note de carburant à l’avenant, et qui ne pardonne pas la route mouillée.",
+    "de": "Der Hypersportwagen: ein 6,0-Liter-V12 und 345 km/h. Das schnellste Auto, das man kaufen kann, mit passendem Preis und passender Spritrechnung, und eine nasse Straße verzeiht er nicht.",
+    "pt-BR": "O hipercarro: um V12 de 6,0 litros e 345 km/h. O carro mais rápido que dá para comprar, com preço e conta de combustível à altura, e que não perdoa pista molhada."
+  },
+  "class": "hyper",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "V12", "displacement_l": 6.0, "tune": 1.0 },
+  "power_kw": 663,
+  "mass_kg": 1700,
+  "top_speed_kmh": 345,
+  "clearance": 10,
+  "cargo_kg": 30,
+  "seats": 2,
+  "tank_l": 90,
+  "tier": 10,
+  "min_player_level": 27,
+  "price_cents": 78000000,
+  "sources": ["dealer"]
+}

@@ -1,0 +1,32 @@
+{
+  "slug": "serwal-v10",
+  "name": {
+    "en": "Serwal V10",
+    "pl": "Serwal V10",
+    "fr": "Serwal V10",
+    "de": "Serwal V10",
+    "pt-BR": "Serwal V10"
+  },
+  "description": {
+    "en": "A V10 supercar that reaches 320 km/h. Stunning on dry asphalt, unforgiving on gravel and ruinous at the pump.",
+    "pl": "Superauto z V10, które dociera do 320 km/h. Oszałamiające na suchym asfalcie, bezlitosne na żwirze i zabójcze dla portfela na stacji.",
+    "fr": "Une supercar V10 qui atteint 320 km/h. Stupéfiante sur asphalte sec, impitoyable sur le gravier et ruineuse à la pompe.",
+    "de": "Ein V10-Supersportwagen, der 320 km/h erreicht. Atemberaubend auf trockenem Asphalt, gnadenlos auf Schotter und ruinös an der Tankstelle.",
+    "pt-BR": "Um superesportivo V10 que chega a 320 km/h. Impressionante no asfalto seco, impiedoso no cascalho e arruinador na bomba."
+  },
+  "class": "super",
+  "drivetrain": "rwd",
+  "powertrain": "ice",
+  "engine": { "layout": "V10", "displacement_l": 5.2, "tune": 1.05 },
+  "power_kw": 583,
+  "mass_kg": 1550,
+  "top_speed_kmh": 320,
+  "clearance": 10,
+  "cargo_kg": 40,
+  "seats": 2,
+  "tank_l": 80,
+  "tier": 8,
+  "min_player_level": 21,
+  "price_cents": 29000000,
+  "sources": ["dealer"]
+}

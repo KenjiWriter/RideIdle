@@ -1,0 +1,32 @@
+{
+  "slug": "zubr-r6",
+  "name": {
+    "en": "Żubr R6",
+    "pl": "Żubr R6",
+    "fr": "Żubr R6",
+    "de": "Żubr R6",
+    "pt-BR": "Żubr R6"
+  },
+  "description": {
+    "en": "A heavy four-wheel-drive pickup with a straight-six. Sure on gravel and in the mud, slow on the track and not light on fuel.",
+    "pl": "Ciężki pickup z napędem na cztery koła i rzędową szóstką. Pewny na żwirze i w błocie, wolny na torze i niezbyt oszczędny.",
+    "fr": "Un lourd pick-up à quatre roues motrices et six cylindres en ligne. Sûr sur le gravier et dans la boue, lent sur circuit et pas économe.",
+    "de": "Ein schwerer Pick-up mit Allradantrieb und Reihensechszylinder. Sicher auf Schotter und im Schlamm, langsam auf der Rennstrecke und nicht sparsam.",
+    "pt-BR": "Uma picape pesada com tração 4x4 e seis cilindros em linha. Segura no cascalho e na lama, lenta na pista e nada econômica."
+  },
+  "class": "pickup",
+  "drivetrain": "awd",
+  "powertrain": "ice",
+  "engine": { "layout": "R6", "displacement_l": 3.0, "tune": 0.9 },
+  "power_kw": 218,
+  "mass_kg": 2050,
+  "top_speed_kmh": 190,
+  "clearance": 28,
+  "cargo_kg": 780,
+  "seats": 5,
+  "tank_l": 80,
+  "tier": 5,
+  "min_player_level": 12,
+  "price_cents": 5200000,
+  "sources": ["exchange", "dealer"]
+}
