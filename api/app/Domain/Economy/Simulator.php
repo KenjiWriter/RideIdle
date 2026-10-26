@@ -86,9 +86,14 @@ final class Simulator
      * opens (its payback is that of the three wrecks it makes room for). A purchase earns from the next day on. The player stops
      * simulating at the last rung, but spends what is left of that day on wrecks, as it would.
      *
+     * Extras (`Extra`: crates, storage units, the way a car is sold) are played along: each day, after the experience and before anything is bought,
+     * they say what they spend or bring and by what factor they change the income of the car, and they add to the cost of a step of the ladder.
+     *
      * Nothing here is random and nothing reads a clock, so a ruleset always gives the same days.
+     *
+     * @param  list<Extra>  $extras  made for this player alone, since they keep their own state
      */
-    public function simulateGame(EconomyRules $rules, PlayerType $player): PlayerRun
+    public function simulateGame(EconomyRules $rules, PlayerType $player, array $extras = []): PlayerRun
     {
         $fleet = $rules->fleetModel();
         $last = $rules->rungs() - 1;
@@ -104,20 +109,32 @@ final class Simulator
         $wreckDaily = $rules->carDailyIncome($player, 0);
         $wreckHours = $player->hoursPerDay($rules->offlineWindowHours(0));
         $day = 0;
+        $stepCost = static fn (int $from): float => $rules->stepCost($from) + array_sum(array_map(static fn (Extra $extra): float => $extra->stepCostDelta($rules, $from), $extras));
 
         while ($day < $maxDays && $rung < $last) {
             $day++;
 
             $hours = $player->hoursPerDay($rules->offlineWindowHours($rung)) + $fleet->otherCarsXpShare * $wrecks * $wreckHours;
-            $cash += $rules->carDailyIncome($player, $rung) + $wrecks * $wreckDaily;
             $xp += $rules->xpPerHour($player) * $hours;
             $level = $rules->levelAt($xp);
+
+            $income = $rules->carDailyIncome($player, $rung);
+            $factor = 1.0;
+            $brought = 0.0;
+
+            foreach ($extras as $extra) {
+                $effect = $extra->day(new DayState($rules, $player, $day, $rung, $level, $income, $cash));
+                $factor *= $effect->incomeFactor;
+                $brought += $effect->cash;
+            }
+
+            $cash += $income * $factor + $wrecks * $wreckDaily + $brought;
 
             while (true) {
                 $options = [];
 
                 if ($rung < $last) {
-                    $cost = $rules->stepCost($rung);
+                    $cost = $stepCost($rung);
                     $cashReadyDay = $cash >= $cost ? ($cashReadyDay ?? $day) : null;
                     $levelIsThere = $level >= $rules->minPlayerLevel($rung + 1);
                     $levelReadyDay ??= $levelIsThere ? $day : null;
@@ -150,7 +167,7 @@ final class Simulator
                 }
 
                 if ($kind === 'step') {
-                    $cash -= $rules->stepCost($rung);
+                    $cash -= $stepCost($rung);
                     $rung++;
                     $purchases[] = new Purchase($rung, $day, (int) $cashReadyDay, (int) $levelReadyDay);
                     $cashReadyDay = null;
@@ -165,20 +182,27 @@ final class Simulator
             }
         }
 
-        return new PlayerRun($player, $purchases, $day, $cash, $xp, $wrecks, $garages);
+        $notes = [];
+
+        foreach ($extras as $extra) {
+            $notes[$extra->name()] = $extra->report();
+        }
+
+        return new PlayerRun($player, $purchases, $day, $cash, $xp, $wrecks, $garages, $notes);
     }
 
     /**
      * Every kind of player of the rules, played in the scenario game.
      *
+     * @param  (callable(PlayerType): list<Extra>)|null  $extrasFor  makes the extras of a player, new ones for each
      * @return array<string, PlayerRun>
      */
-    public function simulateAllGame(EconomyRules $rules): array
+    public function simulateAllGame(EconomyRules $rules, ?callable $extrasFor = null): array
     {
         $runs = [];
 
         foreach ($rules->players() as $key => $player) {
-            $runs[$key] = $this->simulateGame($rules, $player);
+            $runs[$key] = $this->simulateGame($rules, $player, $extrasFor === null ? [] : $extrasFor($player));
         }
 
         return $runs;

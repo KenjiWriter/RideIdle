@@ -183,6 +183,26 @@ final readonly class EconomyRules
     }
 
     /** The fleet that the rules of the game let a driver have, for the scenario game. */
+    /**
+     * The shares of the income of a day that a player is tried with when the crates of parts are put in the scenario game (0.2 is a fifth).
+     *
+     * @return list<float>
+     */
+    public function cratesSpendSweep(): array
+    {
+        return array_map('floatval', $this->data['model']['crates']['spend_sweep']);
+    }
+
+    /**
+     * The shares of the income of a day that a player is tried with when the storage units are put in the scenario game.
+     *
+     * @return list<float>
+     */
+    public function unitsSpendSweep(): array
+    {
+        return array_map('floatval', $this->data['model']['units']['spend_sweep']);
+    }
+
     public function fleetModel(): FleetModel
     {
         $fleet = $this->data['model']['fleet'];

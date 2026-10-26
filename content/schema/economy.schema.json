@@ -91,6 +91,24 @@
           "required": ["base", "exponent", "per_hour", "early", "catch_up_level"],
           "additionalProperties": false
         },
+        "crates": {
+          "description": "What the scenario game tries with the crates of parts (stage 2 of the simulator): how much of the income of a day the players spend on them, one run for each share.",
+          "type": "object",
+          "properties": {
+            "spend_sweep": { "type": "array", "minItems": 1, "items": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 } }
+          },
+          "required": ["spend_sweep"],
+          "additionalProperties": false
+        },
+        "units": {
+          "description": "What the scenario game tries with the storage units (stage 3 of the simulator): how much of the income of a day the players spend on them, one run for each share.",
+          "type": "object",
+          "properties": {
+            "spend_sweep": { "type": "array", "minItems": 1, "items": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 } }
+          },
+          "required": ["spend_sweep"],
+          "additionalProperties": false
+        },
         "fleet": {
           "description": "The fleet that the rules of the game let a driver have (the scenario game of the simulator): every car drives at once, a garage holds a few of them, and every run that is settled gives the player experience. A wreck is what a car of the first rung is.",
           "type": "object",
@@ -106,7 +124,7 @@
           "additionalProperties": false
         }
       },
-      "required": ["fuel_price", "resale", "upkeep", "start_cash", "xp", "fleet"],
+      "required": ["fuel_price", "resale", "upkeep", "start_cash", "xp", "crates", "units", "fleet"],
       "additionalProperties": false
     },
     "players": {

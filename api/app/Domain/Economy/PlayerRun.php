@@ -20,6 +20,8 @@ final readonly class PlayerRun
         public float $xp,
         public int $wrecks = 0,
         public int $extraGarages = 0,
+        /** What the extras of the scenario game said about their run, by the name of the extra (`Extra::report`). */
+        public array $notes = [],
     ) {}
 
     /** The day on which the car of this rung (1 is the first after the wreck) was bought, or null when it never was. */

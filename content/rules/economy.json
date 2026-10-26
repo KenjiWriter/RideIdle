@@ -39,6 +39,8 @@
     "upkeep": 0.1,
     "start_cash": 1200,
     "xp": { "base": 450, "exponent": 2.3, "per_hour": 900, "early": [60, 180, 400, 800, 1600, 2800, 4800, 8000, 12800], "catch_up_level": 20 },
+    "crates": { "spend_sweep": [0.1, 0.2, 0.3] },
+    "units": { "spend_sweep": [0.1, 0.2, 0.3] },
     "fleet": { "wreck_price": 1140, "garage_price": 5000, "garage_capacity": 3, "home_free_places": 2, "garage_city_levels": [3, 5, 8, 12], "other_cars_xp_share": 1.0 }
   },
   "players": {
