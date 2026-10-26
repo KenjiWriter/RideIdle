@@ -38,7 +38,7 @@ final class RunInputsFactory
      */
     public function make(string $carSlug, string $trackSlug, array $mounted = [], int $conditionPpm = Ppm::ONE): RunInputs
     {
-        $this->vehicle($carSlug);
+        $vehicle = $this->vehicle($carSlug);
         $track = $this->rules->track($trackSlug) ?? throw new InvalidArgumentException("Unknown track {$trackSlug}.");
         $region = $this->rules->region($track['region']) ?? throw new InvalidArgumentException("Unknown region {$track['region']}.");
 
@@ -78,7 +78,7 @@ final class RunInputsFactory
                 references: array_map('floatval', $track['reference']),
                 baseLapMs: $track['base_lap_ms'],
                 fuelPerLapMl: $track['fuel_per_lap_ml'],
-                rewardCentsPerLap: $track['reward_cents_per_lap'],
+                rewardCentsPerLap: Ppm::mul($track['reward_cents_per_lap'], $this->rules->carRewardPpm($vehicle['tier'])),
                 xpPerLap: $track['xp_per_lap'],
             ),
             weatherChancesPpm: $region['weather_ppm'],

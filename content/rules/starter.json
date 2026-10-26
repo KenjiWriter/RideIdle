@@ -11,6 +11,7 @@
     "levels_per_tier": 3,
     "xp_per_lap": 10,
     "xp_per_level": 200,
+    "reward_ppm_from_tier": { "1": 1000000, "5": 1090000, "6": 1100000, "7": 1350000, "8": 1470000, "10": 1700000 },
     "max_level": 30,
     "mass": { "reference_kg": 1000, "exponent": 0.6 },
     "stat_ceiling": { "accel": 400, "top_speed": 450, "grip": 250, "handling": 250, "braking": 250, "clearance": 200 }

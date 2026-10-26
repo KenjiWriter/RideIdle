@@ -103,6 +103,25 @@ final class Rules
         return $this->data['car']['xp_per_lap'];
     }
 
+    /**
+     * What a lap pays as a share of the reward of the track for a car of this tier, in ppm: the factor of the highest tier named in the rules that is
+     * at most the tier of the car (the tiers that nothing names pay as the tier before them).
+     */
+    public function carRewardPpm(int $tier): int
+    {
+        $ppm = null;
+        $named = 0;
+
+        foreach ($this->data['car']['reward_ppm_from_tier'] as $from => $factor) {
+            if ((int) $from <= $tier && (int) $from >= $named) {
+                $named = (int) $from;
+                $ppm = $factor;
+            }
+        }
+
+        return $ppm ?? Ppm::ONE;
+    }
+
     /** The level a car does not rise above. */
     public function carMaxLevel(): int
     {

@@ -11,8 +11,9 @@ use App\Domain\Run\RunFreezer;
  * `App\Domain\Economy\GameLadder` sets it against the anchors).
  *
  * The net profit of an hour is the laps in an hour of the lap that the run is frozen into (dry, the base lap), times what a lap pays less the
- * fuel it burns at the price of the rules. A car has its stock parts (what parts and their rarity add is for the stages that come after), and
- * what a level has to choose from is:
+ * fuel it burns at the price of the rules. What a lap pays is the reward of the track times the share that the rules give the tier of the car
+ * (`car.reward_ppm_from_tier`), which the frozen run already has in it, so the cars of the higher tiers pay what their rung of the ladder asks.
+ * A car has its stock parts (what parts and their rarity add is for the stages that come after), and what a level has to choose from is:
  *
  * - the combustion cars of the pack that are for sale at the dealer or on the exchange and ask this level or less of a driver, and
  * - the wrecks of the yard (`garage.wreck_price_cents`), which a driver can buy from the first level, whatever level their model asks for,

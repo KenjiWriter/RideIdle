@@ -240,6 +240,37 @@ it('finds the level of a car by its experience, from the start to the highest le
         ->and($rules->carLevelAt(PHP_INT_MAX))->toBe($rules->carMaxLevel());
 });
 
+it('pays the cars of the first four tiers the reward of the track, and a car of a higher tier more, never less than the tier before', function () {
+    $rules = Rules::fromArray(starterRules());
+
+    expect(array_map(static fn (int $tier): int => $rules->carRewardPpm($tier), range(1, 4)))->toBe([1_000_000, 1_000_000, 1_000_000, 1_000_000])
+        // The tiers that nothing names pay as the highest tier named below them: the pack has no car of tier 9.
+        ->and($rules->carRewardPpm(9))->toBe($rules->carRewardPpm(8));
+
+    $before = 0;
+
+    foreach (range(1, 10) as $tier) {
+        expect($rules->carRewardPpm($tier))->toBeGreaterThanOrEqual($before);
+        $before = $rules->carRewardPpm($tier);
+    }
+
+    expect($rules->carRewardPpm(5))->toBeGreaterThan(1_000_000);
+});
+
+it('is refused by the schema when the rewards by the tier of the car are missing or do not name the first tier', function () {
+    $rules = starterRules();
+    unset($rules['car']['reward_ppm_from_tier']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    unset($rules['car']['reward_ppm_from_tier']['1']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    $rules['car']['reward_ppm_from_tier']['5'] = 0;
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+});
+
 it('lets a car rise high enough to mount a part of the highest tier of the pack', function () {
     $rules = Rules::fromArray(starterRules());
     $highest = 0;
