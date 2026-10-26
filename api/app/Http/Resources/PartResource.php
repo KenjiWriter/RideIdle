@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use App\Content\Catalog;
 use App\Content\Rules;
+use App\Domain\Run\Rarity;
 use App\Models\Part;
 use App\Support\I18nText;
 use Illuminate\Http\Request;
@@ -26,7 +27,7 @@ final class PartResource extends JsonResource
 
         return [
             'id' => $this->resource->id,
-            ...self::describe($definition ?? ['slug' => $this->resource->part_slug, 'slot' => $this->resource->slot]),
+            ...self::describe($definition ?? ['slug' => $this->resource->part_slug, 'slot' => $this->resource->slot], Rarity::tryFrom((int) $this->resource->rarity) ?? Rarity::Common),
             'mounted' => $this->resource->isMounted(),
             'car_id' => $this->resource->car_id,
         ];
@@ -39,7 +40,7 @@ final class PartResource extends JsonResource
      * @param  array<string, mixed>  $definition
      * @return array<string, mixed>
      */
-    public static function describe(array $definition): array
+    public static function describe(array $definition, Rarity $rarity = Rarity::Common): array
     {
         return [
             'slug' => $definition['slug'],
@@ -47,7 +48,10 @@ final class PartResource extends JsonResource
             'slot' => $definition['slot'],
             'tier' => $definition['tier'] ?? null,
             'price_cents' => $definition['price_cents'] ?? null,
-            'stats' => $definition['stats'] ?? [],
+            // The rarity of the part (`common` to `legendary`, and 1 to 5), and the statistics it gives with it.
+            'rarity' => $rarity->key(),
+            'rarity_rank' => $rarity->value,
+            'stats' => app(Rules::class)->scaledStats($definition['stats'] ?? [], $rarity),
             // Tires only: how they grip on every surface, which is what tells one kind from another.
             'surfaces' => isset($definition['tire_kind']) ? app(Rules::class)->tireSurfaces($definition['tire_kind']) : null,
         ];

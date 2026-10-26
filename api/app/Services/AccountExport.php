@@ -8,6 +8,7 @@ use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\Car;
 use App\Models\CityGarage;
+use App\Models\CrateOpening;
 use App\Models\LedgerEntry;
 use App\Models\Part;
 use App\Models\RaceRun;
@@ -106,6 +107,8 @@ final class AccountExport
                 ->map(fn (CityGarage $garage): array => $garage->makeHidden(['user_id'])->toArray())->all(),
             'storage_openings' => StorageOpening::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (StorageOpening $opening): array => $opening->makeHidden(['user_id'])->toArray())->all(),
+            'crate_openings' => CrateOpening::query()->where('user_id', $user->id)->orderBy('id')->get()
+                ->map(fn (CrateOpening $opening): array => $opening->makeHidden(['user_id'])->toArray())->all(),
             'workshop_jobs' => WorkshopJob::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (WorkshopJob $job): array => $job->makeHidden(['user_id'])->toArray())->all(),
             'travels' => Travel::query()->where('user_id', $user->id)->orderBy('id')->get()

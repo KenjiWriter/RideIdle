@@ -6,6 +6,8 @@ use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
 use App\Domain\Economy\EconomyRules;
+use App\Domain\Market\Crates;
+use App\Domain\Run\Rarity;
 use App\Domain\Run\Surface;
 use App\Support\Locale;
 use Opis\JsonSchema\Errors\ErrorFormatter;
@@ -490,4 +492,79 @@ it('puts every city on the map with a name in all five languages and a track, an
     }
 
     expect($problems)->toBe([]);
+});
+
+it('multiplies the statistics of a rarer part by more, and those of a common part by nothing', function () {
+    $rules = Rules::fromArray(starterRules());
+    $multipliers = array_map(fn (Rarity $rarity): float => $rules->scaledStats(['grip' => 100], $rarity)['grip'], Rarity::cases());
+
+    expect($multipliers)->toBe([100.0, 110.0, 122.0, 138.0, 160.0]);
+});
+
+it('scales what a part adds, only the gain of the power, and not a limit', function () {
+    $rules = Rules::fromArray(starterRules());
+    $stats = ['grip' => 100, 'handling' => 90, 'braking' => 105, 'clearance' => 25, 'power_mult' => 1.02, 'top_speed_cap_kmh' => 190, 'fade_resistance' => 100];
+
+    expect($rules->scaledStats($stats, Rarity::Legendary))->toBe([
+        'grip' => 160.0, 'handling' => 144.0, 'braking' => 168.0, 'clearance' => 40.0, 'power_mult' => 1.032, 'top_speed_cap_kmh' => 190, 'fade_resistance' => 100,
+    ])->and($rules->scaledStats($stats, Rarity::Common))->toBe($stats);
+});
+
+it('has crates whose rarer parts are rarer, whose guarantees can be met, and whose kinds draw from a group that exists', function () {
+    $crates = starterRules()['shop']['crates'];
+
+    foreach ($crates['odds'] as $group => $weights) {
+        $weights = array_values($weights);
+
+        // The premium crates have more uncommon parts than common ones (the board), but from the rare ones on every rarity is rarer than the one below.
+        expect($weights[2])->toBeGreaterThan($weights[3])
+            ->and($weights[3])->toBeGreaterThan($weights[4])
+            ->and($weights[4])->toBeGreaterThan(0);
+
+        $floor = Rarity::fromKey($crates['guarantee'][$group]['min_rarity']);
+        $above = array_sum(array_slice($weights, $floor->value - 1));
+
+        expect($above)->toBeGreaterThan(0)
+            ->and($crates['guarantee'][$group]['legendary_every'])->toBeGreaterThan($crates['guarantee'][$group]['every']);
+    }
+
+    foreach ($crates['kinds'] as $key => $kind) {
+        expect($crates['odds'])->toHaveKey($kind['group']);
+    }
+});
+
+it('opens the crates of the shop from level 1, and never asks for a level beyond the one of the last tier of the shop', function () {
+    $rules = Rules::fromArray(starterRules());
+    $crates = new Crates($rules->shopCrates());
+    $top = 0;
+
+    foreach ($rules->shopParts() as $slug) {
+        $top = max($top, json_decode((string) file_get_contents(config('ride.content_path').'/packs/core/parts/'.$slug.'.json'), true)['tier']);
+    }
+
+    expect($crates->playerLevelOfTier(1))->toBe(1);
+
+    foreach ($crates->kinds() as $key => $kind) {
+        expect($kind['min_player_level'])->toBeLessThanOrEqual($crates->playerLevelOfTier($top) + 3);
+    }
+});
+
+it('is refused by the schema when the crates lack odds, a guarantee is not a rarity, or a kind draws from no group', function () {
+    $rules = starterRules();
+    unset($rules['shop']['crates']['odds']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    $rules['shop']['crates']['guarantee']['standard']['min_rarity'] = 'mythic';
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    $rules['shop']['crates']['kinds']['slot']['group'] = 'free';
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    unset($rules['shop']['rarity_stat_ppm']['legendary']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    expect(rulesSchemaErrors(starterRules()))->toBe([]);
 });

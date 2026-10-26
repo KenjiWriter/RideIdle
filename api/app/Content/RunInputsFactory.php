@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Content;
 
 use App\Domain\Run\CarStats;
+use App\Domain\Run\Rarity;
 use App\Domain\Run\RunInputs;
 use App\Domain\Run\Surface;
 use App\Domain\Run\TrackProfile;
@@ -32,7 +33,7 @@ final class RunInputsFactory
     public function __construct(private readonly Catalog $catalog, private readonly Rules $rules) {}
 
     /**
-     * @param  array<string, string>  $mounted  slugs of the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot: the slug, or the slug with the rarity of the part
      * @param  int  $conditionPpm  the condition of the car (1 000 000 is perfect): a worn car breaks down more
      */
     public function make(string $carSlug, string $trackSlug, array $mounted = [], int $conditionPpm = Ppm::ONE): RunInputs
@@ -91,7 +92,7 @@ final class RunInputsFactory
     /**
      * What the tank of the car holds, in millilitres: the tank mounted on it, or the one of the body.
      *
-     * @param  array<string, string>  $mounted  slugs of the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot
      */
     public function tankMl(string $carSlug, array $mounted = []): int
     {
@@ -126,7 +127,9 @@ final class RunInputsFactory
      *
      * Averaging is a first rule that the economy simulator will check; the numbers are in the definitions of the parts.
      *
-     * @param  array<string, string>  $mounted  slugs of the parts on the car, by slot
+     * The rarity of a part multiplies what it adds (`Rules::scaledStats`), before any of this.
+     *
+     * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot
      */
     public function stats(string $carSlug, array $mounted = []): CarStats
     {
@@ -167,20 +170,23 @@ final class RunInputsFactory
      * The definitions of the mounted parts, by slot. A slug that is not in the pack, or a part in a slot it does not
      * belong to, is a mistake of whoever saved it, not something to drive on.
      *
-     * @param  array<string, string>  $mounted  slugs of the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot
      * @return array<string, array<string, mixed>>
      */
     private function parts(array $mounted): array
     {
         $parts = [];
 
-        foreach ($mounted as $slot => $slug) {
+        foreach ($mounted as $slot => $entry) {
+            $slug = is_array($entry) ? $entry['slug'] : $entry;
+            $rarity = is_array($entry) ? Rarity::from($entry['rarity']) : Rarity::Common;
             $part = $this->catalog->part($slug) ?? throw new InvalidArgumentException("Unknown part {$slug}.");
 
             if ($part['slot'] !== $slot) {
                 throw new InvalidArgumentException("The part {$slug} belongs to the slot {$part['slot']}, not to {$slot}.");
             }
 
+            $part['stats'] = $this->rules->scaledStats($part['stats'] ?? [], $rarity);
             $parts[$slot] = $part;
         }
 
@@ -190,7 +196,7 @@ final class RunInputsFactory
     /**
      * The kind of the tires on the car, which picks the column of the tire matrix: the stock tires when none are mounted.
      *
-     * @param  array<string, string>  $mounted  slugs of the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot
      */
     private function tireKind(array $mounted): string
     {

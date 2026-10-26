@@ -65,4 +65,16 @@ class Car extends Model
     {
         return $this->parts()->whereNotNull('mounted_slot')->orderBy('mounted_slot')->pluck('part_slug', 'mounted_slot')->all();
     }
+
+    /**
+     * The parts that sit on the car, by slot, with their rarity: what the statistics of the car are made of, since a part of a rarity gives more.
+     *
+     * @return array<string, array{slug: string, rarity: int}>
+     */
+    public function mountedParts(): array
+    {
+        return $this->parts()->whereNotNull('mounted_slot')->orderBy('mounted_slot')->get()
+            ->mapWithKeys(static fn (Part $part): array => [$part->mounted_slot => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity]])
+            ->all();
+    }
 }

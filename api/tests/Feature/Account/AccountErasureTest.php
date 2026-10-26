@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Models\AccountIdentity;
+use App\Models\CrateOpening;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
+use App\Models\StorageOpening;
 use App\Models\User;
 use App\Services\AccountErasure;
 use App\Services\Ledger;
@@ -50,6 +52,24 @@ describe('what is removed', function () {
 
         expect($removed)->toBe($before)
             ->and($removed)->toMatchArray(['accounts' => 1, 'sign-ins' => 2, 'devices' => 1, 'wallets' => 1, 'cars' => 1, 'parts' => 2, 'garages' => 1, 'workshop jobs' => 1, 'tutorial steps' => 1, 'runs' => 1, 'settlements' => 1, 'settlement events' => 1, 'ledger entries' => 1]);
+    });
+
+    it('removes the crates and the storage units that the driver opened, and says so', function () {
+        $user = accountWithHistory();
+        $other = User::factory()->guest()->create();
+        $opening = fn (User $driver): array => ['user_id' => $driver->id, 'kind' => 'slot', 'pity_group' => 'standard', 'opening_index' => 0, 'slot' => 'tires', 'tier' => 1, 'rarity' => 1, 'part_slug' => 'all-season-tires-t1', 'price_cents' => 45_000];
+        CrateOpening::query()->create($opening($user));
+        CrateOpening::query()->create($opening($other));
+        StorageOpening::query()->create([
+            'user_id' => $user->id, 'unit' => 'small', 'opening_index' => 0, 'outcome' => 'scrap', 'vehicle_slug' => 'rdzak-gt-4', 'age_years' => 22,
+            'mileage_km' => 250_000, 'condition_ppm' => 100_000, 'value_cents' => 20_000, 'price_cents' => 120_000,
+        ]);
+
+        $removed = erasure()->erase($user);
+
+        expect($removed)->toMatchArray(['crate openings' => 1, 'storage openings' => 1])
+            ->and(CrateOpening::query()->pluck('user_id')->all())->toBe([$other->id])
+            ->and(StorageOpening::query()->count())->toBe(0);
     });
 
     it('leaves another account and everything of it as it was', function () {

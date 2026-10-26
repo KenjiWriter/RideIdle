@@ -86,7 +86,25 @@
       "rally-suspension-t2",
       "disc-brakes-t2",
       "sport-exhaust-t2"
-    ]
+    ],
+    "rarity_stat_ppm": { "common": 1000000, "uncommon": 1100000, "rare": 1220000, "epic": 1380000, "legendary": 1600000 },
+    "crates": {
+      "first_tier_level": 1,
+      "levels_per_tier": 3,
+      "odds": {
+        "standard": { "common": 620, "uncommon": 250, "rare": 100, "epic": 27, "legendary": 3 },
+        "premium": { "common": 300, "uncommon": 350, "rare": 240, "epic": 90, "legendary": 20 }
+      },
+      "guarantee": {
+        "standard": { "every": 10, "min_rarity": "rare", "legendary_every": 150 },
+        "premium": { "every": 40, "min_rarity": "epic", "legendary_every": 150 }
+      },
+      "kinds": {
+        "slot": { "group": "standard", "price_ppm": 1000000, "min_player_level": 1, "choose_slot": true },
+        "mixed": { "group": "standard", "price_ppm": 1500000, "min_player_level": 3, "choose_slot": false },
+        "premium": { "group": "premium", "price_ppm": 2000000, "min_player_level": 6, "choose_slot": true }
+      }
+    }
   },
   "workshop": {
     "mechanic_level": 1,

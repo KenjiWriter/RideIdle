@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
+use App\Models\CrateOpening;
+use App\Models\Part;
 use App\Models\Settlement;
 use App\Models\User;
 use App\Services\AccountExport;
@@ -102,6 +104,22 @@ describe('what is exported', function () {
             ->and($game['workshop_jobs'][0])->toMatchArray(['kind' => 'mount', 'status' => 'queued']);
     });
 
+    it('has the crates the driver opened, and the rarity of their parts', function () {
+        $user = accountWithHistory();
+        $part = Part::factory()->create(['user_id' => $user->id, 'part_slug' => 'street-tires-t2', 'rarity' => 4]);
+        CrateOpening::query()->create([
+            'user_id' => $user->id, 'kind' => 'slot', 'pity_group' => 'standard', 'opening_index' => 0, 'slot' => 'tires', 'tier' => 2,
+            'rarity' => 4, 'part_slug' => 'street-tires-t2', 'price_cents' => 59_500, 'part_id' => $part->id,
+        ]);
+
+        $game = (new AccountExport)->for($user)['game'];
+
+        expect($game['crate_openings'])->toHaveCount(1)
+            ->and($game['crate_openings'][0])->toMatchArray(['kind' => 'slot', 'pity_group' => 'standard', 'opening_index' => 0, 'rarity' => 4, 'part_slug' => 'street-tires-t2', 'price_cents' => 59_500])
+            ->and($game['crate_openings'][0])->not->toHaveKey('user_id')
+            ->and(collect($game['inventory'])->firstWhere('id', $part->id)['rarity'])->toBe(4);
+    });
+
     it('has the steps of the tutorial that the driver reached', function () {
         $game = (new AccountExport)->for(accountWithHistory())['game'];
 
@@ -113,7 +131,7 @@ describe('what is exported', function () {
     it('has an empty game for an account that never played', function () {
         $game = (new AccountExport)->for(User::factory()->guest()->create())['game'];
 
-        expect($game)->toBe(['wallet' => null, 'cars' => [], 'inventory' => [], 'garages' => [], 'storage_openings' => [], 'workshop_jobs' => [], 'travels' => [], 'tutorial' => [], 'runs' => [], 'ledger' => []]);
+        expect($game)->toBe(['wallet' => null, 'cars' => [], 'inventory' => [], 'garages' => [], 'storage_openings' => [], 'crate_openings' => [], 'workshop_jobs' => [], 'travels' => [], 'tutorial' => [], 'runs' => [], 'ledger' => []]);
     });
 
     it('is only about the account, and never about another', function () {

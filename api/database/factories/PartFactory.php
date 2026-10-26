@@ -25,6 +25,7 @@ class PartFactory extends Factory
             'user_id' => User::factory()->guest(),
             'part_slug' => 'street-tires-t2',
             'slot' => 'tires',
+            'rarity' => 1,
             'car_id' => null,
             'mounted_slot' => null,
         ];

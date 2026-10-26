@@ -110,7 +110,7 @@ final class GarageController extends Controller
     {
         $vehicle = $this->catalog->vehicle($car->vehicle_slug);
         $mounted = $car->parts()->whereNotNull('mounted_slot')->get()->keyBy('mounted_slot');
-        $slugs = $mounted->pluck('part_slug', 'mounted_slot')->all();
+        $slugs = $mounted->map(static fn (Part $part): array => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity])->all();
 
         return [
             'id' => $car->id,

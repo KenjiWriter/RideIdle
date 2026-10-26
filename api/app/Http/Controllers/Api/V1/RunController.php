@@ -223,13 +223,13 @@ final class RunController extends Controller
     }
 
     /**
-     * The parts on the car of the run, by slot.
+     * The parts on the car of the run, by slot, with their rarity.
      *
-     * @return array<string, string>
+     * @return array<string, array{slug: string, rarity: int}>
      */
     private function mountedOn(RaceRun $run): array
     {
-        return $run->car?->mountedSlugs() ?? [];
+        return $run->car?->mountedParts() ?? [];
     }
 
     /** The condition of the car of a run: a worn one breaks down more. */

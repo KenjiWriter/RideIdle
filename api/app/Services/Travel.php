@@ -191,7 +191,7 @@ final class Travel
                     'demand' => $track['demand'],
                 ],
                 // How the car, with the parts it has, runs this track in the dry against the lap of a car that matches its reference.
-                'fit_percent' => $run === null ? null : (int) round(100 * $track['base_lap_ms'] / $freezer->freeze($this->inputs->make($run->car_slug, $trackSlug, $run->car?->mountedSlugs() ?? []), 'map', 0)->config['lap_ms']['dry']),
+                'fit_percent' => $run === null ? null : (int) round(100 * $track['base_lap_ms'] / $freezer->freeze($this->inputs->make($run->car_slug, $trackSlug, $run->car?->mountedParts() ?? []), 'map', 0)->config['lap_ms']['dry']),
                 'route' => $km === null || $stats === null ? null : ['km' => $km, ...$this->journeyOf($km, $stats)],
             ];
         }
@@ -214,7 +214,7 @@ final class Travel
 
     private function statsOf(RaceRun $run): CarStats
     {
-        return $this->inputs->stats($run->car_slug, $run->car?->mountedSlugs() ?? []);
+        return $this->inputs->stats($run->car_slug, $run->car?->mountedParts() ?? []);
     }
 
     /**
@@ -247,7 +247,7 @@ final class Travel
             if ($run !== null) {
                 $track = $this->rules->tracksOf($journey->to_region)[0];
 
-                $this->runs->arrive($run, $this->inputs->make($run->car_slug, $track, $run->car?->mountedSlugs() ?? [], $run->car?->conditionPpm() ?? Ppm::ONE), $track, $journey->arrive_ms);
+                $this->runs->arrive($run, $this->inputs->make($run->car_slug, $track, $run->car?->mountedParts() ?? [], $run->car?->conditionPpm() ?? Ppm::ONE), $track, $journey->arrive_ms);
             }
 
             $journey->forceFill(['status' => Journey::STATUS_ARRIVED])->save();

@@ -259,9 +259,68 @@
           "type": "array",
           "items": { "$ref": "common.schema.json#/$defs/slug" },
           "uniqueItems": true
+        },
+        "rarity_stat_ppm": {
+          "description": "What a part of each rarity multiplies its statistics by (Systemy I): 1 000 000 is none. Only what a part adds to a car is multiplied (grip, handling, braking, clearance, and the gain of power), not a limit like the one of a gearbox.",
+          "type": "object",
+          "properties": {
+            "common": { "type": "integer", "minimum": 1 },
+            "uncommon": { "type": "integer", "minimum": 1 },
+            "rare": { "type": "integer", "minimum": 1 },
+            "epic": { "type": "integer", "minimum": 1 },
+            "legendary": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["common", "uncommon", "rare", "epic", "legendary"],
+          "additionalProperties": false
+        },
+        "crates": {
+          "description": "The crates of the shop: one draw of a part of a rarity, for game cash only. The odds are shown before the purchase, the draw is made by the server, every one is written down, and the guarantees give a rarer part now and then.",
+          "type": "object",
+          "properties": {
+            "first_tier_level": { "description": "The player level that opens the crates of tier 1.", "type": "integer", "minimum": 1 },
+            "levels_per_tier": { "description": "Every further tier opens this many levels later: tier t opens at max(first_tier_level, levels_per_tier * (t - 1)), as the cars of the dealer do.", "type": "integer", "minimum": 1 },
+            "odds": {
+              "description": "The weights of the rarities, per mille, for each group of crates.",
+              "type": "object",
+              "properties": {
+                "standard": { "$ref": "#/$defs/crateOdds" },
+                "premium": { "$ref": "#/$defs/crateOdds" }
+              },
+              "required": ["standard", "premium"],
+              "additionalProperties": false
+            },
+            "guarantee": {
+              "description": "What every group of crates gives now and then, counted over the openings of the whole group.",
+              "type": "object",
+              "properties": {
+                "standard": { "$ref": "#/$defs/crateGuarantee" },
+                "premium": { "$ref": "#/$defs/crateGuarantee" }
+              },
+              "required": ["standard", "premium"],
+              "additionalProperties": false
+            },
+            "kinds": {
+              "description": "The kinds of crate, by key: what group they draw from, what they cost (a share of the mean price of the models they can give, in ppm), the player level that opens them, and whether the driver chooses the slot.",
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "group": { "enum": ["standard", "premium"] },
+                  "price_ppm": { "type": "integer", "minimum": 1 },
+                  "min_player_level": { "type": "integer", "minimum": 1 },
+                  "choose_slot": { "type": "boolean" }
+                },
+                "required": ["group", "price_ppm", "min_player_level", "choose_slot"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["first_tier_level", "levels_per_tier", "odds", "guarantee", "kinds"],
+          "additionalProperties": false
         }
       },
-      "required": ["parts"],
+      "required": ["parts", "rarity_stat_ppm", "crates"],
       "additionalProperties": false
     },
     "workshop": {
@@ -409,6 +468,29 @@
   "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks"],
   "additionalProperties": false,
   "$defs": {
+    "crateOdds": {
+      "description": "The weights of the five rarities of a part (any scale; the odds are shown in percent of their sum).",
+      "type": "object",
+      "properties": {
+        "common": { "type": "integer", "minimum": 0 },
+        "uncommon": { "type": "integer", "minimum": 0 },
+        "rare": { "type": "integer", "minimum": 0 },
+        "epic": { "type": "integer", "minimum": 0 },
+        "legendary": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["common", "uncommon", "rare", "epic", "legendary"],
+      "additionalProperties": false
+    },
+    "crateGuarantee": {
+      "type": "object",
+      "properties": {
+        "every": { "description": "A crate of the group that follows this many minus one without a part of the rarity below, or better, gives one (the 10th of 10).", "type": "integer", "minimum": 1 },
+        "min_rarity": { "enum": ["uncommon", "rare", "epic", "legendary"] },
+        "legendary_every": { "description": "A crate that follows this many minus one without a legendary part gives one.", "type": "integer", "minimum": 1 }
+      },
+      "required": ["every", "min_rarity", "legendary_every"],
+      "additionalProperties": false
+    },
     "surfaces": {
       "description": "A multiplier for each surface a car can drive on: dry asphalt, wet asphalt, dry gravel, mud (wet gravel) and snow.",
       "type": "object",

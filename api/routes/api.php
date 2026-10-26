@@ -83,6 +83,7 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('/shop', [ShopController::class, 'index']);
         Route::post('/shop/purchases', [ShopController::class, 'purchase']);
+        Route::post('/shop/crates/{kind}/open', [ShopController::class, 'openCrate'])->where('kind', '[a-z0-9-]+');
 
         Route::post('/runs', [RunController::class, 'store']);
         Route::get('/runs/current', [RunController::class, 'current']);

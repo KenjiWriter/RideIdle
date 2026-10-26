@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Content\Catalog;
 use App\Content\Rules;
+use App\Domain\Run\Rarity;
 use App\Exceptions\IdempotencyConflictException;
 use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\RuleRefusedException;
@@ -91,6 +92,7 @@ final class Shop
                 'user_id' => $userId,
                 'part_slug' => $part['slug'],
                 'slot' => $part['slot'],
+                'rarity' => Rarity::Common->value,
             ]);
 
             return new Purchased($owned, $price, false);

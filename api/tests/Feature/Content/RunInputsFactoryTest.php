@@ -318,3 +318,48 @@ it('does not take a condition over perfect or under nothing for more than it is'
     expect(app(Rules::class)->breakChancePerLapPpmFor(2_000_000))->toBe(3_000)
         ->and(app(Rules::class)->breakChancePerLapPpmFor(-5))->toBe(30_000);
 });
+
+describe('the rarity of a part', function () {
+    it('multiplies what a part adds to a car by its rarity, so that the same tires grip better the rarer they are', function () {
+        $grip = fn (int $rarity): array => runInputsFactory()->stats('rdzak-gt-4', ['tires' => ['slug' => 'street-tires-t2', 'rarity' => $rarity]])->stats;
+
+        // The street tires of tier 2 give 100, 98 and 100; the Rdzak GT-4 has the mass of reference, so the factor of the mass is 1.
+        expect($grip(1)['grip'])->toBe(100.0)
+            ->and($grip(2)['grip'])->toEqualWithDelta(110.0, 1e-9)
+            ->and($grip(3)['grip'])->toEqualWithDelta(122.0, 1e-9)
+            ->and($grip(4)['grip'])->toEqualWithDelta(138.0, 1e-9)
+            ->and($grip(5)['grip'])->toEqualWithDelta(160.0, 1e-9)
+            ->and($grip(4)['handling'])->toEqualWithDelta(98 * 1.38, 1e-9)
+            ->and($grip(4)['braking'])->toEqualWithDelta(138.0, 1e-9);
+    });
+
+    it('gives the same statistics for a part that is given by its slug as for one of the common rarity', function () {
+        $plain = runInputsFactory()->stats('rdzak-gt-4', ['tires' => 'street-tires-t2', 'exhaust' => 'sport-exhaust-t2']);
+        $common = runInputsFactory()->stats('rdzak-gt-4', ['tires' => ['slug' => 'street-tires-t2', 'rarity' => 1], 'exhaust' => ['slug' => 'sport-exhaust-t2', 'rarity' => 1]]);
+
+        expect($common->stats)->toBe($plain->stats)->and($common->fuelUseMultiplier)->toBe($plain->fuelUseMultiplier);
+    });
+
+    it('multiplies only the gain of the power of a part, not the power', function () {
+        $accel = fn (int $rarity): float => runInputsFactory()->stats('rdzak-gt-4', ['exhaust' => ['slug' => 'sport-exhaust-t2', 'rarity' => $rarity]])->stats['accel'];
+
+        // The sport exhaust gives 2% of power, and an epic one 2.76%: not 138% of the power.
+        expect($accel(4) / $accel(1))->toEqualWithDelta(1.0276 / 1.02, 1e-9);
+    });
+
+    it('drives a faster lap on tires of a higher rarity', function () {
+        $lap = fn (int $rarity): int => (new RunFreezer)->freeze(runInputsFactory()->make('rdzak-gt-4', 'zlomowo-street', ['tires' => ['slug' => 'street-tires-t2', 'rarity' => $rarity]]), 'seed', 0)->config['lap_ms']['dry'];
+
+        expect($lap(2))->toBeLessThan($lap(1))->and($lap(3))->toBeLessThan($lap(2))->and($lap(4))->toBeLessThan($lap(3))->and($lap(5))->toBeLessThan($lap(4));
+    });
+
+    it('takes the tires of a rarity for the kind that picks the column of the tire matrix, as the common ones do', function () {
+        $rain = fn (int $rarity): int => (new RunFreezer)->freeze(runInputsFactory()->make('rdzak-gt-4', 'zlomowo-street', ['tires' => ['slug' => 'rain-tires-t3', 'rarity' => $rarity]]), 'seed', 0)->config['lap_ms']['rain'];
+
+        expect($rain(3))->toBeLessThan($rain(1));
+    });
+
+    it('refuses a rarity that does not exist', function () {
+        expect(fn () => runInputsFactory()->stats('rdzak-gt-4', ['tires' => ['slug' => 'street-tires-t2', 'rarity' => 6]]))->toThrow(ValueError::class);
+    });
+});

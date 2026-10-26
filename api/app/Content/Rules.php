@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Content;
 
 use App\Domain\Economy\PlayerXpCurve;
+use App\Domain\Run\Rarity;
 use App\Domain\Run\Surface;
 use App\Domain\Settlement\Ppm;
 use App\Support\I18nText;
@@ -327,6 +328,42 @@ final class Rules
     public function shopParts(): array
     {
         return $this->data['shop']['parts'];
+    }
+
+    /**
+     * The statistics of a part of a rarity: what the part adds to a car is multiplied (grip, handling, braking, clearance), and of the power only
+     * the gain is (a multiplier of 1.02 at x1.6 is 1.032). A limit, like the one of a gearbox, is not a gain and stays what it is.
+     *
+     * @param  array<string, int|float>  $stats  the statistics of the definition of the part
+     * @return array<string, int|float>
+     */
+    public function scaledStats(array $stats, Rarity $rarity): array
+    {
+        $ppm = $this->data['shop']['rarity_stat_ppm'][$rarity->key()];
+
+        if ($ppm === Ppm::ONE) {
+            return $stats;
+        }
+
+        foreach ($stats as $name => $value) {
+            if (in_array($name, ['grip', 'handling', 'braking', 'clearance'], true)) {
+                $stats[$name] = round($value * $ppm / Ppm::ONE, 6);
+            } elseif ($name === 'power_mult') {
+                $stats[$name] = round(1 + ($value - 1) * $ppm / Ppm::ONE, 6);
+            }
+        }
+
+        return $stats;
+    }
+
+    /**
+     * The crates of the shop: the odds, the guarantees and the kinds.
+     *
+     * @return array<string, mixed>
+     */
+    public function shopCrates(): array
+    {
+        return $this->data['shop']['crates'];
     }
 
     /**

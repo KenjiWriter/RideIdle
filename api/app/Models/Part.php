@@ -23,6 +23,7 @@ class Part extends Model
         return [
             'user_id' => 'integer',
             'car_id' => 'integer',
+            'rarity' => 'integer',
         ];
     }
 
