@@ -12,6 +12,7 @@ import GameShell from '@/components/GameShell.vue'
 import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
 import LinkAccountDialog from '@/components/LinkAccountDialog.vue'
 import LinkedAccounts from '@/components/LinkedAccounts.vue'
+import RarityMark from '@/components/RarityMark.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RunAlerts from '@/components/RunAlerts.vue'
 import TutorialOverlay from '@/components/TutorialOverlay.vue'
@@ -252,12 +253,13 @@ async function useCode(): Promise<void> {
           :key="slot.slot"
           :to="{ name: 'workshop' }"
           class="tile no-underline"
-          :class="{ on: slot.part }"
+          :class="[slot.part ? 'on' : '', slot.part && slot.part.rarity_rank > 1 ? `r${slot.part.rarity_rank}` : '']"
           :data-test="`slot-${slot.slot}`"
         >
           <span class="sl">{{ t(`slot.${slot.slot}`) }}</span>
           <span class="nm">{{ slot.part ? slot.part.name : slot.built_in ? (car.vehicle.engine ?? t('workshop.builtIn')) : t('workshop.empty') }}</span>
           <span v-if="slot.part" class="mono text-[10px] text-faint">{{ t('part.tier', { tier: slot.part.tier ?? 0 }) }}</span>
+          <RarityMark v-if="slot.part && slot.part.rarity_rank > 1" :rarity="slot.part.rarity" />
         </RouterLink>
       </section>
 

@@ -13,6 +13,8 @@ export function useFormat() {
     money: (cents: number, fractionDigits = 0): string => formatMoney(cents, current.value, fractionDigits),
     number: (value: number, fractionDigits = 0): string => formatNumber(value, current.value, fractionDigits),
     fixed: (value: number, fractionDigits: number): string => formatFixed(value, current.value, fractionDigits),
+    /** A chance in percent: whole when it is, with one decimal when it is not (4.5). */
+    percent: (value: number): string => (Number.isInteger(value) ? formatNumber(value, current.value, 0) : formatFixed(value, current.value, 1)),
     day: (value: string): string => formatDay(value, current.value),
   }
 }

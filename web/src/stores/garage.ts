@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { api } from '@/api/client'
-import type { CancelJobResponse, GarageResponse, JobKind, PurchaseResponse, ShopOffer, ShopResponse, Wallet, WorkshopJob } from '@/api/types'
+import type { CancelJobResponse, CrateKind, CrateOpenResponse, GarageResponse, JobKind, OpenedCrate, PurchaseResponse, ShopCrates, ShopOffer, ShopResponse, Wallet, WorkshopJob } from '@/api/types'
+import { intentionIds } from '@/features/run/intentionIds'
 import { newRequestId } from '@/features/run/requestId'
 import { useRunStore } from '@/stores/run'
 
@@ -29,6 +30,9 @@ export const useGarageStore = defineStore('garage', () => {
   const offers = ref<ShopOffer[]>([])
   const shopCar = ref<ShopResponse['data']['car']>(null)
   const shopLoaded = ref(false)
+  /** The crates of the shop: the odds, the guarantees and what each kind costs. */
+  const crates = ref<ShopCrates | null>(null)
+  const crateIds = intentionIds(PURCHASE_ID_LIFETIME_MS)
   /** The cash of the driver as the shop last saw it. */
   const cash = ref<Wallet | null>(null)
 
@@ -58,10 +62,13 @@ export const useGarageStore = defineStore('garage', () => {
   }
 
   async function loadShop(): Promise<void> {
-    const response = await api<ShopResponse>('/v1/shop')
+    applyShop(await api<ShopResponse>('/v1/shop'))
+  }
 
+  function applyShop(response: Pick<ShopResponse, 'data' | 'wallet'>): void {
     offers.value = response.data.parts
     shopCar.value = response.data.car
+    crates.value = response.data.crates
     cash.value = response.wallet
     shopLoaded.value = true
   }
@@ -101,6 +108,24 @@ export const useGarageStore = defineStore('garage', () => {
     return response
   }
 
+  /**
+   * Opens a crate: the part that was drawn goes to the inventory. `slot` is the slot the driver chose, for the kinds that have a choice. A request
+   * that was lost on its way and is sent again opens one crate: the server answers with `repeated`. Returns the part, null when the crate was
+   * opened before.
+   */
+  async function openCrate(kind: CrateKind, slot: string | null): Promise<OpenedCrate | null> {
+    const response = await api<CrateOpenResponse>(`/v1/shop/crates/${kind}/open`, {
+      method: 'POST',
+      body: JSON.stringify({ request_id: crateIds.forKey(`${kind}:${slot ?? ''}`), ...(slot === null ? {} : { slot }) }),
+    })
+
+    crateIds.answered()
+    applyShop(response)
+    syncRun()
+
+    return response.opened
+  }
+
   /** Queues a job of the workshop: puts a part on the car, or takes it off. */
   async function queue(kind: JobKind, partId: number): Promise<void> {
     applyGarage(await api<GarageResponse>('/v1/garage/jobs', { method: 'POST', body: JSON.stringify({ kind, part: partId }) }))
@@ -126,5 +151,5 @@ export const useGarageStore = defineStore('garage', () => {
     levelUp.value = null
   }
 
-  return { garage, loaded, offers, shopCar, shopLoaded, cash, levelUp, serverNow, loadGarage, loadShop, buy, queue, cancelJob, acknowledgeLevelUp }
+  return { garage, loaded, offers, shopCar, shopLoaded, crates, cash, levelUp, serverNow, loadGarage, loadShop, buy, openCrate, queue, cancelJob, acknowledgeLevelUp }
 })

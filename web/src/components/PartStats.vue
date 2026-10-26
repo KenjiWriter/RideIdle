@@ -16,7 +16,8 @@ const SURFACES: SurfaceKey[] = ['asphalt_dry', 'asphalt_wet', 'gravel_dry', 'mud
 /** What the part does, in words: "Power +2%", "Grip 100". A statistic the messages do not know is shown as it is. */
 const lines = computed(() =>
   Object.entries(props.part.stats).map(([key, value]) => {
-    const shown = key === 'power_mult' ? Math.round((value - 1) * 100) : value
+    // A rarity multiplies the statistics, so 98 can be 135.24 and a power gain of 2% can be 2.4%: shown to a tenth.
+    const shown = key === 'power_mult' ? Math.round((value - 1) * 1000) / 10 : Math.round(value * 10) / 10
 
     return te(`part.stat.${key}`) ? t(`part.stat.${key}`, { value: shown }) : `${key} ${shown}`
   }),

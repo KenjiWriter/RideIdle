@@ -379,4 +379,24 @@ describe('WorkshopView', () => {
     expect(wrapper.get('[data-test="slot-tires"]').text()).toContain('Fabryczne')
     expect(wrapper.get('[data-test="put-on-21"]').text()).toBe('Załóż')
   })
+
+  it('names the rarity of the parts in the inventory, and on the tiles of the parts that are rarer than common', async () => {
+    const epicTires = aPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, stats: { grip: 138 }, rarity: 'epic', rarity_rank: 4 })
+    const rareExhaust = aPart({ id: 11, mounted: true, car_id: 5, rarity: 'rare', rarity_rank: 3 })
+    const commonBrakes = aPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', mounted: true, car_id: 5 })
+    serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust: rareExhaust, brakes: commonBrakes }), inventory: [epicTires, tires] })) })
+
+    const { wrapper } = await mountView(WorkshopView, '/workshop')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="part-31"] [data-test="rarity"]').text()).toBe('Epic')
+    expect(wrapper.findAll('[data-test="part-31"] .pips b.on')).toHaveLength(4)
+    expect(wrapper.get('[data-test="part-21"] [data-test="rarity"]').text()).toBe('Common')
+
+    // A rare part on the car shows its rarity and has a border in its color, and a common one has neither.
+    expect(wrapper.get('[data-test="slot-exhaust"]').classes()).toContain('r3')
+    expect(wrapper.get('[data-test="slot-exhaust"] [data-test="rarity"]').text()).toBe('Rare')
+    expect(wrapper.get('[data-test="slot-brakes"]').classes().filter((name) => /^r\d$/.test(name))).toEqual([])
+    expect(wrapper.find('[data-test="slot-brakes"] [data-test="rarity"]').exists()).toBe(false)
+  })
 })

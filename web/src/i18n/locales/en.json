@@ -345,7 +345,28 @@
     "toWorkshop": "To the workshop",
     "noCar": "You have no car yet.",
     "last": "Last purchase",
-    "getXp": "You get XP by driving this car."
+    "getXp": "You get XP by driving this car.",
+    "partsTitle": "Parts",
+    "crates": {
+      "title": "Crates",
+      "kind": {
+        "slot": "Slot crate",
+        "mixed": "Mixed crate",
+        "premium": "Premium crate"
+      },
+      "note": {
+        "slot": "A random model of the slot you choose, of a random rarity",
+        "mixed": "A part of a random slot, of a random rarity",
+        "premium": "A part of the slot you choose, with better odds of a rare one"
+      },
+      "slot": "Slot",
+      "buy": "Buy · {price}",
+      "locked": "Requires player level {level}",
+      "odds": "{name} {percent}%",
+      "guarantee": "Guarantee ({rarity} or better): {count} to go",
+      "legendary": "Guarantee (Legendary): {count} to go",
+      "last": "Last crate"
+    }
   },
   "workshop": {
     "title": "Workshop",
@@ -615,5 +636,12 @@
     "storageSale": "Sells for",
     "storageWorth": "Worth {price} on the market",
     "storageToFleet": "To the fleet"
+  },
+  "rarity": {
+    "common": "Common",
+    "uncommon": "Uncommon",
+    "rare": "Rare",
+    "epic": "Epic",
+    "legendary": "Legendary"
   }
 }

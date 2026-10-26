@@ -7,7 +7,7 @@ import { POLL_MS } from '@/features/run/useRunPolling'
 import { readSeen, storeSeen } from '@/features/run/seen'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
-import { aCar, aGarage } from '@/test/garageFixtures'
+import { aCar, aGarage, aPart } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
 import { aStep, aTutorial } from '@/test/tutorialFixtures'
 
@@ -858,5 +858,19 @@ describe('GarageView', () => {
 
       expect(wrapper.get('[data-test="tutorial-reward"]').text()).toBe('K. added 100 XP to your car.')
     })
+  })
+
+  it('marks the tile of a rarer part with the color and the name of its rarity, and leaves a common one as it is', async () => {
+    const epic = aPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, mounted: true, car_id: 5, rarity: 'epic', rarity_rank: 4 })
+    const common = aPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', mounted: true, car_id: 5 })
+    serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: epic, brakes: common }) })) })
+
+    const { wrapper } = await show()
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="slot-tires"]').classes()).toContain('r4')
+    expect(wrapper.get('[data-test="slot-tires"] [data-test="rarity"]').text()).toBe('Epic')
+    expect(wrapper.get('[data-test="slot-brakes"]').classes().filter((name) => /^r\d$/.test(name))).toEqual([])
+    expect(wrapper.find('[data-test="slot-brakes"] [data-test="rarity"]').exists()).toBe(false)
   })
 })

@@ -12,7 +12,7 @@ import { useFormat } from '@/i18n/useFormat'
 const CLASSES: StorageClass[] = ['scrap', 'junk', 'good', 'gem']
 
 const { store, t, loadError, busy, error, cash, garage, city, hasRoom, className, load, attempt } = useMarketScreen()
-const { money, number, fixed } = useFormat()
+const { money, number, percent } = useFormat()
 
 const units = computed(() => store.market?.storage.units ?? [])
 const every = computed(() => store.market?.storage.pity_every ?? 0)
@@ -22,9 +22,6 @@ const found = ref<StorageFind | null>(null)
 const foundCard = ref<HTMLElement | null>(null)
 
 onMounted(() => void load())
-
-/** A chance in percent: whole when it is, with one decimal when it is not (4.5%). */
-const percent = (value: number): string => (Number.isInteger(value) ? number(value) : fixed(value, 1))
 
 /** The year of the car, from the year of the game and its age. */
 const modelYear = (find: StorageFind): number => new Date(store.serverNow()).getUTCFullYear() - find.age_years

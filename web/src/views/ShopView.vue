@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 
 import { ApiError } from '@/api/client'
-import type { ShopOffer } from '@/api/types'
+import type { CrateGroup, CrateOffer, CrateSlot, OpenedCrate, ShopOffer } from '@/api/types'
 import CityTabs from '@/components/CityTabs.vue'
 import GameShell from '@/components/GameShell.vue'
 import PartStats from '@/components/PartStats.vue'
+import RarityMark from '@/components/RarityMark.vue'
+import { RARITIES, rankOf } from '@/features/parts/rarity'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
@@ -15,16 +17,26 @@ import { useFormat } from '@/i18n/useFormat'
 import { useGarageStore } from '@/stores/garage'
 
 const { t } = useI18n()
-const { money } = useFormat()
+const { money, percent } = useFormat()
 const store = useGarageStore()
 
 useLeaveOnSignOut()
 
 const loadError = ref(false)
-/** The part that is being bought: one purchase at a time. */
+/** What is being bought: a part, or a crate. One purchase at a time. */
 const buying = ref<string | null>(null)
 const { message: done, show: showDone, clear: clearDone } = useFlash()
 const error = ref<string | null>(null)
+
+/** The slot the driver chose for each kind of crate that has a choice; the first one until they choose. */
+const chosen = ref<Record<string, string>>({})
+/** What the last crate held, until another is opened. */
+const found = ref<OpenedCrate | null>(null)
+const foundCard = ref<HTMLElement | null>(null)
+
+const kinds = computed(() => store.crates?.kinds ?? [])
+/** The groups of crates the driver can open, with their odds and the count to the guarantee. */
+const groups = computed(() => (Object.keys(store.crates?.groups ?? {}) as CrateGroup[]).filter((group) => kinds.value.some((kind) => kind.group === group && kind.open)))
 
 async function open(): Promise<void> {
   loadError.value = false
@@ -44,6 +56,42 @@ function affordable(offer: ShopOffer): boolean {
   return (store.cash?.cash_cents ?? 0) >= (offer.price_cents ?? 0)
 }
 
+/** The slot of a crate that the driver has chosen, or the first it can give. */
+function slotOf(kind: CrateOffer): CrateSlot | null {
+  return kind.slots.find((slot) => slot.slot === chosen.value[kind.key]) ?? kind.slots[0] ?? null
+}
+
+/** What a crate costs: one price for a mixed crate, and one per slot for the others. */
+function priceOf(kind: CrateOffer): number {
+  return (kind.choose_slot ? slotOf(kind)?.price_cents : kind.price_cents) ?? 0
+}
+
+function crateAffordable(kind: CrateOffer): boolean {
+  return (store.cash?.cash_cents ?? 0) >= priceOf(kind)
+}
+
+/** The odds of a kind in the order of the rarities, with their share of the bar. */
+function oddsOf(kind: CrateOffer): { rarity: (typeof RARITIES)[number]; percent: number }[] {
+  const odds = store.crates?.groups[kind.group].odds
+
+  return odds ? RARITIES.map((rarity) => ({ rarity, percent: odds[rarity] })) : []
+}
+
+/** How the answer of the server to a failed purchase is told: in its own words when it refuses, and in ours when it is the network. */
+function failWith(failure: unknown): void {
+  if (endSessionIfUnauthorized(failure)) {
+    return
+  }
+
+  // The server says what is wrong in the language of the driver: not enough cash, a part that is not for sale, a level that is too low.
+  error.value =
+    failure instanceof ApiError && failure.status === 429
+      ? t('common.tooManyRequests')
+      : failure instanceof ApiError && failure.status === 422
+        ? failure.message
+        : t('common.error')
+}
+
 async function buy(offer: ShopOffer): Promise<void> {
   if (buying.value !== null) {
     return
@@ -58,17 +106,32 @@ async function buy(offer: ShopOffer): Promise<void> {
 
     showDone(result.purchase.repeated ? t('shop.repeated') : t('shop.bought', { name: offer.name }))
   } catch (failure) {
-    if (endSessionIfUnauthorized(failure)) {
-      return
-    }
+    failWith(failure)
+  } finally {
+    buying.value = null
+  }
+}
 
-    // The server says what is wrong in the language of the driver: not enough cash, a part that is not for sale.
-    error.value =
-      failure instanceof ApiError && failure.status === 429
-        ? t('common.tooManyRequests')
-        : failure instanceof ApiError && failure.status === 422
-          ? failure.message
-          : t('common.error')
+async function openCrate(kind: CrateOffer): Promise<void> {
+  if (buying.value !== null) {
+    return
+  }
+
+  buying.value = `crate-${kind.key}`
+  clearDone()
+  error.value = null
+
+  try {
+    const opened = await store.openCrate(kind.key, kind.choose_slot ? (slotOf(kind)?.slot ?? null) : null)
+
+    if (opened) {
+      found.value = opened
+      // The crate that was opened may be far down the page, and what it held is on top.
+      await nextTick()
+      foundCard.value?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
+    }
+  } catch (failure) {
+    failWith(failure)
   } finally {
     buying.value = null
   }
@@ -101,6 +164,100 @@ async function buy(offer: ShopOffer): Promise<void> {
       <p v-if="error" class="text-danger" role="alert" data-test="error">{{ error }}</p>
 
       <p v-if="!store.shopCar" class="text-muted" data-test="no-car">{{ t('shop.noCar') }}</p>
+
+      <section v-if="kinds.length > 0" class="flex flex-col gap-2.5" :aria-label="t('shop.crates.title')" data-test="crates">
+        <h2 class="kick !mb-0">{{ t('shop.crates.title') }}</h2>
+
+        <section
+          v-if="found"
+          ref="foundCard"
+          class="card flex flex-col gap-2 !p-3"
+          :style="{ borderColor: `var(--color-r${rankOf(found.rarity)})` }"
+          role="status"
+          :data-rarity="found.rarity"
+          data-test="found"
+        >
+          <p class="kick !mb-0">{{ t('shop.crates.last') }}</p>
+          <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <b class="text-base text-ink" data-test="found-name">{{ found.name }}</b>
+            <RarityMark :rarity="found.rarity" />
+            <span class="tag">{{ t('part.tier', { tier: found.tier ?? 0 }) }}</span>
+          </div>
+          <p class="sub">{{ t(`slot.${found.slot}`) }}</p>
+          <PartStats :part="found" />
+          <p v-if="!found.mountable && store.shopCar" class="text-sm text-danger" data-test="found-needs-level">
+            {{ t('shop.needsLevel', { level: found.required_car_level }) }} {{ t('shop.yourLevel', { level: store.shopCar.level }) }}
+          </p>
+          <RouterLink :to="{ name: 'workshop' }" class="btn btn-primary btn-sm" data-test="found-to-workshop">{{ t('shop.toWorkshop') }}</RouterLink>
+        </section>
+
+        <article
+          v-for="kind in kinds"
+          :key="kind.key"
+          class="card flex flex-col gap-2 !p-3"
+          :class="{ 'opacity-90': !kind.open }"
+          :data-test="`crate-${kind.key}`"
+        >
+          <div class="flex items-center justify-between gap-2.5">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h3 class="text-[15px] font-bold text-ink" data-test="crate-name">{{ t(`shop.crates.kind.${kind.key}`) }}</h3>
+                <span v-if="kind.choose_slot && slotOf(kind)" class="tag" data-test="crate-tier">{{ t('part.tier', { tier: slotOf(kind)?.tier ?? 0 }) }}</span>
+              </div>
+              <p class="sub">{{ t(`shop.crates.note.${kind.key}`) }}</p>
+            </div>
+            <button
+              v-if="kind.open"
+              type="button"
+              class="btn btn-primary btn-sm shrink-0"
+              :disabled="buying !== null || !crateAffordable(kind)"
+              data-test="crate-open"
+              @click="openCrate(kind)"
+            >
+              {{ buying === `crate-${kind.key}` ? t('shop.buying') : t('shop.crates.buy', { price: money(priceOf(kind), 2) }) }}
+            </button>
+            <button v-else type="button" class="btn btn-secondary btn-sm shrink-0" disabled data-test="crate-locked">{{ t('shop.crates.locked', { level: kind.min_player_level }) }}</button>
+          </div>
+
+          <div v-if="kind.open && kind.choose_slot" class="flex flex-wrap gap-1.5" role="radiogroup" :aria-label="t('shop.crates.slot')" data-test="crate-slots">
+            <button
+              v-for="slot in kind.slots"
+              :key="slot.slot"
+              type="button"
+              role="radio"
+              class="chip cursor-pointer"
+              :class="{ 'chip-am': slotOf(kind)?.slot === slot.slot }"
+              :aria-checked="slotOf(kind)?.slot === slot.slot"
+              :data-test="`crate-slot-${slot.slot}`"
+              @click="chosen[kind.key] = slot.slot"
+            >
+              {{ t(`slot.${slot.slot}`) }}
+            </button>
+          </div>
+
+          <template v-if="kind.open">
+            <div class="flex h-2 gap-0.5" aria-hidden="true" data-test="crate-bar">
+              <i v-for="odd in oddsOf(kind)" :key="odd.rarity" class="rounded-[2px] bg-current" :class="`r${rankOf(odd.rarity)}`" :style="{ flexGrow: odd.percent, flexBasis: 0 }" />
+            </div>
+            <p class="flex flex-wrap gap-x-2.5 gap-y-0.5 font-mono text-[10.5px] text-faint" data-test="crate-odds">
+              <span v-for="odd in oddsOf(kind)" :key="odd.rarity" :data-test="`odds-${odd.rarity}`">{{ t('shop.crates.odds', { name: t(`rarity.${odd.rarity}`), percent: percent(odd.percent) }) }}</span>
+            </p>
+          </template>
+        </article>
+
+        <article v-for="group in groups" :key="group" class="card flex flex-col gap-1.5 !p-3" :data-test="`guarantee-${group}`">
+          <div class="flex justify-between gap-2 text-xs text-muted">
+            <span data-test="guarantee-text">{{ t('shop.crates.guarantee', { rarity: t(`rarity.${store.crates!.groups[group].min_rarity}`), count: store.crates!.groups[group].until }) }}</span>
+            <span class="font-mono text-ink" data-test="guarantee-count">{{ store.crates!.groups[group].every - store.crates!.groups[group].until }} / {{ store.crates!.groups[group].every }}</span>
+          </div>
+          <div class="bar" aria-hidden="true">
+            <i :style="{ width: `${(100 * (store.crates!.groups[group].every - store.crates!.groups[group].until)) / store.crates!.groups[group].every}%` }" />
+          </div>
+          <p class="sub" data-test="legendary-text">{{ t('shop.crates.legendary', { count: store.crates!.groups[group].legendary_until }) }}</p>
+        </article>
+      </section>
+
+      <h2 class="kick !mb-0">{{ t('shop.partsTitle') }}</h2>
 
       <ul class="flex flex-col gap-2.5">
         <li v-for="offer in store.offers" :key="offer.slug" class="card flex flex-col gap-1.5 !p-3" :data-test="`offer-${offer.slug}`">

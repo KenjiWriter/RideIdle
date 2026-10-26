@@ -7,6 +7,7 @@ import type { CarStatKey, JobKind, OwnedPart, WorkshopJob } from '@/api/types'
 import GameShell from '@/components/GameShell.vue'
 import JobCancel from '@/components/JobCancel.vue'
 import PartStats from '@/components/PartStats.vue'
+import RarityMark from '@/components/RarityMark.vue'
 import { statFill } from '@/features/car/statFill'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -272,13 +273,20 @@ async function cancel(jobId: number): Promise<void> {
 
         <h3 class="kick !mb-0 mt-1">{{ t('workshop.slots') }}</h3>
         <ul class="grid grid-cols-2 gap-2">
-          <li v-for="slot in car.slots" :key="slot.slot" class="tile" :class="{ on: slot.part }" :data-test="`slot-${slot.slot}`">
+          <li
+            v-for="slot in car.slots"
+            :key="slot.slot"
+            class="tile"
+            :class="[slot.part ? 'on' : '', slot.part && slot.part.rarity_rank > 1 ? `r${slot.part.rarity_rank}` : '']"
+            :data-test="`slot-${slot.slot}`"
+          >
             <span class="sl">{{ t(`slot.${slot.slot}`) }}</span>
             <template v-if="slot.part">
               <span class="nm">
                 {{ slot.part.name }}
                 <span class="mono ml-1 text-[10px] text-faint">{{ t('part.tier', { tier: slot.part.tier ?? 0 }) }}</span>
               </span>
+              <RarityMark v-if="slot.part.rarity_rank > 1" :rarity="slot.part.rarity" />
               <button
                 type="button"
                 class="btn btn-secondary btn-sm mt-1.5 !min-h-9 !text-base"
@@ -308,6 +316,7 @@ async function cancel(jobId: number): Promise<void> {
                 <span class="tag">{{ t('part.tier', { tier: part.tier ?? 0 }) }}</span>
               </p>
               <p class="sub">{{ t(`slot.${part.slot}`) }}</p>
+              <RarityMark :rarity="part.rarity" class="my-1" />
               <PartStats :part="part" />
             </div>
             <button

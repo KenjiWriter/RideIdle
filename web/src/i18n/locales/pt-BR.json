@@ -345,7 +345,28 @@
     "toWorkshop": "Para a oficina",
     "noCar": "Você ainda não tem um carro.",
     "last": "Última compra",
-    "getXp": "Você ganha XP dirigindo este carro."
+    "getXp": "Você ganha XP dirigindo este carro.",
+    "partsTitle": "Peças",
+    "crates": {
+      "title": "Caixas",
+      "kind": {
+        "slot": "Caixa de espaço",
+        "mixed": "Caixa mista",
+        "premium": "Caixa premium"
+      },
+      "note": {
+        "slot": "Um modelo aleatório do espaço escolhido, de raridade aleatória",
+        "mixed": "Uma peça de um espaço aleatório, de raridade aleatória",
+        "premium": "Uma peça do espaço escolhido, com mais chances de uma rara"
+      },
+      "slot": "Espaço",
+      "buy": "Comprar · {price}",
+      "locked": "Requer nível de jogador {level}",
+      "odds": "{name} {percent}%",
+      "guarantee": "Garantia ({rarity} ou melhor): faltam {count}",
+      "legendary": "Garantia (Lendária): faltam {count}",
+      "last": "Última caixa"
+    }
   },
   "workshop": {
     "title": "Oficina",
@@ -615,5 +636,12 @@
     "storageSale": "Vende por",
     "storageWorth": "Vale {price} no mercado",
     "storageToFleet": "Para a frota"
+  },
+  "rarity": {
+    "common": "Comum",
+    "uncommon": "Incomum",
+    "rare": "Rara",
+    "epic": "Épica",
+    "legendary": "Lendária"
   }
 }

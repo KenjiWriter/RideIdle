@@ -237,13 +237,20 @@ export interface EmailConfirmation extends MeResponse {
 /** What a car drives on: the dry track, and what the weather makes of it. The columns of the tire matrix. */
 export type SurfaceKey = 'asphalt_dry' | 'asphalt_wet' | 'gravel_dry' | 'mud' | 'snow'
 
+/** How rare a part is: it multiplies what the part gives to a car. */
+export type PartRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
+
 export interface PartInfo {
   slug: string
   name: string
   slot: string
   tier: number | null
   price_cents: number | null
+  /** What the part gives, with its rarity applied. */
   stats: Record<string, number>
+  rarity: PartRarity
+  /** 1 (common) to 5 (legendary): the number of the filled squares. */
+  rarity_rank: number
   /** Tires only: how well they grip on each surface, 1 being the grip of the tires on dry asphalt. */
   surfaces?: Record<SurfaceKey, number> | null
 }
@@ -261,10 +268,70 @@ export interface ShopOffer extends PartInfo {
   mountable: boolean
 }
 
+/** The kinds of crate: the driver chooses the slot (slot, premium), or it is drawn (mixed). */
+export type CrateKind = 'slot' | 'mixed' | 'premium'
+
+/** The groups of crates have their own odds and guarantees. */
+export type CrateGroup = 'standard' | 'premium'
+
+/** A slot a crate can give a part of, at the level of the driver: the tier, the models, and the price when the slot is chosen. */
+export interface CrateSlot {
+  slot: string
+  tier: number
+  /** Null for a mixed crate: it has one price, whatever slot it gives. */
+  price_cents: number | null
+  models: { slug: string; name: string }[]
+}
+
+export interface CrateOffer {
+  key: CrateKind
+  group: CrateGroup
+  min_player_level: number
+  /** The level of the driver opens it, and there is a slot that it can give. */
+  open: boolean
+  choose_slot: boolean
+  /** The price of a mixed crate; the others have a price per slot. */
+  price_cents: number | null
+  slots: CrateSlot[]
+}
+
+/** The odds of a group in percent, and how far the driver is from its guarantees. */
+export interface CrateGuarantee {
+  odds: Record<PartRarity, number>
+  every: number
+  min_rarity: PartRarity
+  /** How many crates it is to the guarantee, counting the next one (1 when the next one is guaranteed). */
+  until: number
+  legendary_every: number
+  legendary_until: number
+}
+
+export interface ShopCrates {
+  level: number
+  groups: Record<CrateGroup, CrateGuarantee>
+  kinds: CrateOffer[]
+}
+
 /** GET /api/v1/shop */
 export interface ShopResponse {
-  data: { parts: ShopOffer[]; car: { id: number; level: number } | null }
+  data: { parts: ShopOffer[]; car: { id: number; level: number } | null; crates: ShopCrates }
   wallet: Wallet
+}
+
+/** The part that came out of a crate. */
+export interface OpenedCrate extends OwnedPart {
+  cost_cents: number
+  required_car_level: number
+  /** The car of the driver has the level to have it mounted. */
+  mountable: boolean
+}
+
+/** POST /api/v1/shop/crates/{kind}/open. `opened` is null when the same request was made before: the crate was opened. */
+export interface CrateOpenResponse {
+  data: ShopResponse['data']
+  wallet: Wallet
+  repeated: boolean
+  opened: OpenedCrate | null
 }
 
 /** POST /api/v1/shop/purchases. `data` is null when the same request was made before: the part is in the inventory already. */

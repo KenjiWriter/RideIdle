@@ -45,4 +45,10 @@ describe('PartStats', () => {
         .map((line) => line.text()),
     ).toEqual(['Sucho ×0,90', 'Mokro ×1,05', 'Żwir ×0,55', 'Błoto ×0,50', 'Śnieg ×0,55'])
   })
+
+  it('shows the statistics of a rarer part to a tenth, as a rarity makes them fractions', () => {
+    const wrapper = show({ stats: { grip: 138, handling: 135.24, braking: 138, power_mult: 1.0444 } })
+
+    expect(wrapper.findAll('[data-test="part-stats"] li').map((line) => line.text())).toEqual(['Grip 138', 'Handling 135.2', 'Braking 138', 'Power +4.4%'])
+  })
 })

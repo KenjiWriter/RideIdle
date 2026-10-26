@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError } from '@/api/client'
 import { respond, serveApi } from '@/test/fetchServer'
-import { NOW, aCar, aGarage, aJob, aPart, anOffer } from '@/test/garageFixtures'
+import { NOW, aCar, aCrates, aGarage, aJob, aPart, anOffer, anOpenedCrate } from '@/test/garageFixtures'
 
 import { PURCHASE_ID_LIFETIME_MS, useGarageStore } from './garage'
 
@@ -238,6 +238,70 @@ describe('garage store', () => {
 
       await expect(store.cancelJob(1)).rejects.toMatchObject({ status: 422, code: 'job_done', message: 'That job is already done.' })
       expect(store.garage?.workshop.jobs).toHaveLength(1)
+    })
+  })
+
+  describe('the crates', () => {
+    const afterOpening = (opened: ReturnType<typeof anOpenedCrate> | null = anOpenedCrate()) => ({
+      data: { parts: [], car: { id: 5, level: 3 }, crates: aCrates() },
+      wallet: { cash_cents: 440_500, xp: 0 },
+      repeated: opened === null,
+      opened,
+    })
+
+    it('keeps the crates of the shop, with the odds and the guarantees', async () => {
+      serveApi(fetchMock, { 'GET /api/v1/shop': () => respond(200, { data: { parts: [], car: null, crates: aCrates() }, wallet: { cash_cents: 1_000, xp: 0 } }) })
+      const store = useGarageStore()
+
+      await store.loadShop()
+
+      expect(store.crates?.kinds.map((kind) => kind.key)).toEqual(['slot', 'mixed', 'premium'])
+      expect(store.crates?.groups.standard.until).toBe(4)
+    })
+
+    it('opens a crate with a request id and the slot, and says what was in it', async () => {
+      const calls = serveApi(fetchMock, { 'POST /api/v1/shop/crates/slot/open': () => respond(201, afterOpening()), 'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }) })
+      const store = useGarageStore()
+
+      const opened = await store.openCrate('slot', 'tires')
+
+      expect(opened?.rarity).toBe('epic')
+      expect(calls[0]?.body).toEqual({ slot: 'tires', request_id: expect.any(String) })
+      expect(store.cash?.cash_cents).toBe(440_500)
+      expect(store.crates?.level).toBe(3)
+    })
+
+    it('sends no slot for a crate whose slot is drawn', async () => {
+      const calls = serveApi(fetchMock, { 'POST /api/v1/shop/crates/mixed/open': () => respond(201, afterOpening()), 'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }) })
+
+      await useGarageStore().openCrate('mixed', null)
+
+      expect(calls[0]?.body).toEqual({ request_id: expect.any(String) })
+    })
+
+    it('answers null for a crate that was opened before', async () => {
+      serveApi(fetchMock, { 'POST /api/v1/shop/crates/slot/open': () => respond(200, afterOpening(null)), 'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }) })
+
+      expect(await useGarageStore().openCrate('slot', 'tires')).toBeNull()
+    })
+
+    it('sends the same request id again when the answer was lost, so the crate is opened once, and a new one for the next crate', async () => {
+      let attempt = 0
+      const calls = serveApi(fetchMock, {
+        'POST /api/v1/shop/crates/slot/open': () => (++attempt <= 2 ? respond(500, { message: 'Server error' }) : respond(201, afterOpening())),
+        'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }),
+      })
+      const store = useGarageStore()
+      const idOf = (index: number): string => (calls.filter((call) => call.method === 'POST')[index]?.body as { request_id: string }).request_id
+
+      await expect(store.openCrate('slot', 'tires')).rejects.toBeInstanceOf(ApiError)
+      await expect(store.openCrate('slot', 'tires')).rejects.toBeInstanceOf(ApiError)
+      await store.openCrate('slot', 'tires')
+      await store.openCrate('slot', 'tires').catch(() => undefined)
+
+      expect(idOf(1)).toBe(idOf(0))
+      expect(idOf(2)).toBe(idOf(0))
+      expect(idOf(3)).not.toBe(idOf(2))
     })
   })
 })

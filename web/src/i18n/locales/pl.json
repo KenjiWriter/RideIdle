@@ -345,7 +345,28 @@
     "toWorkshop": "Do warsztatu",
     "noCar": "Nie masz jeszcze auta.",
     "last": "Ostatni zakup",
-    "getXp": "Zdobywasz XP, jeżdżąc tym autem."
+    "getXp": "Zdobywasz XP, jeżdżąc tym autem.",
+    "partsTitle": "Części",
+    "crates": {
+      "title": "Skrzynki",
+      "kind": {
+        "slot": "Skrzynka slotowa",
+        "mixed": "Skrzynka mieszana",
+        "premium": "Skrzynka premium"
+      },
+      "note": {
+        "slot": "Losowy model z wybranego slotu, o losowej rzadkości",
+        "mixed": "Część z losowego slotu, o losowej rzadkości",
+        "premium": "Część z wybranego slotu, z lepszymi szansami na rzadką"
+      },
+      "slot": "Slot",
+      "buy": "Kup · {price}",
+      "locked": "Wymaga poziomu gracza {level}",
+      "odds": "{name} {percent}%",
+      "guarantee": "Gwarancja ({rarity} lub lepsza): jeszcze {count}",
+      "legendary": "Gwarancja (Legendarna): jeszcze {count}",
+      "last": "Ostatnia skrzynka"
+    }
   },
   "workshop": {
     "title": "Warsztat",
@@ -615,5 +636,12 @@
     "storageSale": "Sprzedasz za",
     "storageWorth": "Warte na rynku {price}",
     "storageToFleet": "Do floty"
+  },
+  "rarity": {
+    "common": "Zwykła",
+    "uncommon": "Niezwykła",
+    "rare": "Rzadka",
+    "epic": "Epicka",
+    "legendary": "Legendarna"
   }
 }

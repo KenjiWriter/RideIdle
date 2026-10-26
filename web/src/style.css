@@ -22,6 +22,11 @@
   --color-cyan-bg: #0a1e25;
   --color-ok: #6ad487;
   --color-danger: #ff7a6b;
+  --color-r1: #aeb5c2;
+  --color-r2: #6ad487;
+  --color-r3: #58a8ff;
+  --color-r4: #ba86ff;
+  --color-r5: #ffb224;
 
   --font-display: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
   --font-sans: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -475,6 +480,60 @@ body {
       inset 0 1px 0 rgba(255, 255, 255, 0.06),
       0 3px 0 #06070a,
       0 0 12px rgba(106, 212, 135, 0.22);
+  }
+
+  .tile.r2 {
+    border-color: var(--color-r2);
+  }
+
+  .tile.r3 {
+    border-color: var(--color-r3);
+  }
+
+  .tile.r4 {
+    border-color: var(--color-r4);
+  }
+
+  .tile.r5 {
+    border-color: var(--color-r5);
+  }
+
+  /* ---------- rarity: the name and the filled squares, in the color of the rarity (never the color alone) ---------- */
+  .r1 {
+    color: var(--color-r1);
+  }
+
+  .r2 {
+    color: var(--color-r2);
+  }
+
+  .r3 {
+    color: var(--color-r3);
+  }
+
+  .r4 {
+    color: var(--color-r4);
+  }
+
+  .r5 {
+    color: var(--color-r5);
+  }
+
+  .rn {
+    @apply inline-flex items-center gap-2 font-mono text-xs font-medium uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .pips {
+    @apply inline-flex gap-[3px] align-middle;
+  }
+
+  .pips > b {
+    @apply block size-[9px] rounded-[2px] border border-current bg-transparent;
+  }
+
+  .pips > b.on {
+    background: currentColor;
   }
 
   /* ---------- the tutorial: the mentor writes from an old touch phone ---------- */

@@ -345,7 +345,28 @@
     "toWorkshop": "Zur Werkstatt",
     "noCar": "Du hast noch kein Auto.",
     "last": "Letzter Kauf",
-    "getXp": "XP bekommst du, indem du dieses Auto fährst."
+    "getXp": "XP bekommst du, indem du dieses Auto fährst.",
+    "partsTitle": "Teile",
+    "crates": {
+      "title": "Kisten",
+      "kind": {
+        "slot": "Slot-Kiste",
+        "mixed": "Gemischte Kiste",
+        "premium": "Premium-Kiste"
+      },
+      "note": {
+        "slot": "Ein zufälliges Modell des gewählten Slots in zufälliger Seltenheit",
+        "mixed": "Ein Teil eines zufälligen Slots in zufälliger Seltenheit",
+        "premium": "Ein Teil des gewählten Slots, mit besseren Chancen auf ein seltenes"
+      },
+      "slot": "Slot",
+      "buy": "Kaufen · {price}",
+      "locked": "Erfordert Spielerstufe {level}",
+      "odds": "{name} {percent} %",
+      "guarantee": "Garantie ({rarity} oder besser): noch {count}",
+      "legendary": "Garantie (Legendär): noch {count}",
+      "last": "Letzte Kiste"
+    }
   },
   "workshop": {
     "title": "Werkstatt",
@@ -615,5 +636,12 @@
     "storageSale": "Verkauf für",
     "storageWorth": "Wert auf dem Markt: {price}",
     "storageToFleet": "Zur Flotte"
+  },
+  "rarity": {
+    "common": "Gewöhnlich",
+    "uncommon": "Ungewöhnlich",
+    "rare": "Selten",
+    "epic": "Episch",
+    "legendary": "Legendär"
   }
 }

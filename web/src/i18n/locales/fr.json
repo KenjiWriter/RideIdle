@@ -345,7 +345,28 @@
     "toWorkshop": "À l’atelier",
     "noCar": "Vous n’avez pas encore de voiture.",
     "last": "Dernier achat",
-    "getXp": "Vous gagnez de l’XP en conduisant cette voiture."
+    "getXp": "Vous gagnez de l’XP en conduisant cette voiture.",
+    "partsTitle": "Pièces",
+    "crates": {
+      "title": "Caisses",
+      "kind": {
+        "slot": "Caisse d’emplacement",
+        "mixed": "Caisse mixte",
+        "premium": "Caisse premium"
+      },
+      "note": {
+        "slot": "Un modèle au hasard de l’emplacement choisi, de rareté aléatoire",
+        "mixed": "Une pièce d’un emplacement au hasard, de rareté aléatoire",
+        "premium": "Une pièce de l’emplacement choisi, avec de meilleures chances d’en avoir une rare"
+      },
+      "slot": "Emplacement",
+      "buy": "Acheter · {price}",
+      "locked": "Niveau de joueur {level} requis",
+      "odds": "{name} {percent} %",
+      "guarantee": "Garantie ({rarity} ou mieux) : encore {count}",
+      "legendary": "Garantie (Légendaire) : encore {count}",
+      "last": "Dernière caisse"
+    }
   },
   "workshop": {
     "title": "Atelier",
@@ -615,5 +636,12 @@
     "storageSale": "Se vend",
     "storageWorth": "Vaut {price} sur le marché",
     "storageToFleet": "Vers la flotte"
+  },
+  "rarity": {
+    "common": "Commune",
+    "uncommon": "Peu commune",
+    "rare": "Rare",
+    "epic": "Épique",
+    "legendary": "Légendaire"
   }
 }
