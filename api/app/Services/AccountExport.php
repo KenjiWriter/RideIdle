@@ -12,6 +12,7 @@ use App\Models\LedgerEntry;
 use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\Settlement;
+use App\Models\StorageOpening;
 use App\Models\Travel;
 use App\Models\TutorialProgress;
 use App\Models\User;
@@ -92,7 +93,7 @@ final class AccountExport
                 'xp' => $wallet->xp,
                 'updated_at' => $this->day($wallet->updated_at),
             ],
-            'cars' => Car::query()->where('user_id', $user->id)->orderBy('id')->get()->map(
+            'cars' => Car::query()->withoutGlobalScopes()->where('user_id', $user->id)->orderBy('id')->get()->map(
                 fn (Car $car): array => [
                     ...$car->makeHidden(['user_id'])->toArray(),
                     'parts' => Part::query()->where('car_id', $car->id)->orderBy('id')->get()
@@ -103,13 +104,15 @@ final class AccountExport
                 ->map(fn (Part $part): array => $part->makeHidden(['user_id', 'car_id', 'mounted_slot'])->toArray())->all(),
             'garages' => CityGarage::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (CityGarage $garage): array => $garage->makeHidden(['user_id'])->toArray())->all(),
+            'storage_openings' => StorageOpening::query()->where('user_id', $user->id)->orderBy('id')->get()
+                ->map(fn (StorageOpening $opening): array => $opening->makeHidden(['user_id'])->toArray())->all(),
             'workshop_jobs' => WorkshopJob::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (WorkshopJob $job): array => $job->makeHidden(['user_id'])->toArray())->all(),
             'travels' => Travel::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (Travel $journey): array => $journey->makeHidden(['user_id'])->toArray())->all(),
             'tutorial' => TutorialProgress::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (TutorialProgress $step): array => $step->makeHidden(['id', 'user_id'])->toArray())->all(),
-            'runs' => RaceRun::query()->where('user_id', $user->id)->orderBy('id')->get()->map(
+            'runs' => RaceRun::query()->withoutGlobalScopes()->where('user_id', $user->id)->orderBy('id')->get()->map(
                 fn (RaceRun $run): array => [
                     ...$run->makeHidden(['config', 'seed', 'user_id'])->toArray(),
                     'settlements' => Settlement::query()->where('race_run_id', $run->id)->with('events')->orderBy('id')->get()

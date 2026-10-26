@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\CarFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,6 +19,12 @@ class Car extends Model
 
     protected $guarded = [];
 
+    /** A car that was sold is gone from every list: only the export and the erasure of the account ask for it (`withoutGlobalScopes`). */
+    protected static function booted(): void
+    {
+        static::addGlobalScope('unsold', static fn (Builder $query) => $query->whereNull('cars.sold_at'));
+    }
+
     /** @return array<string, string> */
     protected function casts(): array
     {
@@ -26,6 +33,8 @@ class Car extends Model
             'level' => 'integer',
             'xp' => 'integer',
             'condition_ppm' => 'integer',
+            'value_cents' => 'integer',
+            'sold_at' => 'datetime',
         ];
     }
 

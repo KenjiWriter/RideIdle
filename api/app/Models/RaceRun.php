@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Database\Factories\RaceRunFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,10 +30,19 @@ class RaceRun extends Model
     /** The car stands in the garage and has not been sent out yet: the first car of a driver waits for the Start of the tournament screen. */
     public const STOP_PARKED = 'parked';
 
+    /** The car was sold: its run is closed for good. */
+    public const STOP_SOLD = 'sold';
+
     /** The stops that a service puts on a car, not the road or the tank: nothing settles past them, and nothing but the service ends them. */
-    public const SERVICE_STOPS = [self::STOP_WORKSHOP, self::STOP_TRAVEL, self::STOP_PARKED];
+    public const SERVICE_STOPS = [self::STOP_WORKSHOP, self::STOP_TRAVEL, self::STOP_PARKED, self::STOP_SOLD];
 
     protected $guarded = [];
+
+    /** The run of a car that was sold is gone from every list: only the export and the erasure of the account ask for it (`withoutGlobalScopes`). */
+    protected static function booted(): void
+    {
+        static::addGlobalScope('unsold', static fn (Builder $query) => $query->where(static fn (Builder $inner) => $inner->whereNull('race_runs.stop_reason')->orWhere('race_runs.stop_reason', '!=', self::STOP_SOLD)));
+    }
 
     /** @return array<string, string> */
     protected function casts(): array

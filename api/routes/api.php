@@ -61,12 +61,14 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/cars', [FleetController::class, 'index']);
         Route::post('/cars', [FleetController::class, 'buyCar']);
         Route::post('/cars/{car}/select', [FleetController::class, 'select'])->whereNumber('car');
+        Route::post('/cars/{car}/sell', [FleetController::class, 'sell'])->whereNumber('car');
         Route::post('/garages', [FleetController::class, 'buyGarage']);
 
         Route::get('/market', [MarketController::class, 'show']);
         Route::post('/market/exchange/{key}/inspect', [MarketController::class, 'inspect'])->where('key', '[a-z0-9.-]+');
         Route::post('/market/exchange/{key}/buy', [MarketController::class, 'buyListing'])->where('key', '[a-z0-9.-]+');
         Route::post('/market/dealer', [MarketController::class, 'buyNew']);
+        Route::post('/market/storage/{unit}/open', [MarketController::class, 'openStorage'])->where('unit', '[a-z0-9-]+');
 
         Route::get('/map', [WorldController::class, 'show']);
         Route::post('/travel', [WorldController::class, 'travel']);

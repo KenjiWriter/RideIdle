@@ -10,6 +10,7 @@ use App\Content\RunInputsFactory;
 use App\Http\Controllers\Controller;
 use App\Models\Car;
 use App\Models\RaceRun;
+use App\Services\CarSales;
 use App\Services\CityGarages;
 use App\Services\Garage;
 use App\Services\Ledger;
@@ -32,6 +33,7 @@ final class FleetController extends Controller
         private readonly CityGarages $garages,
         private readonly Workshop $workshop,
         private readonly Travel $travel,
+        private readonly CarSales $sales,
         private readonly RunService $runs,
         private readonly Ledger $ledger,
         private readonly Rules $rules,
@@ -88,6 +90,20 @@ final class FleetController extends Controller
         return $this->respond($userId);
     }
 
+    /**
+     * Sells a car of the driver: they are paid a share of what it was worth when they got it, and at least the scrap. What it earned until now is
+     * paid first, the parts go back to the inventory, and the car is gone from the garage. The last car is not sold, and neither is one that is
+     * on the road or has work waiting in the workshop.
+     */
+    public function sell(Request $request, int $car): JsonResponse
+    {
+        $userId = (int) $request->user()->getAuthIdentifier();
+        $this->workshop->advance($userId);
+        $cents = $this->sales->sell($userId, $car);
+
+        return $this->respond($userId, 200, ['sold' => ['car' => $car, 'cents' => $cents]]);
+    }
+
     private function bringUpToDate(int $userId): void
     {
         $this->workshop->advance($userId);
@@ -122,7 +138,7 @@ final class FleetController extends Controller
         return response()->json([
             'data' => [
                 'selected' => $selected?->id,
-                'cars' => $this->garage->cars($userId)->map(fn (Car $car): array => $this->carData($car, $selected))->values()->all(),
+                'cars' => $this->carsData($userId, $selected),
                 'garages' => $garages,
                 'yard' => $yard,
             ],
@@ -132,8 +148,16 @@ final class FleetController extends Controller
         ], $status)->header('Cache-Control', 'no-store');
     }
 
+    /** @return list<array<string, mixed>> */
+    private function carsData(int $userId, ?Car $selected): array
+    {
+        $cars = $this->garage->cars($userId);
+
+        return $cars->map(fn (Car $car): array => $this->carData($car, $selected, $cars->count()))->values()->all();
+    }
+
     /** @return array<string, mixed> */
-    private function carData(Car $car, ?Car $selected): array
+    private function carData(Car $car, ?Car $selected, int $carsOfDriver): array
     {
         $vehicle = $this->catalog->vehicle($car->vehicle_slug);
         $run = $this->garage->runOf($car);
@@ -145,6 +169,9 @@ final class FleetController extends Controller
             'level' => $car->level,
             'selected' => $selected?->id === $car->id,
             'condition_percent' => (int) round($car->conditionPpm() / 10_000),
+            // What a sale pays, and why there is none now (`last_car`, `busy`) or null.
+            'sale_cents' => $this->sales->quoteCents($car),
+            'sell_blocked' => $this->sales->blockedReason($car, $carsOfDriver),
             'vehicle' => [
                 'slug' => $car->vehicle_slug,
                 'name' => $vehicle !== null ? I18nText::from($vehicle['name'])->for() : $car->vehicle_slug,

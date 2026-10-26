@@ -157,7 +157,7 @@ final class CityGarages
 
             $this->ledger->post($userId, -$price, 'wreck', $key);
 
-            return $this->park($userId, $vehicle, $region, $nowMs);
+            return $this->park($userId, $vehicle, $region, $nowMs, valueCents: $price);
         }, Ledger::DEADLOCK_ATTEMPTS);
     }
 
@@ -186,8 +186,9 @@ final class CityGarages
      * the lock of the wallet and has checked the room (`assertRoomIn`) and taken the money.
      *
      * @param  int  $conditionPpm  the condition of the car (1 000 000 is perfect): a worn car breaks down more
+     * @param  int|null  $valueCents  what the car is worth, as the driver got it: a sale pays a share of it
      */
-    public function park(int $userId, string $vehicle, string $region, ?int $nowMs = null, int $conditionPpm = 1_000_000): Car
+    public function park(int $userId, string $vehicle, string $region, ?int $nowMs = null, int $conditionPpm = 1_000_000, ?int $valueCents = null): Car
     {
         $track = $this->rules->tracksOf($region)[0];
 
@@ -197,6 +198,7 @@ final class CityGarages
             'level' => $this->rules->carStartLevel(),
             'xp' => $this->rules->carXpToReach($this->rules->carStartLevel()),
             'condition_ppm' => $conditionPpm,
+            'value_cents' => $valueCents,
         ]);
 
         $this->runs->start($userId, $vehicle, $track, $this->inputs->make($vehicle, $track, [], $conditionPpm), $this->inputs->tankMl($vehicle), $nowMs, $car);

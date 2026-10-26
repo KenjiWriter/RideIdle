@@ -66,6 +66,8 @@ final class RunService
             'vehicle_slug' => $carSlug,
             'level' => $rules->carStartLevel(),
             'xp' => $rules->carXpToReach($rules->carStartLevel()),
+            // A wreck is worth what the yard asks for it, which is what a sale pays a share of.
+            'value_cents' => $rules->wreckPriceCents($carSlug),
         ]);
 
         return RaceRun::query()->create([

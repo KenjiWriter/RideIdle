@@ -218,6 +218,28 @@ final class Rules
         return $this->data['market']['pricing'];
     }
 
+    /** What a driver is paid for a car, as a share of its value in ppm (the economy model has 70%). */
+    public function marketResalePpm(): int
+    {
+        return $this->data['market']['resale_ppm'];
+    }
+
+    /** The least a car is bought for, in cents for every kilogram of its mass: what it is worth as scrap. */
+    public function marketScrapCentsPerKg(): int
+    {
+        return $this->data['market']['scrap_cents_per_kg'];
+    }
+
+    /**
+     * The storage units of the city: the guarantee, what can be in a unit, and the kinds of unit (`market.storage`).
+     *
+     * @return array<string, mixed>
+     */
+    public function marketStorage(): array
+    {
+        return $this->data['market']['storage'];
+    }
+
     /** How much longer a lap of a track that is not lit takes at night, in ppm of its time (1 030 000 is 3% longer). */
     public function nightLapPpm(): int
     {

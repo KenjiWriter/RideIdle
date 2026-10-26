@@ -54,6 +54,22 @@
       "mileage_span_km": 300000,
       "mileage_floor_ppm": 700000,
       "condition_base_ppm": 350000
+    },
+    "resale_ppm": 700000,
+    "scrap_cents_per_kg": 25,
+    "storage": {
+      "pity_every": 15,
+      "classes": {
+        "scrap": { "age_years": { "min": 20, "max": 25 }, "condition_ppm": { "min": 50000, "max": 150000 }, "mileage_km": { "min": 220000, "max": 300000 } },
+        "junk": { "age_years": { "min": 12, "max": 20 }, "condition_ppm": { "min": 200000, "max": 450000 }, "mileage_km": { "min": 150000, "max": 280000 } },
+        "good": { "age_years": { "min": 6, "max": 12 }, "condition_ppm": { "min": 550000, "max": 850000 }, "mileage_km": { "min": 70000, "max": 160000 } },
+        "gem": { "age_years": { "min": 2, "max": 5 }, "condition_ppm": { "min": 850000, "max": 1000000 }, "mileage_km": { "min": 20000, "max": 70000 } }
+      },
+      "units": {
+        "small": { "unlock_level": 3, "pool_level": 3, "price_cents": 120000, "odds": { "scrap": 700, "junk": 250, "good": 45, "gem": 5 }, "gem_value_cap_cents": 1200000 },
+        "medium": { "unlock_level": 6, "pool_level": 6, "price_cents": 350000, "odds": { "scrap": 350, "junk": 390, "good": 200, "gem": 60 } },
+        "large": { "unlock_level": 9, "pool_level": 9, "price_cents": 600000, "odds": { "scrap": 150, "junk": 300, "good": 400, "gem": 150 } }
+      }
     }
   },
   "clock": { "night_lap_ppm": 1030000 },

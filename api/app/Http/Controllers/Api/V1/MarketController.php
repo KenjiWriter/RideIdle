@@ -68,6 +68,33 @@ final class MarketController extends Controller
         return $this->respond($userId, $car === null ? 200 : 201, ['repeated' => $car === null, 'bought' => $car?->id]);
     }
 
+    /**
+     * Opens a storage unit of a kind (`unit`): the car in it goes into the garage of the city, and the answer says what it was (`opened`, with
+     * what it is worth and what a sale of it pays). `request_id` makes a repeated request harmless: it opens nothing twice.
+     */
+    public function openStorage(Request $request, string $unit): JsonResponse
+    {
+        $data = $request->validate(['request_id' => ['required', 'string', 'max:'.RunService::MAX_REQUEST_ID_LENGTH]]);
+
+        $userId = (int) $request->user()->getAuthIdentifier();
+        $this->workshop->advance($userId);
+        $opened = $this->market->openStorage($userId, $unit, $data['request_id'], RunService::nowMs());
+
+        return $this->respond($userId, $opened === null ? 200 : 201, [
+            'repeated' => $opened === null,
+            'bought' => $opened['car']->id ?? null,
+            'opened' => $opened === null ? null : [
+                'class' => $opened['outcome']->class,
+                'vehicle' => $this->market->vehicleOf($opened['outcome']->vehicle),
+                'age_years' => $opened['outcome']->ageYears,
+                'mileage_km' => $opened['outcome']->mileageKm,
+                'condition' => ['percent' => (int) round($opened['outcome']->conditionPpm / 10_000), 'defects' => $opened['outcome']->defects],
+                'value_cents' => $opened['outcome']->valueCents,
+                'sale_cents' => $opened['sale_cents'],
+            ],
+        ]);
+    }
+
     /** @param  array<string, mixed>  $extra  more keys of the top level of the answer */
     private function respond(int $userId, int $status = 200, array $extra = []): JsonResponse
     {

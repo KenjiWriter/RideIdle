@@ -7,11 +7,14 @@ namespace App\Services;
 use App\Content\Catalog;
 use App\Content\Rules;
 use App\Domain\Market\ExchangeListings;
+use App\Domain\Market\StorageOutcome;
+use App\Domain\Market\StorageUnits;
 use App\Domain\Market\UsedCarPricing;
 use App\Domain\Market\UsedListing;
 use App\Exceptions\RuleRefusedException;
 use App\Models\Car;
 use App\Models\LedgerEntry;
+use App\Models\StorageOpening;
 use App\Support\I18nText;
 use Illuminate\Support\Facades\DB;
 
@@ -27,14 +30,20 @@ final class Market
 {
     private readonly ExchangeListings $exchange;
 
+    private readonly StorageUnits $storage;
+
     public function __construct(
         private readonly Ledger $ledger,
         private readonly Rules $rules,
         private readonly Catalog $catalog,
         private readonly Garage $garage,
         private readonly CityGarages $garages,
+        private readonly CarSales $sales,
     ) {
-        $this->exchange = new ExchangeListings($rules->marketExchange(), new UsedCarPricing($rules->marketPricing()));
+        $pricing = new UsedCarPricing($rules->marketPricing());
+
+        $this->exchange = new ExchangeListings($rules->marketExchange(), $pricing);
+        $this->storage = new StorageUnits($rules->marketStorage(), $pricing);
     }
 
     /** The city whose market the driver sees: the one the car they play stands in. */
@@ -75,6 +84,7 @@ final class Market
             ],
             'dealer' => $this->dealerData($level),
             'wrecks' => $this->garages->yard(),
+            'storage' => $this->storageData($userId, $level),
         ];
     }
 
@@ -120,7 +130,7 @@ final class Market
             $this->garages->assertRoomIn($userId, $listing->region);
             $this->ledger->post($userId, -$listing->priceCents, 'exchange', "listing:{$userId}:{$listing->key}");
 
-            return $this->garages->park($userId, $listing->vehicle, $listing->region, $nowMs, $listing->conditionPpm);
+            return $this->garages->park($userId, $listing->vehicle, $listing->region, $nowMs, $listing->conditionPpm, $listing->priceCents);
         }, Ledger::DEADLOCK_ATTEMPTS);
     }
 
@@ -160,8 +170,116 @@ final class Market
             $this->garages->assertRoomIn($userId, $region);
             $this->ledger->post($userId, -$definition['price_cents'], 'dealer', $key);
 
-            return $this->garages->park($userId, $vehicle, $region, $nowMs);
+            return $this->garages->park($userId, $vehicle, $region, $nowMs, valueCents: $definition['price_cents']);
         }, Ledger::DEADLOCK_ATTEMPTS);
+    }
+
+    /**
+     * Opens a storage unit into the garage of the city: the car in it is drawn by the server, from a seed that is made of the secret of the
+     * application, the driver, the kind of unit and the number of the opening, so that nobody can know it before or fish for it. The draw, with
+     * what came out, is written down. `$requestId` makes a repeated request harmless: one that was paid already opens nothing and answers null.
+     *
+     * @return array{car: Car, outcome: StorageOutcome, sale_cents: int}|null
+     *
+     * @throws RuleRefusedException `unit_not_found`, `unit_level_required`, `no_garage`, `garage_full`
+     */
+    public function openStorage(int $userId, string $unit, string $requestId, ?int $nowMs = null): ?array
+    {
+        $this->ledger->ensureWallet($userId);
+
+        return DB::transaction(function () use ($userId, $unit, $requestId, $nowMs): ?array {
+            $this->ledger->lockWallet($userId);
+
+            $key = "storage:{$userId}:{$requestId}";
+
+            if (LedgerEntry::query()->where('idem_key', $key)->exists()) {
+                return null;
+            }
+
+            $kind = $this->storage->units()[$unit] ?? throw new RuleRefusedException('unit_not_found');
+            $level = $this->levelOf($userId);
+
+            if ($level < $kind['unlock_level']) {
+                throw new RuleRefusedException('unit_level_required', ['required' => $kind['unlock_level'], 'current' => $level]);
+            }
+
+            $region = $this->cityOf($userId);
+
+            $this->garages->assertRoomIn($userId, $region);
+            $this->ledger->post($userId, -$kind['price_cents'], 'storage', $key);
+
+            $index = StorageOpening::query()->where('user_id', $userId)->where('unit', $unit)->count();
+            $seed = hash_hmac('sha256', "storage|{$userId}|{$unit}|{$index}", (string) config('app.key'));
+            $outcome = $this->storage->open($seed, $unit, $this->storagePool($kind['pool_level']), $this->openingsSinceGood($userId, $unit));
+
+            $car = $this->garages->park($userId, $outcome->vehicle, $region, $nowMs, $outcome->conditionPpm, $outcome->valueCents);
+
+            StorageOpening::query()->create([
+                'user_id' => $userId,
+                'unit' => $unit,
+                'opening_index' => $index,
+                'outcome' => $outcome->class,
+                'vehicle_slug' => $outcome->vehicle,
+                'age_years' => $outcome->ageYears,
+                'mileage_km' => $outcome->mileageKm,
+                'condition_ppm' => $outcome->conditionPpm,
+                'value_cents' => $outcome->valueCents,
+                'price_cents' => $kind['price_cents'],
+                'car_id' => $car->id,
+            ]);
+
+            return ['car' => $car, 'outcome' => $outcome, 'sale_cents' => $this->sales->saleCents($outcome->vehicle, $outcome->valueCents)];
+        }, Ledger::DEADLOCK_ATTEMPTS);
+    }
+
+    /**
+     * The cars that can be in a unit: the ones of the pack that ask a level or less of a driver, in a fixed order.
+     *
+     * @return list<array{slug: string, class: string, price_cents: int}>
+     */
+    private function storagePool(int $poolLevel): array
+    {
+        $pool = [];
+
+        foreach ($this->catalog->vehicles() as $slug => $vehicle) {
+            if ($vehicle['powertrain'] === 'ice' && $vehicle['min_player_level'] <= $poolLevel) {
+                $pool[] = ['slug' => $slug, 'class' => $vehicle['class'], 'price_cents' => $vehicle['price_cents']];
+            }
+        }
+
+        return $pool;
+    }
+
+    /** How many units of a kind the driver has opened since the last that gave a good car or better: for the guarantee. */
+    private function openingsSinceGood(int $userId, string $unit): int
+    {
+        $query = StorageOpening::query()->where('user_id', $userId)->where('unit', $unit);
+        $lastGood = (clone $query)->whereIn('outcome', [StorageOutcome::GOOD, StorageOutcome::GEM])->max('opening_index');
+
+        return $lastGood === null ? $query->count() : (clone $query)->where('opening_index', '>', $lastGood)->count();
+    }
+
+    /**
+     * The storage units for the screen: what each costs, the odds, and how far the driver is from the guarantee.
+     *
+     * @return array<string, mixed>
+     */
+    private function storageData(int $userId, int $level): array
+    {
+        $units = [];
+
+        foreach ($this->storage->units() as $key => $kind) {
+            $units[] = [
+                'key' => $key,
+                'unlock_level' => $kind['unlock_level'],
+                'open' => $level >= $kind['unlock_level'],
+                'price_cents' => $kind['price_cents'],
+                'odds' => $this->storage->oddsPercent($key),
+                'until_guarantee' => max(1, $this->storage->pityEvery() - $this->openingsSinceGood($userId, $key)),
+            ];
+        }
+
+        return ['pity_every' => $this->storage->pityEvery(), 'units' => $units];
     }
 
     private function levelOf(int $userId): int
@@ -263,6 +381,12 @@ final class Market
         usort($offers, fn (array $a, array $b): int => [$a['level_required'], $a['price_cents'], $a['vehicle']['slug']] <=> [$b['level_required'], $b['price_cents'], $b['vehicle']['slug']]);
 
         return $offers;
+    }
+
+    /** @return array<string, mixed> the body of a car for a screen: its name, class, engine, power, speed and mass */
+    public function vehicleOf(string $slug): array
+    {
+        return $this->vehicleData($slug);
     }
 
     /** @return array<string, mixed> */

@@ -13,6 +13,7 @@ use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
+use App\Models\StorageOpening;
 use App\Models\Travel;
 use App\Models\TutorialProgress;
 use App\Models\User;
@@ -46,7 +47,7 @@ final class AccountErasure
      */
     public function inventory(User $user): array
     {
-        $runs = RaceRun::query()->where('user_id', $user->id)->select('id');
+        $runs = RaceRun::query()->withoutGlobalScopes()->where('user_id', $user->id)->select('id');
         $settlements = Settlement::query()->whereIn('race_run_id', $runs)->select('id');
 
         return [
@@ -55,7 +56,8 @@ final class AccountErasure
             'devices' => PersonalAccessToken::query()->where('tokenable_type', $user->getMorphClass())->where('tokenable_id', $user->id)->count(),
             'waiting links' => AccountToken::query()->where('user_id', $user->id)->count(),
             'wallets' => Wallet::query()->where('user_id', $user->id)->count(),
-            'cars' => Car::query()->where('user_id', $user->id)->count(),
+            'cars' => Car::query()->withoutGlobalScopes()->where('user_id', $user->id)->count(),
+            'storage openings' => StorageOpening::query()->where('user_id', $user->id)->count(),
             'parts' => Part::query()->where('user_id', $user->id)->count(),
             'garages' => CityGarage::query()->where('user_id', $user->id)->count(),
             'workshop jobs' => WorkshopJob::query()->where('user_id', $user->id)->count(),
@@ -86,19 +88,20 @@ final class AccountErasure
             $failed = $this->mailsTo($user, 'failed_jobs');
             $addresses = $this->addressesOf($user);
 
-            $runs = RaceRun::query()->where('user_id', $user->id)->select('id');
+            $runs = RaceRun::query()->withoutGlobalScopes()->where('user_id', $user->id)->select('id');
             $settlements = Settlement::query()->whereIn('race_run_id', $runs)->select('id');
 
             SettlementEvent::query()->whereIn('settlement_id', $settlements)->delete();
             LedgerEntry::query()->where('user_id', $user->id)->delete();
             Settlement::query()->whereIn('race_run_id', $runs)->delete();
             Travel::query()->where('user_id', $user->id)->delete();
-            RaceRun::query()->where('user_id', $user->id)->delete();
+            RaceRun::query()->withoutGlobalScopes()->where('user_id', $user->id)->delete();
             WorkshopJob::query()->where('user_id', $user->id)->delete();
             CityGarage::query()->where('user_id', $user->id)->delete();
             TutorialProgress::query()->where('user_id', $user->id)->delete();
             Part::query()->where('user_id', $user->id)->delete();
-            Car::query()->where('user_id', $user->id)->delete();
+            Car::query()->withoutGlobalScopes()->where('user_id', $user->id)->delete();
+            StorageOpening::query()->where('user_id', $user->id)->delete();
             Wallet::query()->where('user_id', $user->id)->delete();
             AccountToken::query()->where('user_id', $user->id)->delete();
             AccountIdentity::query()->where('user_id', $user->id)->delete();

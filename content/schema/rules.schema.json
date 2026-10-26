@@ -163,9 +163,60 @@
           },
           "required": ["age_kept_ppm", "class_floor_ppm", "mileage_per_year_km", "mileage_span_km", "mileage_floor_ppm", "condition_base_ppm"],
           "additionalProperties": false
+        },
+        "resale_ppm": { "description": "What a driver is paid for a car: this share of its value, as it was when the driver got it (the economy model has 70%).", "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "scrap_cents_per_kg": { "description": "The least a car is bought for, by the kilogram of its mass: what it is worth as scrap.", "type": "integer", "minimum": 0 },
+        "storage": {
+          "description": "The storage units of the city: a locked unit with a random car in it. The odds are shown before the purchase, the draw is made by the server, and the unit gives at least a good car now and then (the guarantee).",
+          "type": "object",
+          "properties": {
+            "pity_every": { "description": "A unit of a kind that has not given a good car or better this many times in a row gives one the next time.", "type": "integer", "minimum": 1 },
+            "classes": {
+              "description": "What can be in a unit: scrap, junk, good, and gem. The car has an age, a mileage and a condition within these ranges, and its value is the one of the formula of the exchange.",
+              "type": "object",
+              "properties": {
+                "scrap": { "$ref": "#/$defs/storageClass" },
+                "junk": { "$ref": "#/$defs/storageClass" },
+                "good": { "$ref": "#/$defs/storageClass" },
+                "gem": { "$ref": "#/$defs/storageClass" }
+              },
+              "required": ["scrap", "junk", "good", "gem"],
+              "additionalProperties": false
+            },
+            "units": {
+              "description": "The kinds of unit, by key.",
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "unlock_level": { "description": "The level of the driver that opens this kind of unit.", "type": "integer", "minimum": 1 },
+                  "pool_level": { "description": "The cars that can be in it are the ones of the pack that ask this level of a driver or less, so that what is in a unit does not grow with the level of the driver.", "type": "integer", "minimum": 1 },
+                  "price_cents": { "$ref": "common.schema.json#/$defs/cents" },
+                  "odds": {
+                    "description": "The weights of scrap, junk, good and gem.",
+                    "type": "object",
+                    "properties": {
+                      "scrap": { "type": "integer", "minimum": 0 },
+                      "junk": { "type": "integer", "minimum": 0 },
+                      "good": { "type": "integer", "minimum": 0 },
+                      "gem": { "type": "integer", "minimum": 0 }
+                    },
+                    "required": ["scrap", "junk", "good", "gem"],
+                    "additionalProperties": false
+                  },
+                  "gem_value_cap_cents": { "description": "A gem is worth no more than this (a small unit does not skip the ladder of cars).", "$ref": "common.schema.json#/$defs/cents" }
+                },
+                "required": ["unlock_level", "pool_level", "price_cents", "odds"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["pity_every", "classes", "units"],
+          "additionalProperties": false
         }
       },
-      "required": ["exchange", "pricing"],
+      "required": ["exchange", "pricing", "resale_ppm", "scrap_cents_per_kg", "storage"],
       "additionalProperties": false
     },
     "start": {
@@ -372,6 +423,16 @@
       "additionalProperties": false
     },
     "stat": { "enum": ["accel", "top_speed", "grip", "handling", "braking", "clearance"] },
+    "storageClass": {
+      "type": "object",
+      "properties": {
+        "age_years": { "$ref": "#/$defs/range" },
+        "condition_ppm": { "$ref": "#/$defs/range" },
+        "mileage_km": { "$ref": "#/$defs/range" }
+      },
+      "required": ["age_years", "condition_ppm", "mileage_km"],
+      "additionalProperties": false
+    },
     "range": {
       "type": "object",
       "properties": { "min": { "type": "integer", "minimum": 0 }, "max": { "type": "integer", "minimum": 0 } },
