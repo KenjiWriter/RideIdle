@@ -279,6 +279,14 @@
           "properties": {
             "first_tier_level": { "description": "The player level that opens the crates of tier 1.", "type": "integer", "minimum": 1 },
             "levels_per_tier": { "description": "Every further tier opens this many levels later: tier t opens at max(first_tier_level, levels_per_tier * (t - 1)), as the cars of the dealer do.", "type": "integer", "minimum": 1 },
+            "tier_price_ppm": {
+              "description": "A factor on the price of a crate, from a tier on (ppm, 1 000 000 is none): the factor of a tier is the one of the highest tier named that is at most it. The tiers have to name tier 1. A crate of a high tier would pay back sooner than the next car of the ladder, so it costs a little more (the economy simulator checks it).",
+              "type": "object",
+              "minProperties": 1,
+              "required": ["1"],
+              "propertyNames": { "pattern": "^[1-9][0-9]*$" },
+              "additionalProperties": { "type": "integer", "minimum": 1 }
+            },
             "odds": {
               "description": "The weights of the rarities, per mille, for each group of crates.",
               "type": "object",
@@ -316,7 +324,7 @@
               }
             }
           },
-          "required": ["first_tier_level", "levels_per_tier", "odds", "guarantee", "kinds"],
+          "required": ["first_tier_level", "levels_per_tier", "tier_price_ppm", "odds", "guarantee", "kinds"],
           "additionalProperties": false
         }
       },

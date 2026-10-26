@@ -202,14 +202,14 @@ final class CrateShop
     }
 
     /**
-     * What a crate costs: a share of the mean price of the models it can give, in whole dollars.
+     * What a crate costs: a share of the mean price of the models it can give, in whole dollars, with the factor of the tier of each slot.
      *
      * @param  array{price_ppm: int}  $kind
      * @param  array<string, array{tier: int, parts: list<array<string, mixed>>}>  $pools  the slots the crate can give
      */
     private function priceCents(array $kind, array $pools): int
     {
-        $means = array_map(static fn (array $pool): float => array_sum(array_column($pool['parts'], 'price_cents')) / count($pool['parts']), $pools);
+        $means = array_map(fn (array $pool): float => array_sum(array_column($pool['parts'], 'price_cents')) / count($pool['parts']) * $this->crates->tierPriceFactorPpm($pool['tier']) / Ppm::ONE, $pools);
         $cents = array_sum($means) / count($means) * $kind['price_ppm'] / Ppm::ONE;
 
         return max(100, (int) (round($cents / 100) * 100));

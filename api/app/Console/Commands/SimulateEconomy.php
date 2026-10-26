@@ -350,23 +350,24 @@ final class SimulateEconomy extends Command
             : $this->warn('Crate shift gate: FAILED. A share moves a day of the ladder out of the tolerance. This does not fail the command, except with --strict-game.');
 
         $this->newLine();
-        $this->line("What the first crate pays back, in days, against the next car of the ladder (player {$extras->valuedPlayer}; a crate that pays back sooner than a car is a better deal than the car):");
+        $this->line("What crates pay back, in days, against the next car of the ladder (player {$extras->valuedPlayer}). The first crates pay back sooner as the gain falls with every crate; the gate is the whole programme, the crates up to the guarantee of a legendary part, which must not pay back sooner than the car:");
         $this->table(
-            ['rung', 'level', 'crate $', 'first crate', 'after 10', 'after 40', 'next car', ''],
+            ['rung', 'level', 'crate $', 'first crate', 'after 10', 'after 40', 'programme', 'next car', ''],
             array_map(fn (array $row): array => [
                 $row['rung'],
                 $row['level'],
                 $row['price'] === null ? '-' : $this->money($row['price']),
                 ...array_map(fn (array $crate): string => $crate['crate_days'] === null ? '-' : number_format($crate['crate_days'], 1), $row['crates']),
+                $row['programme_days'] === null ? '-' : number_format($row['programme_days'], 1),
                 $row['step_days'] === null ? '-' : number_format($row['step_days'], 1),
                 $row['crate_pays_back_sooner'] ? 'OUT' : 'ok',
             ], $extras->crateValue),
         );
 
-        $sooner = array_map(static fn (array $row): string => $row['rung'], array_filter($extras->crateValue, static fn (array $row): bool => $row['crate_pays_back_sooner']));
+        $programme = array_map(static fn (array $row): string => $row['rung'], array_filter($extras->crateValue, static fn (array $row): bool => $row['crate_pays_back_sooner']));
         $extras->crateValuePassed()
-            ? $this->info('Crate value gate: PASSED. A crate never pays back sooner than a car.')
-            : $this->warn('Crate value gate: FAILED. A crate pays back sooner than the next car at '.implode(', ', $sooner).'. This does not fail the command, except with --strict-game.');
+            ? $this->info('Crate value gate: PASSED. The programme of '.($extras->crateValue[0]['programme_crates'] ?? 0).' crates never pays back sooner than a car'.($extras->firstCratesSooner() === [] ? '.' : ' (the first crates do, at '.implode(', ', $extras->firstCratesSooner()).').'))
+            : $this->warn('Crate value gate: FAILED. The programme of crates pays back sooner than the next car at '.implode(', ', $programme).'. This does not fail the command, except with --strict-game.');
 
         $this->newLine();
         $this->line('Storage units, on top of the game scenario: each player spends a share of the income of a day on the dearest unit that the level opens, and the find is sold at once (the expected return of the table).');

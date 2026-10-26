@@ -15,7 +15,7 @@ final readonly class ExtrasResult
      * @param  array<string, PlayerRun>  $baseline  the scenario game without extras
      * @param  array<string, array<string, PlayerRun>>  $crates  by share of the income spent on crates, then by player
      * @param  array<string, GateReport>  $crateShift  by share
-     * @param  list<array{rung: string, level: int, price: float|null, crates: list<array{crates: int, crate_days: float|null}>, step_days: float|null, crate_pays_back_sooner: bool}>  $crateValue  for the first player, by rung of the ladder
+     * @param  list<array{rung: string, level: int, price: float|null, crates: list<array{crates: int, crate_days: float|null}>, programme_crates: int, programme_days: float|null, step_days: float|null, first_crate_pays_back_sooner: bool, crate_pays_back_sooner: bool}>  $crateValue  for the first player, by rung of the ladder
      * @param  array<string, array<string, PlayerRun>>  $units  by share of the income spent on storage units, then by player
      * @param  array<string, GateReport>  $unitShift  by share
      * @param  list<array{kind: string, price: float, unlock_level: int, mean_return: float, chance_double: float, ok: bool}>  $unitReturns  by kind of unit, from the cheapest
@@ -39,10 +39,19 @@ final readonly class ExtrasResult
         return array_filter($this->crateShift, static fn (GateReport $report): bool => ! $report->passed()) === [];
     }
 
-    /** Whether a crate never pays back sooner than the next car of the ladder does: if it did, the player would spend on crates before cars. */
+    /**
+     * Whether the whole programme of crates never pays back sooner than the next car of the ladder does: if it did, the player would spend on crates before
+     * cars. The first crates do from the rungs where the cars are dear (`firstCratesSooner`), which is not what the gate asks.
+     */
     public function crateValuePassed(): bool
     {
         return array_filter($this->crateValue, static fn (array $row): bool => $row['crate_pays_back_sooner']) === [];
+    }
+
+    /** @return list<string> the rungs where the first crate pays back sooner than the next car (information: the gain falls with every crate) */
+    public function firstCratesSooner(): array
+    {
+        return array_values(array_map(static fn (array $row): string => $row['rung'], array_filter($this->crateValue, static fn (array $row): bool => $row['first_crate_pays_back_sooner'])));
     }
 
     public function unitShiftPassed(): bool

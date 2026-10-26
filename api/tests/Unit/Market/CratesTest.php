@@ -106,4 +106,13 @@ describe('the crates', function () {
             // One crate earlier there is no such thing.
             ->and(drawnRarities('standard', 3, 148, 500)['legendary'])->toBeLessThan(10);
     });
+
+    it('prices the tiers by a schedule that says from which tier a factor holds, and leaves the tiers below it at none', function () {
+        // From the rules: no factor up to the tier 7, 9% more from the tier 8 on (the pack has tiers 1 to 3 only, so the shop sells at the price of its parts).
+        expect(array_map(fn (int $tier): int => crates()->tierPriceFactorPpm($tier), [1, 2, 3, 7, 8, 9, 10]))->toBe([1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_090_000, 1_090_000, 1_090_000]);
+
+        $steps = new Crates([...crateRules()->shopCrates(), 'tier_price_ppm' => ['1' => 1_000_000, '4' => 1_500_000, '6' => 2_000_000]]);
+
+        expect(array_map(fn (int $tier): int => $steps->tierPriceFactorPpm($tier), [1, 3, 4, 5, 6, 10]))->toBe([1_000_000, 1_000_000, 1_500_000, 1_500_000, 2_000_000, 2_000_000]);
+    });
 });

@@ -25,6 +25,7 @@ final readonly class CrateEconomy
      * @param  array<string, int>  $slotMix  slot => how many of the crates of a round are for it (tires 2, suspension 1, brakes 1)
      * @param  array<string, int>  $odds  the weights of the rarities of the group of the crates, by the name of the rarity
      * @param  list<float>  $gain  the gain of laps an hour (0.2 is a fifth) after 0, 1, 2, ... crates of one tier: it only grows, and past the last number it stays
+     * @param  array<int, int>  $tierPricePpm  a factor on the price of the crates from a tier on (`shop.crates.tier_price_ppm`): the one of the highest tier named that is at most the tier
      */
     public function __construct(
         public int $firstTierLevel,
@@ -36,6 +37,7 @@ final readonly class CrateEconomy
         public string $floorRarity,
         public int $legendaryEvery,
         public array $gain,
+        public array $tierPricePpm = [1 => 1_000_000],
     ) {
         if ($firstTierLevel < 1 || $levelsPerTier < 1 || $priceFactorPpm < 1 || $floorEvery < 1 || $legendaryEvery < 1) {
             throw new InvalidArgumentException('The levels, the price and the guarantees of the crates must be positive.');
@@ -43,6 +45,10 @@ final readonly class CrateEconomy
 
         if ($slotMix === [] || min($slotMix) < 1) {
             throw new InvalidArgumentException('The crates need at least one slot, and every slot at least one crate of a round.');
+        }
+
+        if ($tierPricePpm === [] || min($tierPricePpm) < 1) {
+            throw new InvalidArgumentException('The factors on the price of the crates of a tier must be positive, and there has to be one.');
         }
 
         if ($gain === [] || (float) $gain[0] !== 0.0) {
@@ -74,7 +80,8 @@ final readonly class CrateEconomy
     }
 
     /**
-     * What a crate of a tier costs, in dollars: the mean of the prices of the parts of its slots, by the mix, times the price factor.
+     * What a crate of a tier costs, in dollars: the mean of the prices of the parts of its slots, by the mix, times the price factor and the factor of
+     * the tier (a high tier costs a little more, so that the whole programme of crates does not pay back sooner than the next car).
      *
      * @throws InvalidArgumentException when the anchors have no price for a part of the tier
      */
@@ -87,7 +94,23 @@ final readonly class CrateEconomy
             $total += $count * $price;
         }
 
-        return $total / array_sum($this->slotMix) * $this->priceFactorPpm / 1_000_000;
+        return $total / array_sum($this->slotMix) * $this->priceFactorPpm / 1_000_000 * $this->tierFactorPpm($tier) / 1_000_000;
+    }
+
+    /** The factor on the price of the crates of a tier, in ppm: the one of the highest tier of the schedule that is at most this tier (1 000 000 below the first). */
+    public function tierFactorPpm(int $tier): int
+    {
+        $factor = 1_000_000;
+        $best = 0;
+
+        foreach ($this->tierPricePpm as $from => $ppm) {
+            if ($from <= $tier && $from > $best) {
+                $best = $from;
+                $factor = $ppm;
+            }
+        }
+
+        return $factor;
     }
 
     /** What the parts of the crates add to the laps in an hour after this many crates of a tier: a share (0.2 is a fifth). */

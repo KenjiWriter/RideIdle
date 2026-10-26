@@ -32,6 +32,25 @@ final class Crates
         return max($this->crates['first_tier_level'], $this->crates['levels_per_tier'] * ($tier - 1));
     }
 
+    /**
+     * The factor on the price of a crate of a tier, in ppm: the one of the highest tier of `tier_price_ppm` that is at most this tier. The pack has tiers
+     * 1 to 3 only, where the factor is 1 000 000; the tiers above are the ones of the full game, which the economy simulator prices.
+     */
+    public function tierPriceFactorPpm(int $tier): int
+    {
+        $factor = 1_000_000;
+        $best = 0;
+
+        foreach ($this->crates['tier_price_ppm'] as $from => $ppm) {
+            if ((int) $from <= $tier && (int) $from > $best) {
+                $best = (int) $from;
+                $factor = $ppm;
+            }
+        }
+
+        return $factor;
+    }
+
     public function floorEvery(string $group): int
     {
         return $this->crates['guarantee'][$group]['every'];

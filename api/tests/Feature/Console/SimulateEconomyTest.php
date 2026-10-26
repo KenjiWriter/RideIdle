@@ -219,8 +219,9 @@ describe('economy:simulate', function () {
         $data['model']['fleet']['home_free_places'] = 0;
         $data['model']['fleet']['garage_city_levels'] = [];
         $data['consistency']['tolerance'] = 0.6;
-        // And parts a hundred times dearer, so that a crate never pays back sooner than a car (the crates are priced by the anchors).
-        $data['anchors']['new_car_by_tier'] = array_map(static fn (int|float $price): int|float => $price * 100, $data['anchors']['new_car_by_tier']);
+        // And crates and units at a tenth of the income only: without the fleet a third of it moves the days of the occasional player by more than a quarter.
+        $data['model']['crates']['spend_sweep'] = [0.1];
+        $data['model']['units']['spend_sweep'] = [0.1];
 
         $this->artisan('economy:simulate', ['--ruleset' => economyTemporaryFile(json_encode($data, JSON_THROW_ON_ERROR)), '--strict-game' => true])
             ->expectsOutputToContain('Fleet gate (game): PASSED')
@@ -263,13 +264,14 @@ describe('economy:simulate', function () {
             ->and($output)->toContain('Crate shift gate: PASSED');
     });
 
-    it('says from which rung a crate pays back sooner than the next car, and that the gate of its value is out', function () {
+    it('says what crates pay back against the next car, the first ones and the whole programme, and that the gate of the value is the programme', function () {
         Artisan::call('economy:simulate');
         $output = Artisan::output();
 
-        expect($output)->toContain('What the first crate pays back')
+        expect($output)->toContain('What crates pay back')
             ->and($output)->toMatch('/\| L0\s+\| 1\s+\| \$563\s+\| 19\.6\s+\|/')
-            ->and($output)->toContain('Crate value gate: FAILED. A crate pays back sooner than the next car at L4, L5, L6, L7.');
+            ->and($output)->toMatch('/\| L7\s+\| 22\s+\| \$8 175\s+\| 11\.5\s+\| 59\.2\s+\| 147\.8\s+\| 148\.8\s+\| 145\.6\s+\| ok\s+\|/')
+            ->and($output)->toContain('Crate value gate: PASSED. The programme of 150 crates never pays back sooner than a car (the first crates do, at L4, L5, L6, L7).');
     });
 
     it('plays the storage units, and says what each kind returns on average and that none returns more than it costs', function () {
@@ -295,9 +297,9 @@ describe('economy:simulate', function () {
         Artisan::call('economy:simulate', ['--json' => true, '--player' => ['B']]);
         $extras = json_decode(Artisan::output(), true, 512, JSON_THROW_ON_ERROR)['extras'];
 
-        expect($extras['passed'])->toBeFalse()
+        expect($extras['passed'])->toBeTrue()
             ->and($extras['crates']['shift_passed'])->toBeTrue()
-            ->and($extras['crates']['value_passed'])->toBeFalse()
+            ->and($extras['crates']['value_passed'])->toBeTrue()
             ->and(array_column($extras['crates']['shares'], 'share'))->toBe([0.1, 0.2, 0.3])
             ->and(array_keys($extras['crates']['shares'][1]['players']))->toBe(['B'])
             ->and($extras['crates']['shares'][1]['players']['B'])->toHaveKeys(['crates', 'spent', 'uplift', 'first_rare_day'])

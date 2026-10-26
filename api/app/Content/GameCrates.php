@@ -33,6 +33,7 @@ final class GameCrates
             floorRarity: $guarantee['min_rarity'],
             legendaryEvery: $guarantee['legendary_every'],
             gain: array_map('floatval', $table['gain_by_crates']),
+            tierPricePpm: array_combine(array_map('intval', array_keys($crates['tier_price_ppm'])), array_map('intval', array_values($crates['tier_price_ppm']))),
         );
     }
 

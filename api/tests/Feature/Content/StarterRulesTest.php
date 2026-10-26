@@ -568,3 +568,23 @@ it('is refused by the schema when the crates lack odds, a guarantee is not a rar
 
     expect(rulesSchemaErrors(starterRules()))->toBe([]);
 });
+
+it('prices the crates of the high tiers a little above the anchors, and does not touch the tiers of the pack', function () {
+    $schedule = starterRules()['shop']['crates']['tier_price_ppm'];
+    $crates = new Crates(Rules::fromArray(starterRules())->shopCrates());
+
+    // The pack has the tiers 1 to 3: the shop sells them at the price of the parts. The factors are of the tiers of the full game, and the simulator prices them.
+    expect($schedule)->toHaveKey('1')
+        ->and(min($schedule))->toBeGreaterThanOrEqual(1_000_000)
+        ->and($crates->tierPriceFactorPpm(1))->toBe(1_000_000)
+        ->and($crates->tierPriceFactorPpm(3))->toBe(1_000_000)
+        ->and($crates->tierPriceFactorPpm(10))->toBeGreaterThan(1_000_000);
+
+    $rules = starterRules();
+    unset($rules['shop']['crates']['tier_price_ppm']['1']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    $rules['shop']['crates']['tier_price_ppm']['eight'] = 1_090_000;
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+});

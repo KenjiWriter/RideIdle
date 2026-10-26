@@ -54,4 +54,27 @@ describe('the payback of a crate against the one of a step of the ladder', funct
 
         expect(array_column($rows, 'crates'))->toBe([0, 10, 40]);
     });
+
+    it('says the days that the whole programme of crates takes to pay back: the crates bought at the price of the tier, over the gain after all of them', function () {
+        $rules = economyRules();
+        $player = $rules->players()['A'];
+        $crates = aCrateEconomy(['gain' => array_map(static fn (int $n): float => min(0.30, $n / 500), range(0, 200))]);
+
+        $price = $crates->cost($rules, 3);
+        $income = $rules->carDailyIncome($player, 2);
+
+        // The programme of the game is the guarantee of a legendary part, 150 crates by default, or the number that is asked for.
+        expect((new CratePayback)->programme($rules, $player, $crates, 2, 6))->toEqualWithDelta(150 * $price / ($income * 0.30), 1e-9)
+            ->and((new CratePayback)->programme($rules, $player, $crates, 2, 6, 50))->toEqualWithDelta(50 * $price / ($income * 0.10), 1e-9);
+    });
+
+    it('is the slowest way to see the gain: the programme pays back slower than the first crate, and says nothing where no crate is open or none adds anything', function () {
+        $rules = economyRules();
+        $player = $rules->players()['A'];
+        $crates = aCrateEconomy();
+
+        expect((new CratePayback)->programme($rules, $player, $crates, 1, 3, 3))->toBeGreaterThan((new CratePayback)->compare($rules, $player, $crates, 1, 3, [0])[0]['crate_days'])
+            ->and((new CratePayback)->programme($rules, $player, aCrateEconomy(['firstTierLevel' => 5]), 1, 3, 3))->toBeNull()
+            ->and((new CratePayback)->programme($rules, $player, $crates, 1, 3, 99))->not->toBeNull();
+    });
 });

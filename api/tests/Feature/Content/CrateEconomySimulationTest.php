@@ -41,7 +41,8 @@ describe('the scenario game with the crates of the game', function () {
 
     it('gives the days for a tenth, a fifth and a third of the income spent on crates: the pace slows by a day or two, and by a few at the end', function () {
         // What the sweep of the ruleset shows today. The crates cost more than the income they add, so the purchases do not come sooner:
-        // L8 comes on day 37, 38 and 41 for the regular player where it came on 36, and on 100, 105 and 112 for the occasional one (98).
+        // L8 comes on day 37, 38 and 40 for the regular player where it came on 36, and on 100, 105 and 111 for the occasional one (98). The crates of the
+        // tier 8 cost 9% more than the anchors say (`tier_price_ppm`), so a third of the income buys a few fewer of them and ends a day sooner than before.
         expect(daysWithCrates(0.1))->toBe([
             'A' => [3, 8, 9, 10, 13, 16, 22, 37],
             'B' => [7, 23, 27, 33, 43, 54, 68, 100],
@@ -51,8 +52,8 @@ describe('the scenario game with the crates of the game', function () {
             'B' => [7, 24, 28, 34, 44, 55, 71, 105],
             'C' => [2, 4, 4, 5, 5, 7, 9, 16],
         ])->and(daysWithCrates(0.3))->toBe([
-            'A' => [3, 8, 9, 11, 14, 17, 24, 41],
-            'B' => [7, 25, 29, 35, 44, 55, 74, 112],
+            'A' => [3, 8, 9, 11, 14, 17, 24, 40],
+            'B' => [7, 25, 29, 35, 44, 55, 74, 111],
             'C' => [2, 4, 4, 5, 5, 7, 10, 16],
         ]);
     });

@@ -91,6 +91,7 @@
     "crates": {
       "first_tier_level": 1,
       "levels_per_tier": 3,
+      "tier_price_ppm": { "1": 1000000, "8": 1090000 },
       "odds": {
         "standard": { "common": 620, "uncommon": 250, "rare": 100, "epic": 27, "legendary": 3 },
         "premium": { "common": 300, "uncommon": 350, "rare": 240, "epic": 90, "legendary": 20 }

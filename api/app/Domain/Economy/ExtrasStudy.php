@@ -10,8 +10,8 @@ namespace App\Domain\Economy;
  * `CrateEconomy` and `UnitEconomy`.
  *
  * The gates it prepares are the ones of the extension plan: no share moves the day of a purchase of the ladder by more than the tolerance of the
- * pace gate (against the same scenario without the extra), a crate does not pay back sooner than the next car of the ladder, and a kind of unit
- * returns less than it costs.
+ * pace gate (against the same scenario without the extra), the whole programme of crates (to the guarantee of a legendary part) does not pay back
+ * sooner than the next car of the ladder, and a kind of unit returns less than it costs.
  */
 final class ExtrasStudy
 {
@@ -61,9 +61,10 @@ final class ExtrasStudy
     }
 
     /**
-     * What a crate pays back against the next car, at every rung, for one kind of player.
+     * What a crate pays back against the next car, at every rung, for one kind of player: the first crates (information: they are the best a crate does) and
+     * the whole programme (the gate).
      *
-     * @return list<array{rung: string, level: int, price: float|null, crates: list<array{crates: int, crate_days: float|null}>, step_days: float|null, crate_pays_back_sooner: bool}>
+     * @return list<array{rung: string, level: int, price: float|null, crates: list<array{crates: int, crate_days: float|null}>, programme_crates: int, programme_days: float|null, step_days: float|null, first_crate_pays_back_sooner: bool, crate_pays_back_sooner: bool}>
      */
     private function crateValue(EconomyRules $rules, CrateEconomy $crates, PlayerType $player): array
     {
@@ -73,6 +74,7 @@ final class ExtrasStudy
             $level = $rules->minPlayerLevel($rung);
             $compared = $this->payback->compare($rules, $player, $crates, $rung, $level, self::CRATE_COUNTS);
             $first = $compared[0];
+            $programme = $this->payback->programme($rules, $player, $crates, $rung, $level);
 
             $rows[] = [
                 'rung' => $rules->rungName($rung),
@@ -80,8 +82,12 @@ final class ExtrasStudy
                 'price' => $first['price'],
                 'crates' => array_map(static fn (array $row): array => ['crates' => $row['crates'], 'crate_days' => $row['crate_days']], $compared),
                 'step_days' => $first['step_days'],
-                // The first crate is the best a crate does, so it is the one set against the car.
-                'crate_pays_back_sooner' => $first['crate_days'] !== null && $first['step_days'] !== null && $first['crate_days'] < $first['step_days'],
+                'programme_crates' => $crates->legendaryEvery,
+                'programme_days' => $programme,
+                // The first crate is the best a crate does, and it pays back sooner than a car from the rungs where the cars become dear: that is what the gain does
+                // as it falls, and the report says it, but it is not what the gate asks.
+                'first_crate_pays_back_sooner' => $first['crate_days'] !== null && $first['step_days'] !== null && $first['crate_days'] < $first['step_days'],
+                'crate_pays_back_sooner' => $programme !== null && $first['step_days'] !== null && $programme < $first['step_days'],
             ];
         }
 
