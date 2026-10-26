@@ -19,6 +19,7 @@ use App\Models\Car;
 use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\Settlement;
+use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -448,6 +449,9 @@ final class RunService
             return new Settled($result, null);
         }
 
+        // The driver is levelled by the car that they play; the others earn cash and level themselves (`player.other_cars_xp_ppm`).
+        $xp = $this->experienceForDriver($run, $result->xp);
+
         $settlement = Settlement::query()->create([
             'race_run_id' => $run->id,
             'state_version' => $run->state_version,
@@ -456,7 +460,7 @@ final class RunService
             'now_ms' => $nowMs,
             'laps' => $result->laps,
             'cash_cents' => $result->cashCents,
-            'xp' => $result->xp,
+            'xp' => $xp,
             'stop_reason' => $result->stopReason()?->value,
         ]);
 
@@ -475,7 +479,7 @@ final class RunService
             $this->ledger->post($run->user_id, $result->cashCents, 'settlement', "settle:{$run->id}:{$run->state_version}", $settlement->id);
         }
 
-        $this->ledger->grantXp($run->user_id, $result->xp);
+        $this->ledger->grantXp($run->user_id, $xp);
 
         $stopReason = $result->stopReason();
 
@@ -496,6 +500,27 @@ final class RunService
         }
 
         return new Settled($result, $settlement);
+    }
+
+    /**
+     * The experience of a settlement that goes to the driver: all of it when the run is of the car that the driver plays (the one they selected, or the
+     * first they have), and the share of the rules (`player.other_cars_xp_ppm`) when it is of another car. A run with no car counts as played.
+     */
+    private function experienceForDriver(RaceRun $run, int $xp): int
+    {
+        if ($xp === 0 || $run->car_id === null) {
+            return $xp;
+        }
+
+        $selected = User::query()->whereKey($run->user_id)->value('selected_car_id');
+        $cars = Car::query()->where('user_id', $run->user_id);
+        $played = $selected !== null && (clone $cars)->whereKey($selected)->exists() ? (int) $selected : (int) (clone $cars)->orderBy('id')->value('id');
+
+        if ($run->car_id === $played) {
+            return $xp;
+        }
+
+        return intdiv($xp * ($this->rules ?? Rules::fromConfig())->otherCarsXpPpm(), 1_000_000);
     }
 
     /**

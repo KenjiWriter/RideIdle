@@ -588,3 +588,19 @@ it('prices the crates of the high tiers a little above the anchors, and does not
     $rules['shop']['crates']['tier_price_ppm']['eight'] = 1_090_000;
     expect(rulesSchemaErrors($rules))->not->toBe([]);
 });
+
+it('levels the driver by the car that is played only, and refuses a share that is not one', function () {
+    expect(starterRules()['player']['other_cars_xp_ppm'])->toBe(0);
+
+    foreach ([-1, 1_000_001] as $wrong) {
+        $rules = starterRules();
+        $rules['player']['other_cars_xp_ppm'] = $wrong;
+
+        expect(rulesSchemaErrors($rules))->not->toBe([]);
+    }
+
+    $rules = starterRules();
+    unset($rules['player']['other_cars_xp_ppm']);
+
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+});

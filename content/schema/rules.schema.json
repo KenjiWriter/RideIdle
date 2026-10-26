@@ -241,13 +241,14 @@
       "description": "The level of a driver, from the experience that every lap pays. It opens the tracks, and the cities, one after the other. The first levels are the table early_xp (the experience that reaches level 2, 3, ...), so that the first hour is quick; from the catch-up level on the experience that reaches level n is xp_base * n ^ xp_exponent, rounded, and the levels between are on a straight line from the end of the table to that curve.",
       "type": "object",
       "properties": {
+        "other_cars_xp_ppm": { "description": "How much of the experience of the laps of a car that the driver does not play goes to the driver (ppm): 0 is none, 1 000 000 is all of it. The car that is played gives all of it. A fleet of parked cars still earns cash and levels its own cars, but does not level the driver (the economy model's `model.fleet.other_cars_xp_share` has to say the same).", "type": "integer", "minimum": 0, "maximum": 1000000 },
         "xp_base": { "type": "number", "exclusiveMinimum": 0 },
         "xp_exponent": { "type": "number", "exclusiveMinimum": 0 },
         "max_level": { "type": "integer", "minimum": 1, "maximum": 1000 },
         "early_xp": { "description": "The experience that reaches level 2, 3, ... in all: rising.", "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 1 } },
         "catch_up_level": { "description": "The level from which the curve is the plain one: it has to be above the last level of the table.", "type": "integer", "minimum": 2, "maximum": 1000 }
       },
-      "required": ["xp_base", "xp_exponent", "max_level", "early_xp", "catch_up_level"],
+      "required": ["other_cars_xp_ppm", "xp_base", "xp_exponent", "max_level", "early_xp", "catch_up_level"],
       "additionalProperties": false
     },
     "shop": {

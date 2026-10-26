@@ -141,6 +141,15 @@ final class Rules
     }
 
     /**
+     * What share of the experience of the laps of a car that the driver does not play goes to the driver, in ppm (0 today: only the car that is played
+     * levels the driver, the others earn cash and level themselves).
+     */
+    public function otherCarsXpPpm(): int
+    {
+        return $this->data['player']['other_cars_xp_ppm'];
+    }
+
+    /**
      * The experience that reaches a level of the driver, to the whole (see `PlayerXpCurve`: a table for the first levels, a straight
      * line to the catch-up level, and then xp_base * level ^ xp_exponent). Level 1 is the start, at nothing. The web draws the same curve
      * for the bar of the HUD, and the economy simulator has its own copy of the numbers; a test keeps the three together.

@@ -73,7 +73,7 @@
     }
   },
   "clock": { "night_lap_ppm": 1030000 },
-  "player": { "xp_base": 450, "xp_exponent": 2.3, "max_level": 30, "early_xp": [60, 180, 400, 800, 1600, 2800, 4800, 8000, 12800], "catch_up_level": 20 },
+  "player": { "other_cars_xp_ppm": 0, "xp_base": 450, "xp_exponent": 2.3, "max_level": 30, "early_xp": [60, 180, 400, 800, 1600, 2800, 4800, 8000, 12800], "catch_up_level": 20 },
   "start": { "head_start_ms": 60000 },
   "shop": {
     "parts": [
