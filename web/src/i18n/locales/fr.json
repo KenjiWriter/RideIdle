@@ -576,7 +576,8 @@
     "sellBlocked": {
       "last_car": "Votre dernière voiture reste avec vous.",
       "busy": "Elle est sur la route ou a du travail à l’atelier."
-    }
+    },
+    "xpNote": "Seule la voiture que vous jouez vous donne de l’XP. Les autres rapportent de l’argent et montent de niveau seules."
   },
   "market": {
     "tabs": "Services de la ville",

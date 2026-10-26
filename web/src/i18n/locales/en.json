@@ -576,7 +576,8 @@
     "sellBlocked": {
       "last_car": "Your last car stays with you.",
       "busy": "It is on the road or has work in the workshop."
-    }
+    },
+    "xpNote": "Only the car you play gives you XP. The others earn cash and level themselves."
   },
   "market": {
     "tabs": "City services",

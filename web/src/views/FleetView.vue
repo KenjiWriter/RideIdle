@@ -158,6 +158,8 @@ const buyGarage = (garage: FleetGarage) =>
     <header class="flex flex-col gap-1">
       <h1 class="ttl">{{ t('fleet.title') }}</h1>
       <p v-if="store.fleet" class="sub" data-test="summary">{{ t('fleet.summary', { cars: cars.length, garages: owned.length }) }}</p>
+      <!-- A fleet earns cash with every car, but only the car that is played levels the driver. -->
+      <p v-if="cars.length > 1" class="sub" data-test="xp-note">{{ t('fleet.xpNote') }}</p>
     </header>
 
     <GarageTabs />

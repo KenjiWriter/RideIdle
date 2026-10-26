@@ -576,7 +576,8 @@
     "sellBlocked": {
       "last_car": "Dein letztes Auto bleibt bei dir.",
       "busy": "Es ist unterwegs oder hat Arbeit in der Werkstatt."
-    }
+    },
+    "xpNote": "Nur das Auto, das du fährst, gibt dir XP. Die anderen verdienen Geld und steigen selbst auf."
   },
   "market": {
     "tabs": "Dienste der Stadt",

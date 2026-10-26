@@ -576,7 +576,8 @@
     "sellBlocked": {
       "last_car": "Ostatnie auto zostaje z Tobą.",
       "busy": "Auto jest w drodze albo ma zlecenie w warsztacie."
-    }
+    },
+    "xpNote": "XP dostajesz tylko za auto, którym grasz. Pozostałe zarabiają i same awansują."
   },
   "market": {
     "tabs": "Usługi miasta",

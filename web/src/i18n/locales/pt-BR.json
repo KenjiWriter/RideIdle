@@ -576,7 +576,8 @@
     "sellBlocked": {
       "last_car": "Seu último carro fica com você.",
       "busy": "Ele está na estrada ou tem serviço na oficina."
-    }
+    },
+    "xpNote": "Só o carro que você joga dá XP a você. Os outros rendem dinheiro e sobem de nível sozinhos."
   },
   "market": {
     "tabs": "Serviços da cidade",

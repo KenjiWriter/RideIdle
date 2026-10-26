@@ -322,4 +322,32 @@ describe('FleetView', () => {
 
     expect(wrapper.get('[data-test="error"]').text()).toBe('The car is on the road, or the workshop has work waiting on it, so it cannot be sold now.')
   })
+
+  it('says that only the car that is played gives the driver XP, when there is more than one car', async () => {
+    serve({ 'GET /api/v1/cars': () => respond(200, aFleet()), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="xp-note"]').text()).toBe('Only the car you play gives you XP. The others earn cash and level themselves.')
+  })
+
+  it('has nothing to say about the XP of the others when the driver has one car', async () => {
+    serve({ 'GET /api/v1/cars': () => respond(200, aFleet({ cars: [aFleetCar()] })), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="xp-note"]').exists()).toBe(false)
+  })
+
+  it('says it in the language of the driver', async () => {
+    await setLocale('pl')
+    serve({ 'GET /api/v1/cars': () => respond(200, aFleet()), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="xp-note"]').text()).toBe('XP dostajesz tylko za auto, którym grasz. Pozostałe zarabiają i same awansują.')
+  })
 })
