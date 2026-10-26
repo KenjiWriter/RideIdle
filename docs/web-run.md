@@ -1,6 +1,6 @@
 # Ekrany biegu w aplikacji web
 
-Nowy kierowca przechodzi: landing → imię → **historia** → **wybór wraku** (krok 2 z 2) → **garaż**, czyli ekran biegu, na którym prowadzi go samouczek. API, z którego korzystają, opisuje `docs/api-runs.md`.
+Nowy kierowca przechodzi: landing → imię → **historia** → **wybór wraku** (krok 2 z 2) → **garaż**, czyli ekran biegu, na którym prowadzi go samouczek: auto czeka tam na **Start** w zakładce Turniej. API, z którego korzystają, opisuje `docs/api-runs.md`.
 
 ## Wybór wraku (`/choose`)
 
@@ -99,6 +99,8 @@ Ekran Turniej to plansza Wyscig: wyścig takim, jakim jest teraz. Wejście jest 
 - **Pasek pogody** mówi, jaka jest pogoda teraz, za ile się zmienia i jaka będzie („Teraz: sucho. Za 12 min 30 s: deszcz.”). Gdy pogoda zmienia czas okrążenia, dodaje, ile okrążenie trwa i płaci w tej pogodzie, i ile w suchym. Efektem pogody jest to, co liczą reguły: oponami nie da się jej jeszcze zmieniać, więc planszowego „Zmień opony” nie ma.
 - Wiersze obok pierścienia: okrążenie (numer w toku albo liczba ukończonych), czas okrążenia i zysk na okrążenie, a pod nimi zysk, XP gracza i XP auta za okrążenie w tej pogodzie (XP auta jest w każdej pogodzie takie samo).
 
+- **Start.** Auto, które czeka w garażu (pierwsze auto kierowcy), ma na ekranie kartę **„Auto czeka w garażu”** z przyciskiem **Start** (`POST /runs/{id}/start`), status „Czeka na start” (bursztynowy, nie czerwony: nic się nie zepsuło), a pierścień mówi, że auto stoi. Po Starcie karta znika, a pierścień zaczyna odliczać. Gdy start się nie uda, jest komunikat i można spróbować jeszcze raz. W garażu i na Flocie takie auto ma baner „Auto czeka w garażu…” z przyciskiem „Przejdź do Turnieju”; na ekranie Turniej baner jest zbędny, bo mówi to karta.
+
 Czego z planszy **nie ma**, bo nie ma jeszcze, na czym to oprzeć: turnieju i rund („Runda 3/10”: bieg jedzie, póki jest paliwo), **pozycji** (P3/8) i rywali na tablicy (tablica ma jeden wiersz, z kierowcą, i mówi, że boty i duchy dojdą później: boty to F3, duchy F4), przycisku „Zmień turniej” (jeden tor, mapa to F2), przełącznika auto-powtarzania (auto zawsze jedzie do końca paliwa), zakładek Turnieje i Ranking oraz zegara gry i pogody w HUD. Tytuł „Turniej” w nawigacji jest z planszy: po F6, gdy będą turnieje z drabinką, ten ekran będzie ich zakładką „Wyścig”.
 
 ## Mapa (`/map`)
@@ -119,7 +121,7 @@ Ekran Mapa (plansza Mapa; w nawigacji jest pierwszy: Mapa, Garaż, Turniej, Wars
 
 **Historia** (`/story`) leży między imieniem a wyborem wraku (kreator → historia → wybór wraku) i jest taka jak storyboard z planszy Historia: cztery sceny jednego zdjęcia (dziupla nocą, trzy wraki, Kuba wychodzi, szyld z imieniem kierowcy), kamera, która się po nim porusza (6, 6, 7 i 5 s), słowa Kuby pod obrazem i jego pierwszy SMS w scenie 4 (numer +48 555 010 112). Dotknięcie obrazu przewija, „Pomiń” jest po 3 s, a przycisk „Wybierz wraka” po 2 s ostatniej sceny; ostatnia scena nie kończy się sama. Kierowca, który prosi system o mniej ruchu (`prefers-reduced-motion`), ma kamerę nieruchomą i nic nie przewija się samo (brak limitów czasu na czytanie), a „Pomiń” i wybór są od razu. Tekst jest zawsze na ekranie. Pominięte na planszy: dźwięk (brak plików).
 
-**Samouczek** to nakładka na garażu (`TutorialOverlay`), jak na planszy Krok: ekran jest przyciemniony, **jedyny aktywny element jest podświetlony**, a z dołu wysuwa się stary telefon z SMS-ami od Kuby, przyciskiem odpowiedzi („OK, tankuję”), przyciskiem „Kto to?” (Kuba odpowiada „Nie pytaj. — K.”) i numerem kroku („Krok 4/5”; licznik rośnie razem z krokami z danych, a nie jest sztywnym 20). „Pomiń” stoi tuż pod HUD-em i **pyta o potwierdzenie** (kierowca traci nagrody kroków, które go jeszcze czekają).
+**Samouczek** to nakładka na garażu i na ekranie Turniej (`TutorialOverlay`), jak na planszy Krok: ekran jest przyciemniony, **jedyny aktywny element jest podświetlony**, a z dołu wysuwa się stary telefon z SMS-ami od Kuby, przyciskiem odpowiedzi („OK, tankuję”), przyciskiem „Kto to?” (Kuba odpowiada „Nie pytaj. — K.”) i numerem kroku („Krok 4/5”; licznik rośnie razem z krokami z danych, a nie jest sztywnym 20). „Pomiń” stoi tuż pod HUD-em i **pyta o potwierdzenie** (kierowca traci nagrody kroków, które go jeszcze czekają).
 
 - Podświetlenie to otwór w warstwie przyciemnienia (`clip-path`), więc dotknięcie poza nim jest zatrzymane, a dotknięcie w nim dociera do przycisku. Miejsce elementu jest mierzone co 250 ms (strona się wczytuje i przesuwa), a element, na który wskazuje krok, jest przewijany pod HUD i nad telefon raz, gdy zostanie znaleziony. Elementy oznaczone są `data-tutorial` (`laps`, `cash`, `refuel`, `repair`).
 - Po odpowiedzi na SMS-a telefon i przyciemnienie znikają, a pierścień na elemencie zostaje (miękki), dopóki kierowca nie zrobi tego, o co Kuba prosił.
@@ -127,7 +129,7 @@ Ekran Mapa (plansza Mapa; w nawigacji jest pierwszy: Mapa, Garaż, Turniej, Wars
 - Okno „Zapisz swój garaż” nie otwiera się, dopóki jakiś krok czeka na kierowcę (z telefonem albo bez), bo to samo okrążenie, które zarabia na ofertę, przynosi następną wiadomość. Otwiera się po odpowiedzi na SMS-a o kodzie odzyskiwania, czyli dokładnie wtedy, o co Kuba prosi.
 - Dostępność: telefon ma `role="dialog"`, `aria-modal` i etykietę „Wiadomość od {numer}”, odpowiedź dostaje fokus, Escape zamyka pytanie o pominięcie, wysuwanie telefonu wyłącza się przy `prefers-reduced-motion`, a przyciski odpowiedzi mają co najmniej 44 px wysokości. Tło strony poza otworem nie jest `inert`: nawigacja klawiaturą może wyjść poza telefon (do poprawy, jeśli test z czytnikiem ekranu to potwierdzi).
 
-Samouczek jest wyświetlany tylko w garażu: SMS, który przychodzi, gdy kierowca jest w warsztacie albo sklepie, czeka na garaż.
+Samouczek jest wyświetlany w garażu i na ekranie Turniej, bo tam kierowca spędza pierwsze minuty (wspólna logika wypłaty: `useTutorialReward`): SMS, który przychodzi, gdy kierowca jest w warsztacie albo sklepie, czeka na jeden z tych ekranów. **Krok `start`** wskazuje przycisk Start; zanim kierowca jest na ekranie Turniej, ringowana jest zakładka „Turniej” na dolnym pasku (`TutorialOverlay` szuka celu po kolei: przycisk, potem zakładka). Każdy ekran otwiera się u góry (`scrollBehavior` routera), żeby to, na co wskazuje krok, było w polu widzenia.
 
 ## XP i poziom auta w garażu
 

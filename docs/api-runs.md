@@ -69,6 +69,10 @@ Trzy wraki startowe, od najtańszego (to on jest polecany na start), i tor, na k
 
 `car` musi być wrakiem startowym z paczki treści (`sources` zawiera `start`), `track` torem z `content/rules/starter.json`, który otwiera poziom gracza (`min_player_level` toru; inaczej 422 `track_locked`, opis w części „Poziom gracza i tory”). Odpowiedź to 201. Kierowca, który ma już bieg, dostaje 409 z `code: run_exists` i `run_id`. Dwa równoległe żądania tego samego kierowcy nie założą dwóch biegów (blokada portfela, sprawdzone na osobnych procesach).
 
+### Wysłanie auta: `POST /runs/{id}/start`
+
+**Pierwsze auto kierowcy czeka w garażu na Start** (uwaga testera: samouczek mówił tylko, że „auto jedzie samo”, a gracz nie wiedział, skąd i po co). `POST /runs` zakłada bieg **zaparkowany**: `status: stopped`, `stop_reason: parked` (przystanek serwisowy jak warsztat i podróż: nic się nie rozlicza, kursor stoi, holowanie nie jest oferowane, tankowanie i naprawa nie ruszają auta). `POST /runs/{id}/start` wysyła auto: jedzie od tej chwili (kursor ustawiony na „teraz”, więc za czas postoju nic nie jest zapłacone ani należne), a odpowiedź to bieg jak zawsze. Auto, które nie czeka (jedzie albo stoi z innego powodu), zostaje, jak było, więc powtórzony Start jest nieszkodliwy; cudzy albo nieistniejący bieg to 404 `no_run`. **Tylko pierwsze auto jest zaparkowane**: auta kupione później (wrak, giełda, dealer) jeżdżą od razu, bo „zaparkowane auta jeżdżą same” to założenie floty. Zaparkowane auto nie jedzie w trasę (`car_cannot_travel`), a zlecenie warsztatu nie robi z niego jadącego (po zleceniu nadal czeka na Start).
+
 ### Podsumowanie: `GET /runs/current` i `GET /runs/{id}`
 
 Oprócz `data` i `wallet`:
@@ -258,17 +262,18 @@ Auto awansuje na okrążeniach, które przejechało (projekt: „Okrążeń tym 
 
 Samouczek prowadzi pierwsze minuty gry SMS-ami od Kuby (mentora, który się ukrywa i pisze za każdym razem z innego numeru). **Kroki są danymi**: `content/rules/tutorial.json` (schemat `tutorial.schema.json`, teksty w pięciu językach, test `TutorialStepsTest`), więc kolejność, słowa i nagrody zmienia się bez wdrażania kodu. Serwer jest źródłem prawdy, a postęp kierowcy to wiersze tabeli `tutorial_progress` (jeden na krok, który kierowca osiągnął: `active`, `done` albo `skipped`, z czasami; krok bez wiersza nie jest jeszcze osiągnięty).
 
-Każdy krok ma `trigger` (co go rozpoczyna, gdy poprzedni jest skończony) i `completion` (co go kończy). To fakty o grze, które serwer odczytuje ze stanu, a nie zdarzenia, na które nasłuchuje: `none`, `run_started` (jest bieg), `lap_completed` (ukończone okrążenie), `fuel_low` (w baku poniżej jednej czwartej), `fuel_restored` (co najmniej cztery piąte), `breakdown` (auto stoi po awarii), `recovered` (już nie stoi po awarii), `acknowledged` (kierowca odpowiedział na SMS). Dzięki temu samouczek, tak jak rozliczenie biegu, jest doprowadzany do stanu bieżącego, gdy ktoś na niego patrzy, i niczego nie traci z tego, co się stało pod nieobecność kierowcy.
+Każdy krok ma `trigger` (co go rozpoczyna, gdy poprzedni jest skończony) i `completion` (co go kończy). To fakty o grze, które serwer odczytuje ze stanu, a nie zdarzenia, na które nasłuchuje: `none`, `run_started` (jest bieg), `driving` (auto zostało wysłane i nie czeka w garażu), `lap_completed` (ukończone okrążenie), `fuel_low` (w baku poniżej jednej czwartej), `fuel_restored` (co najmniej cztery piąte), `breakdown` (auto stoi po awarii), `recovered` (już nie stoi po awarii), `acknowledged` (kierowca odpowiedział na SMS). Dzięki temu samouczek, tak jak rozliczenie biegu, jest doprowadzany do stanu bieżącego, gdy ktoś na niego patrzy, i niczego nie traci z tego, co się stało pod nieobecność kierowcy.
 
 | Krok | Rozpoczyna | Kończy | Podświetla | Nagroda |
 |---|---|---|---|---|
 | 1 `wreck` | od razu | wybór wraku (jest bieg) | nic (bez SMS-a) | brak |
-| 2 `first-lap` | jest bieg | pierwsze okrążenie | okrążenia | 200 $ |
-| 3 `rewards` | pierwsze okrążenie | odpowiedź kierowcy | gotówka w HUD | 100 XP auta |
-| 4 `refuel` | bak poniżej 25% | bak od 80% | przycisk tankowania | 90 $ (tankowanie na koszt Kuby) |
-| 5 `repair` | awaria | auto znów jedzie | przycisk naprawy | 30 $ (naprawa na koszt Kuby) |
+| 2 `start` | jest bieg | auto wysłane (`driving`) | przycisk Start w Turnieju, a gdy kierowcy tam nie ma, zakładka Turniej | brak |
+| 3 `first-lap` | jest bieg | pierwsze okrążenie | okrążenia | 200 $ |
+| 4 `rewards` | pierwsze okrążenie | odpowiedź kierowcy | gotówka w HUD | 100 XP auta |
+| 5 `refuel` | bak poniżej 25% | bak od 80% | przycisk tankowania | 90 $ (tankowanie na koszt Kuby) |
+| 6 `repair` | awaria | auto znów jedzie | przycisk naprawy | 30 $ (naprawa na koszt Kuby) |
 
-Kroki 1–5 to pierwsze pięć z planszy Samouczek, dopasowane do tego, co w grze jest. Jedno odstępstwo: krok 5 w projekcie to naprawa hamulców i „stan techniczny” części, którego nie ma, więc tu jest awaria i naprawa, a ten krok czeka na pierwszą awarię (szansa 0,3% na okrążenie, więc może długo). Kroki 6–20 (skrzynki, sloty, mapa, miasta…) dojdą z mechanikami, których dotyczą. Nagrody to gotówka z kluczem idempotencji `tutorial:{kierowca}:{krok}`, księgowana w tej samej transakcji, która oznacza krok jako zrobiony, więc nie da się ich wypłacić dwa razy. Nic w samouczku nie kosztuje kierowcy gotówki: tankowanie i naprawa są mu zwracane.
+Kroki 1–6 to pierwsze pięć z planszy Samouczek (jej krok 2, „dotyka Start na torze”, jest tu podzielony na `start` i `first-lap`), dopasowane do tego, co w grze jest. Jedno odstępstwo: krok 5 w projekcie to naprawa hamulców i „stan techniczny” części, którego nie ma, więc tu jest awaria i naprawa, a ten krok czeka na pierwszą awarię (szansa 0,3% na okrążenie, więc może długo). Kroki 6–20 (skrzynki, sloty, mapa, miasta…) dojdą z mechanikami, których dotyczą. Nagrody to gotówka z kluczem idempotencji `tutorial:{kierowca}:{krok}`, księgowana w tej samej transakcji, która oznacza krok jako zrobiony, więc nie da się ich wypłacić dwa razy. Nic w samouczku nie kosztuje kierowcy gotówki: tankowanie i naprawa są mu zwracane.
 
 ### `GET /tutorial`, `POST /tutorial/reply`, `POST /tutorial/skip`
 
@@ -276,7 +281,7 @@ Kroki 1–5 to pierwsze pięć z planszy Samouczek, dopasowane do tego, co w grz
 
 - `status`: `in_progress`, `finished` albo `skipped`;
 - `total` i `done`: liczba kroków i skończonych;
-- `current`: krok, który czeka, z `key`, `number` (od 1), `sender` (numer, z którego pisze Kuba), `sms` (jedna do dwóch wiadomości w języku kierowcy), `reply` (napis przycisku odpowiedzi), `target` (`laps`, `cash`, `refuel`, `repair`: co ekran podświetla) i `acknowledged` (kierowca już odpowiedział), albo `null`;
+- `current`: krok, który czeka, z `key`, `number` (od 1), `sender` (numer, z którego pisze Kuba), `sms` (jedna do dwóch wiadomości w języku kierowcy), `reply` (napis przycisku odpowiedzi), `target` (`start`, `laps`, `cash`, `refuel`, `repair`: co ekran podświetla; `start` to przycisk Start, a gdzie go nie ma, zakładka Turniej) i `acknowledged` (kierowca już odpowiedział), albo `null`;
 - `rewarded`: co wypłaciły kroki skończone tym wywołaniem (`key`, `cash_cents` i `car_xp`, oba zawsze są), żeby klient mógł to powiedzieć i odświeżyć gotówkę i garaż. XP auta trafia do auta kierowcy w tej samej transakcji, która kończy krok; kierowca bez auta dostaje 0.
 
 `POST /tutorial/reply` odpowiada na SMS-y kroku, który czeka (telefon znika, a krok kończący się odpowiedzią jest skończony); dwa razy to jedna odpowiedź. `POST /tutorial/skip` zostawia bez wykonania kroki, które nie są skończone, **razem z ich nagrodami**; to, co zrobione i wypłacone, zostaje. Po `skip` samouczek już nie wraca. Obie odpowiedzi mają ten sam kształt co `GET`, a żadna nie jest buforowana. Postęp wchodzi do kopii danych konta (`game.tutorial`) i do usunięcia konta (rodzaj `tutorial steps`).
