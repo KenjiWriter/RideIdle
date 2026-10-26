@@ -219,10 +219,13 @@ describe('economy:simulate', function () {
         $data['model']['fleet']['home_free_places'] = 0;
         $data['model']['fleet']['garage_city_levels'] = [];
         $data['consistency']['tolerance'] = 0.6;
+        // And parts a hundred times dearer, so that a crate never pays back sooner than a car (the crates are priced by the anchors).
+        $data['anchors']['new_car_by_tier'] = array_map(static fn (int|float $price): int|float => $price * 100, $data['anchors']['new_car_by_tier']);
 
         $this->artisan('economy:simulate', ['--ruleset' => economyTemporaryFile(json_encode($data, JSON_THROW_ON_ERROR)), '--strict-game' => true])
             ->expectsOutputToContain('Fleet gate (game): PASSED')
             ->expectsOutputToContain('Ladder of the game: every level is within the anchors')
+            ->expectsOutputToContain('Crate value gate: PASSED')
             ->assertExitCode(0);
     });
 
@@ -248,5 +251,59 @@ describe('economy:simulate', function () {
             ->and($report['game_ladder']['unreachable_rungs'])->toBe(['L6', 'L7', 'L8'])
             ->and($report['game_ladder']['rows'])->toHaveCount(11)
             ->and($report['game_ladder']['rows'][0])->toMatchArray(['level' => 1, 'rung' => 'L0', 'car' => 'rdzak-gt-4', 'track' => 'zlomowo-street', 'ok' => true]);
+    });
+
+    it('plays the crates of parts at the shares of the ruleset, and says that the shift of the days is within the tolerance', function () {
+        Artisan::call('economy:simulate', ['--player' => ['A']]);
+        $output = Artisan::output();
+
+        expect($output)->toContain('Crates of parts, on top of the game scenario')
+            ->and($output)->toMatch('/\| none\s+\| 3\s+\| 8\s+\| 9\s+\| 10\s+\| 13\s+\| 16\s+\| 22\s+\| 36\s+\|/')
+            ->and($output)->toMatch('/\| 20%\s+\| 3\s+\| 8\s+\| 10\s+\| 11\s+\| 13\s+\| 17\s+\| 23\s+\| 38\s+\|\s+18\s+\|/')
+            ->and($output)->toContain('Crate shift gate: PASSED');
+    });
+
+    it('says from which rung a crate pays back sooner than the next car, and that the gate of its value is out', function () {
+        Artisan::call('economy:simulate');
+        $output = Artisan::output();
+
+        expect($output)->toContain('What the first crate pays back')
+            ->and($output)->toMatch('/\| L0\s+\| 1\s+\| \$563\s+\| 19\.6\s+\|/')
+            ->and($output)->toContain('Crate value gate: FAILED. A crate pays back sooner than the next car at L4, L5, L6, L7.');
+    });
+
+    it('plays the storage units, and says what each kind returns on average and that none returns more than it costs', function () {
+        Artisan::call('economy:simulate');
+        $output = Artisan::output();
+
+        expect($output)->toContain('Storage units, on top of the game scenario')
+            ->and($output)->toMatch('/\| small\s+\| \$1 200\s+\| 3\s+\| 91%/')
+            ->and($output)->toMatch('/\| medium\s+\| \$3 500\s+\| 6\s+\| 76%/')
+            ->and($output)->toContain('Unit return gate: PASSED')
+            ->and($output)->toContain('Unit shift gate: PASSED');
+    });
+
+    it('puts the sale on the paid price next to the days of the design, as a report', function () {
+        Artisan::call('economy:simulate', ['--player' => ['A']]);
+        $output = Artisan::output();
+
+        expect($output)->toContain('The sale of a car for a share of what was paid')
+            ->and($output)->toContain('8 8 9 11 14 17 22 36');
+    });
+
+    it('prints the extras in the JSON report, for the kinds of players that were asked for', function () {
+        Artisan::call('economy:simulate', ['--json' => true, '--player' => ['B']]);
+        $extras = json_decode(Artisan::output(), true, 512, JSON_THROW_ON_ERROR)['extras'];
+
+        expect($extras['passed'])->toBeFalse()
+            ->and($extras['crates']['shift_passed'])->toBeTrue()
+            ->and($extras['crates']['value_passed'])->toBeFalse()
+            ->and(array_column($extras['crates']['shares'], 'share'))->toBe([0.1, 0.2, 0.3])
+            ->and(array_keys($extras['crates']['shares'][1]['players']))->toBe(['B'])
+            ->and($extras['crates']['shares'][1]['players']['B'])->toHaveKeys(['crates', 'spent', 'uplift', 'first_rare_day'])
+            ->and($extras['crates']['value']['player'])->toBe('B')
+            ->and($extras['units']['returns_passed'])->toBeTrue()
+            ->and(array_column($extras['units']['returns'], 'kind'))->toBe(['small', 'medium', 'large'])
+            ->and($extras['sales']['B']['days'])->toHaveCount(8);
     });
 });

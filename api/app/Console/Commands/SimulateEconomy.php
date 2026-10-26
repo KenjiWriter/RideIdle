@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Content\Catalog;
+use App\Content\GameCrates;
 use App\Content\GameIncome;
+use App\Content\GameUnits;
 use App\Content\Rules;
 use App\Domain\Economy\EconomyRules;
+use App\Domain\Economy\ExtrasResult;
+use App\Domain\Economy\ExtrasStudy;
 use App\Domain\Economy\Finding;
 use App\Domain\Economy\GameLadder;
 use App\Domain\Economy\GateReport;
@@ -15,6 +19,7 @@ use App\Domain\Economy\GateRow;
 use App\Domain\Economy\LadderRow;
 use App\Domain\Economy\PaceGate;
 use App\Domain\Economy\PlayerRun;
+use App\Domain\Economy\Purchase;
 use App\Domain\Economy\RulesConsistency;
 use App\Domain\Economy\Simulator;
 use Illuminate\Console\Command;
@@ -34,6 +39,9 @@ use Opis\JsonSchema\Validator;
  * The same players are then played with the fleet that the game really lets a driver have (every car drives and gives experience, garages
  * hold three, a wreck is cheap), and the income that the game reaches at each level, from its own cars and tracks, is set against the ladder.
  * Both are a report too, and fail the command only with --strict-game: they say what the rules of the game do to the pace of the design.
+ *
+ * Crates of parts and storage units are played on top of that scenario at the shares of the income that the ruleset names, and the sale of a
+ * car for a share of what was paid: what they do to the days of the ladder, what a crate pays back against a car, and what a unit returns.
  */
 final class SimulateEconomy extends Command
 {
@@ -51,7 +59,7 @@ final class SimulateEconomy extends Command
 
     protected $description = 'Simulate three kinds of players up the ladder of cars and check the pace against the design (the gate), and the rules of the game against the anchors';
 
-    public function handle(Rules $game, Catalog $catalog, Simulator $simulator, PaceGate $gate, RulesConsistency $consistency, GameLadder $ladder, GameIncome $income): int
+    public function handle(Rules $game, Catalog $catalog, Simulator $simulator, PaceGate $gate, RulesConsistency $consistency, GameLadder $ladder, GameIncome $income, ExtrasStudy $study, GameCrates $crates, GameUnits $units): int
     {
         $path = (string) ($this->option('ruleset') ?: config('ride.content_path').'/rules/economy.json');
 
@@ -80,12 +88,13 @@ final class SimulateEconomy extends Command
         $unreachable = $ladder->unreachableRungs($economy, $incomeByLevel, $economy->consistencyTolerance());
 
         $game = ['runs' => $fleetRuns, 'report' => $fleetReport, 'rows' => $rows, 'unreachable' => $unreachable];
-        $gameOk = $fleetReport->passed() && $unreachable === [] && array_filter($rows, static fn (LadderRow $row): bool => ! $row->ok) === [];
+        $extras = $study->run($economy, $crates->economy(), $units->economy(), array_map('strval', array_keys($runs)));
+        $gameOk = $fleetReport->passed() && $unreachable === [] && array_filter($rows, static fn (LadderRow $row): bool => ! $row->ok) === [] && $extras->passed();
 
         if ($this->option('json')) {
-            $this->line((string) json_encode($this->asArray($economy, $runs, $report, $findings, $game), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+            $this->line((string) json_encode($this->asArray($economy, $runs, $report, $findings, $game, $extras), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         } else {
-            $this->print($economy, $runs, $report, $findings, $game);
+            $this->print($economy, $runs, $report, $findings, $game, $extras);
         }
 
         $strict = (bool) $this->option('strict');
@@ -174,7 +183,7 @@ final class SimulateEconomy extends Command
      * @param  list<Finding>  $findings
      * @param  array{runs: array<string, PlayerRun>, report: GateReport, rows: list<LadderRow>, unreachable: array<int, string>}  $game
      */
-    private function print(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game): void
+    private function print(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game, ExtrasResult $extras): void
     {
         $this->line("Economy ruleset {$economy->version()}");
         $this->newLine();
@@ -214,6 +223,7 @@ final class SimulateEconomy extends Command
         }
 
         $this->printGame($economy, $game);
+        $this->printExtras($economy, $extras);
 
         $this->newLine();
         $this->line('The rules of the game against the anchors (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'):');
@@ -300,17 +310,153 @@ final class SimulateEconomy extends Command
             : $this->warn("Ladder of the game: {$off} of ".count($game['rows']).' levels are off the anchors. This does not fail the command, except with --strict-game.');
     }
 
+    /** The crates of parts and the storage units played on top of the scenario game, and the sale of a car for a share of what was paid. */
+    private function printExtras(EconomyRules $economy, ExtrasResult $extras): void
+    {
+        $rungs = $economy->rungs();
+        $days = static fn (PlayerRun $run): array => array_map(static fn (int $rung): string => (string) ($run->dayOf($rung) ?? '-'), range(1, $rungs - 1));
+        $passedFor = static fn (GateReport $gate, string $key): bool => array_filter($gate->rows, static fn (GateRow $row): bool => $row->player === $key && ! $row->passed) === [];
+        $percent = fn (float $share): string => $this->trim($share * 100).'%';
+        $carCaption = array_map(static fn (int $rung): string => $economy->rungName($rung), range(1, $rungs - 1));
+
+        $this->newLine();
+        $this->line('Crates of parts, on top of the game scenario: each player spends a share of the income of a day on crates of the slots (tires, suspension, brakes), of the tier that the level opens, at the price of the anchors.');
+        $this->line('The gate is the shift of the days from the scenario without them (tolerance '.sprintf('%.0f%%', $economy->gateTolerance() * 100).'), not the targets of the design.');
+
+        foreach (array_keys($extras->baseline) as $key) {
+            $this->newLine();
+            $this->line("Player {$key}:");
+            $rows = [['none', ...$days($extras->baseline[$key]), '-', '-', '-', '-']];
+
+            foreach ($extras->crates as $share => $runs) {
+                $note = $runs[$key]->notes['crates'];
+                $rows[] = [
+                    $percent((float) $share),
+                    ...$days($runs[$key]),
+                    $note['crates'],
+                    $this->money($note['spent']),
+                    sprintf('%+.0f%%', $note['uplift'] * 100),
+                    $note['first_rare_day'] ?? 'never',
+                    $passedFor($extras->crateShift[$share], (string) $key) ? 'ok' : 'OUT',
+                ];
+            }
+
+            $this->table(['share', ...$carCaption, 'crates', 'spent', 'uplift', 'first rare day', 'gate'], $rows);
+        }
+
+        $this->newLine();
+        $extras->crateShiftPassed()
+            ? $this->info('Crate shift gate: PASSED. No share moves a day of the ladder out of the tolerance.')
+            : $this->warn('Crate shift gate: FAILED. A share moves a day of the ladder out of the tolerance. This does not fail the command, except with --strict-game.');
+
+        $this->newLine();
+        $this->line("What the first crate pays back, in days, against the next car of the ladder (player {$extras->valuedPlayer}; a crate that pays back sooner than a car is a better deal than the car):");
+        $this->table(
+            ['rung', 'level', 'crate $', 'first crate', 'after 10', 'after 40', 'next car', ''],
+            array_map(fn (array $row): array => [
+                $row['rung'],
+                $row['level'],
+                $row['price'] === null ? '-' : $this->money($row['price']),
+                ...array_map(fn (array $crate): string => $crate['crate_days'] === null ? '-' : number_format($crate['crate_days'], 1), $row['crates']),
+                $row['step_days'] === null ? '-' : number_format($row['step_days'], 1),
+                $row['crate_pays_back_sooner'] ? 'OUT' : 'ok',
+            ], $extras->crateValue),
+        );
+
+        $sooner = array_map(static fn (array $row): string => $row['rung'], array_filter($extras->crateValue, static fn (array $row): bool => $row['crate_pays_back_sooner']));
+        $extras->crateValuePassed()
+            ? $this->info('Crate value gate: PASSED. A crate never pays back sooner than a car.')
+            : $this->warn('Crate value gate: FAILED. A crate pays back sooner than the next car at '.implode(', ', $sooner).'. This does not fail the command, except with --strict-game.');
+
+        $this->newLine();
+        $this->line('Storage units, on top of the game scenario: each player spends a share of the income of a day on the dearest unit that the level opens, and the find is sold at once (the expected return of the table).');
+
+        foreach (array_keys($extras->baseline) as $key) {
+            $this->newLine();
+            $this->line("Player {$key}:");
+            $rows = [['none', ...$days($extras->baseline[$key]), '-', '-', '-', '-']];
+
+            foreach ($extras->units as $share => $runs) {
+                $note = $runs[$key]->notes['units'];
+                $rows[] = [
+                    $percent((float) $share),
+                    ...$days($runs[$key]),
+                    $this->money($note['spent']),
+                    $this->money($note['net_cost']),
+                    sprintf('%.1f%%', $note['net_share_of_income'] * 100),
+                    number_format($note['expected_jumps'], 2),
+                    $passedFor($extras->unitShift[$share], (string) $key) ? 'ok' : 'OUT',
+                ];
+            }
+
+            $this->table(['share', ...$carCaption, 'spent', 'net cost', 'of the income', 'jumps', 'gate'], $rows);
+        }
+
+        $this->newLine();
+        $extras->unitShiftPassed()
+            ? $this->info('Unit shift gate: PASSED. No share moves a day of the ladder out of the tolerance.')
+            : $this->warn('Unit shift gate: FAILED. A share moves a day of the ladder out of the tolerance. This does not fail the command, except with --strict-game.');
+
+        $this->newLine();
+        $this->line('What a kind of storage unit returns when the find is sold at once:');
+        $this->table(
+            ['unit', 'price', 'level', 'mean return', 'chance of 2x', ''],
+            array_map(fn (array $row): array => [
+                $row['kind'],
+                $this->money($row['price']),
+                $row['unlock_level'],
+                sprintf('%.0f%%', $row['mean_return'] * 100),
+                sprintf('%.1f%%', $row['chance_double'] * 100),
+                $row['ok'] ? 'ok' : 'OUT',
+            ], $extras->unitReturns),
+        );
+        $extras->unitReturnsPassed()
+            ? $this->info('Unit return gate: PASSED. Every kind returns less than it costs on average.')
+            : $this->warn('Unit return gate: FAILED. A kind of unit returns at least what it costs on average. This does not fail the command, except with --strict-game.');
+
+        $this->newLine();
+        $this->line('The sale of a car for a share of what was paid, not of the value of the anchor (a wreck of the yard was paid $1 140, not $2 000). A report only: the greedy player buys the next car, a wreck or a garage by what pays back soonest, so a dearer first step moves it to the wrecks first.');
+        $this->table(
+            ['player', 'days of the ladder, as the design counts the sale', 'as the game counts it'],
+            array_map(fn (string $key): array => [$key, implode(' ', $days($extras->baseline[$key])), implode(' ', $days($extras->sales[$key]))], array_keys($extras->baseline)),
+        );
+    }
+
     /**
      * @param  array<string, PlayerRun>  $runs
      * @param  list<Finding>  $findings
      * @param  array{runs: array<string, PlayerRun>, report: GateReport, rows: list<LadderRow>, unreachable: array<int, string>}  $game
      * @return array<string, mixed>
      */
-    private function asArray(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game): array
+    private function asArray(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game, ExtrasResult $extras): array
     {
         return [
             'ruleset' => $economy->version(),
             'gate' => $this->gateAsArray($report),
+            'extras' => [
+                'passed' => $extras->passed(),
+                'crates' => [
+                    'shift_passed' => $extras->crateShiftPassed(),
+                    'value_passed' => $extras->crateValuePassed(),
+                    'shares' => array_map(fn (array $players, string $share): array => [
+                        'share' => (float) $share,
+                        'gate' => $this->gateAsArray($extras->crateShift[$share]),
+                        'players' => array_map(static fn (PlayerRun $run): array => $run->notes['crates'], $players),
+                    ], $extras->crates, array_keys($extras->crates)),
+                    'value' => ['player' => $extras->valuedPlayer, 'rows' => $extras->crateValue],
+                ],
+                'units' => [
+                    'shift_passed' => $extras->unitShiftPassed(),
+                    'returns_passed' => $extras->unitReturnsPassed(),
+                    'shares' => array_map(fn (array $players, string $share): array => [
+                        'share' => (float) $share,
+                        'gate' => $this->gateAsArray($extras->unitShift[$share]),
+                        'players' => array_map(static fn (PlayerRun $run): array => $run->notes['units'], $players),
+                    ], $extras->units, array_keys($extras->units)),
+                    'returns' => $extras->unitReturns,
+                ],
+                'sales' => array_map(static fn (PlayerRun $run): array => ['days' => array_map(static fn (Purchase $purchase): int => $purchase->day, $run->purchases)], $extras->sales),
+            ],
             'game_fleet' => [
                 'gate' => $this->gateAsArray($game['report']),
                 'players' => array_map(static fn (PlayerRun $run): array => ['name' => $run->player->name, 'wrecks' => $run->wrecks, 'extra_garages' => $run->extraGarages], $game['runs']),
