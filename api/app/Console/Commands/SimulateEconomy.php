@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Content\Catalog;
+use App\Content\GameIncome;
 use App\Content\Rules;
 use App\Domain\Economy\EconomyRules;
 use App\Domain\Economy\Finding;
+use App\Domain\Economy\GameLadder;
 use App\Domain\Economy\GateReport;
 use App\Domain\Economy\GateRow;
+use App\Domain\Economy\LadderRow;
 use App\Domain\Economy\PaceGate;
 use App\Domain\Economy\PlayerRun;
 use App\Domain\Economy\RulesConsistency;
@@ -27,6 +30,10 @@ use Opis\JsonSchema\Validator;
  * on which day each of them buys each car. The pace gate then says whether those days are within 25% of the days of the
  * design, and the exit code is the answer, so a pipeline can stop a ruleset that spoils the pace. Next to it the numbers
  * the game runs on are set against the anchors: that is a report, and fails the command only with --strict.
+ *
+ * The same players are then played with the fleet that the game really lets a driver have (every car drives and gives experience, garages
+ * hold three, a wreck is cheap), and the income that the game reaches at each level, from its own cars and tracks, is set against the ladder.
+ * Both are a report too, and fail the command only with --strict-game: they say what the rules of the game do to the pace of the design.
  */
 final class SimulateEconomy extends Command
 {
@@ -39,11 +46,12 @@ final class SimulateEconomy extends Command
         {--ruleset= : The ruleset to play, a file of the shape of content/rules/economy.json (that file when left out)}
         {--player=* : Play only these kinds of players, by their keys (A, B or C)}
         {--json : Print the report as JSON}
-        {--strict : Fail also when a number of the rules of the game is off the anchors}';
+        {--strict : Fail also when a number of the rules of the game is off the anchors}
+        {--strict-game : Fail also when the fleet of the game is out of the pace of the design, or the ladder of the game is off the anchors}';
 
     protected $description = 'Simulate three kinds of players up the ladder of cars and check the pace against the design (the gate), and the rules of the game against the anchors';
 
-    public function handle(Rules $game, Catalog $catalog, Simulator $simulator, PaceGate $gate, RulesConsistency $consistency): int
+    public function handle(Rules $game, Catalog $catalog, Simulator $simulator, PaceGate $gate, RulesConsistency $consistency, GameLadder $ladder, GameIncome $income): int
     {
         $path = (string) ($this->option('ruleset') ?: config('ride.content_path').'/rules/economy.json');
 
@@ -65,13 +73,24 @@ final class SimulateEconomy extends Command
         $findings = $consistency->check($economy, $this->numbersOf($game, $catalog));
         $off = array_values(array_filter($findings, static fn (Finding $finding): bool => ! $finding->ok));
 
+        $fleetRuns = array_intersect_key($simulator->simulateAllGame($economy), $runs);
+        $fleetReport = $gate->evaluate($economy, $fleetRuns);
+        $incomeByLevel = $income->byLevel($ladder->levels($economy));
+        $rows = $ladder->check($economy, $incomeByLevel);
+        $unreachable = $ladder->unreachableRungs($economy, $incomeByLevel, $economy->consistencyTolerance());
+
+        $game = ['runs' => $fleetRuns, 'report' => $fleetReport, 'rows' => $rows, 'unreachable' => $unreachable];
+        $gameOk = $fleetReport->passed() && $unreachable === [] && array_filter($rows, static fn (LadderRow $row): bool => ! $row->ok) === [];
+
         if ($this->option('json')) {
-            $this->line((string) json_encode($this->asArray($economy, $runs, $report, $findings), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+            $this->line((string) json_encode($this->asArray($economy, $runs, $report, $findings, $game), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         } else {
-            $this->print($economy, $runs, $report, $findings);
+            $this->print($economy, $runs, $report, $findings, $game);
         }
 
-        return $report->passed() && (! $this->option('strict') || $off === []) ? self::SUCCESS : self::FAILURE;
+        $strict = (bool) $this->option('strict');
+
+        return $report->passed() && (! $strict || $off === []) && (! $this->option('strict-game') || $gameOk) ? self::SUCCESS : self::FAILURE;
     }
 
     /**
@@ -153,8 +172,9 @@ final class SimulateEconomy extends Command
     /**
      * @param  array<string, PlayerRun>  $runs
      * @param  list<Finding>  $findings
+     * @param  array{runs: array<string, PlayerRun>, report: GateReport, rows: list<LadderRow>, unreachable: array<int, string>}  $game
      */
-    private function print(EconomyRules $economy, array $runs, GateReport $report, array $findings): void
+    private function print(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game): void
     {
         $this->line("Economy ruleset {$economy->version()}");
         $this->newLine();
@@ -180,17 +200,7 @@ final class SimulateEconomy extends Command
         foreach ($runs as $key => $run) {
             $this->newLine();
             $this->line("Player {$key}, {$run->player->name} ({$run->player->visitsPerDay} visits/day, up to ".$this->trim($run->player->maxHoursPerDay).' h, activity '.$this->trim($run->player->activity).'):');
-            $this->table(
-                ['car', 'target day', 'day', 'off', 'waited for', 'gate'],
-                array_map(fn (GateRow $row): array => [
-                    $row->rung,
-                    $row->target,
-                    $row->day ?? 'never',
-                    $row->deviation() === null ? '-' : sprintf('%+.0f%%', $row->deviation() * 100),
-                    $row->binding ?? '-',
-                    $row->passed ? 'ok' : 'OUT',
-                ], array_values(array_filter($report->rows, static fn (GateRow $row): bool => $row->player === (string) $key))),
-            );
+            $this->gateTable($report, (string) $key);
         }
 
         $failures = $report->failures();
@@ -202,6 +212,8 @@ final class SimulateEconomy extends Command
         } else {
             $this->error('Pace gate: FAILED. '.count($failures).' of '.count($report->rows)." days are out of {$tolerance} of the target.");
         }
+
+        $this->printGame($economy, $game);
 
         $this->newLine();
         $this->line('The rules of the game against the anchors (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'):');
@@ -222,28 +234,99 @@ final class SimulateEconomy extends Command
             : $this->warn("Rules of the game: {$off} of ".count($findings).' numbers are off the anchors. This does not fail the command, except with --strict.');
     }
 
+    /** The days a kind of player bought each car, against the days of the design. */
+    private function gateTable(GateReport $report, string $key): void
+    {
+        $this->table(
+            ['car', 'target day', 'day', 'off', 'waited for', 'gate'],
+            array_map(fn (GateRow $row): array => [
+                $row->rung,
+                $row->target,
+                $row->day ?? 'never',
+                $row->deviation() === null ? '-' : sprintf('%+.0f%%', $row->deviation() * 100),
+                $row->binding ?? '-',
+                $row->passed ? 'ok' : 'OUT',
+            ], array_values(array_filter($report->rows, static fn (GateRow $row): bool => $row->player === $key))),
+        );
+    }
+
+    /**
+     * The players with the fleet that the game lets them have, and the income that the game reaches at each level.
+     *
+     * @param  array{runs: array<string, PlayerRun>, report: GateReport, rows: list<LadderRow>, unreachable: array<int, string>}  $game
+     */
+    private function printGame(EconomyRules $economy, array $game): void
+    {
+        $fleet = $economy->fleetModel();
+        $this->newLine();
+        $this->line('The game scenario: the fleet that the rules of the game allow (every car drives and gives '.$this->trim($fleet->otherCarsXpShare * 100).'% of its experience to the player, a wreck is $'.$this->trim($fleet->wreckPrice).', a garage $'.$this->trim($fleet->garagePrice).' for '.$fleet->garageCapacity.' places):');
+
+        foreach ($game['runs'] as $key => $run) {
+            $this->newLine();
+            $this->line("Player {$key}, {$run->player->name}: ends with {$run->wrecks} wrecks and {$run->extraGarages} garages of other cities.");
+            $this->gateTable($game['report'], (string) $key);
+        }
+
+        $failures = $game['report']->failures();
+        $this->newLine();
+
+        $failures === []
+            ? $this->info('Fleet gate (game): PASSED. Every day is within the tolerance of the target.')
+            : $this->warn('Fleet gate (game): FAILED. '.count($failures).' of '.count($game['report']->rows).' days are out of '.sprintf('%.0f%%', $game['report']->tolerance * 100).' of the target. This does not fail the command, except with --strict-game.');
+
+        $this->newLine();
+        $this->line('The ladder of the game: the best net $/h that its cars and tracks reach at a level, against the anchor of the rung of that level (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'):');
+        $this->table(
+            ['level', 'rung', 'anchors $/h', 'game $/h', 'off', 'best', ''],
+            array_map(fn (LadderRow $row): array => [
+                $row->level,
+                $row->rung,
+                $this->money($row->anchor),
+                $this->money($row->game),
+                sprintf('%+.0f%%', $row->deviation() * 100),
+                "{$row->car} on {$row->track}",
+                $row->ok ? 'ok' : 'OFF',
+            ], $game['rows']),
+        );
+
+        $off = count(array_filter($game['rows'], static fn (LadderRow $row): bool => ! $row->ok));
+
+        if ($game['unreachable'] !== []) {
+            $this->warn('No car and track of the game reach '.implode(', ', $game['unreachable']).'.');
+        }
+
+        $off === 0 && $game['unreachable'] === []
+            ? $this->info('Ladder of the game: every level is within the anchors.')
+            : $this->warn("Ladder of the game: {$off} of ".count($game['rows']).' levels are off the anchors. This does not fail the command, except with --strict-game.');
+    }
+
     /**
      * @param  array<string, PlayerRun>  $runs
      * @param  list<Finding>  $findings
+     * @param  array{runs: array<string, PlayerRun>, report: GateReport, rows: list<LadderRow>, unreachable: array<int, string>}  $game
      * @return array<string, mixed>
      */
-    private function asArray(EconomyRules $economy, array $runs, GateReport $report, array $findings): array
+    private function asArray(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game): array
     {
         return [
             'ruleset' => $economy->version(),
-            'gate' => [
-                'passed' => $report->passed(),
-                'tolerance' => $report->tolerance,
-                'slack_days' => $report->slackDays,
-                'rows' => array_map(static fn (GateRow $row): array => [
-                    'player' => $row->player,
-                    'car' => $row->rung,
-                    'target_day' => $row->target,
-                    'day' => $row->day,
-                    'deviation' => $row->deviation() === null ? null : round($row->deviation(), 4),
-                    'waited_for' => $row->binding,
-                    'passed' => $row->passed,
-                ], $report->rows),
+            'gate' => $this->gateAsArray($report),
+            'game_fleet' => [
+                'gate' => $this->gateAsArray($game['report']),
+                'players' => array_map(static fn (PlayerRun $run): array => ['name' => $run->player->name, 'wrecks' => $run->wrecks, 'extra_garages' => $run->extraGarages], $game['runs']),
+            ],
+            'game_ladder' => [
+                'rows' => array_map(static fn (LadderRow $row): array => [
+                    'level' => $row->level,
+                    'rung' => $row->rung,
+                    'anchor' => round($row->anchor, 2),
+                    'game' => round($row->game, 2),
+                    'deviation' => round($row->deviation(), 4),
+                    'car' => $row->car,
+                    'track' => $row->track,
+                    'ok' => $row->ok,
+                ], $game['rows']),
+                'unreachable_rungs' => array_values($game['unreachable']),
             ],
             'players' => array_map(static fn (PlayerRun $run): array => ['name' => $run->player->name, 'days_simulated' => $run->daysSimulated], $runs),
             'consistency' => array_map(static fn (Finding $finding): array => [
@@ -254,6 +337,25 @@ final class SimulateEconomy extends Command
                 'deviation' => $finding->deviation() === null ? null : round($finding->deviation(), 4),
                 'ok' => $finding->ok,
             ], $findings),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    private function gateAsArray(GateReport $report): array
+    {
+        return [
+            'passed' => $report->passed(),
+            'tolerance' => $report->tolerance,
+            'slack_days' => $report->slackDays,
+            'rows' => array_map(static fn (GateRow $row): array => [
+                'player' => $row->player,
+                'car' => $row->rung,
+                'target_day' => $row->target,
+                'day' => $row->day,
+                'deviation' => $row->deviation() === null ? null : round($row->deviation(), 4),
+                'waited_for' => $row->binding,
+                'passed' => $row->passed,
+            ], $report->rows),
         ];
     }
 

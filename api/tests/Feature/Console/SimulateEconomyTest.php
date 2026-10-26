@@ -185,4 +185,68 @@ describe('economy:simulate', function () {
             ->expectsOutputToContain('needs a target day for each')
             ->assertExitCode(2);
     });
+
+    it('plays the game scenario too: the fleet that the rules of the game allow, and says that it is out of the pace of the design', function () {
+        Artisan::call('economy:simulate');
+        $output = Artisan::output();
+
+        expect($output)->toContain('The game scenario')
+            ->and($output)->toContain('ends with 14 wrecks and 4 garages of other cities')
+            ->and($output)->toContain('Fleet gate (game): FAILED')
+            // The regular player buys the last car on the 36th day with the fleet, and the design says the 76th.
+            ->and($output)->toMatch('/\| L8\s+\| 76\s+\| 36\s+\|/')
+            ->and($output)->toContain('does not fail the command, except with --strict-game');
+    });
+
+    it('sets the income that the game reaches at each level against the ladder, and names the rungs that nothing in the game reaches', function () {
+        Artisan::call('economy:simulate');
+        $output = Artisan::output();
+
+        expect($output)->toContain('The ladder of the game')
+            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$984\s+\|/')
+            ->and($output)->toContain('rdzak-gt-4 on autodrom-circuit')
+            ->and($output)->toContain('No car and track of the game reach L6, L7, L8.');
+    });
+
+    it('does not fail for the game scenario when it is not asked to, and fails when it is: with --strict-game', function () {
+        $this->artisan('economy:simulate', ['--strict' => true])->assertExitCode(0);
+        $this->artisan('economy:simulate', ['--strict-game' => true])->assertExitCode(1);
+    });
+
+    it('passes with --strict-game for a ruleset whose fleet is no bigger than the design thinks and whose ladder the game reaches', function () {
+        $data = economyData();
+        // No place for a wreck, no garage to buy, and a tolerance that the ladder of the game is within.
+        $data['model']['fleet']['home_free_places'] = 0;
+        $data['model']['fleet']['garage_city_levels'] = [];
+        $data['consistency']['tolerance'] = 0.6;
+
+        $this->artisan('economy:simulate', ['--ruleset' => economyTemporaryFile(json_encode($data, JSON_THROW_ON_ERROR)), '--strict-game' => true])
+            ->expectsOutputToContain('Fleet gate (game): PASSED')
+            ->expectsOutputToContain('Ladder of the game: every level is within the anchors')
+            ->assertExitCode(0);
+    });
+
+    it('brings the experience of the other cars down to nothing with the knob of the fleet, and the days fall back to the ones of one car', function () {
+        $data = economyData();
+        $data['model']['fleet']['other_cars_xp_share'] = 0;
+
+        Artisan::call('economy:simulate', ['--ruleset' => economyTemporaryFile(json_encode($data, JSON_THROW_ON_ERROR)), '--json' => true]);
+        $report = json_decode(Artisan::output(), true, 512, JSON_THROW_ON_ERROR);
+        $days = collect($report['game_fleet']['gate']['rows'])->where('player', 'A')->pluck('day')->all();
+
+        expect($days)->toBe([3, 8, 9, 18, 28, 36, 48, 69]);
+    });
+
+    it('prints the game scenario in the JSON report, for the kinds of players that were asked for', function () {
+        Artisan::call('economy:simulate', ['--json' => true, '--player' => ['B']]);
+        $report = json_decode(Artisan::output(), true, 512, JSON_THROW_ON_ERROR);
+
+        expect(array_keys($report['game_fleet']['players']))->toBe(['B'])
+            ->and($report['game_fleet']['players']['B'])->toMatchArray(['wrecks' => 14, 'extra_garages' => 4])
+            ->and($report['game_fleet']['gate']['passed'])->toBeFalse()
+            ->and(collect($report['game_fleet']['gate']['rows'])->pluck('player')->unique()->all())->toBe(['B'])
+            ->and($report['game_ladder']['unreachable_rungs'])->toBe(['L6', 'L7', 'L8'])
+            ->and($report['game_ladder']['rows'])->toHaveCount(11)
+            ->and($report['game_ladder']['rows'][0])->toMatchArray(['level' => 1, 'rung' => 'L0', 'car' => 'rdzak-gt-4', 'track' => 'zlomowo-street', 'ok' => true]);
+    });
 });
