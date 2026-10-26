@@ -251,4 +251,75 @@ describe('FleetView', () => {
     expect(wrapper.get('[data-test="car-6"] [data-test="play"]').text()).toBe('Graj tym autem')
     expect(wrapper.get('[data-test="car-5"] [data-test="car-condition"]').text()).toBe('Kondycja 100%')
   })
+
+  it('asks before a car is sold, with the price, and sells it for that price', async () => {
+    const afterSale = { ...aFleet({ cars: [aFleetCar()] }, 679_800), sold: { car: 6, cents: 79_800 } }
+    const calls = serve({
+      'GET /api/v1/cars': () => respond(200, aFleet()),
+      'POST /api/v1/cars/6/sell': () => respond(200, afterSale),
+      'GET /api/v1/runs/current': noRun,
+    })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+
+    const card = wrapper.get('[data-test="car-6"]')
+    expect(card.get('[data-test="sell"]').text()).toBe('Sell · $798')
+
+    await card.get('[data-test="sell"]').trigger('click')
+
+    expect(wrapper.get('[data-test="sell-sure-6"]').text()).toContain('Sell Bizon M-2 for $798?')
+    expect(wrapper.get('[data-test="sell-sure-6"]').text()).toContain('The parts on it go back to your inventory.')
+    expect(calls.some((call) => call.method === 'POST')).toBe(false)
+
+    await wrapper.get('[data-test="sell-confirm"]').trigger('click')
+    await flushPromises()
+
+    expect(calls.find((call) => call.method === 'POST')?.url).toBe('/api/v1/cars/6/sell')
+    expect(wrapper.get('[data-test="done"]').text()).toBe('Bizon M-2 sold for $798.')
+    expect(wrapper.find('[data-test="car-6"]').exists()).toBe(false)
+  })
+
+  it('keeps the car when the driver does not confirm the sale', async () => {
+    const calls = serve({ 'GET /api/v1/cars': () => respond(200, aFleet()), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+    await wrapper.get('[data-test="car-6"] [data-test="sell"]').trigger('click')
+    await wrapper.get('[data-test="sell-keep"]').trigger('click')
+
+    expect(wrapper.find('[data-test="sell-sure-6"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="car-6"] [data-test="sell"]').exists()).toBe(true)
+    expect(calls.some((call) => call.method === 'POST')).toBe(false)
+  })
+
+  it('does not offer to sell the last car, or one that is on the road, and says why', async () => {
+    const last = aFleetCar({ sell_blocked: 'last_car' })
+    const busy = aFleetCar({ id: 6, selected: false, sell_blocked: 'busy' })
+    serve({ 'GET /api/v1/cars': () => respond(200, aFleet({ cars: [last, busy] })), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="car-5"] [data-test="sell"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-test="car-5"] [data-test="sell-blocked"]').text()).toBe('Your last car stays with you.')
+    expect(wrapper.get('[data-test="car-6"] [data-test="sell"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-test="car-6"] [data-test="sell-blocked"]').text()).toBe('It is on the road or has work in the workshop.')
+  })
+
+  it('shows what the server says when it refuses a sale', async () => {
+    serve({
+      'GET /api/v1/cars': () => respond(200, aFleet()),
+      'POST /api/v1/cars/6/sell': () => respond(422, { message: 'The car is on the road, or the workshop has work waiting on it, so it cannot be sold now.', code: 'car_busy' }),
+      'GET /api/v1/runs/current': noRun,
+    })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+    await wrapper.get('[data-test="car-6"] [data-test="sell"]').trigger('click')
+    await wrapper.get('[data-test="sell-confirm"]').trigger('click')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="error"]').text()).toBe('The car is on the road, or the workshop has work waiting on it, so it cannot be sold now.')
+  })
 })

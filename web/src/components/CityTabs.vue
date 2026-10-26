@@ -10,5 +10,6 @@ const { t } = useI18n()
     <RouterLink :to="{ name: 'shop' }" exact-active-class="on" data-test="tab-shop">{{ t('market.tabShop') }}</RouterLink>
     <RouterLink :to="{ name: 'exchange' }" exact-active-class="on" data-test="tab-exchange">{{ t('market.tabExchange') }}</RouterLink>
     <RouterLink :to="{ name: 'dealer' }" exact-active-class="on" data-test="tab-dealer">{{ t('market.tabDealer') }}</RouterLink>
+    <RouterLink :to="{ name: 'storage' }" exact-active-class="on" data-test="tab-storage">{{ t('market.tabStorage') }}</RouterLink>
   </nav>
 </template>

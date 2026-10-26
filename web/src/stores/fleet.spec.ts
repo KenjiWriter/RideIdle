@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError } from '@/api/client'
-import { aFleet } from '@/test/fleetFixtures'
+import { aFleet, aFleetCar } from '@/test/fleetFixtures'
 import { respond, serveApi } from '@/test/fetchServer'
 import { NOW } from '@/test/garageFixtures'
 
@@ -115,5 +115,22 @@ describe('fleet store', () => {
     expect(idOf(2)).not.toBe(idOf(1))
     expect(idOf(3)).toBe(idOf(2))
     expect(idOf(4)).not.toBe(idOf(3))
+  })
+
+  it('sells a car, takes the fleet from the answer, says what was paid, and asks for the car, the garage and the map again', async () => {
+    const calls = serveApi(fetchMock, {
+      'POST /api/v1/cars/6/sell': () => respond(200, { ...aFleet({ cars: [aFleetCar()] }, 679_800), sold: { car: 6, cents: 79_800 } }),
+      'GET /api/v1/runs/current': noRun,
+      'GET /api/v1/garage': () => respond(500, { message: 'Server error' }),
+      'GET /api/v1/map': () => respond(500, { message: 'Server error' }),
+    })
+    const store = useFleetStore()
+
+    const paid = await store.sell(6)
+    await vi.waitFor(() => expect(calls.map((call) => call.url)).toEqual(expect.arrayContaining(['/api/v1/runs/current', '/api/v1/garage', '/api/v1/map'])))
+
+    expect(paid).toBe(79_800)
+    expect(store.cash?.cash_cents).toBe(679_800)
+    expect(store.fleet?.cars.map((car) => car.id)).toEqual([5])
   })
 })

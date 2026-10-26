@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { api } from '@/api/client'
-import type { MarketResponse } from '@/api/types'
+import type { MarketResponse, StorageFind, StorageKind } from '@/api/types'
 import { intentionIds } from '@/features/run/intentionIds'
 import { useFleetStore } from '@/stores/fleet'
 import { useRunStore } from '@/stores/run'
@@ -22,6 +22,7 @@ export const useMarketStore = defineStore('market', () => {
   /** The clock of the server minus the clock of this device, as it was at the last answer. */
   const clockOffsetMs = ref(0)
   const dealerIds = intentionIds(DEALER_ID_LIFETIME_MS)
+  const storageIds = intentionIds(DEALER_ID_LIFETIME_MS)
 
   /** What time it is for the server now. */
   function serverNow(): number {
@@ -79,6 +80,23 @@ export const useMarketStore = defineStore('market', () => {
     return response.bought ?? null
   }
 
+  /**
+   * Opens a storage unit: the server draws the car that was in it and puts it in the garage of the city. A request that was lost on its way and
+   * is sent again opens one unit: the server answers with `repeated`. Returns what was found, null when the unit was opened before.
+   */
+  async function openStorage(unit: StorageKind): Promise<StorageFind | null> {
+    const response = await api<MarketResponse>(`/v1/market/storage/${unit}/open`, {
+      method: 'POST',
+      body: JSON.stringify({ request_id: storageIds.forKey(unit) }),
+    })
+
+    storageIds.answered()
+    apply(response)
+    syncRun()
+
+    return response.opened ?? null
+  }
+
   /** Buys a wreck of the yard into the garage of the city of the market: the fleet buys it, and the market is asked for again. */
   async function buyWreck(vehicle: string): Promise<number | null> {
     const city = market.value?.city.slug
@@ -94,5 +112,5 @@ export const useMarketStore = defineStore('market', () => {
     return bought
   }
 
-  return { market, cash, loaded, serverNow, load, inspect, buyListing, buyNew, buyWreck }
+  return { market, cash, loaded, serverNow, load, inspect, buyListing, buyNew, openStorage, buyWreck }
 })

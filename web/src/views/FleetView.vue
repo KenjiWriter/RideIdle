@@ -5,6 +5,7 @@ import { RouterLink, useRouter } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import type { FleetCar, FleetGarage } from '@/api/types'
+import CarSale from '@/components/CarSale.vue'
 import GameShell from '@/components/GameShell.vue'
 import GarageTabs from '@/components/GarageTabs.vue'
 import { useFlash } from '@/features/run/useFlash'
@@ -130,6 +131,13 @@ async function attempt(action: () => Promise<string>): Promise<void> {
   }
 }
 
+const sell = (car: FleetCar) =>
+  attempt(async () => {
+    const cents = await store.sell(car.id)
+
+    return t('fleet.sold', { car: car.vehicle.name, price: money(cents) })
+  })
+
 const choose = (car: FleetCar) =>
   attempt(async () => {
     await store.select(car.id)
@@ -183,7 +191,10 @@ const buyGarage = (garage: FleetGarage) =>
             <span class="chip chip-am">{{ t('garage.carLevel', { level: car.level }) }}</span>
             <span class="chip" :class="car.condition_percent < 60 ? 'chip-bad' : ''" data-test="car-condition">{{ t('fleet.condition', { percent: car.condition_percent }) }}</span>
           </div>
-          <button v-if="!car.selected" type="button" class="btn btn-secondary btn-sm" :disabled="busy" data-test="play" @click="choose(car)">{{ t('fleet.play') }}</button>
+          <div class="flex flex-wrap gap-2">
+            <button v-if="!car.selected" type="button" class="btn btn-secondary btn-sm flex-1" :disabled="busy" data-test="play" @click="choose(car)">{{ t('fleet.play') }}</button>
+            <CarSale :car="car" :disabled="busy" @sell="sell(car)" />
+          </div>
         </article>
 
         <div v-if="garage.free > 0" class="card flex items-center justify-between gap-2.5 !p-3 !border-dashed" data-test="free-places">

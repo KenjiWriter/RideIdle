@@ -5,7 +5,7 @@ import { ApiError } from '@/api/client'
 import { aFleet } from '@/test/fleetFixtures'
 import { respond, serveApi } from '@/test/fetchServer'
 import { NOW } from '@/test/garageFixtures'
-import { aMarket } from '@/test/marketFixtures'
+import { aFind, aMarket } from '@/test/marketFixtures'
 
 import { DEALER_ID_LIFETIME_MS, useMarketStore } from './market'
 
@@ -125,5 +125,40 @@ describe('market store', () => {
 
   it('does not buy a wreck before it knows the city', async () => {
     await expect(useMarketStore().buyWreck('rdzak-gt-4')).rejects.toThrow('not known')
+  })
+
+  it('opens a storage unit with a request id, and says what was in it', async () => {
+    const calls = serveApi(fetchMock, { 'POST /api/v1/market/storage/small/open': () => respond(201, { ...aMarket(), bought: 9, repeated: false, opened: aFind() }), 'GET /api/v1/runs/current': noRun })
+
+    const found = await useMarketStore().openStorage('small')
+
+    expect(found).toEqual(aFind())
+    expect(calls[0]?.body).toEqual({ request_id: expect.any(String) })
+  })
+
+  it('answers null for a unit that was opened before', async () => {
+    serveApi(fetchMock, { 'POST /api/v1/market/storage/small/open': () => respond(200, { ...aMarket(), bought: null, repeated: true, opened: null }), 'GET /api/v1/runs/current': noRun })
+
+    expect(await useMarketStore().openStorage('small')).toBeNull()
+  })
+
+  it('sends the same request id again when the answer was lost, so the unit is opened once, and a new one for the next unit', async () => {
+    let attempt = 0
+    const calls = serveApi(fetchMock, {
+      'POST /api/v1/market/storage/small/open': () => (++attempt === 3 ? respond(201, { ...aMarket(), bought: 9, opened: aFind() }) : respond(500, { message: 'Server error' })),
+      'GET /api/v1/runs/current': noRun,
+    })
+    const store = useMarketStore()
+    const idOf = (index: number): string => (calls.filter((call) => call.method === 'POST')[index]?.body as { request_id: string }).request_id
+
+    await expect(store.openStorage('small')).rejects.toBeInstanceOf(ApiError)
+    await expect(store.openStorage('small')).rejects.toBeInstanceOf(ApiError)
+    await store.openStorage('small')
+    await store.openStorage('small').catch(() => undefined)
+
+    expect(idOf(1)).toBe(idOf(0))
+    expect(idOf(2)).toBe(idOf(0))
+    // The unit was answered, so the next one is a new intention.
+    expect(idOf(3)).not.toBe(idOf(2))
   })
 })

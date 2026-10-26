@@ -39,4 +39,5 @@ export const routes: RouteRecordRaw[] = [
   { path: '/shop', name: 'shop', component: () => import('@/views/ShopView.vue'), meta: { requiresAuth: true } },
   { path: '/exchange', name: 'exchange', component: () => import('@/views/ExchangeView.vue'), meta: { requiresAuth: true } },
   { path: '/dealer', name: 'dealer', component: () => import('@/views/DealerView.vue'), meta: { requiresAuth: true } },
+  { path: '/storage', name: 'storage', component: () => import('@/views/StorageView.vue'), meta: { requiresAuth: true } },
 ]

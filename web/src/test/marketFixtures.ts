@@ -1,4 +1,4 @@
-import type { DealerOffer, ExchangeListing, MarketResponse, MarketVehicle } from '@/api/types'
+import type { DealerOffer, ExchangeListing, MarketResponse, MarketVehicle, StorageFind } from '@/api/types'
 
 import { NOW } from './garageFixtures'
 
@@ -64,9 +64,31 @@ export function aMarket(data: Partial<MarketResponse['data']> = {}, cashCents = 
         { slug: 'rdzak-gt-4', name: 'Rdzak GT-4', class: 'hatchback', price_cents: 114_000 },
         { slug: 'bizon-m-2', name: 'Bizon M-2', class: 'muscle', price_cents: 139_000 },
       ],
+      storage: {
+        pity_every: 15,
+        units: [
+          { key: 'small', unlock_level: 3, open: true, price_cents: 120_000, odds: { scrap: 70, junk: 25, good: 4.5, gem: 0.5 }, until_guarantee: 12 },
+          { key: 'medium', unlock_level: 6, open: false, price_cents: 350_000, odds: { scrap: 35, junk: 39, good: 20, gem: 6 }, until_guarantee: 15 },
+          { key: 'large', unlock_level: 9, open: false, price_cents: 600_000, odds: { scrap: 15, junk: 30, good: 40, gem: 15 }, until_guarantee: 15 },
+        ],
+      },
       ...data,
     },
     wallet: { cash_cents: cashCents, xp: 1_000 },
     now_ms: nowMs,
+  }
+}
+
+/** What a small unit held: a Rdzak GT-3 of eight years, in a condition of 72% with one defect, worth $4 000 and sold for $2 800. */
+export function aFind(overrides: Partial<StorageFind> = {}): StorageFind {
+  return {
+    class: 'good',
+    vehicle: aVehicle(),
+    age_years: 8,
+    mileage_km: 120_000,
+    condition: { percent: 72, defects: 1 },
+    value_cents: 400_000,
+    sale_cents: 280_000,
+    ...overrides,
   }
 }

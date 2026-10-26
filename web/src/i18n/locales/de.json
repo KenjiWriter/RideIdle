@@ -545,7 +545,17 @@
     },
     "condition": "Zustand {percent} %",
     "buyCarTitle": "Auto kaufen",
-    "buyCarNote": "Börse, Händler und Schrottplatz sind in der Stadt, in der das Auto steht, mit dem du spielst."
+    "buyCarNote": "Börse, Händler und Schrottplatz sind in der Stadt, in der das Auto steht, mit dem du spielst.",
+    "sell": "Verkaufen · {price}",
+    "sellSure": "{car} für {price} verkaufen?",
+    "sellParts": "Die verbauten Teile gehen zurück in dein Inventar.",
+    "sellConfirm": "Verkaufen",
+    "sellKeep": "Behalten",
+    "sold": "{car} für {price} verkauft.",
+    "sellBlocked": {
+      "last_car": "Dein letztes Auto bleibt bei dir.",
+      "busy": "Es ist unterwegs oder hat Arbeit in der Werkstatt."
+    }
   },
   "market": {
     "tabs": "Dienste der Stadt",
@@ -575,6 +585,35 @@
     "dealerLocked": "Erfordert Spielerstufe {level}",
     "km": "{km} km",
     "speed": "{value} km/h",
-    "mass": "{value} kg"
+    "mass": "{value} kg",
+    "tabStorage": "Lager",
+    "storageTitle": "Lagerabteile",
+    "storageSub": "{city} · drinnen steht ein Auto, du siehst es aber erst nach der Zahlung",
+    "storageKind": {
+      "small": "Kleines Abteil",
+      "medium": "Mittleres Abteil",
+      "large": "Großes Abteil"
+    },
+    "storageOdds": "Chancen",
+    "storageClass": {
+      "scrap": "Schrott",
+      "junk": "Gurke",
+      "good": "Gutes Auto",
+      "gem": "Juwel"
+    },
+    "storageOdd": "{name} {percent} %",
+    "storageOpen": "Öffnen · {price}",
+    "storageLocked": "Erfordert Spielerstufe {level}",
+    "storageGuarantee": "Bis zur Garantie: {count}",
+    "storageRule": "Wenn {every} Abteile in Folge nichts Gutes enthalten, steckt im nächsten ein gutes Auto oder besser.",
+    "storageResultTitle": {
+      "scrap": "Nur ein Haufen Schrott",
+      "junk": "Eine Gurke, aber sie lässt sich verkaufen",
+      "good": "Ein guter Fund!",
+      "gem": "Ein Juwel! Was für ein Glück!"
+    },
+    "storageSale": "Verkauf für",
+    "storageWorth": "Wert auf dem Markt: {price}",
+    "storageToFleet": "Zur Flotte"
   }
 }

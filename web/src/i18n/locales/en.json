@@ -545,7 +545,17 @@
     },
     "condition": "Condition {percent}%",
     "buyCarTitle": "Buy a car",
-    "buyCarNote": "The exchange, the dealer and the wrecks are in the city where the car you play stands."
+    "buyCarNote": "The exchange, the dealer and the wrecks are in the city where the car you play stands.",
+    "sell": "Sell · {price}",
+    "sellSure": "Sell {car} for {price}?",
+    "sellParts": "The parts on it go back to your inventory.",
+    "sellConfirm": "Sell",
+    "sellKeep": "Keep",
+    "sold": "{car} sold for {price}.",
+    "sellBlocked": {
+      "last_car": "Your last car stays with you.",
+      "busy": "It is on the road or has work in the workshop."
+    }
   },
   "market": {
     "tabs": "City services",
@@ -575,6 +585,35 @@
     "dealerLocked": "Requires player level {level}",
     "km": "{km} km",
     "speed": "{value} km/h",
-    "mass": "{value} kg"
+    "mass": "{value} kg",
+    "tabStorage": "Storage",
+    "storageTitle": "Storage units",
+    "storageSub": "{city} · there is a car inside, but you see it only after you pay",
+    "storageKind": {
+      "small": "Small unit",
+      "medium": "Medium unit",
+      "large": "Large unit"
+    },
+    "storageOdds": "Odds",
+    "storageClass": {
+      "scrap": "Scrap",
+      "junk": "Junk",
+      "good": "Good car",
+      "gem": "Gem"
+    },
+    "storageOdd": "{name} {percent}%",
+    "storageOpen": "Open · {price}",
+    "storageLocked": "Requires player level {level}",
+    "storageGuarantee": "Until the guarantee: {count}",
+    "storageRule": "If {every} units in a row give nothing good, the next one holds a good car or better.",
+    "storageResultTitle": {
+      "scrap": "Just a heap of scrap",
+      "junk": "Junk, but it still sells",
+      "good": "A good find!",
+      "gem": "A gem! Lucky you!"
+    },
+    "storageSale": "Sells for",
+    "storageWorth": "Worth {price} on the market",
+    "storageToFleet": "To the fleet"
   }
 }

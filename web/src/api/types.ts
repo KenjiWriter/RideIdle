@@ -417,6 +417,10 @@ export interface FleetCar {
   run: { id: number; status: RunStatus; stop_reason: StopReason | null; laps_done: number; fuel_ml: number; tank_ml: number; track: string } | null
   /** The journey the car is on, if it is. */
   travel: { to: string; to_name: string; arrive_ms: number } | null
+  /** What a sale of the car pays now, in cents. */
+  sale_cents: number
+  /** Why the car cannot be sold now: it is the last one the driver has, or it is on the road or has work in the workshop. */
+  sell_blocked: 'last_car' | 'busy' | null
 }
 
 /** A garage the driver can have in a city, with how full it is. */
@@ -443,6 +447,8 @@ export interface FleetResponse {
   now_ms: number
   repeated?: boolean
   bought?: number | null
+  /** The car that was sold, and what the driver was paid for it. */
+  sold?: { car: number; cents: number }
 }
 
 /** A car of the market as the screens show it: the body, and what it is made of. */
@@ -482,6 +488,35 @@ export interface DealerOffer {
   open: boolean
 }
 
+/** What can be in a storage unit, from the worst to the best. */
+export type StorageClass = 'scrap' | 'junk' | 'good' | 'gem'
+
+/** The kinds of storage unit, from the cheapest. */
+export type StorageKind = 'small' | 'medium' | 'large'
+
+/** A kind of storage unit: what it costs, the chance of each thing in it (in percent), and how far the driver is from the guarantee of a good car. */
+export interface StorageUnit {
+  key: StorageKind
+  unlock_level: number
+  /** The level of the driver opens this kind of unit. */
+  open: boolean
+  price_cents: number
+  odds: Record<StorageClass, number>
+  /** How many units of this kind it takes at most to get a good car or better. */
+  until_guarantee: number
+}
+
+/** What was in the unit that was opened: the car, how it looks, and what a sale of it pays. */
+export interface StorageFind {
+  class: StorageClass
+  vehicle: MarketVehicle
+  age_years: number
+  mileage_km: number
+  condition: { percent: number; defects: number }
+  value_cents: number
+  sale_cents: number
+}
+
 /** GET /api/v1/market, and the answer of the calls that buy or inspect a car. The market is the one of the city where the car the driver plays stands. */
 export interface MarketResponse {
   data: {
@@ -491,10 +526,13 @@ export interface MarketResponse {
     exchange: { refresh_ms: number; next_refresh_ms: number; listings: ExchangeListing[] }
     dealer: DealerOffer[]
     wrecks: YardCar[]
+    storage: { pity_every: number; units: StorageUnit[] }
   }
   wallet: Wallet
   now_ms: number
   /** A purchase that came a second time bought nothing. */
   repeated?: boolean
   bought?: number | null
+  /** The car found in a storage unit that was just opened, null when the request came a second time. */
+  opened?: StorageFind | null
 }

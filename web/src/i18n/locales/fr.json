@@ -545,7 +545,17 @@
     },
     "condition": "État {percent} %",
     "buyCarTitle": "Acheter une voiture",
-    "buyCarNote": "La bourse, le concessionnaire et la casse sont dans la ville où se trouve la voiture que vous jouez."
+    "buyCarNote": "La bourse, le concessionnaire et la casse sont dans la ville où se trouve la voiture que vous jouez.",
+    "sell": "Vendre · {price}",
+    "sellSure": "Vendre {car} pour {price} ?",
+    "sellParts": "Les pièces montées retournent dans votre inventaire.",
+    "sellConfirm": "Vendre",
+    "sellKeep": "Garder",
+    "sold": "{car} vendue pour {price}.",
+    "sellBlocked": {
+      "last_car": "Votre dernière voiture reste avec vous.",
+      "busy": "Elle est sur la route ou a du travail à l’atelier."
+    }
   },
   "market": {
     "tabs": "Services de la ville",
@@ -575,6 +585,35 @@
     "dealerLocked": "Niveau de joueur {level} requis",
     "km": "{km} km",
     "speed": "{value} km/h",
-    "mass": "{value} kg"
+    "mass": "{value} kg",
+    "tabStorage": "Box",
+    "storageTitle": "Box de stockage",
+    "storageSub": "{city} · une voiture est à l’intérieur, mais vous ne la voyez qu’après avoir payé",
+    "storageKind": {
+      "small": "Petit box",
+      "medium": "Box moyen",
+      "large": "Grand box"
+    },
+    "storageOdds": "Chances",
+    "storageClass": {
+      "scrap": "Ferraille",
+      "junk": "Épave",
+      "good": "Bonne voiture",
+      "gem": "Perle rare"
+    },
+    "storageOdd": "{name} {percent} %",
+    "storageOpen": "Ouvrir · {price}",
+    "storageLocked": "Niveau de joueur {level} requis",
+    "storageGuarantee": "Avant la garantie : {count}",
+    "storageRule": "Si {every} box d’affilée ne donnent rien de bon, le suivant contient une bonne voiture ou mieux.",
+    "storageResultTitle": {
+      "scrap": "Rien que de la ferraille",
+      "junk": "Une épave, mais ça se vend",
+      "good": "Belle trouvaille !",
+      "gem": "Une perle rare ! Quelle chance !"
+    },
+    "storageSale": "Se vend",
+    "storageWorth": "Vaut {price} sur le marché",
+    "storageToFleet": "Vers la flotte"
   }
 }

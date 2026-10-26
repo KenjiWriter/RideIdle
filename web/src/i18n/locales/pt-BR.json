@@ -545,7 +545,17 @@
     },
     "condition": "Condição {percent}%",
     "buyCarTitle": "Comprar um carro",
-    "buyCarNote": "A bolsa, a concessionária e o ferro-velho ficam na cidade onde está o carro que você joga."
+    "buyCarNote": "A bolsa, a concessionária e o ferro-velho ficam na cidade onde está o carro que você joga.",
+    "sell": "Vender · {price}",
+    "sellSure": "Vender {car} por {price}?",
+    "sellParts": "As peças instaladas voltam para o seu inventário.",
+    "sellConfirm": "Vender",
+    "sellKeep": "Manter",
+    "sold": "{car} vendido por {price}.",
+    "sellBlocked": {
+      "last_car": "Seu último carro fica com você.",
+      "busy": "Ele está na estrada ou tem serviço na oficina."
+    }
   },
   "market": {
     "tabs": "Serviços da cidade",
@@ -575,6 +585,35 @@
     "dealerLocked": "Requer nível de jogador {level}",
     "km": "{km} km",
     "speed": "{value} km/h",
-    "mass": "{value} kg"
+    "mass": "{value} kg",
+    "tabStorage": "Galpões",
+    "storageTitle": "Galpões",
+    "storageSub": "{city} · há um carro lá dentro, mas você só o vê depois de pagar",
+    "storageKind": {
+      "small": "Galpão pequeno",
+      "medium": "Galpão médio",
+      "large": "Galpão grande"
+    },
+    "storageOdds": "Chances",
+    "storageClass": {
+      "scrap": "Sucata",
+      "junk": "Lata-velha",
+      "good": "Carro bom",
+      "gem": "Joia"
+    },
+    "storageOdd": "{name} {percent}%",
+    "storageOpen": "Abrir · {price}",
+    "storageLocked": "Requer nível de jogador {level}",
+    "storageGuarantee": "Até a garantia: {count}",
+    "storageRule": "Se {every} galpões seguidos não derem nada de bom, o próximo guarda um carro bom ou melhor.",
+    "storageResultTitle": {
+      "scrap": "Só um monte de sucata",
+      "junk": "Uma lata-velha, mas dá para vender",
+      "good": "Um bom achado!",
+      "gem": "Uma joia! Que sorte!"
+    },
+    "storageSale": "Vende por",
+    "storageWorth": "Vale {price} no mercado",
+    "storageToFleet": "Para a frota"
   }
 }

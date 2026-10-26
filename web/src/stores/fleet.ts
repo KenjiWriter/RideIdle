@@ -63,6 +63,19 @@ export const useFleetStore = defineStore('fleet', () => {
     syncSelected()
   }
 
+  /**
+   * Sells a car: the driver is paid and the car is gone from the garage. The car they play may be the one that went, so the screens that show
+   * it ask for it again. Returns what the driver was paid, in cents.
+   */
+  async function sell(carId: number): Promise<number> {
+    const response = await api<FleetResponse>(`/v1/cars/${carId}/sell`, { method: 'POST' })
+
+    apply(response)
+    syncSelected()
+
+    return response.sold?.cents ?? 0
+  }
+
   /** Buys a garage in a city. */
   async function buyGarage(city: string): Promise<void> {
     apply(await api<FleetResponse>('/v1/garages', { method: 'POST', body: JSON.stringify({ city }) }))
@@ -97,5 +110,5 @@ export const useFleetStore = defineStore('fleet', () => {
     return response.bought ?? null
   }
 
-  return { fleet, cash, loaded, serverNow, load, select, buyGarage, buyCar }
+  return { fleet, cash, loaded, serverNow, load, select, sell, buyGarage, buyCar }
 })

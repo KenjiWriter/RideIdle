@@ -545,7 +545,17 @@
     },
     "condition": "Kondycja {percent}%",
     "buyCarTitle": "Kup auto",
-    "buyCarNote": "Giełda, dealer i złomowisko są w mieście, w którym stoi auto, którym grasz."
+    "buyCarNote": "Giełda, dealer i złomowisko są w mieście, w którym stoi auto, którym grasz.",
+    "sell": "Sprzedaj · {price}",
+    "sellSure": "Sprzedać {car} za {price}?",
+    "sellParts": "Części z auta wrócą do Twojego inwentarza.",
+    "sellConfirm": "Sprzedaj",
+    "sellKeep": "Zostaw",
+    "sold": "Sprzedano {car} za {price}.",
+    "sellBlocked": {
+      "last_car": "Ostatnie auto zostaje z Tobą.",
+      "busy": "Auto jest w drodze albo ma zlecenie w warsztacie."
+    }
   },
   "market": {
     "tabs": "Usługi miasta",
@@ -575,6 +585,35 @@
     "dealerLocked": "Wymaga poziomu gracza {level}",
     "km": "{km} km",
     "speed": "{value} km/h",
-    "mass": "{value} kg"
+    "mass": "{value} kg",
+    "tabStorage": "Magazyny",
+    "storageTitle": "Magazyny",
+    "storageSub": "{city} · w środku stoi auto, ale zobaczysz je dopiero po zapłacie",
+    "storageKind": {
+      "small": "Mały magazyn",
+      "medium": "Średni magazyn",
+      "large": "Duży magazyn"
+    },
+    "storageOdds": "Szanse",
+    "storageClass": {
+      "scrap": "Złom",
+      "junk": "Rupieć",
+      "good": "Dobre auto",
+      "gem": "Perełka"
+    },
+    "storageOdd": "{name} {percent}%",
+    "storageOpen": "Otwórz · {price}",
+    "storageLocked": "Wymaga poziomu gracza {level}",
+    "storageGuarantee": "Do gwarancji: {count}",
+    "storageRule": "Jeśli {every} magazynów z rzędu nie da nic dobrego, następny kryje dobre auto albo lepsze.",
+    "storageResultTitle": {
+      "scrap": "Sam złom",
+      "junk": "Rupieć, ale da się sprzedać",
+      "good": "Dobry strzał!",
+      "gem": "Perełka! Masz szczęście!"
+    },
+    "storageSale": "Sprzedasz za",
+    "storageWorth": "Warte na rynku {price}",
+    "storageToFleet": "Do floty"
   }
 }
