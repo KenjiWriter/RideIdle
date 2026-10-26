@@ -605,7 +605,7 @@
     "storageOpen": "Öffnen · {price}",
     "storageLocked": "Erfordert Spielerstufe {level}",
     "storageGuarantee": "Bis zur Garantie: {count}",
-    "storageRule": "Wenn {every} Abteile in Folge nichts Gutes enthalten, steckt im nächsten ein gutes Auto oder besser.",
+    "storageRule": "Von jeweils {every} Abteilen in Folge enthält mindestens eines ein gutes Auto oder besser.",
     "storageResultTitle": {
       "scrap": "Nur ein Haufen Schrott",
       "junk": "Eine Gurke, aber sie lässt sich verkaufen",

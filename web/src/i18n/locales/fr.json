@@ -605,7 +605,7 @@
     "storageOpen": "Ouvrir · {price}",
     "storageLocked": "Niveau de joueur {level} requis",
     "storageGuarantee": "Avant la garantie : {count}",
-    "storageRule": "Si {every} box d’affilée ne donnent rien de bon, le suivant contient une bonne voiture ou mieux.",
+    "storageRule": "Sur {every} box d’affilée, au moins un contient une bonne voiture ou mieux.",
     "storageResultTitle": {
       "scrap": "Rien que de la ferraille",
       "junk": "Une épave, mais ça se vend",

@@ -605,7 +605,7 @@
     "storageOpen": "Open · {price}",
     "storageLocked": "Requires player level {level}",
     "storageGuarantee": "Until the guarantee: {count}",
-    "storageRule": "If {every} units in a row give nothing good, the next one holds a good car or better.",
+    "storageRule": "At least one unit in every {every} in a row holds a good car or better.",
     "storageResultTitle": {
       "scrap": "Just a heap of scrap",
       "junk": "Junk, but it still sells",

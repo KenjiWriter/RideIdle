@@ -48,7 +48,7 @@ describe('StorageView', () => {
     expect(small.get('[data-test="odds-gem"]').text()).toBe('Gem 0.5%')
     expect(small.get('[data-test="guarantee"]').text()).toBe('Until the guarantee: 12')
     expect(small.get('[data-test="open"]').text()).toBe('Open · $1,200')
-    expect(wrapper.get('[data-test="rule"]').text()).toBe('If 15 units in a row give nothing good, the next one holds a good car or better.')
+    expect(wrapper.get('[data-test="rule"]').text()).toBe('At least one unit in every 15 in a row holds a good car or better.')
   })
 
   it('says what level a unit asks for, and does not let the driver open it', async () => {

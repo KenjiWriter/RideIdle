@@ -605,7 +605,7 @@
     "storageOpen": "Otwórz · {price}",
     "storageLocked": "Wymaga poziomu gracza {level}",
     "storageGuarantee": "Do gwarancji: {count}",
-    "storageRule": "Jeśli {every} magazynów z rzędu nie da nic dobrego, następny kryje dobre auto albo lepsze.",
+    "storageRule": "W każdych {every} magazynach z rzędu przynajmniej jeden kryje dobre auto albo lepsze.",
     "storageResultTitle": {
       "scrap": "Sam złom",
       "junk": "Rupieć, ale da się sprzedać",

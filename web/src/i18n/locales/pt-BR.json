@@ -605,7 +605,7 @@
     "storageOpen": "Abrir · {price}",
     "storageLocked": "Requer nível de jogador {level}",
     "storageGuarantee": "Até a garantia: {count}",
-    "storageRule": "Se {every} galpões seguidos não derem nada de bom, o próximo guarda um carro bom ou melhor.",
+    "storageRule": "A cada {every} galpões seguidos, pelo menos um guarda um carro bom ou melhor.",
     "storageResultTitle": {
       "scrap": "Só um monte de sucata",
       "junk": "Uma lata-velha, mas dá para vender",
