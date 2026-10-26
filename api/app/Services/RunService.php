@@ -111,8 +111,10 @@ final class RunService
     }
 
     /**
-     * Sends out a car that waits in the garage: it drives from now on, and nothing was earned while it stood. A car that does not wait
-     * (it drives already, or it stands for another reason) is left as it is, so pressing Start twice is the same as pressing it once.
+     * Sends out a car that waits in the garage: it drives from now on, and nothing was earned while it stood. It leaves with a head start
+     * (`start.head_start_ms` of the rules, never more than its shortest lap less a second), so that its first lap is short: the tutorial waits
+     * for it, and a newcomer who has just pressed Start should not stare at a lap of a minute and a quarter. A car that does not wait (it drives
+     * already, or it stands for another reason) is left as it is, so pressing Start twice is the same as pressing it once.
      */
     public function begin(int $runId, ?int $nowMs = null): RaceRun
     {
@@ -121,10 +123,13 @@ final class RunService
                 return $run;
             }
 
+            $shortestLapMs = min(array_map('intval', $run->config['lap_ms']));
+            $headStartMs = max(0, min(($this->rules ?? Rules::fromConfig())->startHeadStartMs(), $shortestLapMs - 1_000));
+
             $run->forceFill([
                 'status' => RaceRun::STATUS_RUNNING,
                 'stop_reason' => null,
-                'cursor_ms' => max($run->cursor_ms, $now),
+                'cursor_ms' => max($run->cursor_ms, $now) - $headStartMs,
                 'state_version' => $run->state_version + 1,
             ])->save();
 

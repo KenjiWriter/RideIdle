@@ -62,19 +62,27 @@ it('prices a step up as the next car less 70 percent of what the old one is sold
     expect($rules->stepCost(0))->toBe(4_500 - 0.7 * 2_000);
 });
 
-it('reaches a level with 45 * level ^ 2.3 experience', function () {
+it('reaches a level with the table of the first levels, a straight line to the catch-up level, and 450 * level ^ 2.3 from there', function () {
     $rules = economyRules();
 
-    expect(round($rules->xpToReach(3)))->toBe(563.0)
+    // The table: level 2 in three laps of 20 XP, level 10 in 640.
+    expect($rules->xpToReach(2))->toBe(60.0)
+        ->and($rules->xpToReach(3))->toBe(180.0)
+        ->and($rules->xpToReach(10))->toBe(12_800.0)
+        // The levels between are on a straight line from level 10 to the curve at level 20, which is where the curve of the design takes over.
+        ->and(round($rules->xpToReach(15)))->toBe(227_481.0)
+        ->and(round($rules->xpToReach(20)))->toBe(round(450 * 20 ** 2.3))
+        ->and(round($rules->xpToReach(25)))->toBe(round(450 * 25 ** 2.3))
         ->and($rules->levelAt(0))->toBe(1)
         ->and($rules->levelAt($rules->xpToReach(3) - 0.01))->toBe(2)
         ->and($rules->levelAt($rules->xpToReach(3)))->toBe(3)
-        ->and($rules->levelAt($rules->xpToReach(9)))->toBe(9);
+        ->and($rules->levelAt($rules->xpToReach(9)))->toBe(9)
+        ->and($rules->levelAt($rules->xpToReach(14)))->toBe(14);
 });
 
 it('says how much experience a lap of the first rung gives, for the rules of the game to be set against', function () {
-    // 90 an hour, 48 laps an hour.
-    expect(economyRules()->xpPerLap(0))->toBe(1.875);
+    // 900 an hour, 48 laps an hour.
+    expect(economyRules()->xpPerLap(0))->toBe(18.75);
 });
 
 it('prices a part from the new car of its tier, the share of the set and the share of the slot', function () {

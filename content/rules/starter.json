@@ -57,7 +57,8 @@
     }
   },
   "clock": { "night_lap_ppm": 1030000 },
-  "player": { "xp_base": 45, "xp_exponent": 2.3, "max_level": 30 },
+  "player": { "xp_base": 450, "xp_exponent": 2.3, "max_level": 30, "early_xp": [60, 180, 400, 800, 1600, 2800, 4800, 8000, 12800], "catch_up_level": 20 },
+  "start": { "head_start_ms": 60000 },
   "shop": {
     "parts": [
       "street-tires-t2",
@@ -190,7 +191,7 @@
       "base_lap_ms": 75000,
       "fuel_per_lap_ml": 1500,
       "reward_cents_per_lap": 1550,
-      "xp_per_lap": 2,
+      "xp_per_lap": 20,
       "demand": { "accel": 20, "top_speed": 15, "grip": 25, "handling": 25, "braking": 15 },
       "reference": { "accel": 97, "top_speed": 175, "grip": 90, "handling": 88, "braking": 90 }
     },
@@ -209,7 +210,7 @@
       "base_lap_ms": 95000,
       "fuel_per_lap_ml": 1900,
       "reward_cents_per_lap": 2200,
-      "xp_per_lap": 2,
+      "xp_per_lap": 20,
       "demand": { "accel": 5, "grip": 25, "handling": 25, "braking": 10, "clearance": 35 },
       "reference": { "accel": 65, "grip": 92, "handling": 71, "braking": 71, "clearance": 80 }
     },
@@ -228,7 +229,7 @@
       "base_lap_ms": 45000,
       "fuel_per_lap_ml": 900,
       "reward_cents_per_lap": 1170,
-      "xp_per_lap": 1,
+      "xp_per_lap": 10,
       "demand": { "accel": 50, "top_speed": 15, "grip": 25, "handling": 5, "braking": 5 },
       "reference": { "accel": 135, "top_speed": 200, "grip": 90, "handling": 70, "braking": 71 }
     },
@@ -247,7 +248,7 @@
       "base_lap_ms": 85000,
       "fuel_per_lap_ml": 1700,
       "reward_cents_per_lap": 2500,
-      "xp_per_lap": 2,
+      "xp_per_lap": 20,
       "demand": { "accel": 15, "top_speed": 5, "grip": 20, "handling": 35, "braking": 25 },
       "reference": { "accel": 97, "top_speed": 175, "grip": 100, "handling": 99, "braking": 100 }
     },
@@ -266,7 +267,7 @@
       "base_lap_ms": 80000,
       "fuel_per_lap_ml": 1600,
       "reward_cents_per_lap": 2650,
-      "xp_per_lap": 2,
+      "xp_per_lap": 20,
       "demand": { "accel": 20, "top_speed": 20, "grip": 20, "handling": 20, "braking": 20 },
       "reference": { "accel": 135, "top_speed": 200, "grip": 100, "handling": 78, "braking": 81 }
     }

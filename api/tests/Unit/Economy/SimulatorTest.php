@@ -17,11 +17,11 @@ function daysOf(EconomyRules $rules): array
     );
 }
 
-it('gives the days of the design for the three kinds of players', function () {
+it('gives the days of the ladder for the three kinds of players: the first cars come quickly, the long game is the design', function () {
     expect(daysOf(economyRules()))->toBe([
-        'A' => [4, 11, 19, 27, 34, 42, 55, 76],
-        'B' => [13, 38, 70, 99, 125, 147, 175, 212],
-        'C' => [1, 3, 6, 9, 12, 17, 25, 37],
+        'A' => [2, 6, 9, 17, 27, 35, 48, 69],
+        'B' => [8, 21, 34, 64, 100, 124, 151, 188],
+        'C' => [1, 2, 3, 6, 11, 16, 23, 36],
     ]);
 });
 
@@ -32,12 +32,12 @@ it('gives the same days every time it is played', function () {
 it('stops at the last rung, and says how many days it took', function () {
     $run = (new Simulator)->simulate(economyRules(), economyRules()->players()['A']);
 
-    expect($run->daysSimulated)->toBe(76)
-        ->and($run->dayOf(8))->toBe(76)
+    expect($run->daysSimulated)->toBe(69)
+        ->and($run->dayOf(8))->toBe(69)
         ->and($run->dayOf(9))->toBeNull();
 });
 
-it('finds that the level, and not the money, is what every player waits for', function () {
+it('finds that the first cars wait for the money and the later ones for the level', function () {
     $waited = [];
 
     foreach ((new Simulator)->simulateAll(economyRules()) as $key => $run) {
@@ -46,9 +46,12 @@ it('finds that the level, and not the money, is what every player waits for', fu
         }
     }
 
-    // Only the very first car of the intensive player has both on the first day.
-    expect(array_keys($waited))->toBe(['level', 'both'])
-        ->and($waited['both'])->toBe(['C1']);
+    // The levels of the first hours are quick, so the first three cars are bought when there is money for them (the very first of the
+    // intensive player has both on the first day), and from the fourth car on it is the level that makes a player wait.
+    expect(array_keys($waited))->toBe(['cash', 'level', 'both'])
+        ->and($waited['both'])->toBe(['C1'])
+        ->and($waited['cash'])->toBe(['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'C2', 'C3'])
+        ->and(count($waited['level']))->toBe(15);
 });
 
 it('lets the money decide when there is little of it', function () {
@@ -69,8 +72,9 @@ it('never buys a car that is out of reach in the days it is given', function () 
     $run = (new Simulator)->simulate($rules, $rules->players()['B']);
 
     // The occasional player gets two cars in thirty days, and the rest not at all.
-    expect($run->dayOf(1))->toBe(13)
-        ->and($run->dayOf(2))->toBeNull()
+    expect($run->dayOf(1))->toBe(8)
+        ->and($run->dayOf(2))->toBe(21)
+        ->and($run->dayOf(3))->toBeNull()
         ->and($run->daysSimulated)->toBe(30);
 });
 
@@ -97,7 +101,7 @@ describe('the pace gate', function () {
 
     it('fails a ruleset that makes the cars come far too fast, and names the lines', function () {
         // Three times the experience: levels come three times as fast, and the cars with them.
-        $rules = economyRules(['model', 'xp', 'per_hour'], 270);
+        $rules = economyRules(['model', 'xp', 'per_hour'], 2_700);
         $report = (new PaceGate)->evaluate($rules, (new Simulator)->simulateAll($rules));
 
         expect($report->passed())->toBeFalse();
@@ -110,10 +114,11 @@ describe('the pace gate', function () {
     });
 
     it('fails a ruleset that makes the cars come too slowly', function () {
-        $rules = economyRules(['model', 'xp', 'per_hour'], 40);
+        $rules = economyRules(['model', 'xp', 'per_hour'], 400);
         $report = (new PaceGate)->evaluate($rules, (new Simulator)->simulateAll($rules));
 
-        $row = collect($report->rows)->first(static fn ($row): bool => $row->player === 'A' && $row->rung === 'L1');
+        // The first cars wait for the money, so it is a later car, which waits for the level, that comes late.
+        $row = collect($report->rows)->first(static fn ($row): bool => $row->player === 'A' && $row->rung === 'L8');
 
         expect($report->passed())->toBeFalse()
             ->and($row->deviation())->toBeGreaterThan(0.25);

@@ -82,11 +82,13 @@
         "xp": {
           "type": "object",
           "properties": {
-            "base": { "description": "The experience to reach level n is base * n ^ exponent.", "type": "number", "exclusiveMinimum": 0 },
+            "base": { "description": "From the catch-up level on, the experience to reach level n is base * n ^ exponent.", "type": "number", "exclusiveMinimum": 0 },
             "exponent": { "type": "number", "exclusiveMinimum": 0 },
-            "per_hour": { "description": "The experience of an hour of driving, before the activity of the player.", "type": "number", "minimum": 0 }
+            "per_hour": { "description": "The experience of an hour of driving, before the activity of the player.", "type": "number", "minimum": 0 },
+            "early": { "description": "The experience that reaches level 2, 3, ... in all, for the first levels (the same table as the rules of the game).", "type": "array", "minItems": 1, "items": { "type": "number", "minimum": 1 } },
+            "catch_up_level": { "description": "The level from which the curve is the plain one; the levels between the table and it are on a straight line.", "type": "integer", "minimum": 2 }
           },
-          "required": ["base", "exponent", "per_hour"],
+          "required": ["base", "exponent", "per_hour", "early", "catch_up_level"],
           "additionalProperties": false
         }
       },

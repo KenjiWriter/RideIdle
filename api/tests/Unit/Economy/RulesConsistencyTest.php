@@ -19,7 +19,7 @@ function gameNumbers(array $changes = []): array
         'fuel_ml' => 1_500,
         'fuel_price_cents' => 200,
         'reward_cents' => 1_550,
-        'xp_per_lap' => 2,
+        'xp_per_lap' => 20,
         'parts' => [['slug' => 'street-tires-t2', 'tier' => 2, 'slot' => 'tires', 'price_cents' => 57_000]],
         ...$changes,
     ];
@@ -43,9 +43,9 @@ it('says by how much a number of the game is off', function () {
     $xp = findingFor($findings, 'experience per lap');
 
     expect($xp->ok)->toBeFalse()
-        ->and($xp->expected)->toBe(1.875)
+        ->and($xp->expected)->toBe(18.75)
         ->and($xp->actual)->toBe(25.0)
-        ->and(round($xp->deviation(), 2))->toBe(12.33)
+        ->and(round($xp->deviation(), 2))->toBe(0.33)
         ->and(findingFor($findings, 'reward per lap')->ok)->toBeTrue();
 });
 

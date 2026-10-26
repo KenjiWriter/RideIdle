@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Content;
 
+use App\Domain\Economy\PlayerXpCurve;
 use App\Domain\Run\Surface;
 use App\Domain\Settlement\Ppm;
 use App\Support\I18nText;
@@ -14,6 +15,8 @@ use App\Support\I18nText;
  */
 final class Rules
 {
+    private ?PlayerXpCurve $playerCurve = null;
+
     /** @param array<string, mixed> $data */
     private function __construct(private readonly array $data) {}
 
@@ -137,19 +140,26 @@ final class Rules
     }
 
     /**
-     * The experience that reaches a level of the driver: xp_base * level ^ xp_exponent, to the whole. Level 1 is the start, at
-     * nothing. The web draws the same curve for the bar of the HUD, and the economy simulator has its own copy of the numbers;
-     * a test keeps the three together.
+     * The experience that reaches a level of the driver, to the whole (see `PlayerXpCurve`: a table for the first levels, a straight
+     * line to the catch-up level, and then xp_base * level ^ xp_exponent). Level 1 is the start, at nothing. The web draws the same curve
+     * for the bar of the HUD, and the economy simulator has its own copy of the numbers; a test keeps the three together.
      */
     public function playerXpToReach(int $level): int
     {
-        if ($level <= 1) {
-            return 0;
-        }
+        return (int) round($this->playerCurve()->xpToReach($level));
+    }
 
+    private function playerCurve(): PlayerXpCurve
+    {
         $player = $this->data['player'];
 
-        return (int) round($player['xp_base'] * $level ** $player['xp_exponent']);
+        return $this->playerCurve ??= new PlayerXpCurve($player['xp_base'], $player['xp_exponent'], $player['early_xp'], $player['catch_up_level']);
+    }
+
+    /** How much of its first lap a car that is sent out for the first time has driven already, in ms: the first lap is short (Start of the tournament). */
+    public function startHeadStartMs(): int
+    {
+        return $this->data['start']['head_start_ms'];
     }
 
     /** The level that this much experience gives a driver, never above the highest. */

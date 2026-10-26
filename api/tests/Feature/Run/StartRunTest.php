@@ -170,11 +170,20 @@ describe('sending the car out', function () {
             ->assertJsonPath('data.stop_reason', null)
             ->assertJsonPath('data.laps_done', 0);
 
-        expect($response->json('data.cursor_ms'))->toBe(RUN_T0 + 3_600_000);
+        // It leaves with a head start of a minute, so its first lap (75 s) has 15 s to go.
+        expect($response->json('data.cursor_ms'))->toBe(RUN_T0 + 3_600_000 - 60_000);
 
-        // Eighty seconds later it has driven its first lap.
-        clockAt(3_680_000);
+        clockAt(3_614_000);
+        getRun($driver)->assertOk()->assertJsonPath('data.laps_done', 0);
+
+        clockAt(3_615_000);
         getRun($driver)->assertOk()->assertJsonPath('data.laps_done', 1)->assertJsonPath('wallet.cash_cents', 1_550);
+
+        // The second lap is a whole one again.
+        clockAt(3_689_000);
+        getRun($driver)->assertOk()->assertJsonPath('data.laps_done', 1);
+        clockAt(3_690_000);
+        getRun($driver)->assertOk()->assertJsonPath('data.laps_done', 2);
     });
 
     it('is harmless when pressed twice, and for a car that drives already', function () {

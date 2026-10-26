@@ -44,6 +44,10 @@ function rulesSchemaErrors(array $rules): array
         $data->roads = array_values((array) $data->roads);
     }
 
+    if (isset($data->player->early_xp) && is_object($data->player->early_xp)) {
+        $data->player->early_xp = array_values((array) $data->player->early_xp);
+    }
+
     if (isset($data->market->exchange->defects) && is_object($data->market->exchange->defects)) {
         $data->market->exchange->defects = array_values(array_map(function (object $band): object {
             $band->weights = array_values((array) $band->weights);
@@ -405,12 +409,16 @@ it('draws the level of a driver by the curve of the economy ruleset, which the w
         expect($rules->playerXpToReach($level))->toBe((int) round($economy->xpToReach($level)));
     }
 
-    // Level 2 starts at 222 XP, as the bar of the HUD says.
+    // Level 2 starts at 60 XP (three laps of 20), as the bar of the HUD says, and level 10 at 12 800 (640 laps).
     expect($rules->playerXpToReach(1))->toBe(0)
-        ->and($rules->playerXpToReach(2))->toBe(222)
+        ->and($rules->playerXpToReach(2))->toBe(60)
+        ->and($rules->playerXpToReach(5))->toBe(800)
+        ->and($rules->playerXpToReach(10))->toBe(12_800)
+        ->and($rules->playerXpToReach(15))->toBe(227_481)
+        ->and($rules->playerXpToReach(20))->toBe(442_162)
         ->and($rules->playerLevelAt(0))->toBe(1)
-        ->and($rules->playerLevelAt(221))->toBe(1)
-        ->and($rules->playerLevelAt(222))->toBe(2)
+        ->and($rules->playerLevelAt(59))->toBe(1)
+        ->and($rules->playerLevelAt(60))->toBe(2)
         ->and($rules->playerLevelAt(PHP_INT_MAX))->toBe(30);
 });
 

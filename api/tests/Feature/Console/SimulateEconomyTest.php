@@ -81,8 +81,8 @@ describe('economy:simulate', function () {
             ->and($output)->toContain('Player C, Intensive')
             ->and($output)->toContain('$2 000')
             ->and($output)->toContain('15.50')
-            // The regular player buys the last car on the 76th day, which is what the design says.
-            ->and($output)->toMatch('/\| L8\s+\| 76\s+\| 76\s+\|/');
+            // The regular player buys the last car on the 69th day, which is what the ladder says now (the design said 76: the first hours are quick).
+            ->and($output)->toMatch('/\| L8\s+\| 76\s+\| 69\s+\|/');
     });
 
     it('plays only the kinds of players it is asked for', function () {
@@ -107,7 +107,7 @@ describe('economy:simulate', function () {
         expect($report['ruleset'])->toBe('2026.10.1')
             ->and($report['gate']['passed'])->toBeTrue()
             ->and($report['gate']['rows'])->toHaveCount(24)
-            ->and($report['gate']['rows'][0])->toMatchArray(['player' => 'A', 'car' => 'L1', 'target_day' => 4, 'day' => 4, 'waited_for' => 'level', 'passed' => true])
+            ->and($report['gate']['rows'][0])->toMatchArray(['player' => 'A', 'car' => 'L1', 'target_day' => 2, 'day' => 2, 'waited_for' => 'cash', 'passed' => true])
             ->and(array_keys($report['players']))->toBe(['A', 'B', 'C'])
             ->and(collect($report['consistency'])->pluck('number'))->toContain('experience per lap', 'reward per lap', 'price of street-tires-t2');
     });
@@ -127,16 +127,16 @@ describe('economy:simulate', function () {
     });
 
     it('sets the rules of the game against the anchors, and says so when a number is off, without failing', function () {
-        // Forty percent more profit makes the reward the anchors give a quarter more than the game pays. The pace does
-        // not change, because it is the level that the players wait for.
-        $this->artisan('economy:simulate', ['--ruleset' => economyFile(['knobs', 'reward_mult'], 1.4)])
+        // A tolerance of one percent makes the experience of a lap (20, where the anchors give 18.75) a number that is off. The pace
+        // does not change: it is the tolerance of the comparison that is changed, not a number of the model.
+        $this->artisan('economy:simulate', ['--ruleset' => economyFile(['consistency', 'tolerance'], 0.01)])
             ->expectsOutputToContain('Pace gate: PASSED')
             ->expectsOutputToContain('numbers are off the anchors')
             ->assertExitCode(0);
     });
 
     it('fails on a number of the game that is off the anchors, when it is asked to be strict', function () {
-        $this->artisan('economy:simulate', ['--ruleset' => economyFile(['knobs', 'reward_mult'], 1.4), '--strict' => true])
+        $this->artisan('economy:simulate', ['--ruleset' => economyFile(['consistency', 'tolerance'], 0.01), '--strict' => true])
             ->assertExitCode(1);
     });
 
@@ -157,8 +157,8 @@ describe('economy:simulate', function () {
             ->and($consistency['reward per lap'])->toMatchArray(['anchors' => 15.5, 'game' => 15.5, 'ok' => true])
             ->and($consistency['price of a liter of fuel']['ok'])->toBeTrue()
             ->and($consistency['price of street-tires-t2'])->toMatchArray(['anchors' => 570.0, 'game' => 570.0, 'ok' => true])
-            // The anchors give 90 XP an hour, which is 1.875 a lap, and the game gives 2, a whole number: a little more, and in order.
-            ->and($consistency['experience per lap'])->toMatchArray(['anchors' => 1.875, 'game' => 2.0, 'ok' => true])
+            // The anchors give 900 XP an hour, which is 18.75 a lap, and the game gives 20, a whole number: a little more, and in order.
+            ->and($consistency['experience per lap'])->toMatchArray(['anchors' => 18.75, 'game' => 20.0, 'ok' => true])
             ->and(collect($consistency)->every(static fn (array $number): bool => $number['ok']))->toBeTrue();
     });
 

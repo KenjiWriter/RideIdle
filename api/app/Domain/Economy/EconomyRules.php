@@ -132,24 +132,23 @@ final readonly class EconomyRules
         return (float) $this->data['model']['start_cash'];
     }
 
-    /** The experience that reaches a level: base * level ^ exponent. */
+    /** The experience that reaches a level: the curve of the game (`PlayerXpCurve`). */
     public function xpToReach(int $level): float
     {
-        $xp = $this->data['model']['xp'];
-
-        return $xp['base'] * $level ** $xp['exponent'];
+        return $this->curve()->xpToReach($level);
     }
 
     /** The highest level that this much experience reaches. A new driver is on the first. */
     public function levelAt(float $xp): int
     {
-        $level = 1;
+        return $this->curve()->levelAt($xp, self::MAX_LEVEL);
+    }
 
-        while ($level < self::MAX_LEVEL && $this->xpToReach($level + 1) <= $xp) {
-            $level++;
-        }
+    private function curve(): PlayerXpCurve
+    {
+        $xp = $this->data['model']['xp'];
 
-        return $level;
+        return new PlayerXpCurve($xp['base'], $xp['exponent'], $xp['early'], $xp['catch_up_level']);
     }
 
     /** The experience of an hour of driving, which the activity of the player multiplies. */

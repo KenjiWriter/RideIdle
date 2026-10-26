@@ -36,8 +36,8 @@ it('rounds the reward of wet laps like the settlement vector W5, and the XP of a
     $config = frozenConfig('rdzak-gt-4');
 
     expect($config['lap_cash_cents'])->toBe(['dry' => 1_550, 'cloudy' => 1_550, 'rain' => 1_442, 'downpour' => 1_442, 'fog' => 1_550])
-        // A lap gives 2 XP, and 93% of 2 is 1.86: rounded, the rain takes nothing from it.
-        ->and($config['lap_xp'])->toBe(['dry' => 2, 'cloudy' => 2, 'rain' => 2, 'downpour' => 2, 'fog' => 2]);
+        // A lap gives 20 XP, and 93% of 20 is 18.6: rounded, the rain takes one from it.
+        ->and($config['lap_xp'])->toBe(['dry' => 20, 'cloudy' => 20, 'rain' => 19, 'downpour' => 19, 'fog' => 20]);
 });
 
 it('takes the climate and the seed from the region of the track', function () {
