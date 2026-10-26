@@ -56,8 +56,8 @@ function gameDaysWith(array $extras): array
 
 describe('the extras of the scenario game', function () {
     it('change nothing when there are none or when they do nothing', function () {
-        expect(gameDaysWith([]))->toBe([3, 8, 9, 10, 13, 16, 22, 36])
-            ->and(gameDaysWith([anExtra()]))->toBe([3, 8, 9, 10, 13, 16, 22, 36]);
+        expect(gameDaysWith([]))->toBe([3, 8, 9, 18, 28, 36, 48, 69])
+            ->and(gameDaysWith([anExtra()]))->toBe([3, 8, 9, 18, 28, 36, 48, 69]);
     });
 
     it('are told the day, the rung, the level and what the car earns before they are counted', function () {
@@ -75,7 +75,9 @@ describe('the extras of the scenario game', function () {
     });
 
     it('spend cash, which slows the player down, and bring cash, which speeds the player up', function () {
-        $slower = gameDaysWith([anExtra(cash: -400.0)]);
+        // The long game is bound by the level, not by the money, so it is a day more or less that the cash moves; a player who is made to spend more than the
+        // car earns on the first days never gets anywhere.
+        $slower = gameDaysWith([anExtra(cash: -800.0)]);
         $faster = gameDaysWith([anExtra(cash: 400.0)]);
 
         expect(array_sum($slower))->toBeGreaterThan(array_sum(gameDaysWith([])))
@@ -91,8 +93,8 @@ describe('the extras of the scenario game', function () {
     });
 
     it('add to the cost of a step of the ladder, and a step can be made dearer or cheaper', function () {
-        $dearer = gameDaysWith([anExtra(stepDelta: 2_000.0)]);
-        $cheaper = gameDaysWith([anExtra(stepDelta: -1_000.0)]);
+        $dearer = gameDaysWith([anExtra(stepDelta: 20_000.0)]);
+        $cheaper = gameDaysWith([anExtra(stepDelta: -3_000.0)]);
 
         expect($dearer[0])->toBeGreaterThan(3)
             ->and(array_sum($dearer))->toBeGreaterThan(array_sum(gameDaysWith([])))

@@ -14,7 +14,7 @@ final class RulesConsistency
     private const HOUR_MS = 3_600_000;
 
     /**
-     * @param  array{lap_ms: int, fuel_ml: int, fuel_price_cents: int, reward_cents: int, xp_per_lap: int, parts: list<array{slug: string, tier: int, slot: string, price_cents: int}>}  $game  the numbers of the first track and of the pack
+     * @param  array{lap_ms: int, fuel_ml: int, fuel_price_cents: int, reward_cents: int, xp_per_lap: int, parts: list<array{slug: string, tier: int, slot: string, price_cents: int}>, other_cars_xp_share?: float}  $game  the numbers of the first track and of the pack, and the share of the experience that the cars the driver does not play give
      * @return list<Finding>
      */
     public function check(EconomyRules $economy, array $game): array
@@ -26,6 +26,12 @@ final class RulesConsistency
             $this->compare($economy, 'reward per lap', $economy->grossPerLap(0), $game['reward_cents'] / 100, '$'),
             $this->compare($economy, 'experience per lap', $economy->xpPerLap(0), $game['xp_per_lap'], 'XP'),
         ];
+
+        // The fleet of the model has to be the fleet of the game: what share of the experience of the other cars the driver gets is a rule, not a number to be near.
+        if (isset($game['other_cars_xp_share'])) {
+            $model = $economy->fleetModel()->otherCarsXpShare;
+            $findings[] = new Finding('experience share of the cars not played', $model, $game['other_cars_xp_share'], 'share', abs($model - $game['other_cars_xp_share']) < 1e-9);
+        }
 
         foreach ($game['parts'] as $part) {
             $findings[] = $this->compare($economy, "price of {$part['slug']}", $economy->partPrice($part['tier'], $part['slot']), $part['price_cents'] / 100, '$');

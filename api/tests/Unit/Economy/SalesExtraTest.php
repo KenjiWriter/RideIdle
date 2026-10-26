@@ -63,7 +63,7 @@ describe('the sale of a car at what was paid for it', function () {
         expect((new SalesExtra)->report())->toBe(['resale' => null, 'deltas' => []]);
     });
 
-    it('moves the first purchases of the ladder, and the last one by a day at most', function () {
+    it('moves the first purchases of the ladder, and the last one by a few days at most', function () {
         $none = array_map(
             static fn (PlayerRun $run): array => array_map(static fn (Purchase $purchase): int => $purchase->day, $run->purchases),
             (new Simulator)->simulateAllGame(economyRules()),
@@ -72,16 +72,17 @@ describe('the sale of a car at what was paid for it', function () {
 
         // The step from the wreck is $602 dearer, and the player, who buys what pays back soonest, goes for the garages before the first car of the
         // ladder: that is why the first car comes days later (A on the 8th day and not the 3rd, B on the 23rd and not the 7th), and the long game
-        // is the same within a day. It is a choice of the policy that the dearer step brings out, and not a loss of 600 dollars that slow.
+        // is the same within a day for the regular and the intensive player, and five days later for the occasional one, whose money binds the days
+        // for longer. It is a choice of the policy that the dearer step brings out, and not a loss of 600 dollars that slow.
         expect($sold)->toBe([
-            'A' => [8, 8, 9, 11, 14, 17, 22, 36],
-            'B' => [23, 25, 29, 35, 44, 55, 70, 99],
-            'C' => [3, 4, 4, 5, 5, 7, 9, 15],
+            'A' => [8, 8, 9, 19, 29, 37, 49, 70],
+            'B' => [23, 25, 29, 66, 102, 126, 153, 190],
+            'C' => [3, 4, 4, 7, 12, 17, 25, 37],
         ]);
 
-        foreach (['A', 'B', 'C'] as $key) {
-            expect(end($sold[$key]) - end($none[$key]))->toBeBetween(0, 1);
-        }
+        expect(end($sold['A']) - end($none['A']))->toBeBetween(0, 1)
+            ->and(end($sold['C']) - end($none['C']))->toBeBetween(0, 1)
+            ->and(end($sold['B']) - end($none['B']))->toBeBetween(0, 5);
     });
 
     it('does not make any purchase of the ladder come sooner than it did', function () {

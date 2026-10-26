@@ -86,3 +86,12 @@ it('reports a part that no anchor speaks of, instead of passing it over', functi
         ->and($finding->deviation())->toBeNull()
         ->and($finding->ok)->toBeFalse();
 });
+
+it('sets the share of the experience that the cars not played give against the one of the model exactly, and not within a tolerance', function () {
+    $same = (new RulesConsistency)->check(economyRules(), gameNumbers(['other_cars_xp_share' => 0.0]));
+    $other = (new RulesConsistency)->check(economyRules(), gameNumbers(['other_cars_xp_share' => 0.05]));
+
+    expect(findingFor($same, 'experience share of the cars not played')->ok)->toBeTrue()
+        ->and(findingFor($other, 'experience share of the cars not played')->ok)->toBeFalse()
+        ->and($same)->toHaveCount(7);
+});

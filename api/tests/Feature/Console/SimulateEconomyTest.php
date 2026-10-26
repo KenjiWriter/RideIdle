@@ -192,10 +192,10 @@ describe('economy:simulate', function () {
 
         expect($output)->toContain('The game scenario')
             ->and($output)->toContain('ends with 14 wrecks and 4 garages of other cities')
-            ->and($output)->toContain('Fleet gate (game): FAILED')
-            // The regular player buys the last car on the 36th day with the fleet, and the design says the 76th.
-            ->and($output)->toMatch('/\| L8\s+\| 76\s+\| 36\s+\|/')
-            ->and($output)->toContain('does not fail the command, except with --strict-game');
+            ->and($output)->toContain('Fleet gate (game): PASSED')
+            // Only the car that is played levels the driver, so the regular player buys the last car on the 69th day with the fleet, as with one car.
+            ->and($output)->toMatch('/\| L8\s+\| 76\s+\| 69\s+\|/')
+            ->and($output)->toContain('the cars the driver does not play give 0% of their experience');
     });
 
     it('sets the income that the game reaches at each level against the ladder, and names the rungs that nothing in the game reaches', function () {
@@ -247,7 +247,7 @@ describe('economy:simulate', function () {
 
         expect(array_keys($report['game_fleet']['players']))->toBe(['B'])
             ->and($report['game_fleet']['players']['B'])->toMatchArray(['wrecks' => 14, 'extra_garages' => 4])
-            ->and($report['game_fleet']['gate']['passed'])->toBeFalse()
+            ->and($report['game_fleet']['gate']['passed'])->toBeTrue()
             ->and(collect($report['game_fleet']['gate']['rows'])->pluck('player')->unique()->all())->toBe(['B'])
             ->and($report['game_ladder']['unreachable_rungs'])->toBe(['L6', 'L7', 'L8'])
             ->and($report['game_ladder']['rows'])->toHaveCount(11)
@@ -259,8 +259,8 @@ describe('economy:simulate', function () {
         $output = Artisan::output();
 
         expect($output)->toContain('Crates of parts, on top of the game scenario')
-            ->and($output)->toMatch('/\| none\s+\| 3\s+\| 8\s+\| 9\s+\| 10\s+\| 13\s+\| 16\s+\| 22\s+\| 36\s+\|/')
-            ->and($output)->toMatch('/\| 20%\s+\| 3\s+\| 8\s+\| 10\s+\| 11\s+\| 13\s+\| 17\s+\| 23\s+\| 38\s+\|\s+18\s+\|/')
+            ->and($output)->toMatch('/\| none\s+\| 3\s+\| 8\s+\| 9\s+\| 18\s+\| 28\s+\| 36\s+\| 48\s+\| 69\s+\|/')
+            ->and($output)->toMatch('/\| 20%\s+\| 3\s+\| 8\s+\| 9\s+\| 18\s+\| 28\s+\| 36\s+\| 48\s+\| 69\s+\|\s+56\s+\|/')
             ->and($output)->toContain('Crate shift gate: PASSED');
     });
 
@@ -290,7 +290,7 @@ describe('economy:simulate', function () {
         $output = Artisan::output();
 
         expect($output)->toContain('The sale of a car for a share of what was paid')
-            ->and($output)->toContain('8 8 9 11 14 17 22 36');
+            ->and($output)->toContain('8 8 9 19 29 37 49 70');
     });
 
     it('prints the extras in the JSON report, for the kinds of players that were asked for', function () {

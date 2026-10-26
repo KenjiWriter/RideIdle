@@ -17,12 +17,13 @@ function gameDaysOf(EconomyRules $rules): array
     );
 }
 
-it('gives the days of the ladder for a fleet that the rules of the game allow: the long game comes in about half the days of the design', function () {
-    // Every car drives at once and every run gives experience, so the wrecks in the garages are what makes the level come quickly.
+it('gives the days of the ladder for a fleet that the rules of the game allow: only the car that is played levels the driver, so the long game is the one of one car', function () {
+    // Every car drives at once and earns, but the experience of the player is the one of the car that is played (`player.other_cars_xp_ppm` is 0),
+    // so the wrecks in the garages do not make the levels, which bind the long game, come any sooner.
     expect(gameDaysOf(economyRules()))->toBe([
-        'A' => [3, 8, 9, 10, 13, 16, 22, 36],
-        'B' => [7, 23, 27, 33, 43, 54, 68, 98],
-        'C' => [2, 3, 4, 4, 5, 6, 9, 15],
+        'A' => [3, 8, 9, 18, 28, 36, 48, 69],
+        'B' => [7, 23, 27, 61, 97, 121, 148, 185],
+        'C' => [2, 3, 4, 7, 12, 17, 24, 37],
     ]);
 });
 
@@ -39,7 +40,7 @@ it('gives the same days every time it is played', function () {
 it('stops at the last rung, and says how many days it took', function () {
     $run = (new Simulator)->simulateGame(economyRules(), economyRules()->players()['A']);
 
-    expect($run->daysSimulated)->toBe(36)->and($run->dayOf(8))->toBe(36)->and($run->dayOf(9))->toBeNull();
+    expect($run->daysSimulated)->toBe(69)->and($run->dayOf(8))->toBe(69)->and($run->dayOf(9))->toBeNull();
 });
 
 it('leaves the designed scenario as it was: the fleet section changes nothing there', function () {
@@ -65,30 +66,35 @@ it('does not use the fleet factor of the design: a car of the ladder is counted 
     expect(gameDaysOf(EconomyRules::fromArray($factors)))->toBe(gameDaysOf(economyRules()));
 });
 
-it('is out of the pace gate for every kind of player with the numbers of the repository, as the design expects fewer cars at once', function () {
+it('is within the pace gate for every kind of player with the numbers of the repository, and is out of it where the driver is levelled by every car', function () {
     $rules = economyRules();
     $report = (new PaceGate)->evaluate($rules, (new Simulator)->simulateAllGame($rules));
-    $outPlayers = array_values(array_unique(array_map(static fn ($row): string => $row->player, $report->failures())));
 
-    expect($report->passed())->toBeFalse()->and($outPlayers)->toBe(['A', 'B', 'C']);
+    expect($report->passed())->toBeTrue();
+
+    // With every car giving the experience of its laps (what the game did before) the long game came in half the days of the design.
+    $all = economyRules(['model', 'fleet', 'other_cars_xp_share'], 1.0);
+    $outPlayers = array_values(array_unique(array_map(static fn ($row): string => $row->player, (new PaceGate)->evaluate($all, (new Simulator)->simulateAllGame($all))->failures())));
+
+    expect($outPlayers)->toBe(['A', 'B', 'C']);
 });
 
 describe('the knobs of the fleet', function () {
-    it('gives the experience of the others only by their share: with none, the level is what the first car makes', function () {
-        $rules = economyRules(['model', 'fleet', 'other_cars_xp_share'], 0.0);
+    it('gives the experience of the others only by their share: with all of it, every car makes the levels and the long game comes in half the days', function () {
+        $rules = economyRules(['model', 'fleet', 'other_cars_xp_share'], 1.0);
 
-        // The wrecks still pay, but the long game is as long as with one car (the days of the ladder with no fleet: A 2 6 10 18 28 36 48 69).
+        // What the game did until the experience was the one of the car that is played: the wrecks in the garages are what makes the level come quickly.
         expect(gameDaysOf($rules))->toBe([
-            'A' => [3, 8, 9, 18, 28, 36, 48, 69],
-            'B' => [7, 23, 27, 61, 97, 121, 148, 185],
-            'C' => [2, 3, 4, 7, 12, 17, 24, 37],
+            'A' => [3, 8, 9, 10, 13, 16, 22, 36],
+            'B' => [7, 23, 27, 33, 43, 54, 68, 98],
+            'C' => [2, 3, 4, 4, 5, 6, 9, 15],
         ]);
     });
 
     it('gives half of the experience for half of the share, which is between the two', function () {
-        $none = gameDaysOf(economyRules(['model', 'fleet', 'other_cars_xp_share'], 0.0))['A'][7];
+        $none = gameDaysOf(economyRules())['A'][7];
         $half = gameDaysOf(economyRules(['model', 'fleet', 'other_cars_xp_share'], 0.5))['A'][7];
-        $all = gameDaysOf(economyRules())['A'][7];
+        $all = gameDaysOf(economyRules(['model', 'fleet', 'other_cars_xp_share'], 1.0))['A'][7];
 
         expect($all)->toBeLessThan($half)->and($half)->toBeLessThan($none);
     });
@@ -127,11 +133,12 @@ describe('the knobs of the fleet', function () {
             ->and($dear->extraGarages)->toBeLessThan($cheap->extraGarages);
     });
 
-    it('opens the garages with the level, so that a city that opens later brings its garage later', function () {
-        $late = economyRules(['model', 'fleet', 'garage_city_levels'], [30, 30, 30, 30]);
+    it('opens the garages with the level, so that a city that opens later has its garage later, and a city that is never opened has none', function () {
+        $never = economyRules(['model', 'fleet', 'garage_city_levels'], [99, 99, 99, 99]);
         $early = economyRules(['model', 'fleet', 'garage_city_levels'], [1, 1, 1, 1]);
 
-        expect((new Simulator)->simulateGame($early, $early->players()['B'])->dayOf(8))->toBeLessThan((new Simulator)->simulateGame($late, $late->players()['B'])->dayOf(8));
+        expect((new Simulator)->simulateGame($early, $early->players()['B'])->extraGarages)->toBe(4)
+            ->and((new Simulator)->simulateGame($never, $never->players()['B'])->extraGarages)->toBe(0);
     });
 
     it('lets the money decide when a wreck pays back later than a car of the ladder does', function () {
@@ -161,7 +168,7 @@ it('reads the fleet of the game from the ruleset', function () {
         ->and($fleet->garageCapacity)->toBe(3)
         ->and($fleet->homeFreePlaces)->toBe(2)
         ->and($fleet->garageCityLevels)->toBe([3, 5, 8, 12])
-        ->and($fleet->otherCarsXpShare)->toBe(1.0)
+        ->and($fleet->otherCarsXpShare)->toBe(0.0)
         // The home garage and every garage that is bought make room for this many wrecks, and a level opens this many cities.
         ->and([$fleet->places(0), $fleet->places(1), $fleet->places(4)])->toBe([2, 5, 14])
         ->and([$fleet->garagesOpenAt(1), $fleet->garagesOpenAt(3), $fleet->garagesOpenAt(8), $fleet->garagesOpenAt(30)])->toBe([0, 1, 3, 4]);

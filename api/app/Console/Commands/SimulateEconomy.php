@@ -159,7 +159,7 @@ final class SimulateEconomy extends Command
     /**
      * The numbers the game runs on: the first track, the fuel, and the parts of the pack.
      *
-     * @return array{lap_ms: int, fuel_ml: int, fuel_price_cents: int, reward_cents: int, xp_per_lap: int, parts: list<array{slug: string, tier: int, slot: string, price_cents: int}>}
+     * @return array{lap_ms: int, fuel_ml: int, fuel_price_cents: int, reward_cents: int, xp_per_lap: int, other_cars_xp_share: float, parts: list<array{slug: string, tier: int, slot: string, price_cents: int}>}
      */
     private function numbersOf(Rules $game, Catalog $catalog): array
     {
@@ -171,6 +171,7 @@ final class SimulateEconomy extends Command
             'fuel_price_cents' => $game->fuelPriceCentsPerLiter(),
             'reward_cents' => (int) $track['reward_cents_per_lap'],
             'xp_per_lap' => (int) $track['xp_per_lap'],
+            'other_cars_xp_share' => $game->otherCarsXpPpm() / 1_000_000,
             'parts' => array_values(array_map(
                 static fn (array $part): array => ['slug' => (string) $part['slug'], 'tier' => (int) $part['tier'], 'slot' => (string) $part['slot'], 'price_cents' => (int) $part['price_cents']],
                 $catalog->parts(),
@@ -269,7 +270,7 @@ final class SimulateEconomy extends Command
     {
         $fleet = $economy->fleetModel();
         $this->newLine();
-        $this->line('The game scenario: the fleet that the rules of the game allow (every car drives and gives '.$this->trim($fleet->otherCarsXpShare * 100).'% of its experience to the player, a wreck is $'.$this->trim($fleet->wreckPrice).', a garage $'.$this->trim($fleet->garagePrice).' for '.$fleet->garageCapacity.' places):');
+        $this->line('The game scenario: the fleet that the rules of the game allow (every car drives and earns, and the cars the driver does not play give '.$this->trim($fleet->otherCarsXpShare * 100).'% of their experience, a wreck is $'.$this->trim($fleet->wreckPrice).', a garage $'.$this->trim($fleet->garagePrice).' for '.$fleet->garageCapacity.' places):');
 
         foreach ($game['runs'] as $key => $run) {
             $this->newLine();

@@ -159,9 +159,9 @@ describe('the scenario game with the storage units', function () {
 
     it('gives the days that the numbers of the report were taken from', function () {
         expect(unitReturnsDays(0.3))->toBe([
-            'A' => [3, 8, 9, 10, 13, 16, 22, 37],
-            'B' => [7, 24, 28, 34, 44, 55, 69, 101],
-            'C' => [2, 3, 4, 4, 5, 6, 9, 15],
+            'A' => [3, 8, 9, 18, 28, 36, 48, 69],
+            'B' => [7, 24, 28, 62, 98, 122, 149, 186],
+            'C' => [2, 3, 4, 7, 12, 17, 24, 37],
         ]);
     });
 
