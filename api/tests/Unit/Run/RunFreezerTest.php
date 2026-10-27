@@ -41,7 +41,7 @@ function sampleFreezeInputs(array $stats = ['grip' => 100.0, 'power' => 100.0], 
 }
 
 it('gives the base lap time to a car with perf 1', function () {
-    $config = (new RunFreezer())->freeze(sampleFreezeInputs(), 'seed', 0)->config;
+    $config = (new RunFreezer)->freeze(sampleFreezeInputs(), 'seed', 0)->config;
 
     expect($config['lap_ms']['dry'])->toBe(75_000)
         ->and($config['lap_cash_cents']['dry'])->toBe(1_550)
@@ -50,7 +50,7 @@ it('gives the base lap time to a car with perf 1', function () {
 });
 
 it('slows the car in rain and rounds the reward per lap (vector W5)', function () {
-    $config = (new RunFreezer())->freeze(sampleFreezeInputs(), 'seed', 0)->config;
+    $config = (new RunFreezer)->freeze(sampleFreezeInputs(), 'seed', 0)->config;
 
     // perf in rain = 0.5 * 0.85 + 0.5 * 1.0 = 0.925, 75 000 / 0.925 ^ 1.15 = 82 035 ms.
     expect($config['lap_ms']['rain'])->toBe(82_035)
@@ -59,14 +59,40 @@ it('slows the car in rain and rounds the reward per lap (vector W5)', function (
 });
 
 it('makes a stronger car faster', function () {
-    $config = (new RunFreezer())->freeze(sampleFreezeInputs(['grip' => 150.0, 'power' => 100.0]), 'seed', 0)->config;
+    $config = (new RunFreezer)->freeze(sampleFreezeInputs(['grip' => 150.0, 'power' => 100.0]), 'seed', 0)->config;
 
     // perf = 0.5 * 1.5 + 0.5 * 1.0 = 1.25.
     expect($config['lap_ms']['dry'])->toBe(58_025);
 });
 
+it('pays the experience of the base lap to a car that is not faster than it, and the share of it that a faster lap takes of the base time to one that is', function (array $stats, int $expectedLapMs, int $expectedXp, int $expectedRainXp) {
+    $config = (new RunFreezer)->freeze(sampleFreezeInputs($stats), 'seed', 0)->config;
+
+    // The track pays 25 XP for a lap of 75 s, and rain takes 7% of it after the share is made.
+    expect($config['lap_ms']['dry'])->toBe($expectedLapMs)
+        ->and($config['lap_xp']['dry'])->toBe($expectedXp)
+        ->and($config['lap_xp']['rain'])->toBe($expectedRainXp);
+})->with([
+    'the base lap' => [['grip' => 100.0, 'power' => 100.0], 75_000, 25, 23],
+    'a slower car gets the whole of it, as it always did' => [['grip' => 50.0, 'power' => 100.0], 104_410, 25, 23],
+    'a faster car gets the share of the base time: 58 025 of 75 000 is 19.3' => [['grip' => 150.0, 'power' => 100.0], 58_025, 19, 18],
+    'the fastest lap there is: 43 684 of 75 000 is 14.6' => [['grip' => 5_000.0, 'power' => 5_000.0], 43_684, 15, 14],
+]);
+
+it('keeps the experience an hour of a car under the ceiling that the track sets, give or take the whole XP of a lap', function () {
+    $ceiling = 3_600_000 / 75_000 * 25;
+
+    foreach ([30.0, 60.0, 100.0, 130.0, 200.0, 5_000.0] as $grip) {
+        $config = (new RunFreezer)->freeze(sampleFreezeInputs(['grip' => $grip, 'power' => $grip]), 'seed', 0)->config;
+        $perHour = 3_600_000 / $config['lap_ms']['dry'] * $config['lap_xp']['dry'];
+
+        // A lap pays whole XP, so the rounding can put a car half an XP a lap over.
+        expect($perHour)->toBeLessThanOrEqual($ceiling + 0.5 * 3_600_000 / $config['lap_ms']['dry']);
+    }
+});
+
 it('limits every statistic between 0.2 and 1.6 of the reference', function (array $stats, int $expectedMs) {
-    expect((new RunFreezer())->freeze(sampleFreezeInputs($stats), 'seed', 0)->config['lap_ms']['dry'])->toBe($expectedMs);
+    expect((new RunFreezer)->freeze(sampleFreezeInputs($stats), 'seed', 0)->config['lap_ms']['dry'])->toBe($expectedMs);
 })->with([
     'one statistic far above the cap, one at zero' => [['grip' => 1_000.0, 'power' => 0.0], 84_661],
     'both at zero' => [['grip' => 0.0, 'power' => 0.0], 477_394],
@@ -74,7 +100,7 @@ it('limits every statistic between 0.2 and 1.6 of the reference', function (arra
 ]);
 
 it('scales the fuel use with the car and never goes below one milliliter', function (float $multiplier, int $expectedMl) {
-    $config = (new RunFreezer())->freeze(sampleFreezeInputs(fuelUse: $multiplier), 'seed', 0)->config;
+    $config = (new RunFreezer)->freeze(sampleFreezeInputs(fuelUse: $multiplier), 'seed', 0)->config;
 
     expect($config['fuel_per_lap_ml'])->toBe($expectedMl);
 })->with([
@@ -84,14 +110,14 @@ it('scales the fuel use with the car and never goes below one milliliter', funct
 ]);
 
 it('freezes the same numbers every time', function () {
-    $first = (new RunFreezer())->freeze(sampleFreezeInputs(), 'seed', 3);
-    $second = (new RunFreezer())->freeze(sampleFreezeInputs(), 'seed', 3);
+    $first = (new RunFreezer)->freeze(sampleFreezeInputs(), 'seed', 3);
+    $second = (new RunFreezer)->freeze(sampleFreezeInputs(), 'seed', 3);
 
     expect($first)->toEqual($second);
 });
 
 it('freezes only integers', function () {
-    $config = (new RunFreezer())->freeze(sampleFreezeInputs(), 'seed', 0)->config;
+    $config = (new RunFreezer)->freeze(sampleFreezeInputs(), 'seed', 0)->config;
 
     foreach (['lap_ms', 'lap_cash_cents', 'lap_xp'] as $table) {
         foreach ($config[$table] as $value) {
@@ -103,7 +129,7 @@ it('freezes only integers', function () {
 });
 
 it('survives being stored as JSON and read back', function () {
-    $frozen = (new RunFreezer())->freeze(sampleFreezeInputs(), 'seed', 0);
+    $frozen = (new RunFreezer)->freeze(sampleFreezeInputs(), 'seed', 0);
 
     $stored = json_decode(json_encode($frozen->config, JSON_THROW_ON_ERROR), true, 512, JSON_THROW_ON_ERROR);
     $config = FrozenRun::configFromArray($stored);
@@ -116,9 +142,9 @@ it('survives being stored as JSON and read back', function () {
 });
 
 it('feeds the settlement with the frozen configuration', function () {
-    $config = (new RunFreezer())->freeze(sampleFreezeInputs(), 'seed', 0)->runConfig();
+    $config = (new RunFreezer)->freeze(sampleFreezeInputs(), 'seed', 0)->runConfig();
 
-    $result = (new Settler())->settle(new RunState(0, 0, 45_000), 3_600_000, $config);
+    $result = (new Settler)->settle(new RunState(0, 0, 45_000), 3_600_000, $config);
 
     // The weather comes from the region seed: some laps are in rain, so the lap count is below the
     // 30 laps the fuel allows only when rain slowed the car enough; either way every lap is paid its own weather.
@@ -138,14 +164,14 @@ it('feeds the settlement with the frozen configuration', function () {
 });
 
 it('plans no breakdown when the car is in perfect condition', function () {
-    expect((new RunFreezer())->freeze(sampleFreezeInputs(breakChance: 0), 'seed', 0)->breakAfterLaps)->toBeNull();
+    expect((new RunFreezer)->freeze(sampleFreezeInputs(breakChance: 0), 'seed', 0)->breakAfterLaps)->toBeNull();
 });
 
 it('plans a breakdown after a later lap, the same one for the same seed', function () {
     $inputs = sampleFreezeInputs(breakChance: 10_000);
 
-    $first = (new RunFreezer())->freeze($inputs, 'seed-a', 7)->breakAfterLaps;
-    $again = (new RunFreezer())->freeze($inputs, 'seed-a', 7)->breakAfterLaps;
+    $first = (new RunFreezer)->freeze($inputs, 'seed-a', 7)->breakAfterLaps;
+    $again = (new RunFreezer)->freeze($inputs, 'seed-a', 7)->breakAfterLaps;
 
     expect($first)->toBeInt()->toBeGreaterThan(7)
         ->and($again)->toBe($first);
@@ -156,7 +182,7 @@ it('plans different breakdowns for different seeds, on average after 1 / chance 
     $laps = [];
 
     for ($i = 0; $i < 3_000; $i++) {
-        $laps[] = (new RunFreezer())->freeze($inputs, "seed-{$i}", 0)->breakAfterLaps;
+        $laps[] = (new RunFreezer)->freeze($inputs, "seed-{$i}", 0)->breakAfterLaps;
     }
 
     $mean = array_sum($laps) / count($laps);
@@ -167,7 +193,7 @@ it('plans different breakdowns for different seeds, on average after 1 / chance 
 });
 
 it('breaks down after the very next lap when the chance is certain', function () {
-    expect((new RunFreezer())->freeze(sampleFreezeInputs(breakChance: 1_000_000), 'seed', 12)->breakAfterLaps)->toBe(13);
+    expect((new RunFreezer)->freeze(sampleFreezeInputs(breakChance: 1_000_000), 'seed', 12)->breakAfterLaps)->toBe(13);
 });
 
 it('rejects inputs that cannot be frozen', function (Closure $build) {
@@ -185,7 +211,7 @@ it('rejects inputs that cannot be frozen', function (Closure $build) {
 ]);
 
 it('refuses to freeze a car without a statistic the track needs', function () {
-    (new RunFreezer())->freeze(sampleFreezeInputs(['grip' => 100.0]), 'seed', 0);
+    (new RunFreezer)->freeze(sampleFreezeInputs(['grip' => 100.0]), 'seed', 0);
 })->throws(InvalidArgumentException::class);
 
 it('refuses to rebuild a configuration that is incomplete', function () {

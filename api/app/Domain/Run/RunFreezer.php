@@ -33,12 +33,14 @@ final class RunFreezer
         $lapCash = [];
         $lapXp = [];
 
+        $xpPerLap = $this->xpPerLap($inputs);
+
         foreach (array_keys($inputs->weatherChancesPpm) as $weather) {
             $effect = $inputs->effectFor($weather);
 
             $lapMs[$weather] = $this->lapMs($inputs, $effect);
             $lapCash[$weather] = Ppm::mul($inputs->track->rewardCentsPerLap, $effect->rewardPpm);
-            $lapXp[$weather] = Ppm::mul($inputs->track->xpPerLap, $effect->xpPpm);
+            $lapXp[$weather] = Ppm::mul($xpPerLap, $effect->xpPpm);
         }
 
         return new FrozenRun([
@@ -49,6 +51,19 @@ final class RunFreezer
             'weather' => ['seed' => $inputs->climateSeed, 'chances_ppm' => $inputs->weatherChancesPpm],
             'night_lap_ppm' => $inputs->nightLapPpm,
         ], $this->breakdownLap($runSeed, $lapsDone, $inputs->breakChancePerLapPpm));
+    }
+
+    /**
+     * The experience of a lap in dry weather, before the weather has its say. The track pays `xpPerLap` for a lap of its base time; a car that
+     * laps it faster gets the same share of it as it takes of the base time, so a fast car does not level the driver quicker than a slow one
+     * would in the same hour (the experience an hour has a ceiling that the track sets: 3 600 000 / base time * xpPerLap). A car that laps
+     * it slower gets the whole of it, as before: a car that does not suit the track still pays for it.
+     */
+    private function xpPerLap(RunInputs $inputs): int
+    {
+        $dryMs = $this->lapMs($inputs, $inputs->effectFor('dry'));
+
+        return (int) round($inputs->track->xpPerLap * min($dryMs, $inputs->track->baseLapMs) / $inputs->track->baseLapMs);
     }
 
     /** Lap time in whole milliseconds: base time divided by perf to the power 1.15. */

@@ -57,6 +57,47 @@ it('pays a lap by the tier of the car, so that the price of a car is what the in
     'tier 10 gets 1.70' => ['orzel-v12', 4_505, 4_190],
 ]);
 
+// The Zlomowo track pays 20 XP for a lap of 75 s, the Autodrom 20 XP for 80 s, and a car that is faster than the base lap gets the share of it.
+it('pays the experience of the base lap to a car that laps the track slower, and less to one that laps it faster', function (string $car, string $track, int $dry, int $rain) {
+    $config = frozenConfig($car, $track);
+
+    expect($config['lap_xp']['dry'])->toBe($dry)
+        ->and($config['lap_xp']['rain'])->toBe($rain);
+})->with([
+    'the starter Rdzak laps the first track in the base time' => ['rdzak-gt-4', 'zlomowo-street', 20, 19],
+    'the Bizon M-2 is 2% faster and rounds back to the whole' => ['bizon-m-2', 'zlomowo-street', 20, 19],
+    'the Kuna 4x4 is slower and gets the whole, not more' => ['kuna-4x4', 'zlomowo-street', 20, 19],
+    'the Rdzak is slower than the base lap on the Autodrom and gets the whole' => ['rdzak-gt-4', 'autodrom-circuit', 20, 19],
+    'the Kornet R6 laps the Autodrom in 77 s: 19.2' => ['kornet-r6', 'autodrom-circuit', 19, 18],
+    'the Serwal GT in 71 s: 17.8' => ['serwal-gt', 'autodrom-circuit', 18, 17],
+    'the Serwal V10 in 67 s: 16.8' => ['serwal-v10', 'autodrom-circuit', 17, 16],
+    'the Orzeł V12 in 68 s: 17.1' => ['orzel-v12', 'autodrom-circuit', 17, 16],
+]);
+
+it('keeps the experience an hour of every car of the pack under the ceiling of every track, give or take the rounding of a lap', function () {
+    $rules = app(Rules::class);
+    $problems = [];
+
+    foreach (app(Catalog::class)->vehicles() as $car => $vehicle) {
+        if ($vehicle['powertrain'] !== 'ice') {
+            continue;
+        }
+
+        foreach ($rules->tracks() as $slug => $track) {
+            $config = frozenConfig($car, $slug);
+            $perHour = 3_600_000 / $config['lap_ms']['dry'] * $config['lap_xp']['dry'];
+            $ceiling = 3_600_000 / $track['base_lap_ms'] * $track['xp_per_lap'];
+
+            // The experience of a lap is a whole number, which lets a car a few per cent over the ceiling: the 10 XP of the drag strip are the coarsest.
+            if ($perHour > $ceiling * 1.06) {
+                $problems[] = sprintf('%s on %s: %.0f XP an hour against a ceiling of %.0f', $car, $slug, $perHour, $ceiling);
+            }
+        }
+    }
+
+    expect($problems)->toBe([]);
+});
+
 it('takes the climate and the seed from the region of the track', function () {
     $inputs = runInputsFactory()->make('rdzak-gt-4', 'zlomowo-street');
 
