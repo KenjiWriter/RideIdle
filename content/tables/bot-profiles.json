@@ -1,0 +1,61 @@
+{
+    "description": "The dry lap, in ms, of the quickest stock car of every tier on every track (with the tires the track asks for, where the stock ones are not): what the bots of the race drive around. Made by the command economy:bot-profiles.",
+    "weather": "dry",
+    "tracks": {
+        "zlomowo-street": {
+            "1": 78346,
+            "2": 75000,
+            "3": 73394,
+            "4": 75107,
+            "5": 66910,
+            "6": 64995,
+            "7": 66555,
+            "8": 66004,
+            "10": 67149
+        },
+        "kruszyn-quarry": {
+            "1": 113623,
+            "2": 94882,
+            "3": 115255,
+            "4": 129139,
+            "5": 124679,
+            "6": 129751,
+            "7": 135966,
+            "8": 134085,
+            "10": 138016
+        },
+        "suchy-pas-drag": {
+            "1": 60564,
+            "2": 53044,
+            "3": 44728,
+            "4": 48261,
+            "5": 32903,
+            "6": 34153,
+            "7": 31714,
+            "8": 30889,
+            "10": 31024
+        },
+        "wilcza-przelecz-switchbacks": {
+            "1": 94033,
+            "2": 94011,
+            "3": 96040,
+            "4": 100937,
+            "5": 93507,
+            "6": 91641,
+            "7": 95781,
+            "8": 94481,
+            "10": 97199
+        },
+        "autodrom-circuit": {
+            "1": 87723,
+            "2": 85215,
+            "3": 86302,
+            "4": 86863,
+            "5": 74475,
+            "6": 71274,
+            "7": 70565,
+            "8": 67160,
+            "10": 68413
+        }
+    }
+}

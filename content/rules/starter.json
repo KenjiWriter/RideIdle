@@ -76,6 +76,11 @@
   "clock": { "night_lap_ppm": 1030000 },
   "player": { "other_cars_xp_ppm": 0, "xp_base": 450, "xp_exponent": 2.3, "max_level": 30, "early_xp": [60, 180, 400, 800, 1600, 2800, 4800, 8000, 12800], "catch_up_level": 20 },
   "start": { "head_start_ms": 60000 },
+  "bots": {
+    "offsets_ppm": [-90000, -60000, -30000, 0, 30000, 60000, 90000],
+    "reward_ppm_by_position": [1500000, 1250000, 1100000, 1000000, 1000000, 800000, 800000, 800000],
+    "names": ["Bruk Racing", "Kuźnia Speed", "Dym i Guma", "Złom Team", "Nocna Zmiana", "Gaz do Dechy", "Rdza Motorsport", "Hamulec Ręczny", "Dwa Suwy", "Zakręt Cup", "Piach i Asfalt", "Szosa Syndicate", "Turbo Sąsiad", "Czarny Olej", "Pit Wojtek", "Zardzewiały Tłok"]
+  },
   "shop": {
     "parts": [
       "street-tires-t2",
@@ -92,7 +97,7 @@
     "crates": {
       "first_tier_level": 1,
       "levels_per_tier": 3,
-      "tier_price_ppm": { "1": 1000000, "8": 1090000 },
+      "tier_price_ppm": { "1": 1000000, "7": 1630000, "8": 1990000 },
       "odds": {
         "standard": { "common": 620, "uncommon": 250, "rare": 100, "epic": 27, "legendary": 3 },
         "premium": { "common": 300, "uncommon": 350, "rare": 240, "epic": 90, "legendary": 20 }
@@ -241,6 +246,7 @@
       },
       "region": "kruszyn",
       "surface": "gravel",
+      "reference_tires": "offroad-tires-t2",
       "lit": false,
       "min_player_level": 3,
       "base_lap_ms": 95000,

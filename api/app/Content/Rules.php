@@ -122,6 +122,36 @@ final class Rules
         return $ppm ?? Ppm::ONE;
     }
 
+    /**
+     * The lap time of every bot against the reference of its tier on the track, in ppm (-90 000 is a bot 9% quicker), from the quickest to the slowest.
+     *
+     * @return list<int>
+     */
+    public function botOffsetsPpm(): array
+    {
+        return array_values($this->data['bots']['offsets_ppm']);
+    }
+
+    /**
+     * What the reward of a lap is multiplied by for each place of the field, the first place first, in ppm.
+     *
+     * @return list<int>
+     */
+    public function botRewardPpmByPosition(): array
+    {
+        return array_values($this->data['bots']['reward_ppm_by_position']);
+    }
+
+    /**
+     * The names of the teams that the bots are called by.
+     *
+     * @return list<string>
+     */
+    public function botNames(): array
+    {
+        return array_values($this->data['bots']['names']);
+    }
+
     /** The level a car does not rise above. */
     public function carMaxLevel(): int
     {
@@ -321,6 +351,12 @@ final class Rules
     public function travelFuelMlPerKm(): int
     {
         return $this->data['travel']['fuel_ml_per_km'];
+    }
+
+    /** The slug of the tires that the reference car of the bots of a track has instead of the stock ones, or null when it has the stock ones. */
+    public function trackReferenceTires(string $slug): ?string
+    {
+        return $this->data['tracks'][$slug]['reference_tires'] ?? null;
     }
 
     /** The level of the driver from which a track is open. */

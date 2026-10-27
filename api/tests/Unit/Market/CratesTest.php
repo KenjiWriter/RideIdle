@@ -108,8 +108,9 @@ describe('the crates', function () {
     });
 
     it('prices the tiers by a schedule that says from which tier a factor holds, and leaves the tiers below it at none', function () {
-        // From the rules: no factor up to the tier 7, 9% more from the tier 8 on (the pack has tiers 1 to 3 only, so the shop sells at the price of its parts).
-        expect(array_map(fn (int $tier): int => crates()->tierPriceFactorPpm($tier), [1, 2, 3, 7, 8, 9, 10]))->toBe([1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_090_000, 1_090_000, 1_090_000]);
+        // From the rules: no factor up to the tier 6, 63% more from the tier 7 and 99% from the tier 8 on (the position among the bots makes a crate worth more
+        // to the car; the pack has tiers 1 to 3 only, so the shop sells at the price of its parts).
+        expect(array_map(fn (int $tier): int => crates()->tierPriceFactorPpm($tier), [1, 2, 3, 6, 7, 8, 9, 10]))->toBe([1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_630_000, 1_990_000, 1_990_000, 1_990_000]);
 
         $steps = new Crates([...crateRules()->shopCrates(), 'tier_price_ppm' => ['1' => 1_000_000, '4' => 1_500_000, '6' => 2_000_000]]);
 

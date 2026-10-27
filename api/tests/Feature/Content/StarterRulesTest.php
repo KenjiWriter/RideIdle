@@ -42,6 +42,12 @@ function rulesSchemaErrors(array $rules): array
         $data->shop->parts = array_values((array) $data->shop->parts);
     }
 
+    foreach (['offsets_ppm', 'reward_ppm_by_position', 'names'] as $key) {
+        if (isset($data->bots->{$key}) && is_object($data->bots->{$key})) {
+            $data->bots->{$key} = array_values((array) $data->bots->{$key});
+        }
+    }
+
     if (isset($data->roads) && is_object($data->roads)) {
         $data->roads = array_values((array) $data->roads);
     }
@@ -238,6 +244,50 @@ it('finds the level of a car by its experience, from the start to the highest le
         ->and($rules->carLevelAt(1_200))->toBe(4)
         // Nothing takes a car past its highest level.
         ->and($rules->carLevelAt(PHP_INT_MAX))->toBe($rules->carMaxLevel());
+});
+
+it('has a field of bots whose places pay what they should: one place more than there are bots, never more for a worse place, and the middle one pays nothing extra', function () {
+    $rules = Rules::fromArray(starterRules());
+    $offsets = $rules->botOffsetsPpm();
+    $pays = $rules->botRewardPpmByPosition();
+
+    expect($pays)->toHaveCount(count($offsets) + 1)
+        // The bots go from the quickest to the slowest, and one of them drives the reference lap exactly.
+        ->and($offsets)->toBe(collect($offsets)->sort()->values()->all())
+        ->and($offsets)->toContain(0)
+        ->and($rules->botNames())->toHaveCount(count(array_unique($rules->botNames())))
+        ->and(count($rules->botNames()))->toBeGreaterThanOrEqual(count($offsets))
+        // The place in the middle of the field, where a car as quick as the reference stands, pays the reward of the track as it is.
+        ->and($pays[array_search(0, $offsets, true) + 1])->toBe(1_000_000);
+
+    for ($place = 1; $place < count($pays); $place++) {
+        expect($pays[$place])->toBeLessThanOrEqual($pays[$place - 1]);
+    }
+});
+
+it('is refused by the schema when the bots are missing or the places pay nothing', function () {
+    $rules = starterRules();
+    unset($rules['bots']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    $rules['bots']['reward_ppm_by_position'][0] = 0;
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    $rules['bots']['names'] = ['Bruk Racing', 'Bruk Racing'];
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+});
+
+it('names tires of the pack as the tires that the reference car of a track has, where it has any', function () {
+    $rules = Rules::fromArray(starterRules());
+    $tires = collect(app(Catalog::class)->parts())->where('slot', 'tires')->keys()->all();
+    $named = array_filter(array_map(fn (string $track): ?string => $rules->trackReferenceTires($track), array_keys($rules->tracks())));
+
+    // Gravel is the track where the stock tires are not what it asks for: a field made around them would pay a bonus to everyone who buys the right ones.
+    expect($rules->trackReferenceTires('kruszyn-quarry'))->toBe('offroad-tires-t2')
+        ->and($rules->trackReferenceTires('zlomowo-street'))->toBeNull()
+        ->and(array_diff($named, $tires))->toBe([]);
 });
 
 it('pays the cars of the first four tiers the reward of the track, and a car of a higher tier more, never less than the tier before', function () {

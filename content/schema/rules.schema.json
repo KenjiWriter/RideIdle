@@ -49,6 +49,35 @@
       "description": "Slug of the tires every car drives on until it has others. Their kind picks the column of the tire matrix.",
       "$ref": "common.schema.json#/$defs/slug"
     },
+    "bots": {
+      "description": "The rivals of the race: seven bots drive every track at lap times around the reference of the tier of the car (the fastest stock car of the tier on that track, `content/tables/bot-profiles.json`), and the place of the car among them, by its dry lap time, multiplies the reward of a lap. A bot as fast as the car is ahead of it.",
+      "type": "object",
+      "properties": {
+        "offsets_ppm": {
+          "description": "The lap time of every bot against the reference, in ppm: -90 000 is a bot 9% quicker than the reference, 0 one that drives it, and 90 000 one 9% slower. There are as many bots as numbers, so the field is one car bigger.",
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 15,
+          "items": { "type": "integer", "minimum": -500000, "maximum": 500000 }
+        },
+        "reward_ppm_by_position": {
+          "description": "What the reward of a lap is multiplied by (ppm, 1 000 000 is none) for the first place, the second and so on, as many as the field has cars. It never rises with the place.",
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 16,
+          "items": { "type": "integer", "minimum": 1 }
+        },
+        "names": {
+          "description": "The names of the teams the bots are called by, none twice: a track takes as many as it has bots, in an order that is its own. They are names, not texts, so they are not translated.",
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1, "maxLength": 40 }
+        }
+      },
+      "required": ["offsets_ppm", "reward_ppm_by_position", "names"],
+      "additionalProperties": false
+    },
     "car": {
       "description": "Owned cars. A part of tier T can be mounted in a car whose level is at least levels_per_tier * (T - 1): tier <= 1 + floor(level / levels_per_tier).",
       "type": "object",
@@ -456,6 +485,7 @@
           "name": { "$ref": "common.schema.json#/$defs/i18n" },
           "region": { "$ref": "common.schema.json#/$defs/slug" },
           "surface": { "description": "What the track is made of when it is dry. The weather turns it wet or snowy.", "enum": ["asphalt", "gravel"] },
+          "reference_tires": { "description": "The tires of the car that the bots of the race are made around, when the stock tires are not what the track asks for: on gravel every stock car is a second slower than a car with the right tires, and a field made around the stock ones would pay a bonus to everyone who buys them. Without it the reference car has the stock tires.", "$ref": "common.schema.json#/$defs/slug" },
           "lit": { "description": "Whether the track has lights: a track that has none takes longer to drive at night.", "type": "boolean" },
           "min_player_level": { "description": "The level of the driver from which the track is open. A car is thought of as the level of the track when the tracks are compared: it can mount the tier that level reaches.", "type": "integer", "minimum": 1 },
           "base_lap_ms": { "description": "Lap time of a car that matches the reference exactly.", "type": "integer", "minimum": 1 },
@@ -482,7 +512,7 @@
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks", "bots"],
   "additionalProperties": false,
   "$defs": {
     "crateOdds": {
