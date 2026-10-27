@@ -216,6 +216,25 @@
       "required": ["tier_efficiency_ppm_per_tier", "layouts", "bays"],
       "additionalProperties": false
     },
+    "drivetrain": {
+      "description": "What the drive of a car does (Katalog aut, Napęd): the numbers of the design, one row for each of fwd, rwd and awd. Every factor of a row is taken RELATIVE to the row of `reference`, because the anchors of the design give the front wheel drive starter its base lap: a car with the reference drive is not touched at all (below its power limit), and the others are faster or slower than it by the ratio of the rows. The power limit is absolute: a drive that cannot put more than `kw` on the road loses (kw / power) ^ exponent of the acceleration.",
+      "type": "object",
+      "properties": {
+        "reference": { "enum": ["fwd", "rwd", "awd"] },
+        "types": {
+          "type": "object",
+          "properties": {
+            "fwd": { "$ref": "#/$defs/drivetrain" },
+            "rwd": { "$ref": "#/$defs/drivetrain" },
+            "awd": { "$ref": "#/$defs/drivetrain" }
+          },
+          "required": ["fwd", "rwd", "awd"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["reference", "types"],
+      "additionalProperties": false
+    },
     "garage": {
       "description": "The garages of the cities: every one holds a number of cars, which drive on the track of the city by themselves. The first is the one of the home city, and the others are bought. A car without a garage has nowhere to stand.",
       "type": "object",
@@ -691,7 +710,7 @@
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "wear", "tow", "stock_tires", "car", "engines", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks", "bots"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "wear", "tow", "stock_tires", "car", "engines", "drivetrain", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks", "bots"],
   "additionalProperties": false,
   "$defs": {
     "purchase_prices": {
@@ -761,6 +780,29 @@
         "snow": { "type": "integer", "minimum": 1 }
       },
       "required": ["asphalt_dry", "asphalt_wet", "gravel_dry", "mud", "snow"],
+      "additionalProperties": false
+    },
+    "drivetrain": {
+      "description": "One drive. The factors multiply the car (1 000 000 is neutral): `start_ppm` the acceleration, `handling_ppm` the handling, `mass_penalty_ppm` both of them, `fuel_ppm` the fuel use, `service_ppm` the price of a service; `traction_ppm` multiplies the grip, the handling and the braking on each surface, like the tire matrix. `power_limit` is optional: above `kw` the acceleration is multiplied by (kw / power) ^ exponent.",
+      "type": "object",
+      "properties": {
+        "start_ppm": { "type": "integer", "minimum": 1 },
+        "handling_ppm": { "type": "integer", "minimum": 1 },
+        "mass_penalty_ppm": { "type": "integer", "minimum": 1 },
+        "fuel_ppm": { "type": "integer", "minimum": 1 },
+        "service_ppm": { "type": "integer", "minimum": 1 },
+        "traction_ppm": { "$ref": "#/$defs/surfaces" },
+        "power_limit": {
+          "type": "object",
+          "properties": {
+            "kw": { "type": "number", "exclusiveMinimum": 0 },
+            "exponent": { "type": "number", "exclusiveMinimum": 0, "maximum": 2 }
+          },
+          "required": ["kw", "exponent"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["start_ppm", "handling_ppm", "mass_penalty_ppm", "fuel_ppm", "service_ppm", "traction_ppm"],
       "additionalProperties": false
     },
     "stat": { "enum": ["accel", "top_speed", "grip", "handling", "braking", "clearance"] },

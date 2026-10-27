@@ -41,6 +41,37 @@
       "hyper": { "layouts": ["R6", "V8", "V10", "V12"], "max_displacement_l": 7.0 }
     }
   },
+  "drivetrain": {
+    "reference": "fwd",
+    "types": {
+      "fwd": {
+        "start_ppm": 920000,
+        "handling_ppm": 970000,
+        "mass_penalty_ppm": 1000000,
+        "fuel_ppm": 950000,
+        "service_ppm": 1000000,
+        "traction_ppm": { "asphalt_dry": 970000, "asphalt_wet": 980000, "gravel_dry": 970000, "mud": 950000, "snow": 980000 },
+        "power_limit": { "kw": 130, "exponent": 0.4 }
+      },
+      "rwd": {
+        "start_ppm": 1000000,
+        "handling_ppm": 1050000,
+        "mass_penalty_ppm": 995000,
+        "fuel_ppm": 1000000,
+        "service_ppm": 1000000,
+        "traction_ppm": { "asphalt_dry": 1000000, "asphalt_wet": 950000, "gravel_dry": 920000, "mud": 880000, "snow": 850000 },
+        "power_limit": { "kw": 260, "exponent": 0.25 }
+      },
+      "awd": {
+        "start_ppm": 1100000,
+        "handling_ppm": 940000,
+        "mass_penalty_ppm": 970000,
+        "fuel_ppm": 1060000,
+        "service_ppm": 1200000,
+        "traction_ppm": { "asphalt_dry": 1030000, "asphalt_wet": 1080000, "gravel_dry": 1100000, "mud": 1120000, "snow": 1150000 }
+      }
+    }
+  },
   "garage": {
     "capacity": 3,
     "price_cents": 500000,
