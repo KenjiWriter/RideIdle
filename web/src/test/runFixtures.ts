@@ -4,11 +4,12 @@ import type { Run } from '@/api/types'
 const SEGMENT_MS = 1_350_000
 
 /** The parts of a run that tell what is happening on the track now: dry weather and a lap of 75 s that has just started. */
-export function liveFields(nowMs: number): Pick<Run, 'weather' | 'current_lap' | 'clock' | 'travel'> {
+export function liveFields(nowMs: number): Pick<Run, 'weather' | 'current_lap' | 'clock' | 'travel' | 'field'> {
   const segment = Math.floor(nowMs / SEGMENT_MS)
 
   return {
     travel: null,
+    field: null,
     clock: {
       day_ms: 10_800_000,
       phases: [

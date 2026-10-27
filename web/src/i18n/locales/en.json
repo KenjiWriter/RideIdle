@@ -475,7 +475,9 @@
       "time": "Time",
       "you": "You · {car}",
       "youTag": "YOU",
-      "later": "Bots and the ghosts of other drivers come later. For now you race alone."
+      "later": "Bots and the ghosts of other drivers come later. For now you race alone.",
+      "botTag": "BOT",
+      "fieldNote": "Times are laps in the dry: the weather slows everyone alike, so the position stays. The ghosts of other drivers come later."
     },
     "carXp": "+{value} car XP",
     "forecast": {
@@ -487,7 +489,12 @@
     },
     "start": "Start",
     "startTitle": "The car is waiting in the garage",
-    "startNote": "Tap Start and the car drives lap after lap by itself, also when you are away."
+    "startNote": "Tap Start and the car drives lap after lap by itself, also when you are away.",
+    "position": {
+      "label": "Position",
+      "value": "P{position}/{size}",
+      "reward": "{percent} for the position"
+    }
   },
   "clock": {
     "phase": {

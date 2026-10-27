@@ -475,7 +475,9 @@
       "time": "Temps",
       "you": "Vous · {car}",
       "youTag": "VOUS",
-      "later": "Les bots et les fantômes des autres pilotes arriveront plus tard. Pour l’instant, vous roulez seul."
+      "later": "Les bots et les fantômes des autres pilotes arriveront plus tard. Pour l’instant, vous roulez seul.",
+      "botTag": "BOT",
+      "fieldNote": "Les temps sont ceux des tours sur le sec : la météo ralentit tout le monde pareil, donc la position ne change pas. Les fantômes des autres pilotes arriveront plus tard."
     },
     "carXp": "+{value} XP voiture",
     "forecast": {
@@ -487,7 +489,12 @@
     },
     "start": "Démarrer",
     "startTitle": "La voiture attend dans le garage",
-    "startNote": "Touche Démarrer et la voiture enchaîne les tours toute seule, même en ton absence."
+    "startNote": "Touche Démarrer et la voiture enchaîne les tours toute seule, même en ton absence.",
+    "position": {
+      "label": "Position",
+      "value": "P{position}/{size}",
+      "reward": "{percent} pour la position"
+    }
   },
   "clock": {
     "phase": {

@@ -475,7 +475,9 @@
       "time": "Czas",
       "you": "Ty · {car}",
       "youTag": "TY",
-      "later": "Boty i duchy innych kierowców dojdą później. Na razie jedziesz sam."
+      "later": "Boty i duchy innych kierowców dojdą później. Na razie jedziesz sam.",
+      "botTag": "BOT",
+      "fieldNote": "Czasy to okrążenia na sucho: pogoda zwalnia wszystkich tak samo, więc pozycja się nie zmienia. Duchy innych kierowców dojdą później."
     },
     "carXp": "+{value} XP auta",
     "forecast": {
@@ -487,7 +489,12 @@
     },
     "start": "Start",
     "startTitle": "Auto czeka w garażu",
-    "startNote": "Dotknij Start, a auto pojedzie okrążenie za okrążeniem samo, także gdy Cię nie będzie."
+    "startNote": "Dotknij Start, a auto pojedzie okrążenie za okrążeniem samo, także gdy Cię nie będzie.",
+    "position": {
+      "label": "Pozycja",
+      "value": "P{position}/{size}",
+      "reward": "{percent} za pozycję"
+    }
   },
   "clock": {
     "phase": {

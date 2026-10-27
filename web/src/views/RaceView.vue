@@ -116,6 +116,20 @@ async function start(): Promise<void> {
 // The server is asked what a lap paid as soon as it is over by the navigation (`useLapClock`), on this screen as on any other.
 
 const lap = computed(() => run.run?.current_lap ?? null)
+
+/** The field of eight the car races among, or nothing for a run that was frozen before there were bots. */
+const field = computed(() => run.run?.field ?? null)
+
+/** What the position does to the reward of a lap, as a signed percent: "+25%", "−20%", or nothing at a multiplier of exactly one. */
+const positionReward = computed(() => {
+  if (!field.value) {
+    return null
+  }
+
+  const percent = Math.round((field.value.reward_ppm / 1_000_000 - 1) * 100)
+
+  return percent === 0 ? null : { percent, text: `${percent > 0 ? '+' : '−'}${Math.abs(percent)}%` }
+})
 const progress = computed(() => (lap.value ? lapProgress(lap.value, now.value) : null))
 
 /** The weather the lap in progress is driven in, or the weather now for a car that stands. */
@@ -254,20 +268,34 @@ const ring = computed(() => {
               <span>{{ t('race.lapPays') }}</span>
               <b class="mono text-[13px] text-amber" data-test="lap-pays">{{ money(lapCash, 2) }}</b>
             </div>
+            <div v-if="field" class="flex justify-between text-[13px] text-muted">
+              <span>{{ t('race.position.label') }}</span>
+              <b class="mono text-[13px] text-ink" data-test="position">{{ t('race.position.value', { position: field.position, size: field.size }) }}</b>
+            </div>
             <div class="mt-0.5 flex flex-wrap gap-[5px]">
               <span class="chip chip-am !h-7 !px-2" data-test="lap-cash">+{{ money(lapCash, 2) }}</span>
               <span class="chip !h-7 !px-2" data-test="lap-xp">+{{ t('car.xp', { value: number(lapXp) }) }}</span>
               <span class="chip !h-7 !px-2" data-test="lap-car-xp">{{ t('race.carXp', { value: number(run.run.lap.car_xp) }) }}</span>
+              <span v-if="positionReward" class="chip !h-7 !px-2" :class="positionReward.percent > 0 ? 'chip-am' : 'chip-bad'" data-test="position-reward">{{ t('race.position.reward', { percent: positionReward.text }) }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Nobody races the driver yet: the board has one row, which is true, and says when the others come. -->
+        <!-- The field of eight, ranked by the lap in the dry; a run that was frozen before there were bots has the board with the driver alone, which is true. -->
         <div class="lb" data-test="board">
           <div class="lbr lbh"><span>#</span><span>{{ t('race.board.driver') }}</span><span>{{ t('race.board.kind') }}</span><span class="text-right">{{ t('race.board.time') }}</span></div>
-          <div class="lbr me"><b>1</b><span class="truncate">{{ t('race.board.you', { car: run.run.car.name }) }}</span><span class="tag tag-am justify-center">{{ t('race.board.youTag') }}</span><span class="tm">{{ formatLapTime(lapMs) }}</span></div>
+          <template v-if="field">
+            <div v-for="(row, index) in field.rows" :key="index" class="lbr" :class="{ me: row.type === 'you' }" :data-test="`board-row-${index + 1}`">
+              <b>{{ index + 1 }}</b>
+              <span class="truncate">{{ row.type === 'you' ? t('race.board.you', { car: run.run.car.name }) : row.name }}</span>
+              <span class="tag justify-center" :class="{ 'tag-am': row.type === 'you' }">{{ row.type === 'you' ? t('race.board.youTag') : t('race.board.botTag') }}</span>
+              <span class="tm">{{ formatLapTime(row.lap_ms) }}</span>
+            </div>
+          </template>
+          <div v-else class="lbr me"><b>1</b><span class="truncate">{{ t('race.board.you', { car: run.run.car.name }) }}</span><span class="tag tag-am justify-center">{{ t('race.board.youTag') }}</span><span class="tm">{{ formatLapTime(lapMs) }}</span></div>
         </div>
-        <p class="sub" data-test="board-later">{{ t('race.board.later') }}</p>
+        <p v-if="field" class="sub" data-test="board-note">{{ t('race.board.fieldNote') }}</p>
+        <p v-else class="sub" data-test="board-later">{{ t('race.board.later') }}</p>
 
         <FuelGauge :run="run.run" />
       </section>

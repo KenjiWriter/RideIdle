@@ -1,7 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { Run } from '@/api/types'
+import type { Run, RunField } from '@/api/types'
 import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
@@ -31,6 +31,16 @@ function aRun(overrides: Partial<Run> = {}): Run {
     ...liveFields(NOW),
     ...overrides,
   }
+}
+
+const BOTS = ['Bruk Racing', 'Kamień Team', 'Złomex', 'Pylon Sport', 'Gaz do Dechy', 'Nitro Boczek', 'Dymiące Tłoki']
+
+/** The field of eight with the driver at this position: seven bots with their laps in the dry, and the driver among them. */
+function aField(position: number, rewardPpm: number): RunField {
+  const rows: RunField['rows'] = BOTS.map((name, index) => ({ name, type: 'bot' as const, lap_ms: 68_250 + index * 2_250 }))
+  rows.splice(position - 1, 0, { name: null, type: 'you', lap_ms: 68_250 + (position - 1) * 2_250 - 100 })
+
+  return { position, size: 8, reward_ppm: rewardPpm, rows }
 }
 
 function runAnswer(run: Run) {
@@ -249,6 +259,71 @@ describe('RaceView', () => {
     expect(wrapper.get('[data-test="board"] .lbr.me').text()).toContain('You · Rdzak GT-4')
     expect(wrapper.get('[data-test="board"] .lbr.me').text()).toContain('1:15.0')
     expect(wrapper.get('[data-test="board-later"]').text()).toBe('Bots and the ghosts of other drivers come later. For now you race alone.')
+  })
+
+  it('says where the car is among the bots, and what the position does to the reward of a lap', async () => {
+    const { wrapper } = await show(aRun({ field: aField(3, 1_100_000) }))
+
+    expect(wrapper.get('[data-test="position"]').text()).toBe('P3/8')
+    expect(wrapper.get('[data-test="position-reward"]').text()).toBe('+10% for the position')
+    expect(wrapper.get('[data-test="position-reward"]').classes()).toContain('chip-am')
+  })
+
+  it('says it when the position costs a fifth of the reward, and says nothing at a multiplier of one', async () => {
+    const { wrapper: behind } = await show(aRun({ field: aField(7, 800_000) }))
+
+    expect(behind.get('[data-test="position"]').text()).toBe('P7/8')
+    expect(behind.get('[data-test="position-reward"]').text()).toBe('−20% for the position')
+    expect(behind.get('[data-test="position-reward"]').classes()).toContain('chip-bad')
+
+    const { wrapper: middle } = await show(aRun({ field: aField(5, 1_000_000) }))
+
+    expect(middle.get('[data-test="position"]').text()).toBe('P5/8')
+    expect(middle.find('[data-test="position-reward"]').exists()).toBe(false)
+  })
+
+  it('has the board of the field: eight rows in the order of the laps in the dry, the driver marked among the bots', async () => {
+    const { wrapper } = await show(aRun({ field: aField(3, 1_100_000) }))
+
+    const rows = wrapper.findAll('[data-test="board"] .lbr:not(.lbh)')
+
+    expect(rows).toHaveLength(8)
+    expect(rows[0]?.text()).toContain('1')
+    expect(rows[0]?.text()).toContain('Bruk Racing')
+    expect(rows[0]?.text()).toContain('BOT')
+    expect(rows[0]?.text()).toContain('1:08.3')
+    expect(rows[1]?.text()).toContain('Kamień Team')
+    // The driver is the third, with the car and the dry lap of the car, and the only row that is marked.
+    expect(rows[2]?.classes()).toContain('me')
+    expect(rows[2]?.text()).toContain('You · Rdzak GT-4')
+    expect(rows[2]?.text()).toContain('YOU')
+    expect(rows[2]?.text()).toContain('1:12.7')
+    expect(rows[3]?.text()).toContain('Złomex')
+    expect(wrapper.findAll('[data-test="board"] .lbr.me')).toHaveLength(1)
+    expect(wrapper.get('[data-test="board-row-3"]').classes()).toContain('me')
+    expect(wrapper.get('[data-test="board-note"]').text()).toBe('Times are laps in the dry: the weather slows everyone alike, so the position stays. The ghosts of other drivers come later.')
+    expect(wrapper.find('[data-test="board-later"]').exists()).toBe(false)
+  })
+
+  it('keeps the board with the driver alone for a run that has no field, and shows no position', async () => {
+    const { wrapper } = await show(aRun({ field: null }))
+
+    expect(wrapper.find('[data-test="position"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="position-reward"]').exists()).toBe(false)
+    expect(wrapper.findAll('[data-test="board"] .lbr')).toHaveLength(2)
+    expect(wrapper.find('[data-test="board-note"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="board-later"]').exists()).toBe(true)
+  })
+
+  it('tells of the position and the board in the language of the driver', async () => {
+    await setLocale('pl')
+    const { wrapper } = await show(aRun({ field: aField(1, 1_500_000) }))
+
+    expect(wrapper.get('[data-test="position"]').text()).toBe('P1/8')
+    expect(wrapper.get('[data-test="position-reward"]').text()).toBe('+50% za pozycję')
+    expect(wrapper.get('[data-test="board-row-1"]').text()).toContain('Ty · Rdzak GT-4')
+    expect(wrapper.get('[data-test="board-row-2"]').text()).toContain('BOT')
+    expect(wrapper.get('[data-test="board-note"]').text()).toBe('Czasy to okrążenia na sucho: pogoda zwalnia wszystkich tak samo, więc pozycja się nie zmienia. Duchy innych kierowców dojdą później.')
   })
 
   it('shows the tank, with the refuel', async () => {

@@ -475,7 +475,9 @@
       "time": "Zeit",
       "you": "Du · {car}",
       "youTag": "DU",
-      "later": "Bots und Geister anderer Fahrer kommen später. Vorerst fährst du allein."
+      "later": "Bots und Geister anderer Fahrer kommen später. Vorerst fährst du allein.",
+      "botTag": "BOT",
+      "fieldNote": "Die Zeiten sind Runden bei Trockenheit: das Wetter bremst alle gleich, die Position bleibt also. Geister anderer Fahrer kommen später."
     },
     "carXp": "+{value} Auto-XP",
     "forecast": {
@@ -487,7 +489,12 @@
     },
     "start": "Start",
     "startTitle": "Das Auto wartet in der Garage",
-    "startNote": "Tippe auf Start, und das Auto fährt Runde um Runde von allein, auch wenn du nicht da bist."
+    "startNote": "Tippe auf Start, und das Auto fährt Runde um Runde von allein, auch wenn du nicht da bist.",
+    "position": {
+      "label": "Position",
+      "value": "P{position}/{size}",
+      "reward": "{percent} für die Position"
+    }
   },
   "clock": {
     "phase": {

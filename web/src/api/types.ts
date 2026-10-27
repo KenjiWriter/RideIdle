@@ -39,6 +39,24 @@ export type RunStatus = 'running' | 'stopped'
 /** Why a run stopped: the tank is empty, the car broke down, it stands in the workshop while a job is done, it is on the road to another city, or it waits in the garage for the Start. */
 export type StopReason = 'fuel_empty' | 'breakdown' | 'workshop' | 'travel' | 'parked'
 
+/** One racer of the field of a run: a bot (with a name) or the driver (the screen writes the car). `lap_ms` is the lap in the dry. */
+export interface FieldRow {
+  name: string | null
+  type: 'bot' | 'you'
+  lap_ms: number
+}
+
+/**
+ * The field the car races among: eight cars, the driver and seven bots, ranked by the lap in the dry (a tie goes to the bots). The position does not change with
+ * the weather, and `reward_ppm` is what it multiplies the reward of a lap by (the reward in `lap.cash_cents` already has it in).
+ */
+export interface RunField {
+  position: number
+  size: number
+  reward_ppm: number
+  rows: FieldRow[]
+}
+
 /** A run: a car driving laps on a track (GET /api/v1/runs/current). Times are ms of the server clock, fuel is in ml. */
 export interface Run {
   id: number
@@ -65,6 +83,8 @@ export interface Run {
     /** How much of its time a lap takes when it starts at night, in ppm: 1 000 000 on a track that is lit, 1 030 000 on one that is not. */
     night_ppm: number
   }
+  /** The field the car races among, null for a run that was frozen before there were bots. */
+  field: RunField | null
   /** The journey the car is on, while it stands on the road between two cities. */
   travel: RunTravel | null
   /** The clock of the game: a day is `day_ms` of the clock of the server, and each phase of it begins at an hour of the game. */

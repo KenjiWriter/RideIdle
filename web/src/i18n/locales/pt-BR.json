@@ -475,7 +475,9 @@
       "time": "Tempo",
       "you": "Você · {car}",
       "youTag": "VOCÊ",
-      "later": "Bots e fantasmas de outros pilotos chegam depois. Por enquanto, você corre sozinho."
+      "later": "Bots e fantasmas de outros pilotos chegam depois. Por enquanto, você corre sozinho.",
+      "botTag": "BOT",
+      "fieldNote": "Os tempos são de voltas no seco: o clima atrasa todo mundo igual, então a posição não muda. Fantasmas de outros pilotos chegam depois."
     },
     "carXp": "+{value} XP do carro",
     "forecast": {
@@ -487,7 +489,12 @@
     },
     "start": "Iniciar",
     "startTitle": "O carro está esperando na garagem",
-    "startNote": "Toque em Iniciar e o carro dá volta após volta sozinho, mesmo quando você não está."
+    "startNote": "Toque em Iniciar e o carro dá volta após volta sozinho, mesmo quando você não está.",
+    "position": {
+      "label": "Posição",
+      "value": "P{position}/{size}",
+      "reward": "{percent} pela posição"
+    }
   },
   "clock": {
     "phase": {
