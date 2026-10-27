@@ -29,6 +29,9 @@ const LOSES_THE_PRICE: Record<string, string> = {
   merge: 'workshop.cancelLosesMerge',
   repair: 'workshop.cancelLosesRepair',
   service: 'workshop.cancelLosesService',
+  // The fee of the vulcanizer, for a job on tires in a workshop without a tire machine.
+  mount: 'workshop.cancelLosesFee',
+  unmount: 'workshop.cancelLosesFee',
 }
 
 /** What is lost with a job at work: the work, and the price of an upgrade, a merge, a repair or a service (the parts stay as they were). */

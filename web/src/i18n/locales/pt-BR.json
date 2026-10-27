@@ -448,7 +448,68 @@
     "serviceWaits": "Há uma revisão na fila.",
     "breakdownEvery": "Uma quebra a cada {time}, em média",
     "cancelLosesRepair": "O trabalho já feito e os {price} pagos pelo conserto se perdem, e a peça fica como estava.",
-    "cancelLosesService": "O trabalho já feito e os {price} pagos pela revisão se perdem."
+    "cancelLosesService": "O trabalho já feito e os {price} pagos pela revisão se perdem.",
+    "atWork": "Trabalhando agora: {working} de {workers}",
+    "cancelLosesFee": "O trabalho já feito e os {price} pagos ao borracheiro se perdem, e a peça fica como estava.",
+    "gear": {
+      "title": "Equipamento",
+      "summary": "Trabalhando ao mesmo tempo: {workers} · fila de {max} serviços",
+      "show": "Mostrar",
+      "hide": "Ocultar",
+      "item": {
+        "tire_machine": "Desmontadora de pneus",
+        "lift": "Elevador",
+        "hoist": "Talha de motor",
+        "toolkit": "Ferramentas"
+      },
+      "level": {
+        "tire_machine": {
+          "none": "Sem máquina (um borracheiro fora da oficina)",
+          "manual": "Desmontadora manual",
+          "automatic": "Máquina automática com balanceadora"
+        },
+        "lift": {
+          "trestles": "Cavaletes",
+          "hand_hydraulic": "Macaco hidráulico manual",
+          "two_post": "Elevador de duas colunas",
+          "four_post": "Elevador de quatro colunas"
+        },
+        "hoist": {
+          "none": "Sem talha",
+          "hoist": "Talha de motor",
+          "hydraulic_crane": "Guindaste hidráulico"
+        },
+        "toolkit": {
+          "hand": "Ferramentas manuais",
+          "pneumatic": "Ferramentas pneumáticas",
+          "electric": "Ferramentas elétricas profissionais"
+        }
+      },
+      "levelOf": "Nível {level} de {max}",
+      "effect": "Tempo dos serviços ×{factor}",
+      "effectBase": "Tempo habitual dos serviços",
+      "slots": "Vale para: {slots}",
+      "slotsAll": "Vale para todos os serviços, inclusive fusão e revisão",
+      "fee": "Sem máquina, um borracheiro fora da oficina cobra {fee} por serviço nos pneus",
+      "next": "Próximo: {name} · tempo ×{factor}",
+      "buy": "Comprar · {price}",
+      "buyLabel": "Comprar: {name}",
+      "short": "Dinheiro insuficiente: faltam {price}",
+      "max": "Nível máximo",
+      "bays": "Baias",
+      "baysInfo": "{count} de {max} · carros trabalhados ao mesmo tempo",
+      "mechanics": "Mecânicos",
+      "mechanicsInfo": "{count} de {max} · cada um precisa de uma baia",
+      "what": {
+        "bays": "uma baia",
+        "mechanics": "um mecânico"
+      },
+      "bought": "Comprado: {name}.",
+      "repeated": "Essa compra já foi feita.",
+      "note": "Uma compra acelera os serviços colocados na fila depois dela.",
+      "needBay": "Um mecânico sem baia não trabalha: compre uma baia.",
+      "needMechanic": "Uma baia sem mecânico fica vazia: compre um mecânico."
+    }
   },
   "hud": {
     "level": "LV",

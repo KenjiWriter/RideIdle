@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { api } from '@/api/client'
-import type { CancelJobResponse, CrateKind, CrateOpenResponse, GarageResponse, JobKind, OpenedCrate, PurchaseResponse, ShopCrates, ShopOffer, ShopResponse, Wallet, WorkshopJob } from '@/api/types'
+import type { BuyEquipmentResponse, CancelJobResponse, CrateKind, CrateOpenResponse, EquipmentKey, GarageResponse, JobKind, OpenedCrate, PurchaseResponse, ShopCrates, ShopOffer, ShopResponse, Wallet, WorkshopJob } from '@/api/types'
 import { intentionIds } from '@/features/run/intentionIds'
 import { newRequestId } from '@/features/run/requestId'
 import { useRunStore } from '@/stores/run'
@@ -33,6 +33,7 @@ export const useGarageStore = defineStore('garage', () => {
   /** The crates of the shop: the odds, the guarantees and what each kind costs. */
   const crates = ref<ShopCrates | null>(null)
   const crateIds = intentionIds(PURCHASE_ID_LIFETIME_MS)
+  const equipmentIds = intentionIds(PURCHASE_ID_LIFETIME_MS)
   /** The cash of the driver as the shop last saw it. */
   const cash = ref<Wallet | null>(null)
 
@@ -156,9 +157,26 @@ export const useGarageStore = defineStore('garage', () => {
     return response.cancelled.flatMap((id) => before.find((job) => job.id === id) ?? [])
   }
 
+  /**
+   * Buys the next level of an item of the workshop, or one more bay or mechanic, for cash. It is there at once, but only the jobs queued from then on are
+   * quicker. A request that was lost on its way and is sent again buys once: the server answers with `repeated`. Returns whether this call bought it.
+   */
+  async function buyEquipment(item: EquipmentKey): Promise<boolean> {
+    const response = await api<BuyEquipmentResponse>('/v1/garage/equipment', {
+      method: 'POST',
+      body: JSON.stringify({ item, request_id: equipmentIds.forKey(item) }),
+    })
+
+    equipmentIds.answered()
+    applyGarage(response)
+    syncRun()
+
+    return !response.repeated
+  }
+
   function acknowledgeLevelUp(): void {
     levelUp.value = null
   }
 
-  return { garage, loaded, offers, shopCar, shopLoaded, crates, cash, levelUp, serverNow, loadGarage, loadShop, buy, openCrate, queue, cancelJob, acknowledgeLevelUp }
+  return { garage, loaded, offers, shopCar, shopLoaded, crates, cash, levelUp, serverNow, loadGarage, loadShop, buy, openCrate, queue, cancelJob, buyEquipment, acknowledgeLevelUp }
 })

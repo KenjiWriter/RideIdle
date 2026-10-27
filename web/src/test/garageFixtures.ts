@@ -1,4 +1,4 @@
-import type { GarageCar, GarageResponse, MergeOffer, MergeResult, MountedPart, OpenedCrate, OwnedPart, RepairNext, ServiceState, ShopCrates, ShopOffer, UpgradeNext, WorkshopJob } from '@/api/types'
+import type { EquipmentItemKey, GarageCar, GarageResponse, MergeOffer, MergeResult, MountedPart, OpenedCrate, OwnedPart, RepairNext, ServiceState, ShopCrates, ShopOffer, UpgradeNext, WorkshopGear, WorkshopJob } from '@/api/types'
 
 /** The time of the server in the fixtures. */
 export const NOW = 1_792_692_000_000
@@ -90,13 +90,80 @@ export function aJob(overrides: Partial<WorkshopJob> = {}): WorkshopJob {
   return { id: 1, kind: 'mount', cost_cents: 0, upgrade_to: null, merge_with: null, merge_to: null, status: 'working', part: aPart(), start_ms: NOW - 60_000, finish_ms: NOW + 175_000, ...overrides }
 }
 
+/**
+ * What a workshop that bought nothing has: one bay, one mechanic and no equipment, as the server sends it (the prices and the multipliers are the ones of the rules).
+ * `levels` lifts the items to a level, `workers` makes that many bays and mechanics.
+ */
+export function aGear(levels: Partial<Record<EquipmentItemKey, number>> = {}, workers = 1): WorkshopGear {
+  const rules: Record<EquipmentItemKey, { slots: string[] | null; levels: { name: string; time_ppm: number; price_cents: number; fee_cents?: number }[] }> = {
+    tire_machine: {
+      slots: ['tires'],
+      levels: [
+        { name: 'none', time_ppm: 1_000_000, price_cents: 0, fee_cents: 3_000 },
+        { name: 'manual', time_ppm: 500_000, price_cents: 40_000 },
+        { name: 'automatic', time_ppm: 350_000, price_cents: 180_000 },
+      ],
+    },
+    lift: {
+      slots: ['suspension', 'brakes', 'exhaust'],
+      levels: [
+        { name: 'trestles', time_ppm: 1_000_000, price_cents: 0 },
+        { name: 'hand_hydraulic', time_ppm: 680_000, price_cents: 35_000 },
+        { name: 'two_post', time_ppm: 450_000, price_cents: 120_000 },
+        { name: 'four_post', time_ppm: 360_000, price_cents: 400_000 },
+      ],
+    },
+    hoist: {
+      slots: ['engine', 'gearbox', 'boost'],
+      levels: [
+        { name: 'none', time_ppm: 1_000_000, price_cents: 0 },
+        { name: 'hoist', time_ppm: 330_000, price_cents: 60_000 },
+        { name: 'hydraulic_crane', time_ppm: 270_000, price_cents: 300_000 },
+      ],
+    },
+    toolkit: {
+      slots: null,
+      levels: [
+        { name: 'hand', time_ppm: 1_000_000, price_cents: 0 },
+        { name: 'pneumatic', time_ppm: 900_000, price_cents: 60_000 },
+        { name: 'electric', time_ppm: 800_000, price_cents: 250_000 },
+      ],
+    },
+  }
+  const bayPrices = [0, 200_000, 600_000, 1_500_000]
+  const mechanicPrices = [0, 180_000, 500_000, 1_200_000]
+
+  return {
+    workers,
+    queue_max: 4 + 2 * (workers - 1),
+    items: (Object.keys(rules) as EquipmentItemKey[]).map((key) => {
+      const level = levels[key] ?? 0
+      const at = rules[key].levels[level]!
+      const next = rules[key].levels[level + 1]
+
+      return {
+        key,
+        slots: rules[key].slots,
+        level,
+        max_level: rules[key].levels.length - 1,
+        name: at.name,
+        time_ppm: at.time_ppm,
+        fee_cents: at.fee_cents ?? 0,
+        next: next ? { name: next.name, time_ppm: next.time_ppm, price_cents: next.price_cents } : null,
+      }
+    }),
+    bays: { count: workers, max: 4, next_price_cents: bayPrices[workers] ?? null },
+    mechanics: { count: workers, max: 4, next_price_cents: mechanicPrices[workers] ?? null },
+  }
+}
+
 export function aGarage(data: Partial<GarageResponse['data']> = {}, nowMs = NOW): GarageResponse {
   return {
     data: {
       car: aCar(),
       inventory: [],
       merges: [],
-      workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [] },
+      workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs: [] },
       ...data,
     },
     now_ms: nowMs,

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ApiError } from '@/api/client'
 import { respond, serveApi } from '@/test/fetchServer'
-import { NOW, aCar, aCrates, aGarage, aJob, aPart, anOffer, anOpenedCrate } from '@/test/garageFixtures'
+import { NOW, aCar, aCrates, aGarage, aGear, aJob, aPart, anOffer, anOpenedCrate } from '@/test/garageFixtures'
 
 import { PURCHASE_ID_LIFETIME_MS, useGarageStore } from './garage'
 
@@ -171,7 +171,7 @@ describe('garage store', () => {
 
   it('queues a job and takes the garage from the answer', async () => {
     const calls = serveApi(fetchMock, {
-      'POST /api/v1/garage/jobs': () => respond(201, aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob()] } })),
+      'POST /api/v1/garage/jobs': () => respond(201, aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs: [aJob()] } })),
       'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }),
     })
     const store = useGarageStore()
@@ -194,7 +194,7 @@ describe('garage store', () => {
   describe('cancelling a job', () => {
     const takeOff = aJob({ id: 1, kind: 'unmount', part: aPart({ id: 11, slot: 'tires', mounted: true, car_id: 5 }) })
     const putOn = aJob({ id: 2, status: 'queued', part: aPart({ id: 21, slot: 'tires', name: 'Street tires T2' }) })
-    const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+    const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs } })
 
     it('cancels on the server, takes the garage from the answer and asks for the run again', async () => {
       const calls = serveApi(fetchMock, {
@@ -238,6 +238,61 @@ describe('garage store', () => {
 
       await expect(store.cancelJob(1)).rejects.toMatchObject({ status: 422, code: 'job_done', message: 'That job is already done.' })
       expect(store.garage?.workshop.jobs).toHaveLength(1)
+    })
+  })
+
+  describe('buying equipment for the workshop', () => {
+    const noRun = () => respond(404, { message: 'No run', code: 'no_run' })
+
+    it('buys with a request id, takes the garage from the answer and asks for the run again, which is where the cash is', async () => {
+      const calls = serveApi(fetchMock, {
+        'POST /api/v1/garage/equipment': () => respond(201, { ...aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear({ tire_machine: 1 }), jobs: [] } }), repeated: false }),
+        'GET /api/v1/runs/current': noRun,
+      })
+      const store = useGarageStore()
+
+      const bought = await store.buyEquipment('tire_machine')
+
+      expect(bought).toBe(true)
+      expect(calls[0]).toMatchObject({ method: 'POST', url: '/api/v1/garage/equipment', body: { item: 'tire_machine', request_id: expect.any(String) } })
+      expect(store.garage?.workshop.gear.items[0]).toMatchObject({ key: 'tire_machine', level: 1, name: 'manual' })
+      expect(calls.some((call) => call.url === '/api/v1/runs/current')).toBe(true)
+    })
+
+    it('says a purchase that was made before was not made again', async () => {
+      serveApi(fetchMock, { 'POST /api/v1/garage/equipment': () => respond(200, { ...aGarage(), repeated: true }), 'GET /api/v1/runs/current': noRun })
+      const store = useGarageStore()
+
+      expect(await store.buyEquipment('lift')).toBe(false)
+    })
+
+    it('sends the same request id for the same item until it is answered, and another one after', async () => {
+      let answer = 0
+      const calls = serveApi(fetchMock, {
+        'POST /api/v1/garage/equipment': () => (answer++ === 0 ? respond(500, { message: 'Server error' }) : respond(201, { ...aGarage(), repeated: false })),
+        'GET /api/v1/runs/current': noRun,
+      })
+      const store = useGarageStore()
+      const ids = () => calls.filter((call) => call.method === 'POST').map((call) => (call.body as { request_id: string }).request_id)
+
+      await store.buyEquipment('lift').catch(() => undefined)
+      await store.buyEquipment('lift')
+      await store.buyEquipment('lift')
+
+      expect(ids()[1]).toBe(ids()[0])
+      expect(ids()[2]).not.toBe(ids()[1])
+    })
+
+    it('lets the error of a refused purchase reach the screen and keeps the garage it has', async () => {
+      serveApi(fetchMock, {
+        'GET /api/v1/garage': () => respond(200, aGarage()),
+        'POST /api/v1/garage/equipment': () => respond(422, { message: 'Not enough cash.', code: 'insufficient_funds' }),
+      })
+      const store = useGarageStore()
+      await store.loadGarage()
+
+      await expect(store.buyEquipment('mechanics')).rejects.toMatchObject({ status: 422, code: 'insufficient_funds', message: 'Not enough cash.' })
+      expect(store.garage?.workshop.gear.mechanics.count).toBe(1)
     })
   })
 

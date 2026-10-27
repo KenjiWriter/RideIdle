@@ -448,7 +448,68 @@
     "serviceWaits": "Serwis czeka w kolejce.",
     "breakdownEvery": "Awaria średnio co ok. {time}",
     "cancelLosesRepair": "Praca, która już trwa, i {price} zapłacone za naprawę przepadną, a część zostaje taka, jak była.",
-    "cancelLosesService": "Praca, która już trwa, i {price} zapłacone za serwis przepadną."
+    "cancelLosesService": "Praca, która już trwa, i {price} zapłacone za serwis przepadną.",
+    "atWork": "Teraz pracuje: {working} z {workers}",
+    "cancelLosesFee": "Praca, która już trwa, i {price} zapłacone u wulkanizatora przepadną, a część zostaje taka, jak była.",
+    "gear": {
+      "title": "Wyposażenie",
+      "summary": "Pracuje naraz: {workers} · kolejka: {max} zleceń",
+      "show": "Pokaż",
+      "hide": "Ukryj",
+      "item": {
+        "tire_machine": "Montażownica do opon",
+        "lift": "Podnośnik",
+        "hoist": "Wciągnik silnika",
+        "toolkit": "Narzędzia"
+      },
+      "level": {
+        "tire_machine": {
+          "none": "Brak maszyny (wulkanizator poza warsztatem)",
+          "manual": "Montażownica ręczna",
+          "automatic": "Montażownica automatyczna z wyważarką"
+        },
+        "lift": {
+          "trestles": "Kozły",
+          "hand_hydraulic": "Podnośnik hydrauliczny ręczny",
+          "two_post": "Podnośnik dwukolumnowy",
+          "four_post": "Podnośnik czterokolumnowy"
+        },
+        "hoist": {
+          "none": "Brak wciągnika",
+          "hoist": "Wciągnik silnika",
+          "hydraulic_crane": "Żuraw hydrauliczny"
+        },
+        "toolkit": {
+          "hand": "Narzędzia ręczne",
+          "pneumatic": "Narzędzia pneumatyczne",
+          "electric": "Profesjonalne narzędzia elektryczne"
+        }
+      },
+      "levelOf": "Poziom {level} z {max}",
+      "effect": "Czas zleceń ×{factor}",
+      "effectBase": "Zwykły czas zleceń",
+      "slots": "Dotyczy: {slots}",
+      "slotsAll": "Dotyczy każdego zlecenia, także łączenia i serwisu",
+      "fee": "Bez maszyny wulkanizator poza warsztatem bierze {fee} za każde zlecenie na oponach",
+      "next": "Następny: {name} · czas ×{factor}",
+      "buy": "Kup · {price}",
+      "buyLabel": "Kup: {name}",
+      "short": "Za mało gotówki: potrzeba {price}",
+      "max": "Najwyższy poziom",
+      "bays": "Stanowiska",
+      "baysInfo": "{count} z {max} · tyle aut pracuje naraz",
+      "mechanics": "Mechanicy",
+      "mechanicsInfo": "{count} z {max} · każdy potrzebuje własnego stanowiska",
+      "what": {
+        "bays": "stanowisko",
+        "mechanics": "mechanik"
+      },
+      "bought": "Kupiono: {name}.",
+      "repeated": "Ten zakup już został zrobiony.",
+      "note": "Zakup przyspiesza zlecenia dodane po nim.",
+      "needBay": "Mechanik bez stanowiska nie pracuje: kup stanowisko.",
+      "needMechanic": "Stanowisko bez mechanika stoi puste: kup mechanika."
+    }
   },
   "hud": {
     "level": "LV",

@@ -448,7 +448,68 @@
     "serviceWaits": "Un entretien est dans la file.",
     "breakdownEvery": "Une panne environ toutes les {time} en moyenne",
     "cancelLosesRepair": "Le travail déjà fait et les {price} payés pour la réparation sont perdus, et la pièce reste comme elle était.",
-    "cancelLosesService": "Le travail déjà fait et les {price} payés pour l’entretien sont perdus."
+    "cancelLosesService": "Le travail déjà fait et les {price} payés pour l’entretien sont perdus.",
+    "atWork": "Au travail en ce moment : {working} sur {workers}",
+    "cancelLosesFee": "Le travail déjà fait et les {price} payés chez le vulcanisateur sont perdus, et la pièce reste comme elle était.",
+    "gear": {
+      "title": "Équipement",
+      "summary": "Au travail en même temps : {workers} · file de {max} travaux",
+      "show": "Afficher",
+      "hide": "Masquer",
+      "item": {
+        "tire_machine": "Machine à pneus",
+        "lift": "Pont élévateur",
+        "hoist": "Palan moteur",
+        "toolkit": "Outillage"
+      },
+      "level": {
+        "tire_machine": {
+          "none": "Pas de machine (un vulcanisateur à l’extérieur)",
+          "manual": "Démonte-pneus manuel",
+          "automatic": "Machine automatique avec équilibreuse"
+        },
+        "lift": {
+          "trestles": "Chandelles",
+          "hand_hydraulic": "Pont hydraulique manuel",
+          "two_post": "Pont à deux colonnes",
+          "four_post": "Pont à quatre colonnes"
+        },
+        "hoist": {
+          "none": "Pas de palan",
+          "hoist": "Palan moteur",
+          "hydraulic_crane": "Grue hydraulique"
+        },
+        "toolkit": {
+          "hand": "Outils à main",
+          "pneumatic": "Outils pneumatiques",
+          "electric": "Outillage électrique pro"
+        }
+      },
+      "levelOf": "Niveau {level} sur {max}",
+      "effect": "Durée des travaux ×{factor}",
+      "effectBase": "Durée habituelle des travaux",
+      "slots": "Concerne : {slots}",
+      "slotsAll": "Concerne tous les travaux, fusion et entretien compris",
+      "fee": "Sans machine, un vulcanisateur à l’extérieur demande {fee} par travail sur les pneus",
+      "next": "Suivant : {name} · durée ×{factor}",
+      "buy": "Acheter · {price}",
+      "buyLabel": "Acheter : {name}",
+      "short": "Pas assez d’argent : il faut {price}",
+      "max": "Niveau maximal",
+      "bays": "Postes",
+      "baysInfo": "{count} sur {max} · voitures travaillées en même temps",
+      "mechanics": "Mécaniciens",
+      "mechanicsInfo": "{count} sur {max} · chacun a besoin de son poste",
+      "what": {
+        "bays": "un poste",
+        "mechanics": "un mécanicien"
+      },
+      "bought": "Acheté : {name}.",
+      "repeated": "Cet achat a déjà été fait.",
+      "note": "Un achat accélère les travaux ajoutés après lui.",
+      "needBay": "Un mécanicien sans poste ne travaille pas : achetez un poste.",
+      "needMechanic": "Un poste sans mécanicien reste vide : achetez un mécanicien."
+    }
   },
   "hud": {
     "level": "LV",

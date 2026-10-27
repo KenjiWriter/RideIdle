@@ -4,8 +4,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
-import { NOTHING_TO_REPAIR, NOW, aCar, aGarage, aJob, aMergeOffer, aMergeResult, aMountedPart, aPart, aRepairStep, aService, anUpgradeStep } from '@/test/garageFixtures'
+import { NOTHING_TO_REPAIR, NOW, aCar, aGarage, aGear, aJob, aMergeOffer, aMergeResult, aMountedPart, aPart, aRepairStep, aService, anUpgradeStep } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
+import { useRunStore } from '@/stores/run'
 import { aTutorial } from '@/test/tutorialFixtures'
 
 import WorkshopView from './WorkshopView.vue'
@@ -103,7 +104,7 @@ describe('WorkshopView', () => {
           201,
           aGarage({
             inventory: [tires],
-            workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ id: 3, part: tires, finish_ms: NOW + 235_200 })] },
+            workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs: [aJob({ id: 3, part: tires, finish_ms: NOW + 235_200 })] },
             car: aCar({ run: { id: 7, status: 'stopped', stop_reason: 'workshop' } }),
           }),
         ),
@@ -131,7 +132,7 @@ describe('WorkshopView', () => {
   it('takes a part off the car', async () => {
     const calls = serve({
       'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust }) })),
-      'POST /api/v1/garage/jobs': () => respond(201, aGarage({ car: aCar({}, { exhaust }), workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ kind: 'unmount', part: exhaust })] } })),
+      'POST /api/v1/garage/jobs': () => respond(201, aGarage({ car: aCar({}, { exhaust }), workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs: [aJob({ kind: 'unmount', part: exhaust })] } })),
       'GET /api/v1/runs/current': noRun,
     })
 
@@ -155,6 +156,7 @@ describe('WorkshopView', () => {
               city: { slug: 'zlomowo', name: 'Złomowo' },
               queue_max: 4,
               mechanic: { level: 1, time_cut_ppm: 20_000 },
+              gear: aGear(),
               jobs: [aJob({ id: 1, finish_ms: NOW + 65_000 }), aJob({ id: 2, status: 'queued', part: tires, start_ms: NOW + 65_000, finish_ms: NOW + 300_200 })],
             },
           }),
@@ -181,7 +183,7 @@ describe('WorkshopView', () => {
         return respond(
           200,
           asked === 1
-            ? aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ finish_ms: NOW + 4_000 })] } })
+            ? aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs: [aJob({ finish_ms: NOW + 4_000 })] } })
             : aGarage({ car: aCar({}, { exhaust }) }, NOW + 10_000),
         )
       },
@@ -206,7 +208,7 @@ describe('WorkshopView', () => {
       'GET /api/v1/garage': () => {
         asked += 1
 
-        return respond(200, aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [aJob({ finish_ms: NOW - 1_000 })] } }))
+        return respond(200, aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs: [aJob({ finish_ms: NOW - 1_000 })] } }))
       },
     })
 
@@ -234,7 +236,7 @@ describe('WorkshopView', () => {
 
   describe('cancelling a job', () => {
     const factoryTires = aPart({ id: 31, slug: 'street-tires-t1', name: 'Street tires T1', slot: 'tires', tier: 1, mounted: true, car_id: 5 })
-    const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+    const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs } })
     const takeOff = aJob({ id: 1, kind: 'unmount', part: factoryTires, finish_ms: NOW + 60_000 })
     const putOn = aJob({ id: 2, status: 'queued', part: tires, start_ms: NOW + 60_000, finish_ms: NOW + 295_200 })
     const exhaustJob = aJob({ id: 3, status: 'queued', part: aPart({ id: 12, name: 'Sport exhaust' }), start_ms: NOW + 295_200, finish_ms: NOW + 530_400 })
@@ -410,7 +412,7 @@ describe('WorkshopView', () => {
     const mountedTires = (overrides: Parameters<typeof aMountedPart>[0] = {}) =>
       aMountedPart({ id: 21, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, stats: { grip: 100, handling: 98, braking: 100 }, ...overrides })
     const queueOf = (jobs: ReturnType<typeof aJob>[], car = aCar({ run: { id: 7, status: 'stopped', stop_reason: 'workshop' } }, { tires: mountedTires() })) =>
-      aGarage({ car, workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+      aGarage({ car, workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs } })
     const upgradeJob = (overrides: Parameters<typeof aJob>[0] = {}) =>
       aJob({ id: 4, kind: 'upgrade', cost_cents: 19_950, upgrade_to: 1, part: mountedTires(), finish_ms: NOW + 294_000, ...overrides })
 
@@ -547,7 +549,7 @@ describe('WorkshopView', () => {
       const tires = mountedTires({ upgrade: 2, upgrade_next: anUpgradeStep({ to: 3, locked: { reason: 'car_level', required: 4, current: 3 } }) })
       const brakes = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', upgrade: 3, upgrade_next: anUpgradeStep({ to: null, cost_cents: null, duration_ms: null, locked: { reason: 'max' } }) })
       const exhaust = aMountedPart({ id: 11 })
-      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires, brakes, exhaust }), workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [upgradeJob({ part: exhaust, status: 'queued' })] } })) })
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires, brakes, exhaust }), workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs: [upgradeJob({ part: exhaust, status: 'queued' })] } })) })
 
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
@@ -571,7 +573,7 @@ describe('WorkshopView', () => {
     const mergeJob = (overrides: Parameters<typeof aJob>[0] = {}) =>
       aJob({ id: 6, kind: 'merge', cost_cents: 5_700, part: base(), merge_with: spare, merge_to: 'uncommon', status: 'queued', start_ms: NOW, finish_ms: NOW + 470_400, ...overrides })
     const withJobs = (jobs: ReturnType<typeof aJob>[], inventory: ReturnType<typeof aPart>[] = [base({ merge: null }), { ...spare, merge: null }]) =>
-      sheet(inventory, { workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+      sheet(inventory, { workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs } })
 
     it('offers the merge only on the parts that can be merged, and lists only the partners the server named', async () => {
       // A legendary part, or one that waits in a job, has no offer: it has no button either.
@@ -802,7 +804,7 @@ describe('WorkshopView', () => {
     const wornTires = (overrides: Parameters<typeof aMountedPart>[0] = {}) =>
       aMountedPart({ id: 21, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, stats: { grip: 92, handling: 90, braking: 92 }, condition_percent: 50, repair_next: aRepairStep(), ...overrides })
     const queueOf = (jobs: ReturnType<typeof aJob>[], car = aCar({ run: { id: 7, status: 'stopped', stop_reason: 'workshop' } }, { tires: wornTires() })) =>
-      aGarage({ car, workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+      aGarage({ car, workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs } })
     const repairJob = (overrides: Parameters<typeof aJob>[0] = {}) => aJob({ id: 6, kind: 'repair', cost_cents: 14_250, part: wornTires(), finish_ms: NOW + 117_600, ...overrides })
     const serviceJob = (overrides: Parameters<typeof aJob>[0] = {}) => aJob({ id: 5, kind: 'service', cost_cents: 4_560, part: null, finish_ms: NOW + 882_000, ...overrides })
 
@@ -1087,5 +1089,195 @@ describe('WorkshopView', () => {
     expect(wrapper.get('[data-test="slot-exhaust"] [data-test="rarity"]').text()).toBe('Rare')
     expect(wrapper.get('[data-test="slot-brakes"]').classes().filter((name) => /^r\d$/.test(name))).toEqual([])
     expect(wrapper.find('[data-test="slot-brakes"] [data-test="rarity"]').exists()).toBe(false)
+  })
+
+  describe('the equipment of the workshop', () => {
+    const withGear = (gear = aGear(), jobs: ReturnType<typeof aJob>[] = []) =>
+      aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: gear.queue_max, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear, jobs } })
+    const cashOf = (cents: number) => () => useRunStore().$patch({ wallet: { cash_cents: cents, xp: 0 } })
+
+    it('is folded away, with what the workshop can do at once, until the driver opens it', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, withGear(aGear({}, 2))), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="gear-summary"]').text()).toBe('Working at once: 2 · queue of 6 jobs')
+      expect(wrapper.find('[data-test="gear-body"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="gear-toggle"]').trigger('click')
+
+      expect(wrapper.find('[data-test="gear-body"]').exists()).toBe(true)
+      expect(wrapper.get('[data-test="gear-toggle"]').attributes('aria-expanded')).toBe('true')
+    })
+
+    it('shows every item at its level with what it does, what it works on, the fee, and the next level with its price', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, withGear(aGear({ lift: 1 }))), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop', { prepare: cashOf(1_000_000) })
+      await flushPromises()
+      await wrapper.get('[data-test="gear-toggle"]').trigger('click')
+
+      expect(wrapper.get('[data-test="gear-tire_machine-level"]').text()).toBe('No machine (a vulcanizer outside)')
+      expect(wrapper.get('[data-test="gear-tire_machine-effect"]').text()).toBe('Usual time of jobs')
+      expect(wrapper.get('[data-test="gear-tire_machine"]').text()).toContain('Works on: Tires')
+      expect(wrapper.get('[data-test="gear-tire_machine-fee"]').text()).toBe('Without a machine a vulcanizer outside asks $30.00 for every job on tires')
+      expect(wrapper.get('[data-test="gear-tire_machine-next"]').text()).toBe('Next: Manual tire machine · time ×0.50')
+      expect(wrapper.get('[data-test="buy-tire_machine"]').text()).toBe('Buy · $400.00')
+
+      // The lift is at its first level: the jobs on the suspension, the brakes and the exhaust take 0.68 of the time.
+      expect(wrapper.get('[data-test="gear-lift-level"]').text()).toBe('Hand hydraulic lift')
+      expect(wrapper.get('[data-test="gear-lift-effect"]').text()).toBe('Time of jobs ×0.68')
+      expect(wrapper.get('[data-test="gear-lift"]').text()).toContain('Works on: Suspension, Brakes, Exhaust')
+      expect(wrapper.find('[data-test="gear-lift-fee"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="gear-lift"] .pips').attributes('aria-label')).toBe('Level 1 of 3')
+      expect(wrapper.findAll('[data-test="gear-lift"] .pips b.on')).toHaveLength(1)
+      expect(wrapper.get('[data-test="buy-lift"]').text()).toBe('Buy · $1,200.00')
+
+      // The toolkit works on every job.
+      expect(wrapper.get('[data-test="gear-toolkit"]').text()).toContain('Works on every job, merging and servicing too')
+      expect(wrapper.get('[data-test="buy-toolkit"]').text()).toBe('Buy · $600.00')
+    })
+
+    it('shows the bays and the mechanics, and says what a mechanic or a bay alone is worth', async () => {
+      const gear = { ...aGear(), mechanics: { count: 2, max: 4, next_price_cents: 500_000 } }
+      serve({ 'GET /api/v1/garage': () => respond(200, withGear(gear)), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop', { prepare: cashOf(10_000_000) })
+      await flushPromises()
+      await wrapper.get('[data-test="gear-toggle"]').trigger('click')
+
+      expect(wrapper.get('[data-test="gear-bays-count"]').text()).toBe('1 of 4 · cars worked on at once')
+      expect(wrapper.get('[data-test="buy-bays"]').text()).toBe('Buy · $2,000.00')
+      expect(wrapper.get('[data-test="gear-mechanics-count"]').text()).toBe('2 of 4 · each needs a bay to work')
+      expect(wrapper.get('[data-test="buy-mechanics"]').text()).toBe('Buy · $5,000.00')
+      expect(wrapper.get('[data-test="gear-hint"]').text()).toBe('A mechanic without a bay does not work: buy a bay.')
+    })
+
+    it('buys the next level, says what was bought, and shows what the server sent back', async () => {
+      let bought = false
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, withGear(aGear({ tire_machine: bought ? 1 : 0 }))),
+        'POST /api/v1/garage/equipment': () => {
+          bought = true
+
+          return respond(201, { ...withGear(aGear({ tire_machine: 1 })), repeated: false })
+        },
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop', { prepare: cashOf(100_000) })
+      await flushPromises()
+      await wrapper.get('[data-test="gear-toggle"]').trigger('click')
+      await wrapper.get('[data-test="buy-tire_machine"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ item: 'tire_machine', request_id: expect.any(String) })
+      expect(wrapper.get('[data-test="bought"]').text()).toBe('Bought: Manual tire machine.')
+      expect(wrapper.get('[data-test="gear-tire_machine-level"]').text()).toBe('Manual tire machine')
+      expect(wrapper.find('[data-test="gear-tire_machine-fee"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="gear-tire_machine-next"]').text()).toBe('Next: Automatic machine with a balancer · time ×0.35')
+    })
+
+    it('disables a purchase the cash does not cover, and says what it needs', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, withGear()), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop', { prepare: cashOf(39_999) })
+      await flushPromises()
+      await wrapper.get('[data-test="gear-toggle"]').trigger('click')
+
+      expect(wrapper.get('[data-test="buy-tire_machine"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-test="gear-tire_machine-short"]').text()).toBe('Not enough cash: needs $400.00')
+      // What the cash covers is not held back: the first level of the lift is $350, and the toolkit's is $600.
+      expect(wrapper.get('[data-test="buy-lift"]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.get('[data-test="buy-toolkit"]').attributes('disabled')).toBeDefined()
+    })
+
+    it('lets the server decide when it does not know the cash yet', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, withGear()), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="gear-toggle"]').trigger('click')
+
+      expect(wrapper.get('[data-test="buy-tire_machine"]').attributes('disabled')).toBeUndefined()
+    })
+
+    it('shows the answer of the server in the card when a purchase is refused', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, withGear()),
+        'POST /api/v1/garage/equipment': () => respond(422, { message: 'Not enough cash.', code: 'insufficient_funds' }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop', { prepare: cashOf(10_000_000) })
+      await flushPromises()
+      await wrapper.get('[data-test="gear-toggle"]').trigger('click')
+      await wrapper.get('[data-test="buy-bays"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="gear-error"]').text()).toBe('Not enough cash.')
+      expect(wrapper.find('[data-test="bought"]').exists()).toBe(false)
+    })
+
+    it('says an item is at its highest level instead of offering a purchase', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, withGear(aGear({ hoist: 2 }))), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop', { prepare: cashOf(10_000_000) })
+      await flushPromises()
+      await wrapper.get('[data-test="gear-toggle"]').trigger('click')
+
+      expect(wrapper.get('[data-test="gear-hoist-max"]').text()).toBe('Highest level')
+      expect(wrapper.find('[data-test="buy-hoist"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="gear-hoist-effect"]').text()).toBe('Time of jobs ×0.27')
+    })
+  })
+
+  describe('several mechanics at work', () => {
+    it('lists every job a mechanic is at, each with its own bar and its own cancel, and says how many work', async () => {
+      const first = aJob({ id: 1, finish_ms: NOW + 65_000 })
+      const second = aJob({ id: 2, kind: 'merge', part: tires, merge_with: tires, merge_to: 'uncommon', start_ms: NOW - 30_000, finish_ms: NOW + 400_000 })
+      const queued = aJob({ id: 3, status: 'queued', part: tires, start_ms: NOW + 65_000, finish_ms: NOW + 300_200 })
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 6, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear({}, 2), jobs: [first, second, queued] } })),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="at-work"]').text()).toBe('Working now: 2 of 2')
+      expect(wrapper.findAll('[data-test="job-bar"]')).toHaveLength(2)
+      expect(wrapper.find('[data-test="working-1"] [data-test="cancel-1"]').exists()).toBe(true)
+      expect(wrapper.find('[data-test="working-2"] [data-test="cancel-2"]').exists()).toBe(true)
+      expect(wrapper.find('[data-test="mechanic-idle"]').exists()).toBe(false)
+      // The one that waits is in the queue, not in the card of the mechanics.
+      expect(wrapper.find('[data-test="working-3"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="queue"]').text()).toContain('Queue 3 of 6')
+    })
+
+    it('says nothing about how many work when there is one mechanic, and that he is free when no job is at work', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage()), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="at-work"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="mechanic-idle"]').text()).toBe('The mechanic is free.')
+    })
+
+    it('says the fee of the vulcanizer is lost with a mounting of tires that is cancelled while it is done', async () => {
+      const job = aJob({ id: 4, cost_cents: 3_000, part: tires })
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs: [job] } })),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="cancel-4"]').trigger('click')
+
+      expect(wrapper.get('[data-test="cancel-sure-4"]').text()).toContain('$30.00 paid at the vulcanizer are lost')
+    })
   })
 })

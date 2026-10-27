@@ -448,7 +448,68 @@
     "serviceWaits": "A service is in the queue.",
     "breakdownEvery": "A breakdown about every {time} on average",
     "cancelLosesRepair": "The work already done and the {price} paid for the repair are lost, and the part stays as it was.",
-    "cancelLosesService": "The work already done and the {price} paid for the service are lost."
+    "cancelLosesService": "The work already done and the {price} paid for the service are lost.",
+    "atWork": "Working now: {working} of {workers}",
+    "cancelLosesFee": "The work already done and the {price} paid at the vulcanizer are lost, and the part stays as it was.",
+    "gear": {
+      "title": "Equipment",
+      "summary": "Working at once: {workers} · queue of {max} jobs",
+      "show": "Show",
+      "hide": "Hide",
+      "item": {
+        "tire_machine": "Tire machine",
+        "lift": "Lift",
+        "hoist": "Engine hoist",
+        "toolkit": "Toolkit"
+      },
+      "level": {
+        "tire_machine": {
+          "none": "No machine (a vulcanizer outside)",
+          "manual": "Manual tire machine",
+          "automatic": "Automatic machine with a balancer"
+        },
+        "lift": {
+          "trestles": "Trestles",
+          "hand_hydraulic": "Hand hydraulic lift",
+          "two_post": "Two-post lift",
+          "four_post": "Four-post lift"
+        },
+        "hoist": {
+          "none": "No hoist",
+          "hoist": "Engine hoist",
+          "hydraulic_crane": "Hydraulic crane"
+        },
+        "toolkit": {
+          "hand": "Hand tools",
+          "pneumatic": "Pneumatic tools",
+          "electric": "Electric pro toolkit"
+        }
+      },
+      "levelOf": "Level {level} of {max}",
+      "effect": "Time of jobs ×{factor}",
+      "effectBase": "Usual time of jobs",
+      "slots": "Works on: {slots}",
+      "slotsAll": "Works on every job, merging and servicing too",
+      "fee": "Without a machine a vulcanizer outside asks {fee} for every job on tires",
+      "next": "Next: {name} · time ×{factor}",
+      "buy": "Buy · {price}",
+      "buyLabel": "Buy: {name}",
+      "short": "Not enough cash: needs {price}",
+      "max": "Highest level",
+      "bays": "Bays",
+      "baysInfo": "{count} of {max} · cars worked on at once",
+      "mechanics": "Mechanics",
+      "mechanicsInfo": "{count} of {max} · each needs a bay to work",
+      "what": {
+        "bays": "a bay",
+        "mechanics": "a mechanic"
+      },
+      "bought": "Bought: {name}.",
+      "repeated": "That purchase was made already.",
+      "note": "A purchase speeds up the jobs queued after it.",
+      "needBay": "A mechanic without a bay does not work: buy a bay.",
+      "needMechanic": "A bay without a mechanic stands empty: buy a mechanic."
+    }
   },
   "hud": {
     "level": "LV",

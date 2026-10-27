@@ -462,11 +462,50 @@ export interface GarageCar {
 
 export type JobKind = 'mount' | 'unmount' | 'upgrade' | 'merge' | 'repair' | 'service'
 
+/** The items of equipment of a workshop; each has levels that are bought one after the other (level 0 is the start state). */
+export type EquipmentItemKey = 'tire_machine' | 'lift' | 'hoist' | 'toolkit'
+
+/** What can be bought for a workshop: an item of equipment, or one more bay or mechanic. */
+export type EquipmentKey = EquipmentItemKey | 'bays' | 'mechanics'
+
+/** An item of equipment of the workshop of a city, at the level it is. */
+export interface EquipmentItem {
+  key: EquipmentItemKey
+  /** The slots it works on (tires, suspension, ...); null for the toolkit, which works on every job. */
+  slots: string[] | null
+  level: number
+  max_level: number
+  /** The name of the level it is at (`none`, `manual`, ...): the key of its text. */
+  name: string
+  /** What the time of a job on its slots is multiplied by at this level, in ppm (1 000 000 is the usual time). */
+  time_ppm: number
+  /** What every job on its slots costs on top while the workshop is at this level (the vulcanizer outside the workshop). */
+  fee_cents: number
+  /** The next level and what it costs, or null at the highest. */
+  next: { name: string; time_ppm: number; price_cents: number } | null
+}
+
+/** The bays or the mechanics of a workshop: how many there are, how many there can be, and what one more costs (null at the most). */
+export interface EquipmentCount {
+  count: number
+  max: number
+  next_price_cents: number | null
+}
+
+/** What a workshop of a city has bought: the equipment, the bays and the mechanics. As many mechanics work at once as there are bays for them (`workers`). */
+export interface WorkshopGear {
+  workers: number
+  queue_max: number
+  items: EquipmentItem[]
+  bays: EquipmentCount
+  mechanics: EquipmentCount
+}
+
 /** A job of the workshop. The times are ms of the clock of the server. */
 export interface WorkshopJob {
   id: number
   kind: JobKind
-  /** What an upgrade, a merge, a repair or a service cost, paid when it was queued (0 for the other jobs). */
+  /** What an upgrade, a merge, a repair or a service cost, paid when it was queued; the fee of the vulcanizer for a job on tires where the workshop has no tire machine (0 for the other jobs). */
   cost_cents: number
   /** The level an upgrade takes the part to (null for the other jobs). */
   upgrade_to: number | null
@@ -506,10 +545,15 @@ export interface GarageResponse {
     inventory: OwnedPart[]
     /** The last results of merging, the newest first. */
     merges: MergeResult[]
-    /** The workshop of the city the car stands in: its queue, and the mechanic who works the cars of the driver there one after another. */
-    workshop: { city: { slug: string; name: string }; queue_max: number; mechanic: { level: number; time_cut_ppm: number }; jobs: WorkshopJob[] }
+    /** The workshop of the city the car stands in: its queue, its mechanics (several work at once when it has bays for them) and what it has bought. */
+    workshop: { city: { slug: string; name: string }; queue_max: number; mechanic: { level: number; time_cut_ppm: number }; gear: WorkshopGear; jobs: WorkshopJob[] }
   }
   now_ms: number
+}
+
+/** POST /api/v1/garage/equipment: the garage as it is now; `repeated` says the purchase was made before (nothing was charged this time). */
+export interface BuyEquipmentResponse extends GarageResponse {
+  repeated: boolean
 }
 
 /** DELETE /api/v1/garage/jobs/{job}: the garage as it is now, and the ids of the jobs that were cancelled, the asked one first. */

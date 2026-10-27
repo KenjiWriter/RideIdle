@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
-import type { CarStatKey, JobKind, MergeResult, OwnedPart, RepairNext, UpgradeNext, WorkshopJob } from '@/api/types'
+import type { CarStatKey, EquipmentItem, EquipmentKey, JobKind, MergeResult, OwnedPart, RepairNext, UpgradeNext, WorkshopJob } from '@/api/types'
 import GameShell from '@/components/GameShell.vue'
 import JobCancel from '@/components/JobCancel.vue'
 import PartCondition from '@/components/PartCondition.vue'
@@ -20,6 +20,7 @@ import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useGarageStore } from '@/stores/garage'
+import { useRunStore } from '@/stores/run'
 import { useTutorialStore } from '@/stores/tutorial'
 
 /** How often an open workshop asks the server for the state of the jobs, besides asking when one is due. */
@@ -31,8 +32,9 @@ const MIN_ASK_MS = 3_000
 const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking', 'clearance']
 
 const { t } = useI18n()
-const { number, money, percent } = useFormat()
+const { number, money, percent, fixed } = useFormat()
 const store = useGarageStore()
+const run = useRunStore()
 const tutorial = useTutorialStore()
 const { serviceLine, breakdownLine } = useServiceLine()
 
@@ -42,6 +44,11 @@ const loadError = ref(false)
 const busy = ref(false)
 const error = ref<string | null>(null)
 const { message: cancelled, show: showCancelled, clear: clearCancelled } = useFlash()
+const { message: bought, show: showBought, clear: clearBought } = useFlash()
+/** Why a purchase of equipment failed: shown in the card of the equipment, because the page may be scrolled far from the top. */
+const gearError = ref<string | null>(null)
+/** The card of the equipment is folded away until the driver wants it. */
+const gearOpen = ref(false)
 
 /** What time it is for the server, to the second: the clock of the countdown. */
 const now = ref(store.serverNow())
@@ -51,7 +58,10 @@ let lastAsk = 0
 
 const car = computed(() => store.garage?.car ?? null)
 const jobs = computed(() => store.garage?.workshop.jobs ?? [])
-const working = computed(() => jobs.value.find((job) => job.status === 'working') ?? null)
+/** Every job a mechanic is at: several are done at once when the workshop has bays and mechanics for them. */
+const workingJobs = computed(() => jobs.value.filter((job) => job.status === 'working'))
+/** The cash of the driver as the screens last saw it (null when nothing has told it yet: then the server decides). */
+const cash = computed(() => run.wallet?.cash_cents ?? store.cash?.cash_cents ?? null)
 const waiting = computed(() => jobs.value.filter((job) => job.status === 'queued'))
 const inventory = computed(() => store.garage?.inventory ?? [])
 /** The part that the tutorial points at when it asks for the tires to be put on: the first pair of tires in the inventory, or the first part. */
@@ -213,6 +223,51 @@ function dependents(job: WorkshopJob): WorkshopJob[] {
   return later.filter((other) => other.kind === 'mount' && other.part?.slot === job.part?.slot)
 }
 
+/** The name of the level of an item of equipment, in words. */
+function levelName(item: EquipmentItem, name: string): string {
+  return t(`workshop.gear.level.${item.key}.${name}`)
+}
+
+/** What a level does to the time of a job, in words: the usual time, or the factor it is multiplied by (×0.50). */
+function effectText(ppm: number): string {
+  return ppm === 1_000_000 ? t('workshop.gear.effectBase') : t('workshop.gear.effect', { factor: fixed(ppm / 1_000_000, 2) })
+}
+
+/** The slots an item works on, or that the toolkit works on every job. */
+function slotsText(item: EquipmentItem): string {
+  return item.slots === null ? t('workshop.gear.slotsAll') : t('workshop.gear.slots', { slots: item.slots.map((slot) => t(`slot.${slot}`)).join(', ') })
+}
+
+/** Whether the driver has the cash for a price; a driver the screens know nothing about is let try, and the server decides. */
+function canAfford(priceCents: number): boolean {
+  return cash.value === null || cash.value >= priceCents
+}
+
+/** Buys the next level of an item, or one more bay or mechanic. `name` is what is bought, in words, for the message. */
+async function buyGear(item: EquipmentKey, name: string): Promise<void> {
+  if (busy.value) {
+    return
+  }
+
+  busy.value = true
+  gearError.value = null
+  clearBought()
+
+  try {
+    const made = await store.buyEquipment(item)
+    now.value = store.serverNow()
+    showBought(made ? t('workshop.gear.bought', { name }) : t('workshop.gear.repeated'))
+  } catch (failure) {
+    if (endSessionIfUnauthorized(failure)) {
+      return
+    }
+
+    gearError.value = failureText(failure)
+  } finally {
+    busy.value = false
+  }
+}
+
 async function cancel(jobId: number): Promise<void> {
   if (busy.value) {
     return
@@ -283,16 +338,27 @@ async function cancel(jobId: number): Promise<void> {
           </p>
         </div>
 
-        <template v-if="working">
-          <p class="text-[13px] text-ink" :data-test="`job-${working.id}`">{{ jobText(working) }}</p>
-          <div class="bar bar-cy" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="progress(working)" data-test="job-bar">
-            <i :style="{ width: `${progress(working)}%` }" />
-          </div>
-          <p class="flex justify-between text-xs text-muted" :data-test="`job-${working.id}-state`">
-            <span class="mono text-ink">{{ clock(now - working.start_ms) }} / {{ clock(working.finish_ms - working.start_ms) }}</span>
-            <span>{{ `${t('workshop.working')}: ${t('workshop.left', { time: left(working) })}` }}</span>
+        <template v-if="workingJobs.length > 0">
+          <p v-if="store.garage.workshop.gear.workers > 1" class="sub" data-test="at-work">
+            {{ t('workshop.atWork', { working: workingJobs.length, workers: store.garage.workshop.gear.workers }) }}
           </p>
-          <JobCancel :key="working.id" class="self-start" :job="working" :dependents="dependents(working)" :disabled="busy" @cancel="cancel" />
+          <div
+            v-for="(working, index) in workingJobs"
+            :key="working.id"
+            class="flex flex-col gap-1.5"
+            :class="index > 0 ? 'border-t border-line pt-2' : ''"
+            :data-test="`working-${working.id}`"
+          >
+            <p class="text-[13px] text-ink" :data-test="`job-${working.id}`">{{ jobText(working) }}</p>
+            <div class="bar bar-cy" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="progress(working)" data-test="job-bar">
+              <i :style="{ width: `${progress(working)}%` }" />
+            </div>
+            <p class="flex justify-between text-xs text-muted" :data-test="`job-${working.id}-state`">
+              <span class="mono text-ink">{{ clock(now - working.start_ms) }} / {{ clock(working.finish_ms - working.start_ms) }}</span>
+              <span>{{ `${t('workshop.working')}: ${t('workshop.left', { time: left(working) })}` }}</span>
+            </p>
+            <JobCancel :key="working.id" class="self-start" :job="working" :dependents="dependents(working)" :disabled="busy" @cancel="cancel" />
+          </div>
         </template>
         <p v-else class="sub" data-test="mechanic-idle">{{ t('workshop.idle') }}</p>
       </section>
@@ -317,6 +383,93 @@ async function cancel(jobId: number): Promise<void> {
             <JobCancel :job="job" :dependents="dependents(job)" :disabled="busy" @cancel="cancel" />
           </li>
         </ol>
+      </section>
+
+      <!-- The equipment of the workshop of this city: what is bought here speeds up the jobs queued after it. There is no board for this card; it uses the cards of the screen. -->
+      <section class="flex flex-col gap-2" aria-labelledby="gear-title" data-test="gear">
+        <div class="flex items-center justify-between gap-2">
+          <h2 id="gear-title" class="kick !mb-0">{{ t('workshop.gear.title') }}</h2>
+          <button type="button" class="btn btn-secondary btn-sm" :aria-expanded="gearOpen" aria-controls="gear-body" data-test="gear-toggle" @click="gearOpen = !gearOpen">
+            {{ gearOpen ? t('workshop.gear.hide') : t('workshop.gear.show') }}
+          </button>
+        </div>
+        <p class="sub" data-test="gear-summary">{{ t('workshop.gear.summary', { workers: store.garage.workshop.gear.workers, max: store.garage.workshop.gear.queue_max }) }}</p>
+        <p v-if="bought" class="card card-cy text-sm" role="status" data-test="bought">{{ bought }}</p>
+        <p v-if="gearError" class="text-danger" role="alert" data-test="gear-error">{{ gearError }}</p>
+
+        <div v-if="gearOpen" id="gear-body" class="flex flex-col gap-2" data-test="gear-body">
+          <p class="sub">{{ t('workshop.gear.note') }}</p>
+          <p v-if="store.garage.workshop.gear.mechanics.count > store.garage.workshop.gear.bays.count" class="sub text-ink" data-test="gear-hint">{{ t('workshop.gear.needBay') }}</p>
+          <p v-else-if="store.garage.workshop.gear.bays.count > store.garage.workshop.gear.mechanics.count" class="sub text-ink" data-test="gear-hint">{{ t('workshop.gear.needMechanic') }}</p>
+
+          <ul class="flex flex-col gap-2">
+            <li v-for="item in store.garage.workshop.gear.items" :key="item.key" class="card flex flex-col gap-1.5 !p-3" :data-test="`gear-${item.key}`">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="text-[15px] font-bold text-ink">{{ t(`workshop.gear.item.${item.key}`) }}</p>
+                  <p class="text-[13px] text-ink" :data-test="`gear-${item.key}-level`">{{ levelName(item, item.name) }}</p>
+                </div>
+                <span class="pips shrink-0 pt-1.5 text-cyan" role="img" :aria-label="t('workshop.gear.levelOf', { level: item.level, max: item.max_level })">
+                  <b v-for="n in item.max_level" :key="n" :class="{ on: n <= item.level }" />
+                </span>
+              </div>
+              <p class="sub" :data-test="`gear-${item.key}-effect`">{{ effectText(item.time_ppm) }}</p>
+              <p class="sub">{{ slotsText(item) }}</p>
+              <p v-if="item.fee_cents > 0" class="sub text-ink" :data-test="`gear-${item.key}-fee`">{{ t('workshop.gear.fee', { fee: money(item.fee_cents, 2) }) }}</p>
+
+              <template v-if="item.next">
+                <p class="sub" :data-test="`gear-${item.key}-next`">
+                  {{ t('workshop.gear.next', { name: levelName(item, item.next.name), factor: fixed(item.next.time_ppm / 1_000_000, 2) }) }}
+                </p>
+                <div class="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    :disabled="busy || !canAfford(item.next.price_cents)"
+                    :aria-label="t('workshop.gear.buyLabel', { name: levelName(item, item.next.name) })"
+                    :data-test="`buy-${item.key}`"
+                    @click="buyGear(item.key, levelName(item, item.next.name))"
+                  >
+                    {{ t('workshop.gear.buy', { price: money(item.next.price_cents, 2) }) }}
+                  </button>
+                  <span v-if="!canAfford(item.next.price_cents)" class="sub text-danger" :data-test="`gear-${item.key}-short`">{{ t('workshop.gear.short', { price: money(item.next.price_cents, 2) }) }}</span>
+                </div>
+              </template>
+              <p v-else class="sub text-ink" :data-test="`gear-${item.key}-max`">{{ t('workshop.gear.max') }}</p>
+            </li>
+
+            <!-- More bays and more mechanics: as many mechanics work at once as there are bays for them. -->
+            <li v-for="kind in ['bays', 'mechanics'] as const" :key="kind" class="card flex flex-col gap-1.5 !p-3" :data-test="`gear-${kind}`">
+              <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0">
+                  <p class="text-[15px] font-bold text-ink">{{ t(`workshop.gear.${kind}`) }}</p>
+                  <p class="sub" :data-test="`gear-${kind}-count`">{{ t(`workshop.gear.${kind}Info`, { count: store.garage.workshop.gear[kind].count, max: store.garage.workshop.gear[kind].max }) }}</p>
+                </div>
+                <span class="pips shrink-0 pt-1.5 text-cyan" role="img" :aria-label="t('workshop.gear.levelOf', { level: store.garage.workshop.gear[kind].count, max: store.garage.workshop.gear[kind].max })">
+                  <b v-for="n in store.garage.workshop.gear[kind].max" :key="n" :class="{ on: n <= store.garage.workshop.gear[kind].count }" />
+                </span>
+              </div>
+              <template v-if="store.garage.workshop.gear[kind].next_price_cents !== null">
+                <div class="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    :disabled="busy || !canAfford(store.garage.workshop.gear[kind].next_price_cents)"
+                    :aria-label="t('workshop.gear.buyLabel', { name: t(`workshop.gear.what.${kind}`) })"
+                    :data-test="`buy-${kind}`"
+                    @click="buyGear(kind, t(`workshop.gear.what.${kind}`))"
+                  >
+                    {{ t('workshop.gear.buy', { price: money(store.garage.workshop.gear[kind].next_price_cents, 2) }) }}
+                  </button>
+                  <span v-if="!canAfford(store.garage.workshop.gear[kind].next_price_cents)" class="sub text-danger" :data-test="`gear-${kind}-short`">
+                    {{ t('workshop.gear.short', { price: money(store.garage.workshop.gear[kind].next_price_cents, 2) }) }}
+                  </span>
+                </div>
+              </template>
+              <p v-else class="sub text-ink" :data-test="`gear-${kind}-max`">{{ t('workshop.gear.max') }}</p>
+            </li>
+          </ul>
+        </div>
       </section>
 
       <section v-if="merges.length > 0" class="flex flex-col gap-2" aria-labelledby="merges-title" data-test="merges">

@@ -448,7 +448,68 @@
     "serviceWaits": "Eine Wartung ist in der Warteschlange.",
     "breakdownEvery": "Eine Panne durchschnittlich etwa alle {time}",
     "cancelLosesRepair": "Die bereits geleistete Arbeit und die {price} für die Reparatur gehen verloren, und das Teil bleibt, wie es war.",
-    "cancelLosesService": "Die bereits geleistete Arbeit und die {price} für die Wartung gehen verloren."
+    "cancelLosesService": "Die bereits geleistete Arbeit und die {price} für die Wartung gehen verloren.",
+    "atWork": "Gerade bei der Arbeit: {working} von {workers}",
+    "cancelLosesFee": "Die bereits geleistete Arbeit und die {price} beim Reifenhändler gehen verloren, und das Teil bleibt, wie es war.",
+    "gear": {
+      "title": "Ausstattung",
+      "summary": "Gleichzeitig bei der Arbeit: {workers} · Warteschlange mit {max} Aufträgen",
+      "show": "Anzeigen",
+      "hide": "Ausblenden",
+      "item": {
+        "tire_machine": "Reifenmontiermaschine",
+        "lift": "Hebebühne",
+        "hoist": "Motorkran",
+        "toolkit": "Werkzeug"
+      },
+      "level": {
+        "tire_machine": {
+          "none": "Keine Maschine (ein Reifenhändler außerhalb)",
+          "manual": "Manuelle Reifenmontiermaschine",
+          "automatic": "Automatische Maschine mit Wuchtmaschine"
+        },
+        "lift": {
+          "trestles": "Unterstellböcke",
+          "hand_hydraulic": "Hydraulischer Handheber",
+          "two_post": "Zweisäulen-Hebebühne",
+          "four_post": "Viersäulen-Hebebühne"
+        },
+        "hoist": {
+          "none": "Kein Kran",
+          "hoist": "Motorkran",
+          "hydraulic_crane": "Hydraulischer Kran"
+        },
+        "toolkit": {
+          "hand": "Handwerkzeug",
+          "pneumatic": "Druckluftwerkzeug",
+          "electric": "Elektrisches Profi-Werkzeug"
+        }
+      },
+      "levelOf": "Stufe {level} von {max}",
+      "effect": "Dauer der Aufträge ×{factor}",
+      "effectBase": "Übliche Dauer der Aufträge",
+      "slots": "Gilt für: {slots}",
+      "slotsAll": "Gilt für jeden Auftrag, auch Verschmelzen und Wartung",
+      "fee": "Ohne Maschine verlangt ein Reifenhändler außerhalb {fee} für jeden Auftrag an den Reifen",
+      "next": "Nächste: {name} · Dauer ×{factor}",
+      "buy": "Kaufen · {price}",
+      "buyLabel": "Kaufen: {name}",
+      "short": "Nicht genug Geld: {price} nötig",
+      "max": "Höchste Stufe",
+      "bays": "Stellplätze",
+      "baysInfo": "{count} von {max} · Autos, an denen gleichzeitig gearbeitet wird",
+      "mechanics": "Mechaniker",
+      "mechanicsInfo": "{count} von {max} · jeder braucht einen eigenen Stellplatz",
+      "what": {
+        "bays": "ein Stellplatz",
+        "mechanics": "ein Mechaniker"
+      },
+      "bought": "Gekauft: {name}.",
+      "repeated": "Dieser Kauf wurde schon getätigt.",
+      "note": "Ein Kauf beschleunigt die Aufträge, die danach eingereiht werden.",
+      "needBay": "Ein Mechaniker ohne Stellplatz arbeitet nicht: kaufe einen Stellplatz.",
+      "needMechanic": "Ein Stellplatz ohne Mechaniker bleibt leer: kaufe einen Mechaniker."
+    }
   },
   "hud": {
     "level": "LV",
