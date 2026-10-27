@@ -97,11 +97,13 @@ final class Simulator
     {
         $fleet = $rules->fleetModel();
         $last = $rules->rungs() - 1;
-        $cash = $rules->startCash();
-        $xp = 0.0;
+        // The player begins with what the tutorial gave in the first quarter of an hour: experience, cash and a garage of another city.
+        $gifts = $rules->tutorialGifts();
+        $cash = $rules->startCash() + $gifts->cash;
+        $xp = $gifts->xp;
         $rung = 0;
         $wrecks = 0;
-        $garages = 0;
+        $garages = $gifts->freeGarages;
         $purchases = [];
         $cashReadyDay = null;
         $levelReadyDay = null;

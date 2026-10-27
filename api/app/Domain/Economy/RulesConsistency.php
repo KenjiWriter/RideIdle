@@ -14,7 +14,7 @@ final class RulesConsistency
     private const HOUR_MS = 3_600_000;
 
     /**
-     * @param  array{lap_ms: int, fuel_ml: int, fuel_price_cents: int, reward_cents: int, xp_per_lap: int, parts: list<array{slug: string, tier: int, slot: string, price_cents: int}>, other_cars_xp_share?: float}  $game  the numbers of the first track and of the pack, and the share of the experience that the cars the driver does not play give
+     * @param  array{lap_ms: int, fuel_ml: int, fuel_price_cents: int, reward_cents: int, xp_per_lap: int, parts: list<array{slug: string, tier: int, slot: string, price_cents: int}>, other_cars_xp_share?: float, tutorial?: array{xp: int, cash: float, garages: int}}  $game  the numbers of the first track and of the pack, the share of the experience that the cars the driver does not play give, and what the steps of the tutorial give
      * @return list<Finding>
      */
     public function check(EconomyRules $economy, array $game): array
@@ -31,6 +31,14 @@ final class RulesConsistency
         if (isset($game['other_cars_xp_share'])) {
             $model = $economy->fleetModel()->otherCarsXpShare;
             $findings[] = new Finding('experience share of the cars not played', $model, $game['other_cars_xp_share'], 'share', abs($model - $game['other_cars_xp_share']) < 1e-9);
+        }
+
+        // The same for the tutorial: the player of the model starts with what the steps give, and the model has to say what they give.
+        if (isset($game['tutorial'])) {
+            $gifts = $economy->tutorialGifts();
+            $findings[] = new Finding('experience of the tutorial', $gifts->xp, (float) $game['tutorial']['xp'], 'XP', abs($gifts->xp - $game['tutorial']['xp']) < 1e-9);
+            $findings[] = new Finding('cash of the tutorial', $gifts->cash, $game['tutorial']['cash'], '$', abs($gifts->cash - $game['tutorial']['cash']) < 1e-9);
+            $findings[] = new Finding('garages that the tutorial gives', (float) $gifts->freeGarages, (float) $game['tutorial']['garages'], 'garages', $gifts->freeGarages === $game['tutorial']['garages']);
         }
 
         foreach ($game['parts'] as $part) {

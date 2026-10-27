@@ -56,8 +56,8 @@ function gameDaysWith(array $extras): array
 
 describe('the extras of the scenario game', function () {
     it('change nothing when there are none or when they do nothing', function () {
-        expect(gameDaysWith([]))->toBe([3, 8, 9, 18, 28, 36, 48, 69])
-            ->and(gameDaysWith([anExtra()]))->toBe([3, 8, 9, 18, 28, 36, 48, 69]);
+        expect(gameDaysWith([]))->toBe([3, 6, 7, 16, 26, 34, 46, 68])
+            ->and(gameDaysWith([anExtra()]))->toBe([3, 6, 7, 16, 26, 34, 46, 68]);
     });
 
     it('are told the day, the rung, the level and what the car earns before they are counted', function () {
@@ -69,7 +69,8 @@ describe('the extras of the scenario game', function () {
         expect($first->day)->toBe(1)
             ->and($first->rung)->toBe(0)
             ->and($first->level)->toBeGreaterThanOrEqual(1)
-            ->and($first->cash)->toBe(economyRules()->startCash())
+            // The player begins with the cash of the game and what the tutorial gave.
+            ->and($first->cash)->toBe(economyRules()->startCash() + economyRules()->tutorialGifts()->cash)
             ->and($first->income)->toEqualWithDelta(economyRules()->carDailyIncome(economyRules()->players()['A'], 0), 1e-9)
             ->and(count($extra->seen))->toBe($run->daysSimulated);
     });
@@ -78,7 +79,7 @@ describe('the extras of the scenario game', function () {
         // The long game is bound by the level, not by the money, so it is a day more or less that the cash moves; a player who is made to spend more than the
         // car earns on the first days never gets anywhere.
         $slower = gameDaysWith([anExtra(cash: -800.0)]);
-        $faster = gameDaysWith([anExtra(cash: 400.0)]);
+        $faster = gameDaysWith([anExtra(cash: 800.0)]);
 
         expect(array_sum($slower))->toBeGreaterThan(array_sum(gameDaysWith([])))
             ->and(array_sum($faster))->toBeLessThan(array_sum(gameDaysWith([])));

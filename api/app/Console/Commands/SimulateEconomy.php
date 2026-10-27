@@ -9,6 +9,7 @@ use App\Content\GameCrates;
 use App\Content\GameIncome;
 use App\Content\GameUnits;
 use App\Content\Rules;
+use App\Content\TutorialSteps;
 use App\Domain\Economy\EconomyRules;
 use App\Domain\Economy\ExtrasResult;
 use App\Domain\Economy\ExtrasStudy;
@@ -59,7 +60,7 @@ final class SimulateEconomy extends Command
 
     protected $description = 'Simulate three kinds of players up the ladder of cars and check the pace against the design (the gate), and the rules of the game against the anchors';
 
-    public function handle(Rules $game, Catalog $catalog, Simulator $simulator, PaceGate $gate, RulesConsistency $consistency, GameLadder $ladder, GameIncome $income, ExtrasStudy $study, GameCrates $crates, GameUnits $units): int
+    public function handle(Rules $game, Catalog $catalog, Simulator $simulator, PaceGate $gate, RulesConsistency $consistency, GameLadder $ladder, GameIncome $income, ExtrasStudy $study, GameCrates $crates, GameUnits $units, TutorialSteps $tutorial): int
     {
         $path = (string) ($this->option('ruleset') ?: config('ride.content_path').'/rules/economy.json');
 
@@ -78,7 +79,7 @@ final class SimulateEconomy extends Command
         }
 
         $report = $gate->evaluate($economy, $runs);
-        $findings = $consistency->check($economy, $this->numbersOf($game, $catalog));
+        $findings = $consistency->check($economy, $this->numbersOf($game, $catalog, $tutorial));
         $off = array_values(array_filter($findings, static fn (Finding $finding): bool => ! $finding->ok));
 
         $fleetRuns = array_intersect_key($simulator->simulateAllGame($economy), $runs);
@@ -161,7 +162,7 @@ final class SimulateEconomy extends Command
      *
      * @return array{lap_ms: int, fuel_ml: int, fuel_price_cents: int, reward_cents: int, xp_per_lap: int, other_cars_xp_share: float, parts: list<array{slug: string, tier: int, slot: string, price_cents: int}>}
      */
-    private function numbersOf(Rules $game, Catalog $catalog): array
+    private function numbersOf(Rules $game, Catalog $catalog, TutorialSteps $tutorial): array
     {
         $track = $game->track($game->startingTrack()) ?? [];
 
@@ -172,10 +173,27 @@ final class SimulateEconomy extends Command
             'reward_cents' => (int) $track['reward_cents_per_lap'],
             'xp_per_lap' => (int) $track['xp_per_lap'],
             'other_cars_xp_share' => $game->otherCarsXpPpm() / 1_000_000,
+            'tutorial' => $this->tutorialGifts($tutorial),
             'parts' => array_values(array_map(
                 static fn (array $part): array => ['slug' => (string) $part['slug'], 'tier' => (int) $part['tier'], 'slot' => (string) $part['slot'], 'price_cents' => (int) $part['price_cents']],
                 $catalog->parts(),
             )),
+        ];
+    }
+
+    /**
+     * What the steps of the tutorial give: the experience, the cash (the repair only gives back what it cost, so it is no gift) and the garages.
+     *
+     * @return array{xp: int, cash: float, garages: int}
+     */
+    private function tutorialGifts(TutorialSteps $tutorial): array
+    {
+        $steps = $tutorial->all();
+
+        return [
+            'xp' => array_sum(array_map(static fn (array $step): int => (int) ($step['reward']['xp'] ?? 0), $steps)),
+            'cash' => array_sum(array_map(static fn (array $step): int => $step['key'] === 'repair' ? 0 : (int) ($step['reward']['cash_cents'] ?? 0), $steps)) / 100,
+            'garages' => count(array_filter($steps, static fn (array $step): bool => isset($step['reward']['garage']))),
         ];
     }
 
@@ -269,8 +287,9 @@ final class SimulateEconomy extends Command
     private function printGame(EconomyRules $economy, array $game): void
     {
         $fleet = $economy->fleetModel();
+        $gifts = $economy->tutorialGifts();
         $this->newLine();
-        $this->line('The game scenario: the fleet that the rules of the game allow (every car drives and earns, and the cars the driver does not play give '.$this->trim($fleet->otherCarsXpShare * 100).'% of their experience, a wreck is $'.$this->trim($fleet->wreckPrice).', a garage $'.$this->trim($fleet->garagePrice).' for '.$fleet->garageCapacity.' places):');
+        $this->line('The game scenario: the fleet that the rules of the game allow (every car drives and earns, and the cars the driver does not play give '.$this->trim($fleet->otherCarsXpShare * 100).'% of their experience, a wreck is $'.$this->trim($fleet->wreckPrice).', a garage $'.$this->trim($fleet->garagePrice).' for '.$fleet->garageCapacity.' places), and the player starts with what the tutorial gives: '.$this->trim($gifts->xp).' XP, $'.$this->trim($gifts->cash).' and '.$gifts->freeGarages.' garage of another city:');
 
         foreach ($game['runs'] as $key => $run) {
             $this->newLine();

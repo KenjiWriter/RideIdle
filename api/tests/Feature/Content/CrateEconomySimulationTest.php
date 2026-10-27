@@ -33,9 +33,9 @@ function daysWithCrates(float $share): array
 describe('the scenario game with the crates of the game', function () {
     it('is the scenario without the crates when nothing goes into them', function () {
         expect(daysWithCrates(0.0))->toBe([
-            'A' => [3, 8, 9, 18, 28, 36, 48, 69],
-            'B' => [7, 23, 27, 61, 97, 121, 148, 185],
-            'C' => [2, 3, 4, 7, 12, 17, 24, 37],
+            'A' => [3, 6, 7, 16, 26, 34, 46, 68],
+            'B' => [8, 17, 21, 56, 92, 116, 143, 180],
+            'C' => [2, 3, 3, 6, 11, 16, 24, 36],
         ]);
     });
 
@@ -45,13 +45,13 @@ describe('the scenario game with the crates of the game', function () {
         // occasional one, whose money binds the first purchases, is a day or two later at a fifth and a third of the income.
         expect(daysWithCrates(0.1))->toBe(daysWithCrates(0.0))
             ->and(daysWithCrates(0.2))->toBe([
-                'A' => [3, 8, 9, 18, 28, 36, 48, 69],
-                'B' => [7, 25, 28, 62, 98, 122, 149, 186],
-                'C' => [2, 3, 4, 7, 12, 17, 24, 37],
+                'A' => [3, 6, 7, 16, 26, 34, 46, 68],
+                'B' => [8, 18, 21, 56, 92, 116, 143, 180],
+                'C' => [2, 3, 3, 6, 11, 16, 24, 36],
             ])->and(daysWithCrates(0.3))->toBe([
-                'A' => [3, 8, 9, 18, 28, 36, 48, 69],
-                'B' => [7, 25, 29, 62, 98, 122, 149, 186],
-                'C' => [2, 3, 4, 7, 12, 17, 24, 37],
+                'A' => [3, 6, 7, 16, 26, 34, 46, 68],
+                'B' => [8, 18, 22, 56, 92, 116, 143, 180],
+                'C' => [2, 3, 3, 6, 11, 16, 24, 36],
             ]);
     });
 
@@ -72,7 +72,7 @@ describe('the scenario game with the crates of the game', function () {
 
         // The player is level-bound, so the money that the crates do not take piles up, and a fifth of the income opens a lot of them (fewer than before the
         // place among the bots, because the crates of the high tiers cost more).
-        expect($report)->toMatchArray(['share' => 0.2, 'crates' => 48, 'tier' => 10, 'medians' => ['rare' => 5, 'epic' => 18, 'legendary' => 150]])
+        expect($report)->toMatchArray(['share' => 0.2, 'crates' => 47, 'tier' => 10, 'medians' => ['rare' => 5, 'epic' => 18, 'legendary' => 150]])
             ->and($report['spent'])->toBeGreaterThan(100_000)
             // The anchors price the tiers up to the tenth, and the crates of the game are of the first three.
             ->and($report['priced_by'])->toContain('tiers 1 to 10');
@@ -81,10 +81,10 @@ describe('the scenario game with the crates of the game', function () {
     it('lets the player reach the first rare part on a day that the report names, and the epic and legendary ones rarely or never', function () {
         $report = gameWithCrates(0.3)['A']->notes['crates'];
 
-        // The crates of a tier begin again at every tier, and the player is in the tenth for the last days: the first rare part comes on day 10 and an epic
-        // one on day 17 (in a middle tier), and no legendary one is reached, because 150 crates of one tier are more than the player opens in it.
-        expect($report['first_rare_day'])->toBe(10)
-            ->and($report['first_epic_day'])->toBe(17)
+        // The crates of a tier begin again at every tier, and the player is in the tenth for the last days: the first rare part comes on day 8 and an epic
+        // one on day 23 (in a middle tier), and no legendary one is reached, because 150 crates of one tier are more than the player opens in it.
+        expect($report['first_rare_day'])->toBe(8)
+            ->and($report['first_epic_day'])->toBe(23)
             ->and($report['first_legendary_day'])->toBeNull();
     });
 

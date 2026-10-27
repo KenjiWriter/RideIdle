@@ -209,6 +209,14 @@ final readonly class EconomyRules
         return array_map('floatval', $this->data['model']['units']['spend_sweep']);
     }
 
+    /** What the tutorial gives a player in the first quarter of an hour, which the scenario game starts with. */
+    public function tutorialGifts(): TutorialGifts
+    {
+        $tutorial = $this->data['model']['tutorial'];
+
+        return new TutorialGifts((float) $tutorial['xp'], (float) $tutorial['cash'], (int) $tutorial['free_garages']);
+    }
+
     public function fleetModel(): FleetModel
     {
         $fleet = $this->data['model']['fleet'];

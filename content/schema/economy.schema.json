@@ -109,6 +109,17 @@
           "required": ["spend_sweep"],
           "additionalProperties": false
         },
+        "tutorial": {
+          "description": "What the tutorial gives the player in the first quarter of an hour (the scenario game of the simulator starts with it): the experience of the steps (the laps give the rest of the 4 800 XP of the eighth level), the cash of the steps in dollars (the first lap, the tank and the journey; the repair only gives back what it cost), and the garages of other cities that it gives for nothing.",
+          "type": "object",
+          "properties": {
+            "xp": { "type": "number", "minimum": 0 },
+            "cash": { "type": "number", "minimum": 0 },
+            "free_garages": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["xp", "cash", "free_garages"],
+          "additionalProperties": false
+        },
         "fleet": {
           "description": "The fleet that the rules of the game let a driver have (the scenario game of the simulator): every car drives at once, a garage holds a few of them, and every run that is settled gives the player experience. A wreck is what a car of the first rung is.",
           "type": "object",
@@ -124,7 +135,7 @@
           "additionalProperties": false
         }
       },
-      "required": ["fuel_price", "resale", "upkeep", "start_cash", "xp", "crates", "units", "fleet"],
+      "required": ["fuel_price", "resale", "upkeep", "start_cash", "xp", "crates", "units", "tutorial", "fleet"],
       "additionalProperties": false
     },
     "players": {

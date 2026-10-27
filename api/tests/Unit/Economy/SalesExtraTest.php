@@ -71,13 +71,13 @@ describe('the sale of a car at what was paid for it', function () {
         $sold = salesDaysOf();
 
         // The step from the wreck is $602 dearer, and the player, who buys what pays back soonest, goes for the garages before the first car of the
-        // ladder: that is why the first car comes days later (A on the 8th day and not the 3rd, B on the 23rd and not the 7th), and the long game
-        // is the same within a day for the regular and the intensive player, and five days later for the occasional one, whose money binds the days
+        // ladder: that is why the first car comes days later (A on the 5th day and not the 3rd, B on the 16th and not the 8th), and the long game
+        // is the same within a day for the regular and the intensive player, and two days later for the occasional one, whose money binds the days
         // for longer. It is a choice of the policy that the dearer step brings out, and not a loss of 600 dollars that slow.
         expect($sold)->toBe([
-            'A' => [8, 8, 9, 19, 29, 37, 49, 70],
-            'B' => [23, 25, 29, 66, 102, 126, 153, 190],
-            'C' => [3, 4, 4, 7, 12, 17, 25, 37],
+            'A' => [5, 6, 7, 17, 27, 35, 47, 68],
+            'B' => [16, 18, 22, 58, 94, 118, 145, 182],
+            'C' => [3, 3, 3, 6, 11, 16, 24, 37],
         ]);
 
         expect(end($sold['A']) - end($none['A']))->toBeBetween(0, 1)
