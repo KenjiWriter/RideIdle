@@ -76,7 +76,9 @@
     "carXpMax": "Najwyższy poziom",
     "nextTier": "Od poziomu {level}: części T{tier}",
     "levelUp": "Auto awansowało na poziom {level}.",
-    "tierUnlocked": "Można montować części T{tier}."
+    "tierUnlocked": "Można montować części T{tier}.",
+    "gearboxLimit": "Limit skrzyni: {speed} km/h",
+    "conditionLink": "Stan techniczny: {percent}%"
   },
   "choose": {
     "title": "Wybierz swój wrak",
@@ -528,6 +530,28 @@
       "needBay": "Mechanik bez stanowiska nie pracuje: kup stanowisko.",
       "needMechanic": "Stanowisko bez mechanika stoi puste: kup mechanika."
     }
+  },
+  "condition": {
+    "title": "Stan techniczny",
+    "back": "Wróć",
+    "mileage": "Przebieg",
+    "km": "{km} km",
+    "overall": "Kondycja ogółem {percent}%",
+    "serviceIn": "Do serwisu",
+    "parts": "Kondycja części",
+    "notWorn": "bez zużycia",
+    "none": "brak",
+    "legend": "! = wymaga naprawy",
+    "effect": "{slot} {percent}%: część daje o {loss}% mniej",
+    "actions": "Naprawa i serwis",
+    "repair": "Napraw: {slot}",
+    "cost": "{price} · {time}",
+    "nothingToRepair": "Nic do naprawy",
+    "waits": "Naprawa czeka już w warsztacie",
+    "queued": "Zlecenie czeka w warsztacie.",
+    "toWorkshop": "Pokaż w warsztacie",
+    "note": "Awaria zatrzymuje auto do naprawy. Ryzyko rośnie po terminie serwisu i gdy część spadnie poniżej 20%.",
+    "noCar": "Nie masz jeszcze auta."
   },
   "hud": {
     "level": "LV",

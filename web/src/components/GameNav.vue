@@ -14,8 +14,8 @@ const lap = useLapClock()
 /** The icons are the ones of the design canvas (24 x 24, drawn with a line). */
 const links = [
   { name: 'map', label: 'nav.map', icon: 'M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14' },
-  // The fleet is a part of the garage, so the garage stays lit there, as on the board.
-  { name: 'garage', label: 'nav.garage', icon: 'M3 20V9l9-5 9 5v11M7 20v-7h10v7M7 16h10', also: ['fleet'] },
+  // The fleet and the technical state of the car are parts of the garage, so the garage stays lit there, as on the board.
+  { name: 'garage', label: 'nav.garage', icon: 'M3 20V9l9-5 9 5v11M7 20v-7h10v7M7 16h10', also: ['fleet', 'condition'] },
   { name: 'race', label: 'nav.race', icon: 'M5 21V4M5 4h12l-2 4 2 4H5' },
   {
     name: 'workshop',

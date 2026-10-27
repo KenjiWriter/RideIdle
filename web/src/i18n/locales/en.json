@@ -76,7 +76,9 @@
     "carXpMax": "Highest level",
     "nextTier": "From level {level}: T{tier} parts",
     "levelUp": "The car reached level {level}.",
-    "tierUnlocked": "You can mount T{tier} parts now."
+    "tierUnlocked": "You can mount T{tier} parts now.",
+    "gearboxLimit": "Gearbox limit: {speed} km/h",
+    "conditionLink": "Technical condition: {percent}%"
   },
   "choose": {
     "title": "Choose your wreck",
@@ -528,6 +530,28 @@
       "needBay": "A mechanic without a bay does not work: buy a bay.",
       "needMechanic": "A bay without a mechanic stands empty: buy a mechanic."
     }
+  },
+  "condition": {
+    "title": "Technical condition",
+    "back": "Back",
+    "mileage": "Mileage",
+    "km": "{km} km",
+    "overall": "Overall condition {percent}%",
+    "serviceIn": "Next service in",
+    "parts": "Condition of the parts",
+    "notWorn": "no wear",
+    "none": "none",
+    "legend": "! = needs a repair",
+    "effect": "{slot} {percent}%: gives {loss}% less",
+    "actions": "Repair and service",
+    "repair": "Repair: {slot}",
+    "cost": "{price} · {time}",
+    "nothingToRepair": "Nothing to repair",
+    "waits": "The repair is already waiting in the workshop",
+    "queued": "The job is waiting in the workshop.",
+    "toWorkshop": "Show in the workshop",
+    "note": "A breakdown stops the car until it is repaired. The risk grows once the service is due and when a part falls under 20%.",
+    "noCar": "You have no car yet."
   },
   "hud": {
     "level": "LV",

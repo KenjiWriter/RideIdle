@@ -76,7 +76,9 @@
     "carXpMax": "Nível máximo",
     "nextTier": "A partir do nível {level}: peças T{tier}",
     "levelUp": "O carro subiu para o nível {level}.",
-    "tierUnlocked": "Agora você pode montar peças T{tier}."
+    "tierUnlocked": "Agora você pode montar peças T{tier}.",
+    "gearboxLimit": "Limite do câmbio: {speed} km/h",
+    "conditionLink": "Estado técnico: {percent}%"
   },
   "choose": {
     "title": "Escolha sua carcaça",
@@ -528,6 +530,28 @@
       "needBay": "Um mecânico sem baia não trabalha: compre uma baia.",
       "needMechanic": "Uma baia sem mecânico fica vazia: compre um mecânico."
     }
+  },
+  "condition": {
+    "title": "Estado técnico",
+    "back": "Voltar",
+    "mileage": "Quilometragem",
+    "km": "{km} km",
+    "overall": "Condição geral {percent}%",
+    "serviceIn": "Revisão em",
+    "parts": "Condição das peças",
+    "notWorn": "sem desgaste",
+    "none": "nenhuma",
+    "legend": "! = precisa de conserto",
+    "effect": "{slot} {percent}%: a peça rende {loss}% menos",
+    "actions": "Conserto e revisão",
+    "repair": "Consertar: {slot}",
+    "cost": "{price} · {time}",
+    "nothingToRepair": "Nada a consertar",
+    "waits": "O conserto já está na fila da oficina",
+    "queued": "O serviço está na fila da oficina.",
+    "toWorkshop": "Ver na oficina",
+    "note": "Uma quebra para o carro até o conserto. O risco aumenta depois do prazo da revisão e quando uma peça cai abaixo de 20%.",
+    "noCar": "Você ainda não tem um carro."
   },
   "hud": {
     "level": "LV",

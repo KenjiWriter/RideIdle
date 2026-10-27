@@ -76,7 +76,9 @@
     "carXpMax": "Höchste Stufe",
     "nextTier": "Ab Stufe {level}: Teile T{tier}",
     "levelUp": "Das Auto ist auf Stufe {level} aufgestiegen.",
-    "tierUnlocked": "Du kannst jetzt Teile T{tier} montieren."
+    "tierUnlocked": "Du kannst jetzt Teile T{tier} montieren.",
+    "gearboxLimit": "Getriebegrenze: {speed} km/h",
+    "conditionLink": "Technischer Zustand: {percent} %"
   },
   "choose": {
     "title": "Wähle dein Wrack",
@@ -528,6 +530,28 @@
       "needBay": "Ein Mechaniker ohne Stellplatz arbeitet nicht: kaufe einen Stellplatz.",
       "needMechanic": "Ein Stellplatz ohne Mechaniker bleibt leer: kaufe einen Mechaniker."
     }
+  },
+  "condition": {
+    "title": "Technischer Zustand",
+    "back": "Zurück",
+    "mileage": "Laufleistung",
+    "km": "{km} km",
+    "overall": "Gesamtzustand {percent} %",
+    "serviceIn": "Wartung in",
+    "parts": "Zustand der Teile",
+    "notWorn": "kein Verschleiß",
+    "none": "keins",
+    "legend": "! = muss repariert werden",
+    "effect": "{slot} {percent} %: Teil leistet {loss} % weniger",
+    "actions": "Reparatur und Wartung",
+    "repair": "Reparieren: {slot}",
+    "cost": "{price} · {time}",
+    "nothingToRepair": "Nichts zu reparieren",
+    "waits": "Die Reparatur wartet schon in der Werkstatt",
+    "queued": "Der Auftrag wartet in der Werkstatt.",
+    "toWorkshop": "In der Werkstatt ansehen",
+    "note": "Eine Panne stoppt das Auto bis zur Reparatur. Das Risiko steigt, wenn die Wartung fällig ist und wenn ein Teil unter 20 % fällt.",
+    "noCar": "Du hast noch kein Auto."
   },
   "hud": {
     "level": "LV",

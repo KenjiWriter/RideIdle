@@ -112,6 +112,9 @@ const xpNeeded = computed(() => (car.value && car.value.xp.next_level_at !== nul
 const xpFill = computed(() => (xpNeeded.value ? Math.min(100, Math.round((xpInto.value / xpNeeded.value) * 100)) : 100))
 const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking', 'clearance']
 
+/** The top speed the gearbox on the car allows, in km/h, or null when there is no gearbox with a limit on it. */
+const gearboxLimit = computed(() => car.value?.slots.find((slot) => slot.slot === 'gearbox')?.part?.stats.top_speed_cap_kmh ?? null)
+
 function delta(stat: CarStatKey): number {
   const value = (car.value?.stats[stat] ?? 0) - (car.value?.base_stats[stat] ?? 0)
 
@@ -241,6 +244,13 @@ async function useCode(): Promise<void> {
             {{ number(car.stats[stat], 0) }}
             <em v-if="delta(stat) !== 0" :class="{ dn: delta(stat) < 0 }" :data-test="`delta-${stat}`">{{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 0) }}</em>
           </span>
+        </div>
+        <!-- The limit of the gearbox, when it has one, and the way to the screen of the technical state of the car. -->
+        <div class="mt-1 flex items-center justify-between gap-3 text-xs">
+          <span v-if="gearboxLimit !== null" class="text-faint" data-test="gearbox-limit">{{ t('garage.gearboxLimit', { speed: number(gearboxLimit) }) }}</span>
+          <RouterLink :to="{ name: 'condition' }" class="-my-3 ml-auto py-3 text-amber no-underline" data-test="condition-link">
+            {{ t('garage.conditionLink', { percent: car.parts_condition_percent }) }}
+          </RouterLink>
         </div>
         <!-- The odometer and the service of the car: the place to see that it is due is here, the place to do it is the workshop. -->
         <p class="sub mt-1" data-test="upkeep">

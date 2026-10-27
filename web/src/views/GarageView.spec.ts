@@ -907,6 +907,24 @@ describe('GarageView', () => {
     expect(late.wrapper.get('[data-test="upkeep-service"]').classes()).toContain('text-danger')
   })
 
+  it('links to the technical state of the car with its condition, and says the limit of the gearbox when it has one', async () => {
+    serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ parts_condition_percent: 82 }) })) })
+
+    const { wrapper } = await show()
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="condition-link"]').text()).toBe('Technical condition: 82%')
+    expect(wrapper.get('[data-test="condition-link"]').attributes('href')).toBe('/garage/condition')
+    expect(wrapper.find('[data-test="gearbox-limit"]').exists()).toBe(false)
+
+    const gearbox = aMountedPart({ id: 31, slug: 'manual-5-gearbox-t1', name: 'Manual 5', slot: 'gearbox', stats: { gears: 5, top_speed_cap_kmh: 190, launch: 0 } })
+    serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ parts_condition_percent: 82 }, { gearbox }) })) })
+    const limited = await show()
+    await flushPromises()
+
+    expect(limited.wrapper.get('[data-test="gearbox-limit"]').text()).toBe('Gearbox limit: 190 km/h')
+  })
+
   it('says which part broke down when the server told it, and says nothing more when it did not', async () => {
     const broke = { ...runAnswer(aRun({ status: 'stopped', stop_reason: 'breakdown' })), settlements: [{ version: 5, from_ms: NOW - 60_000, to_ms: NOW, at_ms: NOW, laps: 3, cash_cents: 4_650, xp: 75, stop_reason: 'breakdown' as const, events: [{ type: 'breakdown' as const, at_ms: NOW, payload: { part: 'tires' } }] }] }
     serve(() => respond(200, broke))

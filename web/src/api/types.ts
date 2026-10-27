@@ -328,6 +328,8 @@ export interface OwnedPart extends PartInfo {
   car_id: number | null
   /** How much of its life the part has left, in percent: 100 is new, and the statistics above already count it (x 0.6 + 0.4 x condition). */
   condition_percent: number
+  /** How much less the part gives for it than a new one, in percent (50% of life left is 20% less). */
+  condition_loss_percent: number
   /** What putting it right would cost and take: the parts of the inventory of the garage have it (those on the car have it in `MountedPart`). */
   repair_next?: RepairNext
   /** What merging it would do: null when it cannot be merged now (it is legendary, or waits in a job). Only the parts of the inventory of the garage have it. */
@@ -478,6 +480,8 @@ export interface GarageCar {
   tank_ml: number
   /** What the odometer says. */
   mileage_km: number
+  /** How good the car is as a whole, in percent: the mean of the condition of the parts that are on it (100 with none). */
+  parts_condition_percent: number
   service: ServiceState
   /** How often it breaks down: the chance after a lap, in ppm (1 000 000 is certain), with its condition, the wear of its parts and its service counted. */
   breakdown: { chance_ppm: number }

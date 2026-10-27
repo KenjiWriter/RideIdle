@@ -76,7 +76,9 @@
     "carXpMax": "Niveau maximal",
     "nextTier": "Dès le niveau {level} : pièces T{tier}",
     "levelUp": "La voiture passe au niveau {level}.",
-    "tierUnlocked": "Vous pouvez monter des pièces T{tier}."
+    "tierUnlocked": "Vous pouvez monter des pièces T{tier}.",
+    "gearboxLimit": "Limite de la boîte : {speed} km/h",
+    "conditionLink": "État technique : {percent} %"
   },
   "choose": {
     "title": "Choisissez votre épave",
@@ -528,6 +530,28 @@
       "needBay": "Un mécanicien sans poste ne travaille pas : achetez un poste.",
       "needMechanic": "Un poste sans mécanicien reste vide : achetez un mécanicien."
     }
+  },
+  "condition": {
+    "title": "État technique",
+    "back": "Retour",
+    "mileage": "Kilométrage",
+    "km": "{km} km",
+    "overall": "État général : {percent} %",
+    "serviceIn": "Prochain entretien dans",
+    "parts": "État des pièces",
+    "notWorn": "sans usure",
+    "none": "aucune",
+    "legend": "! = à réparer",
+    "effect": "{slot} {percent} % : la pièce donne {loss} % de moins",
+    "actions": "Réparation et entretien",
+    "repair": "Réparer : {slot}",
+    "cost": "{price} · {time}",
+    "nothingToRepair": "Rien à réparer",
+    "waits": "La réparation attend déjà à l’atelier",
+    "queued": "La tâche attend à l’atelier.",
+    "toWorkshop": "Voir à l’atelier",
+    "note": "Une panne immobilise la voiture jusqu’à sa réparation. Le risque augmente après l’échéance de l’entretien et quand une pièce passe sous 20 %.",
+    "noCar": "Vous n’avez pas encore de voiture."
   },
   "hud": {
     "level": "LV",
