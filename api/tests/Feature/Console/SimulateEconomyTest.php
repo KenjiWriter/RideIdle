@@ -357,6 +357,42 @@ describe('economy:simulate', function () {
             ->and(array_column($merge['steps'], 'merging_cheaper'))->toBe([true, false, false, false]);
     });
 
+    it('says what the game charges for upkeep at each level, the service and the repairs of the shop set, against the share that the model takes off', function () {
+        Artisan::call('economy:simulate', ['--player' => ['A']]);
+        $output = Artisan::output();
+
+        expect($output)->toContain('Upkeep that the game charges (a service every 5000 km, and the repairs of the shop set of the level), against the 10% that the model takes off:')
+            ->and($output)->toContain('its price new at the dealer')
+            ->and($output)->toMatch('/\| level \| car\s+\| income \$\/h \| km\/h \| service \$\/h \| parts \$\/h \| upkeep \$\/h \| share \| shop set \$ \|/')
+            ->and($output)->toMatch('/\| 1\s+\| rdzak-gt-4\s+\| 600\s+\| 125\s+\| 21\.47\s+\|/')
+            ->and($output)->toContain('Upkeep: the game charges 1.9% to 58% of the income over the levels of the ladder')
+            ->and($output)->toContain('This is a report: it has no gate and does not touch the exit code.')
+            // And a line under the table of the consistency report, which is not a number of it.
+            ->and($output)->toContain('Upkeep (informational, not a number of the table above): the model takes 10% of the income off');
+    });
+
+    it('keeps the exit code as it was when the upkeep is added: it is a report with no gate', function () {
+        expect(Artisan::call('economy:simulate', ['--strict' => true, '--strict-game' => true]))->toBe(0);
+    });
+
+    it('prints the upkeep in the JSON report: the rows by level with the shop set, and the shares against the model', function () {
+        Artisan::call('economy:simulate', ['--json' => true, '--player' => ['B']]);
+        $upkeep = json_decode(Artisan::output(), true, 512, JSON_THROW_ON_ERROR)['upkeep'];
+
+        expect($upkeep['model_share'])->toBe(0.1)
+            ->and($upkeep['service_every_km'])->toBe(5_000)
+            ->and($upkeep['game_share_min'])->toBeLessThan($upkeep['game_share_median'])
+            ->and($upkeep['game_share_median'])->toBeLessThan($upkeep['game_share_max'])
+            ->and($upkeep['levels_below_model'])->toContain(1)
+            ->and($upkeep['levels_above_model'])->toContain(27)
+            ->and(array_column($upkeep['rows'], 'level')[0])->toBe(1)
+            ->and($upkeep['rows'][0])->toHaveKeys(['car', 'track', 'net', 'km_per_hour', 'service', 'parts', 'upkeep', 'share', 'set_price', 'set'])
+            // The first level has the parts of tier 1 open, which are tires and suspension.
+            ->and(array_column($upkeep['rows'][0]['set'], 'slot'))->toBe(['tires', 'suspension'])
+            // The third opens tier 2 in all four slots of the shop that wear.
+            ->and(array_column($upkeep['rows'][1]['set'], 'slot'))->toBe(['tires', 'suspension', 'brakes', 'exhaust']);
+    });
+
     it('prints the extras in the JSON report, for the kinds of players that were asked for', function () {
         Artisan::call('economy:simulate', ['--json' => true, '--player' => ['B']]);
         $extras = json_decode(Artisan::output(), true, 512, JSON_THROW_ON_ERROR)['extras'];

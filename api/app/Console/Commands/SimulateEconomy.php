@@ -9,6 +9,7 @@ use App\Content\GameCrates;
 use App\Content\GameIncome;
 use App\Content\GameUnits;
 use App\Content\Rules;
+use App\Content\RunInputsFactory;
 use App\Content\TutorialSteps;
 use App\Domain\Economy\CrateEconomy;
 use App\Domain\Economy\EconomyRules;
@@ -25,7 +26,10 @@ use App\Domain\Economy\PlayerRun;
 use App\Domain\Economy\Purchase;
 use App\Domain\Economy\RulesConsistency;
 use App\Domain\Economy\Simulator;
+use App\Domain\Economy\UpkeepReport;
+use App\Domain\Market\Crates;
 use App\Domain\Run\Rarity;
+use App\Domain\Run\RunFreezer;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 use JsonException;
@@ -58,6 +62,9 @@ final class SimulateEconomy extends Command
 
     private const SCHEMA_BASE = 'https://rideidle.local/schema/';
 
+    /** The slots of the parts of the shop that wear: the upkeep of the shop set is counted over them. */
+    private const UPKEEP_SLOTS = ['tires', 'suspension', 'brakes', 'exhaust'];
+
     protected $signature = 'economy:simulate
         {--ruleset= : The ruleset to play, a file of the shape of content/rules/economy.json (that file when left out)}
         {--player=* : Play only these kinds of players, by their keys (A, B or C)}
@@ -67,12 +74,13 @@ final class SimulateEconomy extends Command
 
     protected $description = 'Simulate three kinds of players up the ladder of cars and check the pace against the design (the gate), and the rules of the game against the anchors';
 
-    public function handle(Rules $game, Catalog $catalog, Simulator $simulator, PaceGate $gate, RulesConsistency $consistency, GameLadder $ladder, GameIncome $income, ExtrasStudy $study, GameCrates $crates, GameUnits $units, TutorialSteps $tutorial): int
+    public function handle(Rules $game, Catalog $catalog, Simulator $simulator, PaceGate $gate, RulesConsistency $consistency, GameLadder $ladder, GameIncome $income, ExtrasStudy $study, GameCrates $crates, GameUnits $units, TutorialSteps $tutorial, RunInputsFactory $factory): int
     {
         $path = (string) ($this->option('ruleset') ?: config('ride.content_path').'/rules/economy.json');
 
         try {
-            $economy = EconomyRules::fromArray($this->read($path));
+            $data = $this->read($path);
+            $economy = EconomyRules::fromArray($data);
         } catch (InvalidArgumentException $problem) {
             $this->error($problem->getMessage());
 
@@ -98,15 +106,16 @@ final class SimulateEconomy extends Command
         // Before `$game` stops being the rules of the game: merging is read from them.
         $crateEconomy = $crates->economy();
         $merge = $this->merge($game, $crateEconomy);
+        $upkeep = $this->upkeep($game, $catalog, $factory, $rows, (float) $data['model']['upkeep']);
 
         $game = ['runs' => $fleetRuns, 'report' => $fleetReport, 'rows' => $rows, 'unreachable' => $unreachable];
         $extras = $study->run($economy, $crateEconomy, $units->economy(), array_map('strval', array_keys($runs)));
         $gameOk = $fleetReport->passed() && $unreachable === [] && array_filter($rows, static fn (LadderRow $row): bool => ! $row->ok || ! $row->xpOk) === [] && $extras->passed();
 
         if ($this->option('json')) {
-            $this->line((string) json_encode($this->asArray($economy, $runs, $report, $findings, $game, $extras, $merge), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+            $this->line((string) json_encode($this->asArray($economy, $runs, $report, $findings, $game, $extras, $merge, $upkeep), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         } else {
-            $this->print($economy, $runs, $report, $findings, $game, $extras, $merge);
+            $this->print($economy, $runs, $report, $findings, $game, $extras, $merge, $upkeep);
         }
 
         $strict = (bool) $this->option('strict');
@@ -227,12 +236,94 @@ final class SimulateEconomy extends Command
     }
 
     /**
+     * What the game charges for keeping the best car of each level of the ladder of the game, against the share that the model takes off: the service
+     * every so many kilometres, and the repairs of the parts of the shop that the level opens. Read from the rules and the pack, with the real pipeline;
+     * a report only.
+     *
+     * @param  list<LadderRow>  $rows  the ladder of the game: the best pair of car and track of every level and its income
+     * @return array{model: float, rows: list<array<string, mixed>>, summary: array{min: float, max: float, median: float, model: float, below: list<int>, above: list<int>}, every_km: int}
+     */
+    private function upkeep(Rules $game, Catalog $catalog, RunInputsFactory $factory, array $rows, float $modelShare): array
+    {
+        $crates = new Crates($game->shopCrates());
+        $report = new UpkeepReport(
+            $game->service()['every_km'],
+            static fn (int $valueCents): int => $game->serviceCostCents($valueCents),
+            // The repair of a part costs a share of its price for the whole life of it: what the rules ask for a part that is worth a million, worn out.
+            $game->partRepairCostCents(1_000_000, 0),
+        );
+
+        $levels = array_map(function (LadderRow $row) use ($game, $catalog, $factory, $crates): array {
+            $lapMs = (new RunFreezer)->freeze($factory->make($row->car, $row->track), 'game-ladder', 0)->config['lap_ms']['dry'];
+            $set = $this->shopSet($row->level, $game, $catalog, $crates);
+            $power = $factory->power($row->car, array_column($set, 'model', 'slot'));
+            $surface = $game->track($row->track)['surface'];
+
+            return [
+                'level' => $row->level,
+                'car' => $row->car,
+                'track' => $row->track,
+                'net' => $row->game,
+                'lap_ms' => $lapMs,
+                'lap_length_m' => $game->trackLengthM($row->track),
+                'car_value_cents' => (int) $catalog->vehicle($row->car)['price_cents'],
+                'parts' => array_map(static fn (array $part): array => [
+                    'slot' => $part['slot'],
+                    'model' => $part['model'],
+                    'price_cents' => $part['price_cents'],
+                    'ppb_per_km' => $game->wearPerKmPpb($part['slot'], $surface, $power, false),
+                ], $set),
+            ];
+        }, $rows);
+
+        $upkeepRows = $report->rows($levels);
+
+        return ['model' => $modelShare, 'rows' => $upkeepRows, 'summary' => $report->summary($upkeepRows, $modelShare), 'every_km' => $game->service()['every_km']];
+    }
+
+    /**
+     * The parts of the shop that a level of the driver has on a car: in each slot that wears and is sold (tires, suspension, brakes, exhaust) the
+     * cheapest model of the highest tier that the level opens (a tier opens as the crates of it do), and nothing in a slot with no part open yet.
+     *
+     * @return list<array{slot: string, model: string, price_cents: int}>
+     */
+    private function shopSet(int $level, Rules $game, Catalog $catalog, Crates $crates): array
+    {
+        $best = [];
+
+        foreach ($game->shopParts() as $slug) {
+            $part = $catalog->part($slug);
+
+            if ($part === null || ! in_array($part['slot'], self::UPKEEP_SLOTS, true) || $crates->playerLevelOfTier($part['tier']) > $level) {
+                continue;
+            }
+
+            $current = $best[$part['slot']] ?? null;
+
+            if ($current === null || $part['tier'] > $current['tier'] || ($part['tier'] === $current['tier'] && $part['price_cents'] < $current['price_cents'])) {
+                $best[$part['slot']] = ['slot' => $part['slot'], 'model' => $slug, 'tier' => $part['tier'], 'price_cents' => $part['price_cents']];
+            }
+        }
+
+        $set = [];
+
+        foreach (self::UPKEEP_SLOTS as $slot) {
+            if (isset($best[$slot])) {
+                $set[] = ['slot' => $slot, 'model' => $best[$slot]['model'], 'price_cents' => $best[$slot]['price_cents']];
+            }
+        }
+
+        return $set;
+    }
+
+    /**
      * @param  array<string, PlayerRun>  $runs
      * @param  list<Finding>  $findings
      * @param  array{runs: array<string, PlayerRun>, report: GateReport, rows: list<LadderRow>, unreachable: array<int, string>}  $game
      * @param  list<array<string, float|string|bool>>  $merge
+     * @param  array{model: float, rows: list<array<string, mixed>>, summary: array{min: float, max: float, median: float, model: float, below: list<int>, above: list<int>}, every_km: int}  $upkeep
      */
-    private function print(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game, ExtrasResult $extras, array $merge): void
+    private function print(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game, ExtrasResult $extras, array $merge, array $upkeep): void
     {
         $this->line("Economy ruleset {$economy->version()}");
         $this->newLine();
@@ -274,6 +365,7 @@ final class SimulateEconomy extends Command
         $this->printGame($economy, $game);
         $this->printExtras($economy, $extras);
         $this->printMerge($merge);
+        $this->printUpkeep($upkeep);
 
         $this->newLine();
         $this->line('The rules of the game against the anchors (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'):');
@@ -292,6 +384,59 @@ final class SimulateEconomy extends Command
         $off === 0
             ? $this->info('Rules of the game: every number is within the anchors.')
             : $this->warn("Rules of the game: {$off} of ".count($findings).' numbers are off the anchors. This does not fail the command, except with --strict.');
+
+        $summary = $upkeep['summary'];
+        $this->line(sprintf(
+            'Upkeep (informational, not a number of the table above): the model takes %s of the income off for service, repairs and tires, and the game charges %s to %s of it (the section on the upkeep above): less than the model at the levels %s, more at the levels %s.',
+            $this->percent($summary['model']),
+            $this->percent($summary['min']),
+            $this->percent($summary['max']),
+            $summary['below'] === [] ? 'none' : implode(', ', $summary['below']),
+            $summary['above'] === [] ? 'none' : implode(', ', $summary['above']),
+        ));
+    }
+
+    /**
+     * What the game charges for keeping a car, set against what the model takes off: a report only, so it has no gate and does not touch the exit code.
+     *
+     * @param  array{model: float, rows: list<array<string, mixed>>, summary: array{min: float, max: float, median: float, model: float, below: list<int>, above: list<int>}, every_km: int}  $upkeep
+     */
+    private function printUpkeep(array $upkeep): void
+    {
+        $this->newLine();
+        $this->line("Upkeep that the game charges (a service every {$this->trim((float) $upkeep['every_km'])} km, and the repairs of the shop set of the level), against the {$this->percent($upkeep['model'])} that the model takes off:");
+        $this->line('The car is the best pair of the ladder of the game at the level, with its stock parts (the income of the ladder above). The service costs a share of the value of the car, which here is its price new at the dealer (a wreck or a used car is worth less, so its service costs less). The shop set is, in each of tires, suspension, brakes and exhaust, the cheapest model of the highest tier that the level opens (nothing where no tier is open yet); a part wears by the kilometres, faster with the power of the car, and putting it right costs half of its price for the whole of its life.');
+        $this->table(
+            ['level', 'car', 'income $/h', 'km/h', 'service $/h', 'parts $/h', 'upkeep $/h', 'share', 'shop set $'],
+            array_map(fn (array $row): array => [
+                $row['level'],
+                $row['car'],
+                number_format($row['net'], 0, '.', ' '),
+                number_format($row['km_per_hour'], 0),
+                number_format($row['service'], 2),
+                number_format($row['parts'], 2),
+                number_format($row['upkeep'], 2),
+                $this->percent($row['share']),
+                number_format($row['set_price'], 0, '.', ' '),
+            ], $upkeep['rows']),
+        );
+
+        $summary = $upkeep['summary'];
+        $this->line(sprintf(
+            'Upkeep: the game charges %s to %s of the income over the levels of the ladder (the middle level %s), against the %s that the model takes off: less than the model at the levels %s, more at the levels %s. This is a report: it has no gate and does not touch the exit code. Where the game charges less, the player has the difference in cash that the model does not count, and the game runs richer than the model; where it charges more (the service is a share of the value of the car, which grows with the rung), the game runs poorer (the pace of the ladder is bound by the level of the player more than by cash).',
+            $this->percent($summary['min']),
+            $this->percent($summary['max']),
+            $this->percent($summary['median']),
+            $this->percent($summary['model']),
+            $summary['below'] === [] ? 'none' : implode(', ', $summary['below']),
+            $summary['above'] === [] ? 'none' : implode(', ', $summary['above']),
+        ));
+    }
+
+    /** A share as a percent, with a decimal below ten percent. */
+    private function percent(float $share): string
+    {
+        return sprintf($share < 0.1 ? '%.1f%%' : '%.0f%%', $share * 100);
     }
 
     /** The days a kind of player bought each car, against the days of the design. */
@@ -536,9 +681,10 @@ final class SimulateEconomy extends Command
      * @param  list<Finding>  $findings
      * @param  array{runs: array<string, PlayerRun>, report: GateReport, rows: list<LadderRow>, unreachable: array<int, string>}  $game
      * @param  list<array<string, float|string|bool>>  $merge
+     * @param  array{model: float, rows: list<array<string, mixed>>, summary: array{min: float, max: float, median: float, model: float, below: list<int>, above: list<int>}, every_km: int}  $upkeep
      * @return array<string, mixed>
      */
-    private function asArray(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game, ExtrasResult $extras, array $merge): array
+    private function asArray(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game, ExtrasResult $extras, array $merge, array $upkeep): array
     {
         return [
             'ruleset' => $economy->version(),
@@ -584,6 +730,29 @@ final class SimulateEconomy extends Command
                     'ratio' => round($row['ratio'], 4),
                     'merging_cheaper' => $row['cheaper'],
                 ], $merge),
+            ],
+            'upkeep' => [
+                'convention' => 'The best pair of car and track of each level of the ladder of the game, with its stock parts. The service costs a share of the value of the car (its price new at the dealer) every so many kilometres; the shop set is, in tires, suspension, brakes and exhaust, the cheapest model of the highest tier that the level opens, which wears by the kilometres and is put right for half of its price for the whole of its life. A report: no gate.',
+                'model_share' => $upkeep['model'],
+                'service_every_km' => $upkeep['every_km'],
+                'game_share_min' => round($upkeep['summary']['min'], 4),
+                'game_share_max' => round($upkeep['summary']['max'], 4),
+                'game_share_median' => round($upkeep['summary']['median'], 4),
+                'levels_below_model' => $upkeep['summary']['below'],
+                'levels_above_model' => $upkeep['summary']['above'],
+                'rows' => array_map(static fn (array $row): array => [
+                    'level' => $row['level'],
+                    'car' => $row['car'],
+                    'track' => $row['track'],
+                    'net' => round($row['net'], 2),
+                    'km_per_hour' => round($row['km_per_hour'], 1),
+                    'service' => round($row['service'], 3),
+                    'parts' => round($row['parts'], 3),
+                    'upkeep' => round($row['upkeep'], 3),
+                    'share' => round($row['share'], 4),
+                    'set_price' => round($row['set_price'], 2),
+                    'set' => array_map(static fn (array $part): array => ['slot' => $part['slot'], 'model' => $part['model'], 'price' => round($part['price'], 2), 'per_hour' => round($part['per_hour'], 3)], $row['set']),
+                ], $upkeep['rows']),
             ],
             'game_fleet' => [
                 'gate' => $this->gateAsArray($game['report']),
