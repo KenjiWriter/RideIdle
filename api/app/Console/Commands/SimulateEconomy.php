@@ -89,7 +89,7 @@ final class SimulateEconomy extends Command
 
         $game = ['runs' => $fleetRuns, 'report' => $fleetReport, 'rows' => $rows, 'unreachable' => $unreachable];
         $extras = $study->run($economy, $crates->economy(), $units->economy(), array_map('strval', array_keys($runs)));
-        $gameOk = $fleetReport->passed() && $unreachable === [] && array_filter($rows, static fn (LadderRow $row): bool => ! $row->ok) === [] && $extras->passed();
+        $gameOk = $fleetReport->passed() && $unreachable === [] && array_filter($rows, static fn (LadderRow $row): bool => ! $row->ok || ! $row->xpOk) === [] && $extras->passed();
 
         if ($this->option('json')) {
             $this->line((string) json_encode($this->asArray($economy, $runs, $report, $findings, $game, $extras), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
@@ -286,21 +286,24 @@ final class SimulateEconomy extends Command
             : $this->warn('Fleet gate (game): FAILED. '.count($failures).' of '.count($game['report']->rows).' days are out of '.sprintf('%.0f%%', $game['report']->tolerance * 100).' of the target. This does not fail the command, except with --strict-game.');
 
         $this->newLine();
-        $this->line('The ladder of the game: the best net $/h that its cars and tracks reach at a level, against the anchor of the rung of that level (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'):');
+        $this->line('The ladder of the game: the best net $/h that its cars and tracks reach at a level, against the anchor of the rung of that level, and the experience an hour of that pair against the '.$this->trim($economy->xpPerHourOfDriving()).' XP an hour of the model (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'):');
         $this->table(
-            ['level', 'rung', 'anchors $/h', 'game $/h', 'off', 'best', ''],
+            ['level', 'rung', 'anchors $/h', 'game $/h', 'off', 'XP/h', 'XP off', 'best', ''],
             array_map(fn (LadderRow $row): array => [
                 $row->level,
                 $row->rung,
                 $this->money($row->anchor),
                 $this->money($row->game),
                 sprintf('%+.0f%%', $row->deviation() * 100),
+                sprintf('%.0f', $row->xp),
+                sprintf('%+.0f%%', $row->xpDeviation() * 100).($row->xpOk ? '' : ' OFF'),
                 "{$row->car} on {$row->track}",
                 $row->ok ? 'ok' : 'OFF',
             ], $game['rows']),
         );
 
         $off = count(array_filter($game['rows'], static fn (LadderRow $row): bool => ! $row->ok));
+        $xpOff = count(array_filter($game['rows'], static fn (LadderRow $row): bool => ! $row->xpOk));
 
         if ($game['unreachable'] !== []) {
             $this->warn('No car and track of the game reach '.implode(', ', $game['unreachable']).'.');
@@ -309,6 +312,10 @@ final class SimulateEconomy extends Command
         $off === 0 && $game['unreachable'] === []
             ? $this->info('Ladder of the game: every level is within the anchors.')
             : $this->warn("Ladder of the game: {$off} of ".count($game['rows']).' levels are off the anchors. This does not fail the command, except with --strict-game.');
+
+        $xpOff === 0
+            ? $this->info('Experience an hour of the game: every level is within the model.')
+            : $this->warn("Experience an hour of the game: {$xpOff} of ".count($game['rows']).' levels are off the model. This does not fail the command, except with --strict-game.');
     }
 
     /** The crates of parts and the storage units played on top of the scenario game, and the sale of a car for a share of what was paid. */
@@ -473,6 +480,10 @@ final class SimulateEconomy extends Command
                     'car' => $row->car,
                     'track' => $row->track,
                     'ok' => $row->ok,
+                    'xp_game' => round($row->xp, 1),
+                    'xp_model' => round($row->xpModel, 1),
+                    'xp_deviation' => round($row->xpDeviation(), 4),
+                    'xp_ok' => $row->xpOk,
                 ], $game['rows']),
                 'unreachable_rungs' => array_values($game['unreachable']),
             ],

@@ -27,7 +27,7 @@ final class GameLadder
     /**
      * The income of the game at each level against the anchor of the rung of that level, from the lowest level to the highest.
      *
-     * @param  array<int, array{net: float, car: string, track: string}>  $incomeByLevel  the best net profit per hour of the game by level
+     * @param  array<int, array{net: float, car: string, track: string, xp: float}>  $incomeByLevel  the best net profit per hour of the game by level, and the experience an hour of that pair
      * @return list<LadderRow>
      */
     public function check(EconomyRules $economy, array $incomeByLevel): array
@@ -40,8 +40,10 @@ final class GameLadder
             $rung = $this->rungOf($economy, $level);
             $anchor = $economy->netPerHour($rung);
             $ok = abs($income['net'] - $anchor) / $anchor <= $economy->consistencyTolerance();
+            $xpModel = $economy->xpPerHourOfDriving();
+            $xpOk = abs($income['xp'] - $xpModel) / $xpModel <= $economy->consistencyTolerance();
 
-            $rows[] = new LadderRow($level, $economy->rungName($rung), $anchor, $income['net'], $income['car'], $income['track'], $ok);
+            $rows[] = new LadderRow($level, $economy->rungName($rung), $anchor, $income['net'], $income['car'], $income['track'], $ok, $income['xp'], $xpModel, $xpOk);
         }
 
         return $rows;
@@ -51,7 +53,7 @@ final class GameLadder
      * The rungs whose anchor pays more than the best the game pays at any level: nothing in the game reaches them. `$tolerance` lets a rung count as
      * reached when the game gets within that share of it (0 asks for all of it).
      *
-     * @param  array<int, array{net: float, car: string, track: string}>  $incomeByLevel
+     * @param  array<int, array{net: float, car: string, track: string, xp: float}>  $incomeByLevel
      * @return array<int, string> the names of the rungs, by the number of the rung
      */
     public function unreachableRungs(EconomyRules $economy, array $incomeByLevel, float $tolerance = 0.0): array

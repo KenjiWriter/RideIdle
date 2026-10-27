@@ -8,11 +8,11 @@ use App\Domain\Economy\LadderRow;
 /**
  * The income of a level of the game, as the collector hands it over.
  *
- * @return array{net: float, car: string, track: string}
+ * @return array{net: float, car: string, track: string, xp: float}
  */
-function ladderIncome(float $net, string $car = 'a-car', string $track = 'a-track'): array
+function ladderIncome(float $net, string $car = 'a-car', string $track = 'a-track', float $xp = 900.0): array
 {
-    return ['net' => $net, 'car' => $car, 'track' => $track];
+    return ['net' => $net, 'car' => $car, 'track' => $track, 'xp' => $xp];
 }
 
 // The anchors: $600 an hour at the first rung, 15% more at each rung after it, and the rungs open at levels 1, 3, 6, 9, 12, 15, 18, 22 and 27.
@@ -89,6 +89,25 @@ describe('the rows of the game ladder', function () {
 
     it('has no rows for no incomes', function () {
         expect((new GameLadder)->check(economyRules(), []))->toBe([]);
+    });
+});
+
+describe('the experience an hour of the game', function () {
+    it('is set against the 900 an hour that the model counts, with the same tolerance as the income', function () {
+        $rows = (new GameLadder)->check(economyRules(), [1 => ladderIncome(600.0, xp: 960.0), 3 => ladderIncome(690.0, xp: 1_080.0), 6 => ladderIncome(793.5, xp: 1_081.0), 9 => ladderIncome(912.5, xp: 720.0), 12 => ladderIncome(1_049.4, xp: 719.0)]);
+
+        expect(array_map(static fn (LadderRow $row): bool => $row->xpOk, $rows))->toBe([true, true, false, true, false])
+            ->and($rows[0]->xp)->toBe(960.0)
+            ->and($rows[0]->xpModel)->toBe(900.0)
+            ->and($rows[0]->xpDeviation())->toEqualWithDelta(0.0667, 0.001)
+            ->and($rows[4]->xpDeviation())->toBeLessThan(-0.2);
+    });
+
+    it('does not depend on the income: a level can be on the anchors in cash and off the model in experience', function () {
+        $row = (new GameLadder)->check(economyRules(), [1 => ladderIncome(600.0, xp: 1_300.0)])[0];
+
+        expect($row->ok)->toBeTrue()
+            ->and($row->xpOk)->toBeFalse();
     });
 });
 

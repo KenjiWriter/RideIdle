@@ -25,6 +25,18 @@ describe('the income of a car on a track', function () {
     });
 });
 
+describe('the experience an hour of a car on a track', function () {
+    it('is the laps of an hour times the experience of a lap: 48 laps of 20 XP for the stock Rdzak GT-4 on the first track', function () {
+        expect(gameIncome()->xpPerHour('rdzak-gt-4', 'zlomowo-street'))->toEqualWithDelta(48 * 20, 0.5);
+    });
+
+    it('does not grow with the speed of the car: the Orzeł V12 on the Autodrom is paid the share of the base lap that it takes, like the stock Rdzak', function () {
+        // 52.6 laps of 17 XP against 42.2 laps of 20 XP: the faster laps pay less, so the hour is about the same, and under the 900 that the track sets.
+        expect(gameIncome()->xpPerHour('orzel-v12', 'autodrom-circuit'))->toEqualWithDelta(895.0, 3.0)
+            ->and(gameIncome()->xpPerHour('rdzak-gt-4', 'autodrom-circuit'))->toEqualWithDelta(845.0, 3.0);
+    });
+});
+
 describe('what a level has to choose from', function () {
     it('are the wrecks of the yard and the cheapest car for sale at the first level, on the first track', function () {
         expect(gameIncome()->carsAt(1))->toBe(['bizon-m-2', 'kuna-4x4', 'rdzak-gt-2', 'rdzak-gt-4'])
@@ -65,6 +77,12 @@ describe('the income by level', function () {
         expect($first['car'])->toBe('rdzak-gt-4')
             ->and($first['track'])->toBe('zlomowo-street')
             ->and($first['net'])->toEqualWithDelta(600.0, 0.5);
+    });
+
+    it('carries the experience an hour of the best pair, within a fifth of the 900 an hour of the model at every level', function () {
+        foreach (gameIncome()->byLevel(range(1, 30)) as $income) {
+            expect($income['xp'])->toBeGreaterThan(720.0)->toBeLessThan(1_080.0);
+        }
     });
 
     it('never falls as the level rises, because what a level opens is added to what the lower ones had', function () {

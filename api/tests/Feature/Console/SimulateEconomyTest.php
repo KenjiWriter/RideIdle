@@ -209,7 +209,27 @@ describe('economy:simulate', function () {
             ->and($output)->toMatch('/\| 27\s+\| L8\s+\| \$1 835\s+\| \$1 834\s+\|/')
             ->and($output)->toContain('orzel-v12 on autodrom-circuit')
             ->and($output)->toContain('Ladder of the game: every level is within the anchors.')
-            ->and($output)->not->toContain('reach L');
+            ->and($output)->not->toContain('reach L')
+            // The experience an hour of the best pair against the 900 of the model: a lap of a fast car pays the share of the base lap it takes, so the
+            // Kornet R6 gets 890 and the Orzeł V12 895 instead of the 1 000 and more that a flat 20 XP a lap would give them.
+            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$1 119\s+\| \+7%\s+\| 890\s+\| -1%\s+\|/')
+            ->and($output)->toMatch('/\| 27\s+\| L8\s+\| \$1 835\s+\| \$1 834\s+\| -0%\s+\| 895\s+\| -1%\s+\|/')
+            ->and($output)->toContain('Experience an hour of the game: every level is within the model.');
+    });
+
+    it('names the levels where the game pays more or less experience an hour than the model counts, and fails with --strict-game for them', function () {
+        $data = economyData();
+        // The model counts 700 an hour while the game pays 805 to 960 at the first levels: the first ones are off by a third.
+        $data['model']['xp']['per_hour'] = 700;
+        $file = economyTemporaryFile(json_encode($data, JSON_THROW_ON_ERROR));
+
+        Artisan::call('economy:simulate', ['--ruleset' => $file]);
+        $output = Artisan::output();
+
+        expect($output)->toMatch('/Experience an hour of the game: \d+ of 12 levels are off the model/')
+            ->and($output)->toMatch('/\| 1\s+\| L0\s+\| \$600\s+\| \$600\s+\| \+0%\s+\| 960\s+\| \+37% OFF\s+\|/');
+
+        $this->artisan('economy:simulate', ['--ruleset' => $file, '--strict-game' => true])->assertExitCode(1);
     });
 
     it('does not fail for the game scenario when it is not asked to, and fails when it is: with --strict-game', function () {
@@ -263,7 +283,10 @@ describe('economy:simulate', function () {
             ->and(collect($report['game_fleet']['gate']['rows'])->pluck('player')->unique()->all())->toBe(['B'])
             ->and($report['game_ladder']['unreachable_rungs'])->toBe([])
             ->and($report['game_ladder']['rows'])->toHaveCount(12)
-            ->and($report['game_ladder']['rows'][0])->toMatchArray(['level' => 1, 'rung' => 'L0', 'car' => 'rdzak-gt-4', 'track' => 'zlomowo-street', 'ok' => true]);
+            ->and($report['game_ladder']['rows'][0])->toMatchArray(['level' => 1, 'rung' => 'L0', 'car' => 'rdzak-gt-4', 'track' => 'zlomowo-street', 'ok' => true, 'xp_ok' => true])
+            ->and($report['game_ladder']['rows'][0]['xp_game'])->toEqualWithDelta(960.0, 0.5)
+            ->and($report['game_ladder']['rows'][0]['xp_model'])->toEqualWithDelta(900.0, 0.5)
+            ->and($report['game_ladder']['rows'][11]['xp_game'])->toEqualWithDelta(895.0, 3.0);
     });
 
     it('plays the crates of parts at the shares of the ruleset, and says that the shift of the days is within the tolerance', function () {

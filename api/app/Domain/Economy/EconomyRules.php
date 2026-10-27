@@ -157,6 +157,12 @@ final readonly class EconomyRules
         return $this->data['model']['xp']['per_hour'] * $player->activity;
     }
 
+    /** The experience of an hour of driving before the activity of the player (900 in the anchors): the one the game is set against. */
+    public function xpPerHourOfDriving(): float
+    {
+        return (float) $this->data['model']['xp']['per_hour'];
+    }
+
     /** The experience that a lap gives before the activity of the player: the one a rule of the game writes down. */
     public function xpPerLap(int $rung): float
     {

@@ -28,8 +28,8 @@ final class GameIncome
     /** The levels that are always asked about: the first one, where a driver has a wreck and the first track. */
     private const FIRST_LEVEL = 1;
 
-    /** @var array<string, float> the net profit per hour by "car|track" */
-    private array $net = [];
+    /** @var array<string, array{net: float, xp: float}> the net profit and the experience of an hour by "car|track" */
+    private array $hourly = [];
 
     public function __construct(
         private readonly Catalog $catalog,
@@ -41,7 +41,7 @@ final class GameIncome
      * The best income for every level that matters: the first level, every level at which a car for sale or a track opens, and the ones asked for.
      *
      * @param  list<int>  $levels  more levels to answer for, for example the levels of the rungs of the ladder
-     * @return array<int, array{net: float, car: string, track: string}> from the lowest level to the highest
+     * @return array<int, array{net: float, car: string, track: string, xp: float}> from the lowest level to the highest, with the experience of an hour of the best pair
      */
     public function byLevel(array $levels = []): array
     {
@@ -64,7 +64,7 @@ final class GameIncome
             }
 
             if ($best !== null) {
-                $incomes[$level] = $best;
+                $incomes[$level] = [...$best, 'xp' => $this->xpPerHour($best['car'], $best['track'])];
             }
         }
 
@@ -74,7 +74,13 @@ final class GameIncome
     /** The net profit of an hour of driving this car on this track with the stock parts, in dry weather, in dollars. */
     public function netPerHour(string $car, string $track): float
     {
-        return $this->net["{$car}|{$track}"] ??= $this->computeNetPerHour($car, $track);
+        return $this->hour($car, $track)['net'];
+    }
+
+    /** The experience of an hour of driving this car on this track in dry weather: the laps of an hour times the experience of a lap the run is frozen into. */
+    public function xpPerHour(string $car, string $track): float
+    {
+        return $this->hour($car, $track)['xp'];
     }
 
     /**
@@ -134,12 +140,22 @@ final class GameIncome
         return array_map(fn (string $track): int => $this->rules->trackMinPlayerLevel($track), array_keys($this->rules->tracks()));
     }
 
-    private function computeNetPerHour(string $car, string $track): float
+    /** @return array{net: float, xp: float} */
+    private function hour(string $car, string $track): array
+    {
+        return $this->hourly["{$car}|{$track}"] ??= $this->computeHour($car, $track);
+    }
+
+    /** @return array{net: float, xp: float} */
+    private function computeHour(string $car, string $track): array
     {
         $config = (new RunFreezer)->freeze($this->inputs->make($car, $track), 'game-ladder', 0)->config;
         $lapsPerHour = self::HOUR_MS / $config['lap_ms']['dry'];
         $fuelCost = $config['fuel_per_lap_ml'] / 1000 * $this->rules->fuelPriceCentsPerLiter() / 100;
 
-        return $lapsPerHour * ($config['lap_cash_cents']['dry'] / 100 - $fuelCost);
+        return [
+            'net' => $lapsPerHour * ($config['lap_cash_cents']['dry'] / 100 - $fuelCost),
+            'xp' => $lapsPerHour * $config['lap_xp']['dry'],
+        ];
     }
 }
