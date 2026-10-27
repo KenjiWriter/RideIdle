@@ -114,17 +114,20 @@ final class Rules
 
     /**
      * What a kilometre wears a part of this slot by, in billionths of its life: 1 / life of the slot, times what the ground does to it (rough_ppm on
-     * gravel), times (power / reference power) ^ exponent for the power of the car (never under 0.8 or over 2), times what a booster does to the parts
-     * of the engine. The only place where this is a floating point number; it is rounded and frozen with the rest of the configuration.
+     * gravel), times (power / reference power) ^ exponent for the power of the car (never under 0.8 or over 2), times what the load of the engine does to the
+     * parts of the engine (1% for every point of load, see `engineLoad`). The only place where this is a floating point number; it is rounded and frozen with
+     * the rest of the configuration.
+     *
+     * @param  int  $engineLoad  the load of the engine of the car, never under 0
      */
-    public function wearPerKmPpb(string $slot, string $surface, float $powerKw, bool $boosted): int
+    public function wearPerKmPpb(string $slot, string $surface, float $powerKw, int $engineLoad = 0): int
     {
         $wear = $this->data['wear'];
         $factor = ($surface === 'gravel' ? ($wear['rough_ppm'][$slot] ?? Ppm::ONE) : Ppm::ONE) / Ppm::ONE;
         $factor *= max(0.8, min(2.0, ($powerKw / $this->data['fuel']['reference_power_kw']) ** ($wear['power_exponent_ppm'] / Ppm::ONE)));
 
-        if ($boosted && in_array($slot, ['engine', 'boost', 'gearbox', 'cooling'], true)) {
-            $factor *= $wear['boost_ppm'] / Ppm::ONE;
+        if ($engineLoad > 0 && in_array($slot, ['engine', 'boost', 'gearbox', 'cooling'], true)) {
+            $factor *= 1 + $engineLoad * $wear['load_ppm_per_point'] / Ppm::ONE;
         }
 
         return (int) round(1_000_000_000 / $wear['life_km'][$slot] * $factor);
@@ -498,7 +501,7 @@ final class Rules
      * What the mass of a car does to its handling and braking: (reference mass / mass) ^ exponent. A heavy car is below 1, a light one
      * above, and a car of the reference mass is not touched.
      */
-    public function massFactor(int $massKg): float
+    public function massFactor(int|float $massKg): float
     {
         $mass = $this->data['car']['mass'];
 
@@ -521,6 +524,22 @@ final class Rules
     public function shopParts(): array
     {
         return $this->data['shop']['parts'];
+    }
+
+    /**
+     * The slots a crate draws parts for: the parts of the other slots are sold in the shop, but are not in the pools of the crates.
+     *
+     * @return list<string>
+     */
+    public function crateSlots(): array
+    {
+        return $this->data['shop']['crates']['slots'];
+    }
+
+    /** What the lag of a booster leaves of the acceleration of the car (1 point of lag takes 1% off; never under nothing). */
+    public function lagFactor(float $lag): float
+    {
+        return max(0.0, 1.0 - $lag * $this->data['car']['lag_ppm_per_point'] / Ppm::ONE);
     }
 
     /**

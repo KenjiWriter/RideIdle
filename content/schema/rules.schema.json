@@ -53,7 +53,7 @@
           "additionalProperties": { "type": "integer", "minimum": 1000000 }
         },
         "power_exponent_ppm": { "type": "integer", "minimum": 0, "maximum": 2000000 },
-        "boost_ppm": { "description": "How much faster the parts of the engine (engine, booster, gearbox, cooling) wear with a booster on the car.", "type": "integer", "minimum": 1000000 },
+        "load_ppm_per_point": { "description": "How much faster the parts of the engine (engine, booster, gearbox, cooling) wear for every point of the load of the engine (the sum of the engine_load of the parts on the car, never under 0): 10000 is 1% a point, so a booster of load 18 and an intercooler of -6 wear them 12% faster.", "type": "integer", "minimum": 0, "maximum": 100000 },
         "stage_ppm": { "type": "integer", "minimum": 1000, "maximum": 500000 },
         "stat_floor_ppm": { "description": "What a worn out part still gives of its statistics (the design: 0.6).", "type": "integer", "minimum": 0, "maximum": 1000000 },
         "unserviceable_ppm": { "description": "Under this condition a part is unserviceable and the car breaks down more.", "type": "integer", "minimum": 0, "maximum": 1000000 },
@@ -84,7 +84,7 @@
           "additionalProperties": false
         }
       },
-      "required": ["life_km", "rough_ppm", "power_exponent_ppm", "boost_ppm", "stage_ppm", "stat_floor_ppm", "unserviceable_ppm", "repair_cost_ppm_of_price", "service", "breakdown"],
+      "required": ["life_km", "rough_ppm", "power_exponent_ppm", "load_ppm_per_point", "stage_ppm", "stat_floor_ppm", "unserviceable_ppm", "repair_cost_ppm_of_price", "service", "breakdown"],
       "additionalProperties": false
     },
     "tow": {
@@ -157,6 +157,7 @@
           "required": ["reference_kg", "exponent"],
           "additionalProperties": false
         },
+        "lag_ppm_per_point": { "description": "The lag of a booster (1 to 10, the design) takes this much off the acceleration of the car for every point: 10000 is 1% a point. The top speed is not touched.", "type": "integer", "minimum": 0, "maximum": 100000 },
         "max_level": { "description": "The level a car does not rise above, whatever experience it has. It has to be high enough for the highest tier.", "type": "integer", "minimum": 1, "maximum": 100 },
         "stat_ceiling": {
           "description": "The value of a statistic at which its bar in the garage is full: what the best car of the whole game is meant to reach, not what a track asks for. A car that has only just left the wreck yard stands well below it.",
@@ -173,7 +174,7 @@
           "additionalProperties": false
         }
       },
-      "required": ["start_level", "levels_per_tier", "levels_per_upgrade", "xp_per_lap", "xp_per_level", "reward_ppm_from_tier", "max_level", "mass", "stat_ceiling"],
+      "required": ["start_level", "levels_per_tier", "levels_per_upgrade", "xp_per_lap", "xp_per_level", "reward_ppm_from_tier", "max_level", "mass", "lag_ppm_per_point", "stat_ceiling"],
       "additionalProperties": false
     },
     "garage": {
@@ -375,6 +376,7 @@
           "description": "The crates of the shop: one draw of a part of a rarity, for game cash only. The odds are shown before the purchase, the draw is made by the server, every one is written down, and the guarantees give a rarer part now and then.",
           "type": "object",
           "properties": {
+            "slots": { "description": "The slots a crate draws parts for: the other parts of the shop (the engine group) are only sold, because the pool of a crate is made of the parts of the shop and its price is their mean.", "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"] } },
             "first_tier_level": { "description": "The player level that opens the crates of tier 1.", "type": "integer", "minimum": 1 },
             "levels_per_tier": { "description": "Every further tier opens this many levels later: tier t opens at max(first_tier_level, levels_per_tier * (t - 1)), as the cars of the dealer do.", "type": "integer", "minimum": 1 },
             "tier_price_ppm": {
@@ -422,7 +424,7 @@
               }
             }
           },
-          "required": ["first_tier_level", "levels_per_tier", "tier_price_ppm", "odds", "guarantee", "kinds"],
+          "required": ["slots", "first_tier_level", "levels_per_tier", "tier_price_ppm", "odds", "guarantee", "kinds"],
           "additionalProperties": false
         }
       },

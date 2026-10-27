@@ -52,6 +52,8 @@ return [
         'queue_full' => 'A fila da oficina está cheia.',
         'equipment_not_found' => 'A oficina não tem esse equipamento.',
         'equipment_max' => 'Esse equipamento já está no nível máximo.',
+        'part_requires_cylinders' => 'Esta peça exige um motor com pelo menos :required cilindros (este carro tem :current).',
+        'part_requires_booster' => 'Esta peça só funciona com sobrealimentação: coloque antes um turbo ou um compressor.',
         'slot_busy' => 'Outra peça para este espaço já está aguardando na oficina.',
         'job_not_found' => 'Esse serviço não existe.',
         'job_done' => 'Esse serviço já foi concluído.',

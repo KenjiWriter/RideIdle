@@ -65,6 +65,12 @@ final class SimulateEconomy extends Command
     /** The slots of the parts of the shop that wear: the upkeep of the shop set is counted over them. */
     private const UPKEEP_SLOTS = ['tires', 'suspension', 'brakes', 'exhaust'];
 
+    /**
+     * The slots of the engine group. Its parts are priced by the board of the catalog (a turbo costs two to five times what the curve of the anchors gives
+     * a part of its tier), so their prices are not set against that curve; the check covers the parts the curve describes.
+     */
+    private const ENGINE_GROUP_SLOTS = ['boost', 'cooling', 'gearbox'];
+
     protected $signature = 'economy:simulate
         {--ruleset= : The ruleset to play, a file of the shape of content/rules/economy.json (that file when left out)}
         {--player=* : Play only these kinds of players, by their keys (A, B or C)}
@@ -196,7 +202,7 @@ final class SimulateEconomy extends Command
             'tutorial' => $this->tutorialGifts($tutorial),
             'parts' => array_values(array_map(
                 static fn (array $part): array => ['slug' => (string) $part['slug'], 'tier' => (int) $part['tier'], 'slot' => (string) $part['slot'], 'price_cents' => (int) $part['price_cents']],
-                $catalog->parts(),
+                array_filter($catalog->parts(), static fn (array $part): bool => ! in_array($part['slot'], self::ENGINE_GROUP_SLOTS, true)),
             )),
         ];
     }
@@ -271,7 +277,7 @@ final class SimulateEconomy extends Command
                     'slot' => $part['slot'],
                     'model' => $part['model'],
                     'price_cents' => $part['price_cents'],
-                    'ppb_per_km' => $game->wearPerKmPpb($part['slot'], $surface, $power, false),
+                    'ppb_per_km' => $game->wearPerKmPpb($part['slot'], $surface, $power),
                 ], $set),
             ];
         }, $rows);
@@ -368,7 +374,7 @@ final class SimulateEconomy extends Command
         $this->printUpkeep($upkeep);
 
         $this->newLine();
-        $this->line('The rules of the game against the anchors (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'):');
+        $this->line('The rules of the game against the anchors (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'; the engine group, priced by the board of the catalog, is not set against the curve of the parts):');
         $this->table(
             ['number', 'anchors', 'game', 'off', ''],
             array_map(fn (Finding $finding): array => [

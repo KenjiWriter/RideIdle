@@ -52,6 +52,8 @@ return [
         'queue_full' => 'La file d’attente de l’atelier est pleine.',
         'equipment_not_found' => 'L’atelier n’a pas cet équipement.',
         'equipment_max' => 'Cet équipement est déjà au niveau maximal.',
+        'part_requires_cylinders' => 'Cette pièce demande un moteur d’au moins :required cylindres (cette voiture en a :current).',
+        'part_requires_booster' => 'Cette pièce ne fonctionne qu’avec une suralimentation : monte d’abord un turbo ou un compresseur.',
         'slot_busy' => 'Une autre pièce pour cet emplacement attend déjà à l’atelier.',
         'job_not_found' => 'Ce travail n’existe pas.',
         'job_done' => 'Ce travail est déjà terminé.',

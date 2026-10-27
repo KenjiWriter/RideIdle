@@ -10,19 +10,19 @@ use App\Content\Rules;
 it('wears a part by 1 / life of its slot a kilometre, faster on gravel, with a powerful car and with a booster on the engine', function () {
     $rules = app(Rules::class);
 
-    expect($rules->wearPerKmPpb('tires', 'asphalt', 97, false))->toBe(25_000)
-        ->and($rules->wearPerKmPpb('suspension', 'asphalt', 97, false))->toBe(12_500)
+    expect($rules->wearPerKmPpb('tires', 'asphalt', 97))->toBe(25_000)
+        ->and($rules->wearPerKmPpb('suspension', 'asphalt', 97))->toBe(12_500)
         // Gravel wears tires and suspension twice as fast, and not the brakes.
-        ->and($rules->wearPerKmPpb('tires', 'gravel', 97, false))->toBe(50_000)
-        ->and($rules->wearPerKmPpb('brakes', 'gravel', 97, false))->toBe(20_000)
+        ->and($rules->wearPerKmPpb('tires', 'gravel', 97))->toBe(50_000)
+        ->and($rules->wearPerKmPpb('brakes', 'gravel', 97))->toBe(20_000)
         // Twice the power wears by the square root of two more, and never less than 0.8 or more than 2 times.
-        ->and($rules->wearPerKmPpb('tires', 'asphalt', 194, false))->toBe(35_355)
-        ->and($rules->wearPerKmPpb('tires', 'asphalt', 10, false))->toBe(20_000)
-        ->and($rules->wearPerKmPpb('tires', 'asphalt', 9_700, false))->toBe(50_000)
+        ->and($rules->wearPerKmPpb('tires', 'asphalt', 194))->toBe(35_355)
+        ->and($rules->wearPerKmPpb('tires', 'asphalt', 10))->toBe(20_000)
+        ->and($rules->wearPerKmPpb('tires', 'asphalt', 9_700))->toBe(50_000)
         // A booster takes it out of the engine and what drives with it, not the tires.
-        ->and($rules->wearPerKmPpb('engine', 'asphalt', 97, true))->toBe(12_500)
-        ->and($rules->wearPerKmPpb('engine', 'asphalt', 97, false))->toBe(8_333)
-        ->and($rules->wearPerKmPpb('tires', 'asphalt', 97, true))->toBe(25_000);
+        ->and($rules->wearPerKmPpb('engine', 'asphalt', 97, 50))->toBe(12_500)
+        ->and($rules->wearPerKmPpb('engine', 'asphalt', 97))->toBe(8_333)
+        ->and($rules->wearPerKmPpb('tires', 'asphalt', 97, 50))->toBe(25_000);
 });
 
 it('gives a part what is left of its statistics: 60% when it is worn out, in stages of 5% of its life', function () {

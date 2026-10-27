@@ -52,6 +52,8 @@ return [
         'queue_full' => 'Kolejka warsztatu jest pełna.',
         'equipment_not_found' => 'Warsztat nie ma takiego wyposażenia.',
         'equipment_max' => 'To wyposażenie ma już najwyższy poziom.',
+        'part_requires_cylinders' => 'Ta część wymaga silnika z co najmniej :required cylindrami (to auto ma :current).',
+        'part_requires_booster' => 'Ta część działa tylko z doładowaniem: najpierw załóż turbosprężarkę albo kompresor.',
         'slot_busy' => 'Inna część do tego miejsca już czeka w warsztacie.',
         'job_not_found' => 'Nie ma takiego zlecenia.',
         'job_done' => 'To zlecenie jest już wykonane.',

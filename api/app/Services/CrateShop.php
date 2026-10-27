@@ -194,7 +194,8 @@ final class CrateShop
         foreach ($this->rules->shopParts() as $slug) {
             $part = $this->catalog->part($slug);
 
-            if ($part === null || $this->crates->playerLevelOfTier($part['tier']) > $level) {
+            // The engine group is sold in the shop, but its parts are not in the crates (`shop.crates.slots`).
+            if ($part === null || ! in_array($part['slot'], $this->rules->crateSlots(), true) || $this->crates->playerLevelOfTier($part['tier']) > $level) {
                 continue;
             }
 

@@ -30,26 +30,45 @@ final class Shop
         private readonly Catalog $catalog,
         private readonly Rules $rules,
         private readonly Ledger $ledger,
+        private readonly PartRequirements $requirements,
+        private readonly Garage $garage,
     ) {}
 
     /**
      * What is for sale, with what the driver's car says about it: the level the car needs to have the part mounted and
      * whether it has it. Without a car nothing can be mounted.
      *
-     * @return list<array<string, mixed>> definitions of the parts, in the order of the rules, with `required_car_level` and `mountable`
+     * A part that the car cannot take for another reason than its level (a turbo for six cylinders on an engine of four, an intercooler with no booster) says
+     * what it lacks in `blocked_by` (see `PartRequirements::lack`), and is not `mountable`.
+     *
+     * The shop shows the parts up to one tier above what the car can have mounted (a car without a part shows as a new one), so the next tier is something to aim
+     * for and nothing is out of sight: the engine group comes into view as the car rises.
+     *
+     * @return list<array<string, mixed>> definitions of the parts, in the order of the rules, with `required_car_level`, `mountable` and `blocked_by`
      */
     public function offers(?Car $car): array
     {
-        return array_map(function (string $slug) use ($car): array {
+        $boosterOn = $car !== null && $this->requirements->boosterOn($car);
+        $slugs = array_values(array_filter($this->rules->shopParts(), fn (string $slug): bool => $this->definition($slug)['tier'] <= $this->highestTierShown($car)));
+
+        return array_map(function (string $slug) use ($car, $boosterOn): array {
             $part = $this->definition($slug);
             $required = $this->rules->requiredCarLevel($part['tier']);
+            $lack = $car === null ? null : $this->requirements->lack($part, $car, $boosterOn);
 
             return [
                 ...$part,
                 'required_car_level' => $required,
-                'mountable' => $car !== null && $car->level >= $required,
+                'mountable' => $car !== null && $car->level >= $required && $lack === null,
+                'blocked_by' => $lack,
             ];
-        }, $this->rules->shopParts());
+        }, $slugs);
+    }
+
+    /** The highest tier the shop shows to a car: one above what it can have mounted. */
+    private function highestTierShown(?Car $car): int
+    {
+        return $this->rules->maxMountableTier($car?->level ?? $this->rules->carStartLevel()) + 1;
     }
 
     /**
@@ -62,7 +81,7 @@ final class Shop
      */
     public function buy(int $userId, string $slug, string $requestId): Purchased
     {
-        if (! in_array($slug, $this->rules->shopParts(), true)) {
+        if (! in_array($slug, $this->rules->shopParts(), true) || $this->definition($slug)['tier'] > $this->highestTierShown($this->garage->carOf($userId))) {
             throw new RuleRefusedException('part_not_for_sale');
         }
 

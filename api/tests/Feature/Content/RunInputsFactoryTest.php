@@ -197,7 +197,7 @@ describe('the statistics of a car with parts on it', function () {
             ->and(runInputsFactory()->tankMl('bizon-m-2', ['tank' => 'fuel-tank-45l-t1']))->toBe(45_000);
     });
 
-    it('makes every part of the shop change something about the stock car, so that nothing is sold for nothing', function () {
+    it('makes every part of the shop change something about the stock car, so that nothing is sold for nothing, but the ones that are the stock car on purpose', function () {
         $stock = runInputsFactory()->stats('rdzak-gt-4');
         $catalog = app(Catalog::class);
         $rules = Rules::fromConfig();
@@ -212,7 +212,8 @@ describe('the statistics of a car with parts on it', function () {
             }
         }
 
-        expect($useless)->toBe([]);
+        // The radiator of the factory is what the car has, and a gearbox with no launch of its own and a limit above the 175 km/h of the Rdzak does not touch it.
+        expect($useless)->toBe(['factory-cooling-t1', 'manual-5-gearbox-t2', 'automatic-8-gearbox-t6']);
     });
 
     it('drives a faster lap with every part of the shop on the car than with none', function () {

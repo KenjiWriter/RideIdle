@@ -52,6 +52,10 @@ function rulesSchemaErrors(array $rules): array
         $data->roads = array_values((array) $data->roads);
     }
 
+    if (isset($data->shop->crates->slots) && is_object($data->shop->crates->slots)) {
+        $data->shop->crates->slots = array_values((array) $data->shop->crates->slots);
+    }
+
     foreach (['bays', 'mechanics'] as $key) {
         if (isset($data->workshop->{$key}->price_cents) && is_object($data->workshop->{$key}->price_cents)) {
             $data->workshop->{$key}->price_cents = array_values((array) $data->workshop->{$key}->price_cents);
@@ -354,10 +358,10 @@ it('starts a new car at the experience of its level, so that its first lap is th
     expect($rules->carLevelAt($rules->carXpToReach($rules->carStartLevel())))->toBe($rules->carStartLevel());
 });
 
-it('sells only parts of the core pack, none of them more than one tier above what a new car can mount', function () {
+it('sells only parts of the core pack, none of them above the highest tier that the best car can mount', function () {
     $rules = starterRules();
-    // The shop says what a car needs for a part it cannot mount yet, so the next tier is something to aim for, and nothing is out of sight.
-    $maxTier = Rules::fromArray($rules)->maxMountableTier($rules['car']['start_level']) + 1;
+    // The shop shows the tiers as the car rises (one above what it can mount); the highest tier is the one of the car at its highest level.
+    $maxTier = Rules::fromArray($rules)->maxMountableTier($rules['car']['max_level']);
     $problems = [];
 
     foreach ($rules['shop']['parts'] as $slug) {

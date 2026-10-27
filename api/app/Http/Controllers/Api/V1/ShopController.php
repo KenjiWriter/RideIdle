@@ -74,6 +74,8 @@ final class ShopController extends Controller
                     ...PartResource::describe($offer),
                     'required_car_level' => $offer['required_car_level'],
                     'mountable' => $offer['mountable'],
+                    // What the car lacks for this part besides its level: cylinders or a booster (null when nothing).
+                    'blocked_by' => $offer['blocked_by'],
                 ],
                 $this->shop->offers($car),
             ),

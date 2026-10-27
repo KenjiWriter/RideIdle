@@ -52,6 +52,8 @@ return [
         'queue_full' => 'The workshop queue is full.',
         'equipment_not_found' => 'The workshop has no such equipment.',
         'equipment_max' => 'This equipment is at its highest level already.',
+        'part_requires_cylinders' => 'This part needs an engine with at least :required cylinders (this car has :current).',
+        'part_requires_booster' => 'This part only works with a booster: put on a turbo or a supercharger first.',
         'slot_busy' => 'Another part for this slot is already waiting in the workshop.',
         'job_not_found' => 'There is no such job.',
         'job_done' => 'That job is already done.',

@@ -50,6 +50,8 @@ final class PartResource extends JsonResource
             'slot' => $definition['slot'],
             'tier' => $definition['tier'] ?? null,
             'price_cents' => $definition['price_cents'] ?? null,
+            // What the car needs for the part (`min_cylinders`, `booster`), or null when it needs nothing.
+            'requires' => $definition['requires'] ?? null,
             // The rarity of the part (`common` to `legendary`, and 1 to 5), and the statistics it gives with it.
             'rarity' => $rarity->key(),
             'rarity_rank' => $rarity->value,

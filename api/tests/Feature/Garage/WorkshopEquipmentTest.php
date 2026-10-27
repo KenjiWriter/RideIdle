@@ -399,11 +399,11 @@ describe('the quotes of putting on and taking off', function () {
         gearStock($driver, 'sport-exhaust-t2', 'exhaust');
 
         gearGarage($driver)->assertOk()
-            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => GEAR_TIRE_FEE_CENTS, 'duration_ms' => GEAR_MOUNT_T2_MS])
-            ->assertJsonPath('data.inventory.1.mount_next', ['cost_cents' => 0, 'duration_ms' => GEAR_MOUNT_T2_MS]);
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => GEAR_TIRE_FEE_CENTS, 'duration_ms' => GEAR_MOUNT_T2_MS, 'locked' => null])
+            ->assertJsonPath('data.inventory.1.mount_next', ['cost_cents' => 0, 'duration_ms' => GEAR_MOUNT_T2_MS, 'locked' => null]);
 
         buyGear($driver, 'tire_machine')->assertCreated()
-            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => 0, 'duration_ms' => 117_600]);
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => 0, 'duration_ms' => 117_600, 'locked' => null]);
     });
 
     it('adds the taking off of the part that sits in the slot to putting on a new one, and shows the taking off of a part of the car', function () {
@@ -413,11 +413,11 @@ describe('the quotes of putting on and taking off', function () {
 
         // The old tires come off in 70.6 s and the new ones go on in 235.2 s, and the vulcanizer asks its fee for each.
         gearGarage($driver)->assertOk()
-            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => 2 * GEAR_TIRE_FEE_CENTS, 'duration_ms' => 70_560 + GEAR_MOUNT_T2_MS])
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => 2 * GEAR_TIRE_FEE_CENTS, 'duration_ms' => 70_560 + GEAR_MOUNT_T2_MS, 'locked' => null])
             ->assertJsonPath('data.car.slots.0.part.unmount_next', ['cost_cents' => GEAR_TIRE_FEE_CENTS, 'duration_ms' => 70_560]);
 
         buyGear($driver, 'tire_machine')->assertCreated()
-            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => 0, 'duration_ms' => 35_280 + 117_600])
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => 0, 'duration_ms' => 35_280 + 117_600, 'locked' => null])
             ->assertJsonPath('data.car.slots.0.part.unmount_next', ['cost_cents' => 0, 'duration_ms' => 35_280]);
 
         // What the quote says is what the jobs are: queue them and the times are the same.
@@ -433,7 +433,7 @@ describe('the quotes of putting on and taking off', function () {
         gearJob($driver, 'unmount', $old->id)->assertCreated();
 
         gearGarage($driver)->assertOk()
-            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => GEAR_TIRE_FEE_CENTS, 'duration_ms' => GEAR_MOUNT_T2_MS]);
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => GEAR_TIRE_FEE_CENTS, 'duration_ms' => GEAR_MOUNT_T2_MS, 'locked' => null]);
     });
 });
 

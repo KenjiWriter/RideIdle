@@ -47,6 +47,7 @@ final class Workshop
         private readonly TutorialScript $script,
         private readonly PartMerges $merges,
         private readonly WorkshopEquipment $equipment,
+        private readonly PartRequirements $requirements,
     ) {}
 
     /**
@@ -349,17 +350,21 @@ final class Workshop
      *
      * @param  Collection<int, Part>  $inventory  the parts of the driver that are on no car
      * @param  Collection<int, WorkshopJob>  $pending  the jobs of the driver that are not done
-     * @return array<int, array{cost_cents: int, duration_ms: int}|null>
+     * @return array<int, array{cost_cents: int, duration_ms: int, locked: array{reason: string, required?: int, current?: int}|null}|null> `locked` is what the car lacks
+     *                                                                                                                                      for the part, or null
      */
     public function mountQuotes(Car $car, Collection $inventory, Collection $pending, WorkshopGear $gear): array
     {
         $firstMountMs = $this->script->firstMountMs((int) $car->user_id);
         $occupants = Part::query()->where('car_id', $car->id)->whereNotNull('mounted_slot')->get()->keyBy('mounted_slot');
         $leaving = $pending->where('kind', WorkshopJob::KIND_UNMOUNT)->where('car_id', $car->id)->pluck('part_id');
+        $boosterOn = $this->requirements->boosterOn($car);
         $quotes = [];
 
         foreach ($inventory as $part) {
-            if ($this->catalog->part($part->part_slug) === null) {
+            $definition = $this->catalog->part($part->part_slug);
+
+            if ($definition === null) {
                 $quotes[$part->id] = null;
 
                 continue;
@@ -373,7 +378,7 @@ final class Workshop
                 $quote = ['cost_cents' => $quote['cost_cents'] + $removal['cost_cents'], 'duration_ms' => $quote['duration_ms'] + $removal['duration_ms']];
             }
 
-            $quotes[$part->id] = $quote;
+            $quotes[$part->id] = [...$quote, 'locked' => $this->requirements->lack($definition, $car, $boosterOn)];
         }
 
         return $quotes;
@@ -409,6 +414,13 @@ final class Workshop
 
         if ($car->level < $required) {
             throw new RuleRefusedException('car_level_required', ['required' => $required, 'current' => $car->level]);
+        }
+
+        // An engine with too few cylinders cannot take the turbo, and an intercooler has nothing to cool without a booster.
+        $lack = $this->requirements->lack($definition, $car);
+
+        if ($lack !== null) {
+            throw new RuleRefusedException($lack['reason'] === 'cylinders' ? 'part_requires_cylinders' : 'part_requires_booster', array_diff_key($lack, ['reason' => 1]));
         }
 
         // Another part of this slot is already on its way onto the car.

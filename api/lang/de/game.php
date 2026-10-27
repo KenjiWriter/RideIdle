@@ -52,6 +52,8 @@ return [
         'queue_full' => 'Die Warteschlange der Werkstatt ist voll.',
         'equipment_not_found' => 'Die Werkstatt hat diese Ausstattung nicht.',
         'equipment_max' => 'Diese Ausstattung hat bereits die höchste Stufe.',
+        'part_requires_cylinders' => 'Dieses Teil braucht einen Motor mit mindestens :required Zylindern (dieses Auto hat :current).',
+        'part_requires_booster' => 'Dieses Teil funktioniert nur mit Aufladung: Baue zuerst einen Turbo oder einen Kompressor ein.',
         'slot_busy' => 'Ein anderes Teil für diesen Platz wartet bereits in der Werkstatt.',
         'job_not_found' => 'Diesen Auftrag gibt es nicht.',
         'job_done' => 'Dieser Auftrag ist bereits erledigt.',

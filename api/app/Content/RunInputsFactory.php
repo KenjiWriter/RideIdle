@@ -123,7 +123,7 @@ final class RunInputsFactory
 
     /**
      * What the wear of the parts on a car and its service come to on a track: how worn each part is, what a lap and a kilometre wear it by (on the ground of
-     * the track, with the power of the car and a booster if it has one), and the odometer. The floating point numbers are made here, once.
+     * the track, with the power of the car and the load of its engine), and the odometer. The floating point numbers are made here, once.
      *
      * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
      * @param  array{mileage_m: int, serviced_at_m: int}  $odometer
@@ -133,6 +133,7 @@ final class RunInputsFactory
         $track = $this->rules->track($trackSlug) ?? throw new InvalidArgumentException("Unknown track {$trackSlug}.");
         $lengthM = $this->rules->trackLengthM($trackSlug);
         $power = $this->power($carSlug, $mounted);
+        $load = $this->engineLoad($this->parts($mounted));
         $service = $this->rules->service();
         $wear = [];
         $perKm = [];
@@ -140,7 +141,7 @@ final class RunInputsFactory
 
         foreach ($mounted as $slot => $entry) {
             $wear[$slot] = is_array($entry) ? (int) ($entry['wear'] ?? 0) : 0;
-            $perKm[$slot] = $this->rules->wearPerKmPpb($slot, $track['surface'], $power, isset($mounted['boost']));
+            $perKm[$slot] = $this->rules->wearPerKmPpb($slot, $track['surface'], $power, $load);
             $perLap[$slot] = intdiv($perKm[$slot] * $lengthM + 500, 1000);
         }
 
@@ -160,19 +161,56 @@ final class RunInputsFactory
     }
 
     /**
-     * The power of a car with these parts on it, in kW: the power of the body times the `power_mult` of every part (as worn as it is).
+     * The power of a car with these parts on it, in kW: the power of the body times the `power_mult` of every part (as worn as it is), where the gain of a
+     * booster is grown by the intercooler that works with it.
      *
      * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted
      */
     public function power(string $carSlug, array $mounted = []): float
     {
-        $multiplier = 1.0;
+        return $this->vehicle($carSlug)['power_kw'] * $this->powerMultiplier($this->parts($mounted));
+    }
 
-        foreach ($this->parts($mounted) as $part) {
-            $multiplier *= (float) ($part['stats']['power_mult'] ?? 1.0);
+    /**
+     * What the parts multiply the power of the body by: the `power_mult` of each, and the gain of the booster (its `power_mult` over 1) grown by the
+     * `boost_gain` of the intercooler (0.03 makes a gain of 25% one of 25.75%). An intercooler works with a booster only.
+     *
+     * @param  array<string, array<string, mixed>>  $parts  the definitions of the mounted parts, by slot
+     */
+    private function powerMultiplier(array $parts): float
+    {
+        $multiplier = 1.0;
+        $intercooler = isset($parts['boost']) ? (float) ($parts['cooling']['stats']['boost_gain'] ?? 0.0) : 0.0;
+
+        foreach ($parts as $slot => $part) {
+            $value = (float) ($part['stats']['power_mult'] ?? 1.0);
+
+            $multiplier *= $slot === 'boost' ? 1.0 + ($value - 1.0) * (1.0 + $intercooler) : $value;
         }
 
-        return $this->vehicle($carSlug)['power_kw'] * $multiplier;
+        return $multiplier;
+    }
+
+    /**
+     * The load of the engine: what the booster asks of it (`engine_load` of the part, in points) less what the intercooler and the radiator take off, never
+     * under nothing. It wears the parts of the engine faster (`Rules::wearPerKmPpb`). An intercooler works with a booster only, so without one it takes
+     * nothing off.
+     *
+     * @param  array<string, array<string, mixed>>  $parts  the definitions of the mounted parts, by slot
+     */
+    private function engineLoad(array $parts): int
+    {
+        $load = 0.0;
+
+        foreach ($parts as $part) {
+            if (isset($part['stats']['boost_gain']) && ! isset($parts['boost'])) {
+                continue;
+            }
+
+            $load += (float) ($part['stats']['engine_load'] ?? 0.0);
+        }
+
+        return max(0, (int) round($load));
     }
 
     /**
@@ -235,14 +273,15 @@ final class RunInputsFactory
     /**
      * The statistics of a car with these parts on it: the pipeline of the design.
      *
-     * - Power is the power of the body times the `power_mult` of every part, and acceleration is power per tonne.
+     * - Power is the power of the body times the `power_mult` of every part (the gain of a booster grown by its intercooler), and acceleration is power per
+     *   tonne, of the body and of the parts that weigh something (`mass_kg`), less the lag of the booster (1% a point) and with the launch of the gearbox.
      * - Top speed is the one of the body, grown with the cube root of the power gained, and never above the cap of the gearbox.
      * - Grip, handling and braking start from the tires, and the suspension and the brakes are averaged with the handling and
      *   the braking of the tires. A slot without a part adds nothing, so the stock car is the reference of the tracks.
      * - Handling and braking are then multiplied by the factor of the mass of the body (`Rules::massFactor`).
      * - Clearance (Off-road in the garage) starts from the body, and the suspension is averaged with it the same way:
      *   a lowered one costs a 4x4 what it gives a hatchback on asphalt. The tires have their say through the tire matrix.
-     * - Fuel use grows with power.
+     * - Fuel use grows with power, and with the `fuel_mult` of the booster.
      *
      * Averaging is a first rule that the economy simulator will check; the numbers are in the definitions of the parts.
      *
@@ -259,12 +298,7 @@ final class RunInputsFactory
         $parts = $this->parts($mounted);
         $tires = $parts['tires'] ?? $this->stockTires();
 
-        $powerMultiplier = 1.0;
-
-        foreach ($parts as $part) {
-            $powerMultiplier *= (float) ($part['stats']['power_mult'] ?? 1.0);
-        }
-
+        $powerMultiplier = $this->powerMultiplier($parts);
         $power = $vehicle['power_kw'] * $powerMultiplier;
         $topSpeed = $vehicle['top_speed_kmh'] * $powerMultiplier ** (1 / 3);
 
@@ -272,22 +306,27 @@ final class RunInputsFactory
             $topSpeed = min($topSpeed, (float) $parts['gearbox']['stats']['top_speed_cap_kmh']);
         }
 
+        // The parts that weigh something (the intercoolers and the radiators, in kilograms, which may be less than nothing) are added to the body.
+        $mass = $vehicle['mass_kg'] + array_sum(array_map(static fn (array $part): float => (float) ($part['stats']['mass_kg'] ?? 0.0), $parts));
         // A heavy car turns and stops worse, a light one better; the stock Rdzak has the mass the rules take as the reference.
-        $massFactor = $this->rules->massFactor($vehicle['mass_kg']);
+        $massFactor = $this->rules->massFactor($mass);
+        // What the booster takes off the acceleration for its lag, and the launch of the gearbox adds to it or takes off (in percent).
+        $startFactor = $this->rules->lagFactor((float) ($parts['boost']['stats']['lag'] ?? 0.0)) * (1.0 + (float) ($parts['gearbox']['stats']['launch'] ?? 0.0) / 100.0);
+        $fuelMultiplier = array_product(array_map(static fn (array $part): float => (float) ($part['stats']['fuel_mult'] ?? 1.0), $parts));
 
         // A car that is overdue for its service performs worse: everything but the clearance, which is about the body, not the engine and the wheels.
         $kept = (Ppm::ONE - max(0, min(Ppm::ONE, $servicePenaltyPpm))) / Ppm::ONE;
 
         return new CarStats(
             stats: [
-                'accel' => $power / ($vehicle['mass_kg'] / 1000) * $kept,
+                'accel' => $power / ($mass / 1000) * $startFactor * $kept,
                 'top_speed' => $topSpeed * $kept,
                 'grip' => (float) $tires['stats']['grip'] * $kept,
                 'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null) * $massFactor * $kept,
                 'braking' => $this->average($tires['stats']['braking'], $parts['brakes']['stats']['braking'] ?? null) * $massFactor * $kept,
                 'clearance' => $this->average($vehicle['clearance'], $parts['suspension']['stats']['clearance'] ?? null),
             ],
-            fuelUseMultiplier: (1.0 + self::FUEL_USE_POWER_SHARE * $power / $this->rules->fuelReferencePowerKw()) / self::FUEL_USE_BASE,
+            fuelUseMultiplier: (1.0 + self::FUEL_USE_POWER_SHARE * $power / $this->rules->fuelReferencePowerKw()) / self::FUEL_USE_BASE * $fuelMultiplier,
         );
     }
 
