@@ -76,6 +76,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/garage', [GarageController::class, 'show']);
         Route::post('/garage/jobs', [GarageController::class, 'queueJob']);
         Route::delete('/garage/jobs/{job}', [GarageController::class, 'cancelJob'])->whereNumber('job');
+        Route::post('/garage/equipment', [GarageController::class, 'buyEquipment']);
 
         Route::get('/tutorial', [TutorialController::class, 'show']);
         Route::post('/tutorial/reply', [TutorialController::class, 'reply']);

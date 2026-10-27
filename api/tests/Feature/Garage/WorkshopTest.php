@@ -16,6 +16,7 @@ use Illuminate\Testing\TestResponse;
 const MOUNT_T2_MS = 235_200;
 const UNMOUNT_TIRES_T1_MS = 70_560;
 
+beforeEach(fn () => withoutTireFee());
 afterEach(fn () => Carbon::setTestNow());
 
 /** @param  array<string, mixed>  $body */

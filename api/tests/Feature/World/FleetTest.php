@@ -12,6 +12,7 @@ use App\Services\Ledger;
 use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 
+beforeEach(fn () => withoutTireFee());
 afterEach(fn () => Carbon::setTestNow());
 
 /** A driver with a car on the track (45 l, at T0) and the experience of a level and some money. */

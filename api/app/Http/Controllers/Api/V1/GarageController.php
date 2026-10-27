@@ -8,6 +8,7 @@ use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
 use App\Domain\Run\WearPlan;
+use App\Domain\Workshop\WorkshopGear;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PartResource;
 use App\Http\Resources\WorkshopJobResource;
@@ -19,6 +20,7 @@ use App\Services\Garage;
 use App\Services\PartMerges;
 use App\Services\RunService;
 use App\Services\Workshop;
+use App\Services\WorkshopEquipment;
 use App\Support\I18nText;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -40,6 +42,7 @@ final class GarageController extends Controller
         private readonly Rules $rules,
         private readonly RunInputsFactory $inputs,
         private readonly PartMerges $merges,
+        private readonly WorkshopEquipment $equipment,
     ) {}
 
     /** The garage as it is now: what is due in the workshop is carried out first. */
@@ -87,28 +90,50 @@ final class GarageController extends Controller
         return $this->respond($userId, 200, ['cancelled' => array_map(static fn (WorkshopJob $gone): int => $gone->id, $cancelled)]);
     }
 
+    /**
+     * Buys the next level of an item of the workshop of the city the car is in (`item`: tire_machine, lift, hoist, toolkit, bays or mechanics), for cash.
+     * `request_id` makes a repeated request harmless (it buys nothing twice, and `repeated` says so).
+     */
+    public function buyEquipment(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'item' => ['required', 'string', Rule::in([...WorkshopGear::ITEMS, WorkshopGear::BAYS, WorkshopGear::MECHANICS])],
+            'request_id' => ['required', 'string', 'max:'.RunService::MAX_REQUEST_ID_LENGTH],
+        ]);
+
+        $userId = (int) $request->user()->getAuthIdentifier();
+        $this->workshop->advance($userId);
+        $gear = $this->workshop->buyGear($userId, $data['item'], $data['request_id']);
+
+        return $this->respond($userId, $gear === null ? 200 : 201, ['repeated' => $gear === null]);
+    }
+
     /** @param  array<string, mixed>  $extra  more keys of the top level of the answer */
     private function respond(int $userId, int $status = 200, array $extra = []): JsonResponse
     {
         $car = $this->garage->carOf($userId);
         $run = $car === null ? null : $this->garage->runOf($car);
         $city = $run === null ? $this->rules->homeRegion() : $this->garage->cityOf($run);
+        // What the workshop of this city has bought: every time and every price of the answer is the one of this workshop.
+        $gear = $this->equipment->gearOf($userId, $city);
 
         $inventory = Part::query()->where('user_id', $userId)->whereNull('car_id')->orderBy('id')->get();
         $pending = $this->workshop->pendingJobs($userId);
         $busy = collect($pending)->flatMap(static fn (WorkshopJob $job): array => [$job->part_id, $job->merge_part_id])->filter()->values()->all();
-        $quotes = $this->merges->quotes($userId, $inventory, $busy);
+        $quotes = $this->merges->quotes($userId, $inventory, $busy, $gear);
 
         return response()->json([
             'data' => [
-                'car' => $car === null ? null : $this->carData($car, $run),
+                'car' => $car === null ? null : $this->carData($car, $run, $gear),
                 // What is in the inventory, and for each part what merging it would do (null when it cannot be merged now).
-                'inventory' => $inventory->map(fn (Part $part): array => [...PartResource::make($part)->resolve(), 'merge' => $quotes[$part->id] ?? null, 'repair_next' => $this->workshop->repairQuote($part)])->all(),
+                'inventory' => $inventory->map(fn (Part $part): array => [...PartResource::make($part)->resolve(), 'merge' => $quotes[$part->id] ?? null, 'repair_next' => $this->workshop->repairQuote($part, $gear)])->all(),
                 // The last results of merging: they are drawn when the mechanic is done, so the driver may be told of them later.
                 'merges' => $this->merges->recent($userId),
                 'workshop' => [
-                    'queue_max' => $this->rules->workshopMaxQueue(),
+                    'queue_max' => $this->rules->workshopMaxQueue($gear->workers()),
                     'mechanic' => $this->rules->mechanic(),
+                    // The equipment, the bays and the mechanics of this workshop: the level of each, what the next costs and what it takes off the time of the jobs.
+                    'gear' => $this->equipment->summary($gear),
                     'city' => ['slug' => $city, 'name' => $this->rules->cityName($city)],
                     'jobs' => WorkshopJobResource::collection($this->workshop->pendingJobs($userId, $city))->resolve(),
                 ],
@@ -119,7 +144,7 @@ final class GarageController extends Controller
     }
 
     /** @return array<string, mixed> */
-    private function carData(Car $car, ?RaceRun $run): array
+    private function carData(Car $car, ?RaceRun $run, WorkshopGear $gear): array
     {
         $vehicle = $this->catalog->vehicle($car->vehicle_slug);
         $mounted = $car->parts()->whereNotNull('mounted_slot')->get()->keyBy('mounted_slot');
@@ -147,7 +172,7 @@ final class GarageController extends Controller
             ],
             'stats' => $this->rounded($this->inputs->stats($car->vehicle_slug, $slugs, $plan->servicePenaltyPpm())->stats),
             'mileage_km' => intdiv((int) $car->mileage_m, 1000),
-            'service' => $this->serviceData($car, $plan),
+            'service' => $this->serviceData($car, $plan, $gear),
             // How often it breaks down: the chance after a lap, with the condition of the car, the wear of its parts and the service counted.
             'breakdown' => ['chance_ppm' => $this->rules->breakChancePerLapPpmFor($car->conditionPpm(), $plan->meanWearPpm(), $plan->overdueSharePpm(), $plan->unserviceableParts($this->rules->unserviceablePpm()))],
             'base_stats' => $this->rounded($this->inputs->stats($car->vehicle_slug)->stats),
@@ -159,9 +184,9 @@ final class GarageController extends Controller
                 'part' => ($part = $mounted->get($slot)) === null ? null : [
                     ...PartResource::make($part)->resolve(),
                     // The next step of the upgrade of this part on this car: its price, its time and what stops it, so the garage can offer it.
-                    'upgrade_next' => $this->workshop->upgradeQuote($part, $car),
+                    'upgrade_next' => $this->workshop->upgradeQuote($part, $car, $gear),
                     // What putting the part right would cost and take, or why it cannot be (it is not worn, or it is worn out).
-                    'repair_next' => $this->workshop->repairQuote($part),
+                    'repair_next' => $this->workshop->repairQuote($part, $gear),
                 ],
                 'built_in' => $slot === 'engine',
             ], self::SLOTS),
@@ -176,9 +201,9 @@ final class GarageController extends Controller
      *
      * @return array<string, int>
      */
-    private function serviceData(Car $car, WearPlan $plan): array
+    private function serviceData(Car $car, WearPlan $plan, WorkshopGear $gear): array
     {
-        $quote = $this->workshop->serviceQuote($car);
+        $quote = $this->workshop->serviceQuote($car, $gear);
         $everyKm = intdiv($plan->serviceEveryM, 1000);
         $sinceKm = intdiv($plan->sinceServiceM(), 1000);
 

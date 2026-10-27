@@ -13,6 +13,7 @@ use Database\Factories\RaceRunFactory;
 use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 
+beforeEach(fn () => withoutTireFee());
 afterEach(fn () => Carbon::setTestNow());
 
 /** The garage of the driver, which is where the car shows its level and its experience. */

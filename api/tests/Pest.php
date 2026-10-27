@@ -1,5 +1,6 @@
 <?php
 
+use App\Content\Rules;
 use App\Domain\Economy\EconomyRules;
 use App\Domain\Run\CarStats;
 use App\Domain\Run\RunInputs;
@@ -121,6 +122,18 @@ const RUN_T0 = 1_792_692_000_000;
 function clockAt(int $msAfterT0): void
 {
     Carbon::setTestNow(Carbon::createFromTimestampMs(RUN_T0 + $msAfterT0));
+}
+
+/**
+ * The rules of this test are the real ones, but a workshop with no tire machine asks no fee of the vulcanizer. The tests of the queue and the prices of the
+ * workshop are not about that fee, and a driver of theirs has no cash for it; WorkshopEquipmentTest has the real one.
+ */
+function withoutTireFee(): void
+{
+    $data = json_decode((string) file_get_contents(config('ride.content_path').'/rules/starter.json'), true, 512, JSON_THROW_ON_ERROR);
+    unset($data['workshop']['equipment']['tire_machine']['levels'][0]['fee_cents']);
+
+    app()->singleton(Rules::class, fn () => Rules::fromArray($data));
 }
 
 /** A run with a constant 75 s lap that pays $15.50 and 25 XP, started at T0 with 45 l (30 laps). */

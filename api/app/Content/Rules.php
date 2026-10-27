@@ -8,6 +8,7 @@ use App\Domain\Economy\PlayerXpCurve;
 use App\Domain\Run\Rarity;
 use App\Domain\Run\Surface;
 use App\Domain\Settlement\Ppm;
+use App\Domain\Workshop\WorkshopGear;
 use App\Support\I18nText;
 
 /**
@@ -170,9 +171,9 @@ final class Rules
     }
 
     /** How long the repair of a part takes the mechanic: the time of putting it on for the whole condition it is short of (the design: base x (1 - condition)). */
-    public function partRepairMs(string $slot, int $tier, int $conditionPpm): int
+    public function partRepairMs(string $slot, int $tier, int $conditionPpm, ?WorkshopGear $gear = null): int
     {
-        return max(1, Ppm::mul($this->workshopJobMs($slot, $tier), Ppm::ONE - max(0, min(Ppm::ONE, $conditionPpm))));
+        return max(1, Ppm::mul($this->workshopJobMs($slot, $tier, gear: $gear), Ppm::ONE - max(0, min(Ppm::ONE, $conditionPpm))));
     }
 
     /** How many laps of a track it takes to drive the interval of the service (rounded up). */
@@ -196,10 +197,10 @@ final class Rules
         return max($service['min_cost_cents'], Ppm::mul($lapCashCents * $this->serviceIntervalLaps($lapLengthM), $service['cost_ppm_of_income']));
     }
 
-    /** How long a service takes the mechanic, cut by his level like any job. */
-    public function serviceJobMs(): int
+    /** How long a service takes the mechanic, cut by his level like any job, and by the toolkit of the workshop (it has no part, so no equipment of a slot). */
+    public function serviceJobMs(?WorkshopGear $gear = null): int
     {
-        return max(1, Ppm::mul($this->data['wear']['service']['time_ms'], Ppm::ONE - $this->mechanic()['time_cut_ppm']));
+        return $this->withGear(max(1, Ppm::mul($this->data['wear']['service']['time_ms'], Ppm::ONE - $this->mechanic()['time_cut_ppm'])), $gear, null);
     }
 
     /** How long a towed car waits before it drives again, in ms. */
@@ -567,8 +568,11 @@ final class Rules
         return $cost;
     }
 
-    /** How long the step from +n to +n+1 takes the mechanic: 5 minutes for the first, 40% more for every step after it, cut by the level of the mechanic. */
-    public function upgradeJobMs(int $from): int
+    /**
+     * How long the step from +n to +n+1 takes the mechanic: 5 minutes for the first, 40% more for every step after it, cut by the level of the mechanic, and
+     * by the equipment of the workshop for the slot of the part (`$slot`) and its toolkit.
+     */
+    public function upgradeJobMs(int $from, ?WorkshopGear $gear = null, ?string $slot = null): int
     {
         $upgrade = $this->data['workshop']['upgrade'];
         $ms = $upgrade['base_time_ms'];
@@ -577,7 +581,7 @@ final class Rules
             $ms = Ppm::mul($ms, $upgrade['time_growth_ppm']);
         }
 
-        return max(1, Ppm::mul($ms, Ppm::ONE - $this->mechanic()['time_cut_ppm']));
+        return $this->withGear(max(1, Ppm::mul($ms, Ppm::ONE - $this->mechanic()['time_cut_ppm'])), $gear, $slot);
     }
 
     /**
@@ -599,10 +603,10 @@ final class Rules
         return Ppm::mul($priceCents, $this->data['workshop']['merge']['cost_ppm_of_price']);
     }
 
-    /** How long an attempt of merging takes the mechanic: twice what putting the part on takes, in ms. */
-    public function mergeJobMs(string $slot, int $tier): int
+    /** How long an attempt of merging takes the mechanic: twice what putting the part on takes, in ms. The parts are not on a car, so only the toolkit of the workshop speeds it up. */
+    public function mergeJobMs(string $slot, int $tier, ?WorkshopGear $gear = null): int
     {
-        return max(1, Ppm::mul($this->workshopJobMs($slot, $tier), $this->data['workshop']['merge']['time_ppm_of_mount']));
+        return max(1, Ppm::mul($this->workshopJobMs($slot, $tier, gear: $gear, slotEquipment: false), $this->data['workshop']['merge']['time_ppm_of_mount']));
     }
 
     /** The scrap that a failed attempt gives back: a quarter of the price of the model. */
@@ -663,24 +667,104 @@ final class Rules
         ];
     }
 
-    /** How many jobs fit in the queue of the workshop, the one in progress included. */
-    public function workshopMaxQueue(): int
+    /** How many jobs fit in the queue of a workshop, the ones in progress included: a place more for every mechanic at work after the first. */
+    public function workshopMaxQueue(int $workers = 1): int
     {
-        return $this->data['workshop']['max_queue'];
+        $workshop = $this->data['workshop'];
+
+        return $workshop['max_queue'] + $workshop['queue_per_extra_worker'] * max(0, $workers - 1);
     }
 
     /**
      * How long a job of the workshop takes, in ms: the time of the slot at tier 1 times the tier, cut by the level of the
-     * mechanic, and a share of that for taking a part off. Whole numbers all the way, so the end of a job never depends on a machine.
+     * mechanic, then by the equipment of the workshop (the one of the slot, unless `$slotEquipment` is false, and the toolkit), and a share of that for taking a
+     * part off. A workshop without a `$gear` has none. Whole numbers all the way, so the end of a job never depends on a machine.
      */
-    public function workshopJobMs(string $slot, int $tier, bool $removal = false): int
+    public function workshopJobMs(string $slot, int $tier, bool $removal = false, ?WorkshopGear $gear = null, bool $slotEquipment = true): int
     {
         $workshop = $this->data['workshop'];
         $base = $workshop['base_time_ms'][$slot] ?? throw new \InvalidArgumentException("The workshop has no time for the slot {$slot}.");
 
-        $ms = Ppm::mul($base * $tier, Ppm::ONE - $this->mechanic()['time_cut_ppm']);
+        $ms = $this->withGear(Ppm::mul($base * $tier, Ppm::ONE - $this->mechanic()['time_cut_ppm']), $gear, $slotEquipment ? $slot : null);
 
         return max(1, $removal ? Ppm::mul($ms, $workshop['removal_ppm']) : $ms);
+    }
+
+    /**
+     * What a job is multiplied by in a workshop that has this equipment, in ppm: the item of the slot (the tire machine for tires, the lift for the suspension, the
+     * brakes and the exhaust, the hoist for the engine, the gearbox and the boost) at its level, times the toolkit. A job that is on no slot (the service, a merge)
+     * gets the toolkit only.
+     */
+    public function gearTimePpm(WorkshopGear $gear, ?string $slot): int
+    {
+        $equipment = $this->data['workshop']['equipment'];
+        $ppm = $equipment[WorkshopGear::TOOLKIT]['levels'][$gear->toolkit]['time_ppm'];
+        $item = $slot === null ? null : $this->equipmentItemOf($slot);
+
+        return $item === null ? $ppm : Ppm::mul($ppm, $equipment[$item]['levels'][$gear->level($item)]['time_ppm']);
+    }
+
+    /** The time of a job in a workshop that has this equipment: `$ms` is what the rules give without any. */
+    private function withGear(int $ms, ?WorkshopGear $gear, ?string $slot): int
+    {
+        return $gear === null ? $ms : max(1, Ppm::mul($ms, $this->gearTimePpm($gear, $slot)));
+    }
+
+    /** The item of equipment that works on the parts of a slot (`tire_machine`, `lift` or `hoist`), or null for a slot that has none (cooling, tank, ecu). */
+    public function equipmentItemOf(string $slot): ?string
+    {
+        foreach ($this->data['workshop']['equipment'] as $item => $definition) {
+            if (in_array($slot, $definition['slots'] ?? [], true)) {
+                return $item;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * What a job on a part of this slot costs on top of its price in a workshop that has this equipment: the fee that the level of the item of the slot asks
+     * (a workshop without a tire machine has the tires done by a vulcanizer outside). Zero for a slot that has no item, or a level that asks none.
+     */
+    public function gearFeeCents(WorkshopGear $gear, string $slot): int
+    {
+        $item = $this->equipmentItemOf($slot);
+
+        return $item === null ? 0 : $this->data['workshop']['equipment'][$item]['levels'][$gear->level($item)]['fee_cents'] ?? 0;
+    }
+
+    /**
+     * The equipment of the workshops: for every item the slots it works on and its levels (the key, the multiplier of the time in ppm, the price of getting that
+     * level from the one before it, and the fee of the level).
+     *
+     * @return array<string, array{slots?: list<string>, levels: list<array{key: string, time_ppm: int, price_cents: int, fee_cents?: int}>}>
+     */
+    public function workshopEquipment(): array
+    {
+        return $this->data['workshop']['equipment'];
+    }
+
+    /**
+     * The highest level of an item of equipment (the start state is level 0), or the most bays or mechanics a workshop has.
+     */
+    public function gearMax(string $item): int
+    {
+        return match ($item) {
+            WorkshopGear::BAYS, WorkshopGear::MECHANICS => count($this->data['workshop'][$item]['price_cents']),
+            default => count($this->data['workshop']['equipment'][$item]['levels']) - 1,
+        };
+    }
+
+    /**
+     * What the next level of an item costs when the workshop has `$level` of it (bays and mechanics are counted: a workshop with one bay buys the second),
+     * or null when it has the highest.
+     */
+    public function gearNextPriceCents(string $item, int $level): ?int
+    {
+        return match ($item) {
+            WorkshopGear::BAYS, WorkshopGear::MECHANICS => $this->data['workshop'][$item]['price_cents'][$level] ?? null,
+            default => $this->data['workshop']['equipment'][$item]['levels'][$level + 1]['price_cents'] ?? null,
+        };
     }
 
     /** @return array<string, array<string, mixed>> effect of every weather */

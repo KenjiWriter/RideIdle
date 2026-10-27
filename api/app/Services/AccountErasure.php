@@ -8,6 +8,7 @@ use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\Car;
 use App\Models\CityGarage;
+use App\Models\CityWorkshop;
 use App\Models\CrateOpening;
 use App\Models\LedgerEntry;
 use App\Models\MergeAttempt;
@@ -64,6 +65,7 @@ final class AccountErasure
             'merge attempts' => MergeAttempt::query()->where('user_id', $user->id)->count(),
             'parts' => Part::query()->where('user_id', $user->id)->count(),
             'garages' => CityGarage::query()->where('user_id', $user->id)->count(),
+            'workshops' => CityWorkshop::query()->where('user_id', $user->id)->count(),
             'workshop jobs' => WorkshopJob::query()->where('user_id', $user->id)->count(),
             'travels' => Travel::query()->where('user_id', $user->id)->count(),
             'tutorial steps' => TutorialProgress::query()->where('user_id', $user->id)->count(),
@@ -102,6 +104,7 @@ final class AccountErasure
             RaceRun::query()->withoutGlobalScopes()->where('user_id', $user->id)->delete();
             WorkshopJob::query()->where('user_id', $user->id)->delete();
             CityGarage::query()->where('user_id', $user->id)->delete();
+            CityWorkshop::query()->where('user_id', $user->id)->delete();
             TutorialProgress::query()->where('user_id', $user->id)->delete();
             Part::query()->where('user_id', $user->id)->delete();
             Car::query()->withoutGlobalScopes()->where('user_id', $user->id)->delete();

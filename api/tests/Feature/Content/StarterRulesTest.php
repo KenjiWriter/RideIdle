@@ -52,6 +52,20 @@ function rulesSchemaErrors(array $rules): array
         $data->roads = array_values((array) $data->roads);
     }
 
+    foreach (['bays', 'mechanics'] as $key) {
+        if (isset($data->workshop->{$key}->price_cents) && is_object($data->workshop->{$key}->price_cents)) {
+            $data->workshop->{$key}->price_cents = array_values((array) $data->workshop->{$key}->price_cents);
+        }
+    }
+
+    foreach ((array) ($data->workshop->equipment ?? []) as $item) {
+        foreach (['slots', 'levels'] as $key) {
+            if (isset($item->{$key}) && is_object($item->{$key})) {
+                $item->{$key} = array_values((array) $item->{$key});
+            }
+        }
+    }
+
     if (isset($data->player->early_xp) && is_object($data->player->early_xp)) {
         $data->player->early_xp = array_values((array) $data->player->early_xp);
     }

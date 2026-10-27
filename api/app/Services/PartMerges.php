@@ -8,6 +8,7 @@ use App\Content\Catalog;
 use App\Content\Rules;
 use App\Domain\Run\Rarity;
 use App\Domain\Run\Rng;
+use App\Domain\Workshop\WorkshopGear;
 use App\Http\Resources\PartResource;
 use App\Models\MergeAttempt;
 use App\Models\Part;
@@ -96,9 +97,10 @@ final class PartMerges
      *
      * @param  Collection<int, Part>  $inventory  the parts of the driver that are on no car
      * @param  list<int>  $busy  the ids of the parts that wait in a job
+     * @param  WorkshopGear|null  $gear  the equipment of the workshop that would do it, which the time depends on (the toolkit)
      * @return array<int, array{to: string, chance_ppm: int, pity_ppm: int, cost_cents: int, duration_ms: int, scrap_cents: int, with: list<int>}|null>
      */
-    public function quotes(int $userId, Collection $inventory, array $busy): array
+    public function quotes(int $userId, Collection $inventory, array $busy, ?WorkshopGear $gear = null): array
     {
         $groups = $inventory->reject(fn (Part $part): bool => in_array($part->id, $busy, true))
             ->groupBy(fn (Part $part): string => $part->slot.'|'.($this->catalog->part($part->part_slug)['tier'] ?? 0).'|'.$part->rarity);
@@ -135,7 +137,7 @@ final class PartMerges
                     'chance_ppm' => $chance,
                     'pity_ppm' => $chance - $withoutPity,
                     'cost_cents' => $this->rules->mergeCostCents($definition['price_cents']),
-                    'duration_ms' => $this->rules->mergeJobMs($part->slot, $definition['tier']),
+                    'duration_ms' => $this->rules->mergeJobMs($part->slot, $definition['tier'], $gear),
                     'scrap_cents' => $this->rules->mergeScrapCents($definition['price_cents']),
                     'with' => $parts->where('id', '!=', $part->id)->pluck('id')->values()->all(),
                 ];

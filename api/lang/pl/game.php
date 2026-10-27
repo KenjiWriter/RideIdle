@@ -50,6 +50,8 @@ return [
         'part_worn_out' => 'Ta część jest zużyta do końca: trzeba ją wymienić, a nie naprawiać.',
         'repair_unavailable' => 'Tej części nie da się naprawić.',
         'queue_full' => 'Kolejka warsztatu jest pełna.',
+        'equipment_not_found' => 'Warsztat nie ma takiego wyposażenia.',
+        'equipment_max' => 'To wyposażenie ma już najwyższy poziom.',
         'slot_busy' => 'Inna część do tego miejsca już czeka w warsztacie.',
         'job_not_found' => 'Nie ma takiego zlecenia.',
         'job_done' => 'To zlecenie jest już wykonane.',

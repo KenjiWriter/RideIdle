@@ -50,6 +50,8 @@ return [
         'part_worn_out' => 'Esta peça está totalmente gasta: é preciso trocá-la, não consertá-la.',
         'repair_unavailable' => 'Esta peça não pode ser consertada.',
         'queue_full' => 'A fila da oficina está cheia.',
+        'equipment_not_found' => 'A oficina não tem esse equipamento.',
+        'equipment_max' => 'Esse equipamento já está no nível máximo.',
         'slot_busy' => 'Outra peça para este espaço já está aguardando na oficina.',
         'job_not_found' => 'Esse serviço não existe.',
         'job_done' => 'Esse serviço já foi concluído.',

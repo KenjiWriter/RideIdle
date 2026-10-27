@@ -374,7 +374,10 @@ describe('the guided first minutes', function () {
         $first = $this->postJson('/api/v1/garage/jobs', ['kind' => 'mount', 'part' => $tires->id], bearerFor($driver))->assertCreated()->json('data.workshop.jobs.0');
 
         // The first job is short, and it is not queued again behind a longer one.
+        // Nor does the vulcanizer outside ask its fee of it: the driver has no cash, and the job costs nothing.
         expect($first['finish_ms'] - $first['start_ms'])->toBe(30_000)
+            ->and($first['cost_cents'])->toBe(0)
+            ->and(driverCash($driver))->toBe(0)
             ->and(app(TutorialScript::class)->firstMountMs($driver->id))->toBeNull();
 
         $second = $this->postJson('/api/v1/garage/jobs', ['kind' => 'mount', 'part' => $exhaust->id], bearerFor($driver))->assertCreated()->json('data.workshop.jobs.1');

@@ -8,8 +8,11 @@ use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
 use App\Domain\Run\Rarity;
+use App\Domain\Workshop\WorkshopGear;
+use App\Domain\Workshop\WorkshopSchedule;
 use App\Exceptions\RuleRefusedException;
 use App\Models\Car;
+use App\Models\LedgerEntry;
 use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\WorkshopJob;
@@ -17,11 +20,12 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * The workshops: putting parts on a car, taking them off, upgrading them (+N) and merging them, by the mechanic of the city, one job after the other. Every city has a
- * workshop of its own with its own queue, and the car has to be in the city to be worked on.
+ * The workshops: putting parts on a car, taking them off, upgrading them (+N) and merging them, by the mechanics of the city. Every city has a
+ * workshop of its own with its own queue and its own equipment (`WorkshopEquipment`), and the car has to be in the city to be worked on.
  *
- * The times of a job are fixed when it is queued: it starts when the job before it in the queue of the city ends (or now, when the mechanic
- * is free) and lasts what the rules say for its slot and tier. Nothing runs in the background. The jobs are carried out lazily, in the order
+ * The times of a job are fixed when it is queued: it starts at the first moment at which a mechanic is free for the whole of it (as many work at once as the
+ * workshop has bays and mechanics for), and not before the job before it on the same car ends, and it lasts what the rules say for its slot and tier with the
+ * equipment the workshop has then (`WorkshopSchedule`). Nothing runs in the background. The jobs are carried out lazily, in the order
  * of their times, when the driver comes back (`advance`), the way a run is settled:
  *
  * - when a job starts, its car goes into the workshop: what it earned until then is settled and then it stands;
@@ -42,6 +46,7 @@ final class Workshop
         private readonly Travel $travel,
         private readonly TutorialScript $script,
         private readonly PartMerges $merges,
+        private readonly WorkshopEquipment $equipment,
     ) {}
 
     /**
@@ -96,6 +101,7 @@ final class Workshop
             }
 
             $city = $run === null ? $this->rules->homeRegion() : $this->garage->cityOf($run);
+            $gear = $this->equipment->gearOf($userId, $city);
             // The service is a job on the car, and no part.
             $part = $kind === WorkshopJob::KIND_SERVICE ? null : Part::query()->where('user_id', $userId)->lockForUpdate()->find($partId ?? 0) ?? throw new RuleRefusedException('part_not_found');
 
@@ -120,42 +126,57 @@ final class Workshop
 
             $plan = match ($kind) {
                 WorkshopJob::KIND_MOUNT => $this->planMount($car, $part, $pending->where('car_id', $car->id)),
-                WorkshopJob::KIND_UPGRADE => $this->planUpgrade($car, $part),
+                WorkshopJob::KIND_UPGRADE => $this->planUpgrade($car, $part, $gear),
                 WorkshopJob::KIND_MERGE => $this->planMerge($part, $partner),
-                WorkshopJob::KIND_REPAIR => $this->planRepair($car, $part),
+                WorkshopJob::KIND_REPAIR => $this->planRepair($car, $part, $gear),
                 WorkshopJob::KIND_SERVICE => [[WorkshopJob::KIND_SERVICE, null]],
                 default => $this->planUnmount($car, $part),
             };
 
-            if ($queue->count() + count($plan) > $this->rules->workshopMaxQueue()) {
+            if ($queue->count() + count($plan) > $this->rules->workshopMaxQueue($gear->workers())) {
                 throw new RuleRefusedException('queue_full');
             }
 
-            $cursor = max($now, (int) $queue->max('finish_ms'));
+            // The jobs of the city keep their times; a car is busy until its last job ends, wherever the jobs of it stand.
+            $placed = $queue->map(static fn (WorkshopJob $job): array => ['start_ms' => $job->start_ms, 'finish_ms' => $job->finish_ms])->values()->all();
+            $carFreeAt = $pending->whereNotNull('car_id')->groupBy('car_id')->map(static fn (Collection $jobs): int => (int) $jobs->max('finish_ms'))->all();
             $jobs = [];
-            // The first mounting of a driver is short while the tutorial teaches it, so that the journey of the step after it does not wait for the mechanic.
+            // The first mounting of a driver is short while the tutorial teaches it, so that the journey of the step after it does not wait for the mechanic, and
+            // the vulcanizer does not ask a fee of it.
             $firstMountMs = $kind === WorkshopJob::KIND_MOUNT ? $this->script->firstMountMs($userId) : null;
 
             foreach ($plan as [$jobKind, $jobPart]) {
                 $definition = $jobPart === null ? null : $this->catalog->part($jobPart->part_slug);
                 $quote = match ($jobKind) {
-                    WorkshopJob::KIND_UPGRADE => $this->upgradeQuote($jobPart, $car),
-                    WorkshopJob::KIND_MERGE => ['cost_cents' => $this->rules->mergeCostCents($definition['price_cents']), 'duration_ms' => $this->rules->mergeJobMs($jobPart->slot, $definition['tier'])],
-                    WorkshopJob::KIND_REPAIR => $this->repairQuote($jobPart),
-                    WorkshopJob::KIND_SERVICE => $this->serviceQuote($car),
-                    default => null,
+                    WorkshopJob::KIND_UPGRADE => $this->upgradeQuote($jobPart, $car, $gear),
+                    WorkshopJob::KIND_MERGE => ['cost_cents' => $this->rules->mergeCostCents($definition['price_cents']), 'duration_ms' => $this->rules->mergeJobMs($jobPart->slot, $definition['tier'], $gear)],
+                    WorkshopJob::KIND_REPAIR => $this->repairQuote($jobPart, $gear),
+                    WorkshopJob::KIND_SERVICE => $this->serviceQuote($car, $gear),
+                    // Putting on and taking off cost nothing but time, and the fee of the vulcanizer where the workshop has no tire machine.
+                    default => [
+                        'cost_cents' => $firstMountMs === null ? $this->rules->gearFeeCents($gear, $jobPart->slot) : 0,
+                        'duration_ms' => $this->rules->workshopJobMs($jobPart->slot, $definition['tier'], removal: $jobKind === WorkshopJob::KIND_UNMOUNT, gear: $gear),
+                    ],
                 };
-                $duration = $quote['duration_ms'] ?? $this->rules->workshopJobMs($jobPart->slot, $definition['tier'], removal: $jobKind === WorkshopJob::KIND_UNMOUNT);
+                $duration = $quote['duration_ms'];
 
                 if ($jobKind === WorkshopJob::KIND_MOUNT && $firstMountMs !== null) {
                     $duration = min($duration, $firstMountMs);
                 }
 
+                // The parts of a merge are not on the car, nor is a part of the inventory that is repaired, so the car is not in the job: it does not stand
+                // while the mechanic is at it.
+                $carId = $jobKind === WorkshopJob::KIND_MERGE || ($jobKind === WorkshopJob::KIND_REPAIR && ! $jobPart->isMounted()) ? null : $car->id;
+                $start = WorkshopSchedule::startFor($placed, $gear->workers(), max($now, $carId === null ? 0 : $carFreeAt[$carId] ?? 0), $duration);
+                $placed[] = ['start_ms' => $start, 'finish_ms' => $start + $duration];
+
+                if ($carId !== null) {
+                    $carFreeAt[$carId] = $start + $duration;
+                }
+
                 $job = WorkshopJob::query()->create([
                     'user_id' => $userId,
-                    // The parts of a merge are not on the car, nor is a part of the inventory that is repaired, so the car is not in the job: it does not stand
-                    // while the mechanic is at it.
-                    'car_id' => $jobKind === WorkshopJob::KIND_MERGE || ($jobKind === WorkshopJob::KIND_REPAIR && ! $jobPart->isMounted()) ? null : $car->id,
+                    'car_id' => $carId,
                     'city' => $city,
                     'part_id' => $jobPart?->id,
                     'merge_part_id' => $jobKind === WorkshopJob::KIND_MERGE ? $partner?->id : null,
@@ -163,8 +184,8 @@ final class Workshop
                     'cost_cents' => $quote['cost_cents'] ?? 0,
                     'upgrade_to' => $quote['to'] ?? null,
                     'status' => WorkshopJob::STATUS_QUEUED,
-                    'start_ms' => $cursor,
-                    'finish_ms' => $cursor + $duration,
+                    'start_ms' => $start,
+                    'finish_ms' => $start + $duration,
                 ]);
 
                 // Paid when queued, under the lock of the wallet we hold: not enough cash undoes the job with the transaction.
@@ -173,8 +194,6 @@ final class Workshop
                 }
 
                 $jobs[] = $job;
-
-                $cursor += $duration;
             }
 
             // A job that can start now does: the car goes into the workshop right away.
@@ -185,11 +204,65 @@ final class Workshop
     }
 
     /**
+     * Buys the next level of an item of the workshop in the city the car of the driver is in, or one more bay or mechanic, for cash: `$item` is
+     * `tire_machine`, `lift`, `hoist`, `toolkit`, `bays` or `mechanics`. It is there at once, but only the jobs queued from then on are quicker: the jobs queued are
+     * not changed, except that more mechanics at work take the jobs that wait earlier. `$requestId` makes a repeated request harmless: a purchase that was paid already
+     * buys nothing, and the answer is null.
+     *
+     * @return WorkshopGear|null what the workshop has now, or null for a repeated request
+     *
+     * @throws RuleRefusedException `equipment_not_found`, `equipment_max`, `car_travelling`
+     */
+    public function buyGear(int $userId, string $item, string $requestId, ?int $nowMs = null): ?WorkshopGear
+    {
+        return $this->locked($userId, $nowMs, function (Collection $runs, int $now) use ($userId, $item, $requestId): ?WorkshopGear {
+            $key = "workshop-gear:{$userId}:{$requestId}";
+
+            if (LedgerEntry::query()->where('idem_key', $key)->exists()) {
+                return null;
+            }
+
+            if (! in_array($item, [...WorkshopGear::ITEMS, WorkshopGear::BAYS, WorkshopGear::MECHANICS], true)) {
+                throw new RuleRefusedException('equipment_not_found');
+            }
+
+            // What is due comes first, so the queue is as it is now.
+            $this->advanceLocked($userId, $runs, $now);
+
+            $car = $this->garage->carOf($userId);
+            $run = $car === null ? null : $runs->get($car->id);
+
+            if ($run?->stop_reason === RaceRun::STOP_TRAVEL) {
+                throw new RuleRefusedException('car_travelling');
+            }
+
+            $city = $run === null ? $this->rules->homeRegion() : $this->garage->cityOf($run);
+            $before = $this->equipment->gearOf($userId, $city);
+            $price = $this->rules->gearNextPriceCents($item, $before->level($item)) ?? throw new RuleRefusedException('equipment_max');
+
+            $this->ledger->post($userId, -$price, 'workshop_gear', $key);
+            $gear = $this->equipment->raise($userId, $city, $item);
+
+            // A mechanic more takes the jobs that wait earlier.
+            if ($gear->workers() > $before->workers()) {
+                $this->moveUp(
+                    WorkshopJob::query()->where('user_id', $userId)->where('city', $city)->where('status', '!=', WorkshopJob::STATUS_DONE)->orderBy('start_ms')->orderBy('id')->lockForUpdate()->get()->values(),
+                    $now,
+                    $gear->workers(),
+                );
+                $this->advanceLocked($userId, $runs, $now);
+            }
+
+            return $gear;
+        });
+    }
+
+    /**
      * Cancels a job that waits for the mechanic or that the mechanic is at, and the jobs that cannot happen without it: the
      * part that was to take the place of the one whose taking off is cancelled. A job costs only time, so nothing is given back,
-     * except for an upgrade or a merge that has not started, which is paid back whole (one at work loses its price and its work);
-     * the work done on the job at work is lost, and its part stays where it was. The jobs that
-     * wait in the queue of that city move up, one after the other, from the end of the job still at work, or from now when none is.
+     * except for a job that has not started and was paid (an upgrade, a merge, a repair, a service, or the fee of the vulcanizer), which is paid back whole
+     * (one at work loses its price and its work); the work done on the job at work is lost, and its part stays where it was. The jobs that
+     * wait in the queue of that city move up to the first moment a mechanic is free for them, or to now when one is.
      * A car that has no job at work after that drives again from now.
      *
      * @return list<WorkshopJob> the jobs that were cancelled, the one that was asked for first
@@ -228,7 +301,7 @@ final class Workshop
             }
 
             $remaining = $pending->reject(fn (WorkshopJob $other): bool => $cancelled->contains('id', $other->id))->values();
-            $this->moveUp($remaining, $now);
+            $this->moveUp($remaining, $now, $this->equipment->gearOf($userId, $job->city)->workers());
 
             // The first of the jobs that wait starts at once when the mechanic has just been freed.
             $this->advanceLocked($userId, $runs, $now);
@@ -321,13 +394,13 @@ final class Workshop
      *
      * @throws RuleRefusedException
      */
-    private function planRepair(Car $car, Part $part): array
+    private function planRepair(Car $car, Part $part, WorkshopGear $gear): array
     {
         if ($part->isMounted() && $part->car_id !== $car->id) {
             throw new RuleRefusedException('part_not_mounted');
         }
 
-        $locked = $this->repairQuote($part)['locked'];
+        $locked = $this->repairQuote($part, $gear)['locked'];
 
         if ($locked !== null) {
             throw new RuleRefusedException(match ($locked['reason']) {
@@ -346,8 +419,9 @@ final class Workshop
      *
      * @return array{cost_cents: int|null, duration_ms: int|null, locked: array{reason: string}|null}
      */
-    public function repairQuote(Part $part): array
+    public function repairQuote(Part $part, ?WorkshopGear $gear = null): array
     {
+        $gear ??= $this->gearOfDriver((int) $part->user_id);
         $definition = $this->catalog->part($part->part_slug);
 
         if (($definition['price_cents'] ?? null) === null) {
@@ -363,25 +437,27 @@ final class Workshop
         }
 
         return [
-            'cost_cents' => $this->rules->partRepairCostCents($definition['price_cents'], $part->conditionPpm()),
-            'duration_ms' => $this->rules->partRepairMs($part->slot, $definition['tier'], $part->conditionPpm()),
+            // The fee of the vulcanizer is part of the price: a workshop without a tire machine has the tires put right outside.
+            'cost_cents' => $this->rules->partRepairCostCents($definition['price_cents'], $part->conditionPpm()) + $this->rules->gearFeeCents($gear, $part->slot),
+            'duration_ms' => $this->rules->partRepairMs($part->slot, $definition['tier'], $part->conditionPpm(), $gear),
             'locked' => null,
         ];
     }
 
     /**
-     * What a service of the car costs and takes: 4% of what the car earns in the kilometres between two services, and a quarter of an hour of the mechanic.
-     * A car with no run earns nothing, so a service costs the least it can.
+     * What a service of the car costs and takes: 4% of what the car earns in the kilometres between two services, and a quarter of an hour of the mechanic
+     * (less with the toolkit of the workshop). A car with no run earns nothing, so a service costs the least it can.
      *
      * @return array{cost_cents: int, duration_ms: int}
      */
-    public function serviceQuote(Car $car): array
+    public function serviceQuote(Car $car, ?WorkshopGear $gear = null): array
     {
+        $gear ??= $this->gearOfCar($car);
         $run = $this->garage->runOf($car);
         $lapCash = (int) ($run?->config['lap_cash_cents']['dry'] ?? 0);
         $lengthM = $run === null ? $this->rules->trackLengthM($this->rules->tracksOf($this->rules->homeRegion())[0]) : $this->rules->trackLengthM($run->track_slug);
 
-        return ['cost_cents' => $this->rules->serviceCostCents($lapCash, $lengthM), 'duration_ms' => $this->rules->serviceJobMs()];
+        return ['cost_cents' => $this->rules->serviceCostCents($lapCash, $lengthM), 'duration_ms' => $this->rules->serviceJobMs($gear)];
     }
 
     /**
@@ -422,13 +498,13 @@ final class Workshop
      *
      * @throws RuleRefusedException
      */
-    private function planUpgrade(Car $car, Part $part): array
+    private function planUpgrade(Car $car, Part $part, WorkshopGear $gear): array
     {
         if (! $part->isMounted() || $part->car_id !== $car->id) {
             throw new RuleRefusedException('part_not_mounted');
         }
 
-        $quote = $this->upgradeQuote($part, $car);
+        $quote = $this->upgradeQuote($part, $car, $gear);
 
         if ($quote['locked'] !== null) {
             throw match ($quote['locked']['reason']) {
@@ -447,8 +523,9 @@ final class Workshop
      *
      * @return array{to: int|null, cost_cents: int|null, duration_ms: int|null, locked: array{reason: string, required?: int, current?: int}|null}
      */
-    public function upgradeQuote(Part $part, Car $car): array
+    public function upgradeQuote(Part $part, Car $car, ?WorkshopGear $gear = null): array
     {
+        $gear ??= $this->gearOfCar($car);
         $rarity = Rarity::tryFrom((int) $part->rarity) ?? Rarity::Common;
         $level = (int) $part->upgrade_level;
         $price = $this->catalog->part($part->part_slug)['price_cents'] ?? null;
@@ -465,8 +542,9 @@ final class Workshop
 
         return [
             'to' => $to,
-            'cost_cents' => $this->rules->upgradeCostCents($price, $level),
-            'duration_ms' => $this->rules->upgradeJobMs($level),
+            // The fee of the vulcanizer is part of the price, like the one of a repair.
+            'cost_cents' => $this->rules->upgradeCostCents($price, $level) + $this->rules->gearFeeCents($gear, $part->slot),
+            'duration_ms' => $this->rules->upgradeJobMs($level, $gear, $part->slot),
             'locked' => $level >= $this->rules->upgradeCap($rarity, $car->level)
                 ? ['reason' => 'car_level', 'required' => $this->rules->requiredCarLevelForUpgrade($to), 'current' => $car->level]
                 : null,
@@ -487,26 +565,53 @@ final class Workshop
     }
 
     /**
-     * Puts the jobs that wait one after the other from the end of the job at work, or from now when none is: each lasts
-     * what it did before, so only its times move.
+     * Puts the jobs that wait where they start first now that the workshop is different (a job was cancelled, or a mechanic came): the ones at work keep their
+     * times, and the others take, one after the other in the order they were in, the first moment a mechanic is free for them, and not before the job before them
+     * on the same car ends. Each lasts what it did before, so only its times move.
      *
      * @param  Collection<int, WorkshopJob>  $remaining  in the order they are carried out
+     * @param  int  $workers  how many mechanics work at once
      */
-    private function moveUp(Collection $remaining, int $now): void
+    private function moveUp(Collection $remaining, int $now, int $workers): void
     {
-        $cursor = $now;
+        $placed = [];
+        $carFreeAt = [];
 
-        foreach ($remaining as $job) {
-            if ($job->status === WorkshopJob::STATUS_WORKING) {
-                $cursor = $job->finish_ms;
+        foreach ($remaining->where('status', WorkshopJob::STATUS_WORKING) as $job) {
+            $placed[] = ['start_ms' => $job->start_ms, 'finish_ms' => $job->finish_ms];
 
-                continue;
+            if ($job->car_id !== null) {
+                $carFreeAt[$job->car_id] = max($carFreeAt[$job->car_id] ?? 0, $job->finish_ms);
             }
-
-            $duration = $job->finish_ms - $job->start_ms;
-            $job->forceFill(['start_ms' => $cursor, 'finish_ms' => $cursor + $duration])->save();
-            $cursor += $duration;
         }
+
+        foreach ($remaining->where('status', '!=', WorkshopJob::STATUS_WORKING) as $job) {
+            $duration = $job->finish_ms - $job->start_ms;
+            $start = WorkshopSchedule::startFor($placed, $workers, max($now, $job->car_id === null ? 0 : $carFreeAt[$job->car_id] ?? 0), $duration);
+
+            $job->forceFill(['start_ms' => $start, 'finish_ms' => $start + $duration])->save();
+            $placed[] = ['start_ms' => $start, 'finish_ms' => $start + $duration];
+
+            if ($job->car_id !== null) {
+                $carFreeAt[$job->car_id] = $start + $duration;
+            }
+        }
+    }
+
+    /** What the workshop has in the city the car stands in. */
+    private function gearOfCar(Car $car): WorkshopGear
+    {
+        $run = $this->garage->runOf($car);
+
+        return $this->equipment->gearOf((int) $car->user_id, $run === null ? $this->rules->homeRegion() : $this->garage->cityOf($run));
+    }
+
+    /** What the workshop of the car the driver plays has (the home city's when they have none). */
+    private function gearOfDriver(int $userId): WorkshopGear
+    {
+        $car = $this->garage->carOf($userId);
+
+        return $car === null ? $this->equipment->gearOf($userId, $this->rules->homeRegion()) : $this->gearOfCar($car);
     }
 
     /** A car that stands in the workshop with no job at work any more leaves it, and drives from now with the parts it has. */
@@ -546,24 +651,36 @@ final class Workshop
             ->get()
             ->values();
 
+        // The starts and the ends that are due, in the order of the clock whichever mechanic they belong to, so that what a job changes (a part, the draw of a
+        // merge) happens in the same order whenever the driver comes back. An end comes before a start of the same moment, and a job that is due to start and
+        // to end is started first.
+        $events = [];
+
         foreach ($jobs as $index => $job) {
+            if ($job->status === WorkshopJob::STATUS_QUEUED && $job->start_ms <= $now) {
+                $events[] = ['at' => $job->start_ms, 'end' => false, 'id' => $job->id, 'index' => $index];
+            }
+
+            if ($job->finish_ms <= $now) {
+                $events[] = ['at' => $job->finish_ms, 'end' => true, 'id' => $job->id, 'index' => $index];
+            }
+        }
+
+        usort($events, static fn (array $a, array $b): int => [$a['at'], $a['end'] ? 0 : 1, $a['id']] <=> [$b['at'], $b['end'] ? 0 : 1, $b['id']]);
+
+        foreach ($events as ['end' => $ends, 'index' => $index]) {
+            $job = $jobs[$index];
             // A merge has no car: nothing stands for it.
             $run = $job->car_id === null ? null : $runs->get($job->car_id);
 
-            if ($job->status === WorkshopJob::STATUS_QUEUED) {
-                if ($job->start_ms > $now) {
-                    continue;
-                }
-
+            if (! $ends) {
                 // The car goes into the workshop when the mechanic starts.
                 if ($run !== null) {
                     $this->runs->enterWorkshop($run, $job->start_ms);
                 }
 
                 $job->forceFill(['status' => WorkshopJob::STATUS_WORKING])->save();
-            }
 
-            if ($job->finish_ms > $now) {
                 continue;
             }
 

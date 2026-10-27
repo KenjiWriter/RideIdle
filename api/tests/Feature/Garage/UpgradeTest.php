@@ -18,6 +18,7 @@ const UPGRADE_TIRES_PRICE = 57_000;
 const UPGRADE_STEP_0_CENTS = 19_950;
 const UPGRADE_STEP_0_MS = 294_000;
 
+beforeEach(fn () => withoutTireFee());
 afterEach(fn () => Carbon::setTestNow());
 
 /** The driver has this much cash to spend. */

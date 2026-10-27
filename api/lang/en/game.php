@@ -50,6 +50,8 @@ return [
         'part_worn_out' => 'This part is worn out: it has to be replaced, not repaired.',
         'repair_unavailable' => 'This part cannot be repaired.',
         'queue_full' => 'The workshop queue is full.',
+        'equipment_not_found' => 'The workshop has no such equipment.',
+        'equipment_max' => 'This equipment is at its highest level already.',
         'slot_busy' => 'Another part for this slot is already waiting in the workshop.',
         'job_not_found' => 'There is no such job.',
         'job_done' => 'That job is already done.',

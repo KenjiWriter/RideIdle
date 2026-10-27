@@ -50,6 +50,8 @@ return [
         'part_worn_out' => 'Cette pièce est complètement usée : il faut la remplacer, pas la réparer.',
         'repair_unavailable' => 'Cette pièce ne peut pas être réparée.',
         'queue_full' => 'La file d’attente de l’atelier est pleine.',
+        'equipment_not_found' => 'L’atelier n’a pas cet équipement.',
+        'equipment_max' => 'Cet équipement est déjà au niveau maximal.',
         'slot_busy' => 'Une autre pièce pour cet emplacement attend déjà à l’atelier.',
         'job_not_found' => 'Ce travail n’existe pas.',
         'job_done' => 'Ce travail est déjà terminé.',

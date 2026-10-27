@@ -19,6 +19,7 @@ const REPAIR_HALF_MS = 117_600;
 const SERVICE_CENTS = 119_288;
 const SERVICE_MS = 882_000;
 
+beforeEach(fn () => withoutTireFee());
 afterEach(fn () => Carbon::setTestNow());
 
 /** A driver at T0 with a car that drives and cash, and tires on it with this much wear. @return array{0: User, 1: Car, 2: Part} */

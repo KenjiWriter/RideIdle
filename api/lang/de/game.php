@@ -50,6 +50,8 @@ return [
         'part_worn_out' => 'Dieses Teil ist völlig verschlissen: Es muss ersetzt werden, eine Reparatur reicht nicht.',
         'repair_unavailable' => 'Dieses Teil lässt sich nicht reparieren.',
         'queue_full' => 'Die Warteschlange der Werkstatt ist voll.',
+        'equipment_not_found' => 'Die Werkstatt hat diese Ausstattung nicht.',
+        'equipment_max' => 'Diese Ausstattung hat bereits die höchste Stufe.',
         'slot_busy' => 'Ein anderes Teil für diesen Platz wartet bereits in der Werkstatt.',
         'job_not_found' => 'Diesen Auftrag gibt es nicht.',
         'job_done' => 'Dieser Auftrag ist bereits erledigt.',

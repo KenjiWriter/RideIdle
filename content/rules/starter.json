@@ -133,6 +133,43 @@
     "time_cut_ppm_per_level": 20000,
     "removal_ppm": 600000,
     "max_queue": 4,
+    "queue_per_extra_worker": 2,
+    "bays": { "price_cents": [0, 200000, 600000, 1500000] },
+    "mechanics": { "price_cents": [0, 180000, 500000, 1200000] },
+    "equipment": {
+      "tire_machine": {
+        "slots": ["tires"],
+        "levels": [
+          { "key": "none", "time_ppm": 1000000, "price_cents": 0, "fee_cents": 3000 },
+          { "key": "manual", "time_ppm": 500000, "price_cents": 40000 },
+          { "key": "automatic", "time_ppm": 350000, "price_cents": 180000 }
+        ]
+      },
+      "lift": {
+        "slots": ["suspension", "brakes", "exhaust"],
+        "levels": [
+          { "key": "trestles", "time_ppm": 1000000, "price_cents": 0 },
+          { "key": "hand_hydraulic", "time_ppm": 680000, "price_cents": 35000 },
+          { "key": "two_post", "time_ppm": 450000, "price_cents": 120000 },
+          { "key": "four_post", "time_ppm": 360000, "price_cents": 400000 }
+        ]
+      },
+      "hoist": {
+        "slots": ["engine", "gearbox", "boost"],
+        "levels": [
+          { "key": "none", "time_ppm": 1000000, "price_cents": 0 },
+          { "key": "hoist", "time_ppm": 330000, "price_cents": 60000 },
+          { "key": "hydraulic_crane", "time_ppm": 270000, "price_cents": 300000 }
+        ]
+      },
+      "toolkit": {
+        "levels": [
+          { "key": "hand", "time_ppm": 1000000, "price_cents": 0 },
+          { "key": "pneumatic", "time_ppm": 900000, "price_cents": 60000 },
+          { "key": "electric", "time_ppm": 800000, "price_cents": 250000 }
+        ]
+      }
+    },
     "upgrade": {
       "stat_ppm_per_level": 30000,
       "max_by_rarity": { "common": 3, "uncommon": 5, "rare": 7, "epic": 9, "legendary": 12 },

@@ -8,6 +8,7 @@ use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\Car;
 use App\Models\CityGarage;
+use App\Models\CityWorkshop;
 use App\Models\CrateOpening;
 use App\Models\LedgerEntry;
 use App\Models\MergeAttempt;
@@ -106,6 +107,8 @@ final class AccountExport
                 ->map(fn (Part $part): array => $part->makeHidden(['user_id', 'car_id', 'mounted_slot'])->toArray())->all(),
             'garages' => CityGarage::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (CityGarage $garage): array => $garage->makeHidden(['user_id'])->toArray())->all(),
+            'workshops' => CityWorkshop::query()->where('user_id', $user->id)->orderBy('id')->get()
+                ->map(fn (CityWorkshop $workshop): array => $workshop->makeHidden(['user_id'])->toArray())->all(),
             'storage_openings' => StorageOpening::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (StorageOpening $opening): array => $opening->makeHidden(['user_id'])->toArray())->all(),
             'crate_openings' => CrateOpening::query()->where('user_id', $user->id)->orderBy('id')->get()
