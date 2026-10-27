@@ -74,6 +74,9 @@ final class RunResource extends JsonResource
                 // What a lap gives the car, which levels on its laps: the same in every weather.
                 'car_xp' => app(Rules::class)->carXpPerLap(),
             ],
+            // The bots the car races against, and the place it holds among them by its dry lap, which multiplies the reward of a lap: null for a run that was frozen
+            // before the bots, or on a track and a tier that the table of the profiles does not know.
+            'field' => $this->config['field'] ?? null,
             // The clock of the game, which a client counts from the time of the server: the length of a day and where its phases begin.
             'clock' => ['day_ms' => GameClock::DAY_MS, 'phases' => GameClock::phases()],
             // The weather of the region now and ahead: it is drawn from the seed of the climate, so it can be told ahead.

@@ -15,7 +15,7 @@ use InvalidArgumentException;
 final readonly class FrozenRun
 {
     /**
-     * @param  array{lap_ms: array<string, int>, lap_cash_cents: array<string, int>, lap_xp: array<string, int>, fuel_per_lap_ml: int, weather: array{seed: string, chances_ppm: array<string, int>}, night_lap_ppm?: int}  $config
+     * @param  array{lap_ms: array<string, int>, lap_cash_cents: array<string, int>, lap_xp: array<string, int>, fuel_per_lap_ml: int, weather: array{seed: string, chances_ppm: array<string, int>}, night_lap_ppm?: int, field?: array{position: int, size: int, reward_ppm: int, rows: list<array{name: string|null, type: string, lap_ms: int}>}}  $config
      * @param  int|null  $breakAfterLaps  absolute lap number after which the car breaks down, null when no breakdown is planned
      */
     public function __construct(public array $config, public ?int $breakAfterLaps) {}

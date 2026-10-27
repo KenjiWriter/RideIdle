@@ -33,11 +33,16 @@ final class TrackSimulator
     /** The weather in which the best build is also asked for, as the design's proof is dry against wet. */
     private const COMPARED_WEATHER = ['dry', 'rain'];
 
+    /** The factory of the runs, without the bots: the simulator compares the cars on the tracks, and the place among the bots pays by the tier of the car, which this report mixes. */
+    private readonly RunInputsFactory $inputs;
+
     public function __construct(
         private readonly Catalog $catalog,
         private readonly Rules $rules,
-        private readonly RunInputsFactory $inputs,
-    ) {}
+        RunInputsFactory $inputs,
+    ) {
+        $this->inputs = $inputs->withoutBots();
+    }
 
     public function simulate(): TrackReport
     {

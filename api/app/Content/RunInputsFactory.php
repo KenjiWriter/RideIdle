@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Content;
 
 use App\Domain\Run\CarStats;
+use App\Domain\Run\FieldProfile;
 use App\Domain\Run\Rarity;
 use App\Domain\Run\RunInputs;
 use App\Domain\Run\Surface;
@@ -30,7 +31,14 @@ final class RunInputsFactory
     /** The statistics that depend on what the tires grip on: the matrix of the tires multiplies them. */
     private const TRACTION_STATS = ['grip', 'handling', 'braking'];
 
-    public function __construct(private readonly Catalog $catalog, private readonly Rules $rules) {}
+    /** @param  BotProfiles|null  $profiles  the references that the bots drive around: without them a car races alone */
+    public function __construct(private readonly Catalog $catalog, private readonly Rules $rules, private readonly ?BotProfiles $profiles = null) {}
+
+    /** The same factory for cars that race alone: what the place among the bots pays is left out, for a comparison of the cars themselves. */
+    public function withoutBots(): self
+    {
+        return new self($this->catalog, $this->rules);
+    }
 
     /**
      * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot: the slug, or the slug with the rarity of the part
@@ -86,7 +94,41 @@ final class RunInputsFactory
             climateSeed: $region['climate_seed'],
             breakChancePerLapPpm: $this->rules->breakChancePerLapPpmFor($conditionPpm),
             nightLapPpm: $track['lit'] ? Ppm::ONE : $this->rules->nightLapPpm(),
+            field: $this->field($trackSlug, (int) $vehicle['tier']),
         );
+    }
+
+    /**
+     * The bots that a car of this tier races against on this track: seven lap times around the reference of the tier (`bots.offsets_ppm` of the
+     * rules), named after teams, and what each place pays. Null when the table of the profiles has no reference for the tier on the track.
+     */
+    private function field(string $trackSlug, int $tier): ?FieldProfile
+    {
+        $reference = $this->profiles?->referenceMs($trackSlug, $tier);
+
+        if ($reference === null) {
+            return null;
+        }
+
+        $offsets = $this->rules->botOffsetsPpm();
+        $rivals = array_map(static fn (int $offset): int => intdiv($reference * (Ppm::ONE + $offset) + intdiv(Ppm::ONE, 2), Ppm::ONE), $offsets);
+
+        return new FieldProfile($rivals, $this->botNames($trackSlug, count($offsets)), $this->rules->botRewardPpmByPosition());
+    }
+
+    /**
+     * The names of the bots of a track: as many of the names of the rules as there are bots, in an order of their own for each track, so that every
+     * driver sees the same rivals on the same track.
+     *
+     * @return list<string>
+     */
+    private function botNames(string $trackSlug, int $count): array
+    {
+        $names = $this->rules->botNames();
+
+        usort($names, static fn (string $a, string $b): int => [crc32("{$trackSlug}|{$a}"), $a] <=> [crc32("{$trackSlug}|{$b}"), $b]);
+
+        return array_slice($names, 0, $count);
     }
 
     /**

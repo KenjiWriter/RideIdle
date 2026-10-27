@@ -33,13 +33,17 @@ final class RunFreezer
         $lapCash = [];
         $lapXp = [];
 
-        $xpPerLap = $this->xpPerLap($inputs);
+        // The dry lap decides the place among the bots and the experience of a lap, so that the weather, which slows every car, changes neither.
+        $dryMs = $this->lapMs($inputs, $inputs->effectFor('dry'));
+        $xpPerLap = $this->xpPerLap($inputs, $dryMs);
+        $field = $inputs->field?->place($dryMs);
+        $rewardPerLap = Ppm::mul($inputs->track->rewardCentsPerLap, $field['reward_ppm'] ?? Ppm::ONE);
 
         foreach (array_keys($inputs->weatherChancesPpm) as $weather) {
             $effect = $inputs->effectFor($weather);
 
             $lapMs[$weather] = $this->lapMs($inputs, $effect);
-            $lapCash[$weather] = Ppm::mul($inputs->track->rewardCentsPerLap, $effect->rewardPpm);
+            $lapCash[$weather] = Ppm::mul($rewardPerLap, $effect->rewardPpm);
             $lapXp[$weather] = Ppm::mul($xpPerLap, $effect->xpPpm);
         }
 
@@ -50,6 +54,7 @@ final class RunFreezer
             'fuel_per_lap_ml' => max(1, (int) round($inputs->track->fuelPerLapMl * $inputs->car->fuelUseMultiplier)),
             'weather' => ['seed' => $inputs->climateSeed, 'chances_ppm' => $inputs->weatherChancesPpm],
             'night_lap_ppm' => $inputs->nightLapPpm,
+            ...($field === null ? [] : ['field' => $field]),
         ], $this->breakdownLap($runSeed, $lapsDone, $inputs->breakChancePerLapPpm));
     }
 
@@ -59,10 +64,8 @@ final class RunFreezer
      * would in the same hour (the experience an hour has a ceiling that the track sets: 3 600 000 / base time * xpPerLap). A car that laps
      * it slower gets the whole of it, as before: a car that does not suit the track still pays for it.
      */
-    private function xpPerLap(RunInputs $inputs): int
+    private function xpPerLap(RunInputs $inputs, int $dryMs): int
     {
-        $dryMs = $this->lapMs($inputs, $inputs->effectFor('dry'));
-
         return (int) round($inputs->track->xpPerLap * min($dryMs, $inputs->track->baseLapMs) / $inputs->track->baseLapMs);
     }
 
