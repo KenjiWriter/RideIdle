@@ -1,0 +1,15 @@
+{
+  "slug": "intercooler-large-t5",
+  "name": {
+    "en": "Large intercooler",
+    "pl": "Intercooler duży",
+    "fr": "Grand intercooler",
+    "de": "Großer Ladeluftkühler",
+    "pt-BR": "Intercooler grande"
+  },
+  "slot": "cooling",
+  "tier": 5,
+  "price_cents": 540000,
+  "stats": { "boost_gain": 0.03, "engine_load": -6, "mass_kg": 7 },
+  "requires": { "booster": true }
+}

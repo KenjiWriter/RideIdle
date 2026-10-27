@@ -1,0 +1,15 @@
+{
+  "slug": "turbo-duo-t4",
+  "name": {
+    "en": "Duo turbo",
+    "pl": "Turbo Duo",
+    "fr": "Turbo Duo",
+    "de": "Duo-Turbo",
+    "pt-BR": "Turbo Duo"
+  },
+  "slot": "boost",
+  "tier": 4,
+  "price_cents": 890000,
+  "stats": { "power_mult": 1.3, "lag": 4, "fuel_mult": 1.17, "engine_load": 10 },
+  "requires": { "min_cylinders": 4 }
+}

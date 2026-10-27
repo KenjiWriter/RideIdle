@@ -1,0 +1,15 @@
+{
+  "slug": "intercooler-water-air-t6",
+  "name": {
+    "en": "Water-to-air intercooler",
+    "pl": "Intercooler woda-powietrze",
+    "fr": "Intercooler eau-air",
+    "de": "Wasser-Luft-Ladeluftkühler",
+    "pt-BR": "Intercooler água-ar"
+  },
+  "slot": "cooling",
+  "tier": 6,
+  "price_cents": 920000,
+  "stats": { "boost_gain": 0.04, "engine_load": -8, "mass_kg": 6 },
+  "requires": { "booster": true }
+}

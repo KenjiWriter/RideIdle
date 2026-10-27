@@ -1,0 +1,14 @@
+{
+  "slug": "twin-screw-pro-t7",
+  "name": {
+    "en": "Twin-screw Pro supercharger",
+    "pl": "Dwuślimakowy Pro",
+    "fr": "Compresseur à double vis Pro",
+    "de": "Twin-Screw-Kompressor Pro",
+    "pt-BR": "Compressor de duplo parafuso Pro"
+  },
+  "slot": "boost",
+  "tier": 7,
+  "price_cents": 2900000,
+  "stats": { "power_mult": 1.26, "lag": 0, "fuel_mult": 1.16, "engine_load": 7 }
+}

@@ -1,0 +1,14 @@
+{
+  "slug": "dual-clutch-gearbox-t8",
+  "name": {
+    "en": "Dual-clutch gearbox",
+    "pl": "Skrzynia dwusprzęgłowa",
+    "fr": "Boîte à double embrayage",
+    "de": "Doppelkupplungsgetriebe",
+    "pt-BR": "Câmbio de dupla embreagem"
+  },
+  "slot": "gearbox",
+  "tier": 8,
+  "price_cents": 3800000,
+  "stats": { "gears": 7, "top_speed_cap_kmh": 340, "launch": 2 }
+}

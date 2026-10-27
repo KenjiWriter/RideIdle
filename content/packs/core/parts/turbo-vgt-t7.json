@@ -1,0 +1,15 @@
+{
+  "slug": "turbo-vgt-t7",
+  "name": {
+    "en": "VGT turbo",
+    "pl": "Turbo VGT",
+    "fr": "Turbo VGT",
+    "de": "VGT-Turbo",
+    "pt-BR": "Turbo VGT"
+  },
+  "slot": "boost",
+  "tier": 7,
+  "price_cents": 3400000,
+  "stats": { "power_mult": 1.42, "lag": 3, "fuel_mult": 1.19, "engine_load": 14 },
+  "requires": { "min_cylinders": 4 }
+}

@@ -1,0 +1,14 @@
+{
+  "slug": "roots-t4",
+  "name": {
+    "en": "Roots supercharger",
+    "pl": "Roots",
+    "fr": "Compresseur Roots",
+    "de": "Roots-Kompressor",
+    "pt-BR": "Compressor Roots"
+  },
+  "slot": "boost",
+  "tier": 4,
+  "price_cents": 780000,
+  "stats": { "power_mult": 1.16, "lag": 0, "fuel_mult": 1.12, "engine_load": 5 }
+}

@@ -1,0 +1,14 @@
+{
+  "slug": "roots-race-t9",
+  "name": {
+    "en": "Performance Roots supercharger",
+    "pl": "Roots Wyczyn",
+    "fr": "Compresseur Roots Performance",
+    "de": "Roots-Kompressor Performance",
+    "pt-BR": "Compressor Roots Performance"
+  },
+  "slot": "boost",
+  "tier": 9,
+  "price_cents": 6800000,
+  "stats": { "power_mult": 1.32, "lag": 0, "fuel_mult": 1.2, "engine_load": 9 }
+}

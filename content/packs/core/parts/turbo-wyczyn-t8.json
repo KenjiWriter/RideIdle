@@ -1,0 +1,15 @@
+{
+  "slug": "turbo-wyczyn-t8",
+  "name": {
+    "en": "Performance turbo",
+    "pl": "Turbo Wyczyn",
+    "fr": "Turbo Performance",
+    "de": "Performance-Turbo",
+    "pt-BR": "Turbo Performance"
+  },
+  "slot": "boost",
+  "tier": 8,
+  "price_cents": 4600000,
+  "stats": { "power_mult": 1.48, "lag": 7, "fuel_mult": 1.24, "engine_load": 16 },
+  "requires": { "min_cylinders": 6 }
+}

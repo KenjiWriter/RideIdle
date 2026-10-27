@@ -1,0 +1,14 @@
+{
+  "slug": "automatic-6-gearbox-t4",
+  "name": {
+    "en": "Automatic 6-speed gearbox",
+    "pl": "Skrzynia automatyczna 6-biegowa",
+    "fr": "Boîte automatique 6 vitesses",
+    "de": "Sechsgang-Automatikgetriebe",
+    "pt-BR": "Câmbio automático de 6 marchas"
+  },
+  "slot": "gearbox",
+  "tier": 4,
+  "price_cents": 480000,
+  "stats": { "gears": 6, "top_speed_cap_kmh": 250, "launch": -2 }
+}

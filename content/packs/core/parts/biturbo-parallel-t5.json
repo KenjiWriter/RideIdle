@@ -1,0 +1,15 @@
+{
+  "slug": "biturbo-parallel-t5",
+  "name": {
+    "en": "Parallel twin-turbo",
+    "pl": "Bi-turbo równoległe",
+    "fr": "Bi-turbo parallèle",
+    "de": "Parallel-Biturbo",
+    "pt-BR": "Biturbo paralelo"
+  },
+  "slot": "boost",
+  "tier": 5,
+  "price_cents": 1900000,
+  "stats": { "power_mult": 1.38, "lag": 4, "fuel_mult": 1.28, "engine_load": 14 },
+  "requires": { "min_cylinders": 6 }
+}

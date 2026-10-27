@@ -1,0 +1,14 @@
+{
+  "slug": "radiator-aluminium-t3",
+  "name": {
+    "en": "Aluminium radiator",
+    "pl": "Chłodnica aluminiowa",
+    "fr": "Radiateur aluminium",
+    "de": "Aluminiumkühler",
+    "pt-BR": "Radiador de alumínio"
+  },
+  "slot": "cooling",
+  "tier": 3,
+  "price_cents": 150000,
+  "stats": { "engine_load": -3, "mass_kg": -3 }
+}

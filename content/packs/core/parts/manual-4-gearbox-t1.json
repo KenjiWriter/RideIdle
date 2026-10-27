@@ -1,0 +1,14 @@
+{
+  "slug": "manual-4-gearbox-t1",
+  "name": {
+    "en": "Manual 4-speed gearbox",
+    "pl": "Skrzynia manualna 4-biegowa",
+    "fr": "Boîte manuelle 4 vitesses",
+    "de": "Viergang-Schaltgetriebe",
+    "pt-BR": "Câmbio manual de 4 marchas"
+  },
+  "slot": "gearbox",
+  "tier": 1,
+  "price_cents": 60000,
+  "stats": { "gears": 4, "top_speed_cap_kmh": 150, "launch": 0 }
+}

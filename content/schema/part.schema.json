@@ -22,6 +22,16 @@
       "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
       "additionalProperties": { "type": "number" }
     },
+    "requires": {
+      "description": "What the car must have for the part to be put on it: an engine of at least min_cylinders cylinders (the number in the layout of its engine, R4 is 4 and V8 is 8), and, for the parts that only work with a booster (an intercooler), a booster on the car. A job that puts the part on a car that does not meet it is refused.",
+      "type": "object",
+      "properties": {
+        "min_cylinders": { "type": "integer", "minimum": 1, "maximum": 12 },
+        "booster": { "const": true }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
     "fits": {
       "description": "Optional restriction to vehicle classes or powertrains.",
       "type": "object",

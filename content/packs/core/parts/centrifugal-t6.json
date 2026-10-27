@@ -1,0 +1,14 @@
+{
+  "slug": "centrifugal-t6",
+  "name": {
+    "en": "Centrifugal supercharger",
+    "pl": "Odśrodkowy",
+    "fr": "Compresseur centrifuge",
+    "de": "Zentrifugalkompressor",
+    "pt-BR": "Compressor centrífugo"
+  },
+  "slot": "boost",
+  "tier": 6,
+  "price_cents": 1860000,
+  "stats": { "power_mult": 1.24, "lag": 3, "fuel_mult": 1.15, "engine_load": 7 }
+}

@@ -1,0 +1,15 @@
+{
+  "slug": "turbo-osemka-t2",
+  "name": {
+    "en": "Eight turbo",
+    "pl": "Turbo Ósemka",
+    "fr": "Turbo Huit",
+    "de": "Acht-Turbo",
+    "pt-BR": "Turbo Oito"
+  },
+  "slot": "boost",
+  "tier": 2,
+  "price_cents": 420000,
+  "stats": { "power_mult": 1.25, "lag": 3, "fuel_mult": 1.15, "engine_load": 8 },
+  "requires": { "min_cylinders": 4 }
+}

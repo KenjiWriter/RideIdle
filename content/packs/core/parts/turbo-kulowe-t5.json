@@ -1,0 +1,15 @@
+{
+  "slug": "turbo-kulowe-t5",
+  "name": {
+    "en": "Ball-bearing turbo",
+    "pl": "Turbo Kulowe",
+    "fr": "Turbo à roulements à billes",
+    "de": "Kugellager-Turbo",
+    "pt-BR": "Turbo de rolamento esférico"
+  },
+  "slot": "boost",
+  "tier": 5,
+  "price_cents": 1350000,
+  "stats": { "power_mult": 1.34, "lag": 4, "fuel_mult": 1.18, "engine_load": 11 },
+  "requires": { "min_cylinders": 4 }
+}

@@ -1,0 +1,15 @@
+{
+  "slug": "intercooler-race-t8",
+  "name": {
+    "en": "Performance intercooler",
+    "pl": "Intercooler wyczynowy",
+    "fr": "Intercooler performance",
+    "de": "Performance-Ladeluftkühler",
+    "pt-BR": "Intercooler Performance"
+  },
+  "slot": "cooling",
+  "tier": 8,
+  "price_cents": 2200000,
+  "stats": { "boost_gain": 0.05, "engine_load": -11, "mass_kg": 8 },
+  "requires": { "booster": true }
+}

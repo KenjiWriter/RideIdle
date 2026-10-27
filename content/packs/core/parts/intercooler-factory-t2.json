@@ -1,0 +1,15 @@
+{
+  "slug": "intercooler-factory-t2",
+  "name": {
+    "en": "Factory intercooler",
+    "pl": "Intercooler fabryczny",
+    "fr": "Intercooler d’origine",
+    "de": "Serien-Ladeluftkühler",
+    "pt-BR": "Intercooler de fábrica"
+  },
+  "slot": "cooling",
+  "tier": 2,
+  "price_cents": 120000,
+  "stats": { "boost_gain": 0.01, "engine_load": -2, "mass_kg": 3 },
+  "requires": { "booster": true }
+}

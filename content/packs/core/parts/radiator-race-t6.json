@@ -1,0 +1,14 @@
+{
+  "slug": "radiator-race-t6",
+  "name": {
+    "en": "Performance radiator",
+    "pl": "Chłodnica wyczynowa",
+    "fr": "Radiateur performance",
+    "de": "Performance-Kühler",
+    "pt-BR": "Radiador Performance"
+  },
+  "slot": "cooling",
+  "tier": 6,
+  "price_cents": 740000,
+  "stats": { "engine_load": -6, "mass_kg": -5 }
+}

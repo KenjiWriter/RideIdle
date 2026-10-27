@@ -1,0 +1,15 @@
+{
+  "slug": "biturbo-sequential-t7",
+  "name": {
+    "en": "Sequential twin-turbo",
+    "pl": "Bi-turbo sekwencyjne",
+    "fr": "Bi-turbo séquentiel",
+    "de": "Sequenzieller Biturbo",
+    "pt-BR": "Biturbo sequencial"
+  },
+  "slot": "boost",
+  "tier": 7,
+  "price_cents": 4200000,
+  "stats": { "power_mult": 1.45, "lag": 2, "fuel_mult": 1.3, "engine_load": 15 },
+  "requires": { "min_cylinders": 6 }
+}

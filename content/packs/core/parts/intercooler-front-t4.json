@@ -1,0 +1,15 @@
+{
+  "slug": "intercooler-front-t4",
+  "name": {
+    "en": "Front-mount intercooler",
+    "pl": "Intercooler frontalny",
+    "fr": "Intercooler frontal",
+    "de": "Frontladeluftkühler",
+    "pt-BR": "Intercooler frontal"
+  },
+  "slot": "cooling",
+  "tier": 4,
+  "price_cents": 310000,
+  "stats": { "boost_gain": 0.02, "engine_load": -4, "mass_kg": 5 },
+  "requires": { "booster": true }
+}

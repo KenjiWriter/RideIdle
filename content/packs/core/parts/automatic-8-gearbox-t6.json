@@ -1,0 +1,14 @@
+{
+  "slug": "automatic-8-gearbox-t6",
+  "name": {
+    "en": "Automatic 8-speed gearbox",
+    "pl": "Skrzynia automatyczna 8-biegowa",
+    "fr": "Boîte automatique 8 vitesses",
+    "de": "Achtgang-Automatikgetriebe",
+    "pt-BR": "Câmbio automático de 8 marchas"
+  },
+  "slot": "gearbox",
+  "tier": 6,
+  "price_cents": 1400000,
+  "stats": { "gears": 8, "top_speed_cap_kmh": 300, "launch": 0 }
+}

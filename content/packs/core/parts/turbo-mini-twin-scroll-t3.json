@@ -1,0 +1,15 @@
+{
+  "slug": "turbo-mini-twin-scroll-t3",
+  "name": {
+    "en": "Mini twin-scroll turbo",
+    "pl": "Turbo Mini Twin-Scroll",
+    "fr": "Turbo mini twin-scroll",
+    "de": "Mini-Twin-Scroll-Turbo",
+    "pt-BR": "Turbo mini twin-scroll"
+  },
+  "slot": "boost",
+  "tier": 3,
+  "price_cents": 540000,
+  "stats": { "power_mult": 1.22, "lag": 2, "fuel_mult": 1.12, "engine_load": 7 },
+  "requires": { "min_cylinders": 4 }
+}

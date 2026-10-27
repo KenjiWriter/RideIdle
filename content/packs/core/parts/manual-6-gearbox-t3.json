@@ -1,0 +1,14 @@
+{
+  "slug": "manual-6-gearbox-t3",
+  "name": {
+    "en": "Manual 6-speed gearbox",
+    "pl": "Skrzynia manualna 6-biegowa",
+    "fr": "Boîte manuelle 6 vitesses",
+    "de": "Sechsgang-Schaltgetriebe",
+    "pt-BR": "Câmbio manual de 6 marchas"
+  },
+  "slot": "gearbox",
+  "tier": 3,
+  "price_cents": 240000,
+  "stats": { "gears": 6, "top_speed_cap_kmh": 240, "launch": 2 }
+}

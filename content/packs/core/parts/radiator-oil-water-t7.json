@@ -1,0 +1,14 @@
+{
+  "slug": "radiator-oil-water-t7",
+  "name": {
+    "en": "Oil and water radiator",
+    "pl": "Chłodnica oleju i wody",
+    "fr": "Radiateur huile et eau",
+    "de": "Öl-Wasser-Kühler",
+    "pt-BR": "Radiador de óleo e água"
+  },
+  "slot": "cooling",
+  "tier": 7,
+  "price_cents": 1180000,
+  "stats": { "engine_load": -9, "mass_kg": 4 }
+}

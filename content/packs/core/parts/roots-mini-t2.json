@@ -1,0 +1,14 @@
+{
+  "slug": "roots-mini-t2",
+  "name": {
+    "en": "Mini Roots supercharger",
+    "pl": "Roots mini",
+    "fr": "Compresseur Roots mini",
+    "de": "Mini-Roots-Kompressor",
+    "pt-BR": "Compressor Roots mini"
+  },
+  "slot": "boost",
+  "tier": 2,
+  "price_cents": 360000,
+  "stats": { "power_mult": 1.12, "lag": 0, "fuel_mult": 1.1, "engine_load": 4 }
+}

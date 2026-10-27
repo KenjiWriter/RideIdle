@@ -1,0 +1,15 @@
+{
+  "slug": "turbo-grande-t6",
+  "name": {
+    "en": "Grande turbo",
+    "pl": "Turbo Grande",
+    "fr": "Turbo Grande",
+    "de": "Grande-Turbo",
+    "pt-BR": "Turbo Grande"
+  },
+  "slot": "boost",
+  "tier": 6,
+  "price_cents": 2100000,
+  "stats": { "power_mult": 1.4, "lag": 6, "fuel_mult": 1.2, "engine_load": 13 },
+  "requires": { "min_cylinders": 6 }
+}

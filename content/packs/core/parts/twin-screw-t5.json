@@ -1,0 +1,14 @@
+{
+  "slug": "twin-screw-t5",
+  "name": {
+    "en": "Twin-screw supercharger",
+    "pl": "Dwuślimakowy",
+    "fr": "Compresseur à double vis",
+    "de": "Twin-Screw-Kompressor",
+    "pt-BR": "Compressor de duplo parafuso"
+  },
+  "slot": "boost",
+  "tier": 5,
+  "price_cents": 1240000,
+  "stats": { "power_mult": 1.2, "lag": 0, "fuel_mult": 1.14, "engine_load": 6 }
+}
