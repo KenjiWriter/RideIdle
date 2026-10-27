@@ -20,7 +20,8 @@
   "garage": {
     "capacity": 3,
     "price_cents": 500000,
-    "wreck_price_cents": { "rdzak-gt-4": 114000, "bizon-m-2": 139000, "kuna-4x4": 151000 }
+    "wreck_price_cents": { "rdzak-gt-4": 114000, "bizon-m-2": 139000, "kuna-4x4": 151000 },
+    "wreck_mileage_km": { "rdzak-gt-4": 260000, "bizon-m-2": 280000, "kuna-4x4": 300000 }
   },
   "market": {
     "exchange": {
@@ -57,6 +58,7 @@
       "mileage_floor_ppm": 700000,
       "condition_base_ppm": 350000
     },
+    "dealer_mileage_km": 10,
     "resale_ppm": 700000,
     "scrap_cents_per_kg": 25,
     "storage": {
@@ -113,6 +115,18 @@
         "premium": { "group": "premium", "price_ppm": 2000000, "min_player_level": 6, "choose_slot": true }
       }
     }
+  },
+  "wear": {
+    "life_km": { "tires": 40000, "suspension": 80000, "brakes": 50000, "exhaust": 80000, "engine": 120000, "boost": 120000, "gearbox": 120000, "cooling": 120000, "tank": 200000, "ecu": 120000 },
+    "rough_ppm": { "tires": 2000000, "suspension": 2000000 },
+    "power_exponent_ppm": 500000,
+    "boost_ppm": 1500000,
+    "stage_ppm": 50000,
+    "stat_floor_ppm": 600000,
+    "unserviceable_ppm": 200000,
+    "repair_cost_ppm_of_price": 500000,
+    "service": { "every_km": 5000, "step_km": 500, "penalty_ppm_per_step": 40000, "max_steps": 5, "cost_ppm_of_value": 40000, "min_cost_cents": 2000, "time_ms": 900000 },
+    "breakdown": { "wear_factor": 3, "overdue_factor": 2, "unserviceable_factor": 1 }
   },
   "workshop": {
     "mechanic_level": 1,
@@ -247,6 +261,7 @@
       "surface": "asphalt",
       "lit": true,
       "min_player_level": 1,
+      "length_m": 2600,
       "base_lap_ms": 75000,
       "fuel_per_lap_ml": 1500,
       "reward_cents_per_lap": 1550,
@@ -267,6 +282,7 @@
       "reference_tires": "offroad-tires-t2",
       "lit": false,
       "min_player_level": 3,
+      "length_m": 2400,
       "base_lap_ms": 95000,
       "fuel_per_lap_ml": 1900,
       "reward_cents_per_lap": 2200,
@@ -286,6 +302,7 @@
       "surface": "asphalt",
       "lit": false,
       "min_player_level": 5,
+      "length_m": 1600,
       "base_lap_ms": 45000,
       "fuel_per_lap_ml": 900,
       "reward_cents_per_lap": 1170,
@@ -305,6 +322,7 @@
       "surface": "asphalt",
       "lit": false,
       "min_player_level": 8,
+      "length_m": 2900,
       "base_lap_ms": 85000,
       "fuel_per_lap_ml": 1700,
       "reward_cents_per_lap": 2500,
@@ -324,6 +342,7 @@
       "surface": "asphalt",
       "lit": true,
       "min_player_level": 12,
+      "length_m": 3200,
       "base_lap_ms": 80000,
       "fuel_per_lap_ml": 1600,
       "reward_cents_per_lap": 2650,

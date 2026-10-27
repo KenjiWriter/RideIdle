@@ -21,6 +21,9 @@ use App\Domain\Run\GameClock;
  * - Weather changes every 22.5 minutes, counted from the Unix epoch, so laps are counted
  *   per segment with a closed formula instead of one by one.
  *
+ * - A part that wears, or a service that falls due, changes the car at a lap that is known when the configuration is frozen. Settlement stops
+ *   there with a `recompute` event (it is not a stop of the car), and the caller freezes the configuration again and settles on.
+ *
  * Settling at t1 and then at t2 gives the same state and totals as settling once at t2.
  */
 final class Settler
@@ -31,13 +34,18 @@ final class Settler
     /** The longest window settled in one step by settleInChunks: 72 hours. */
     public const MAX_WINDOW_MS = 259_200_000;
 
-    /** Laps the car can still drive: limited by the fuel and by the planned breakdown. */
+    /** Laps the car can still drive: limited by the fuel, by the planned breakdown, and by the lap at which the configuration has to be made again. */
     public static function lapBudget(RunState $state, RunConfig $config): int
     {
         $budget = intdiv($state->fuelMl, $config->fuelPerLapMl);
 
         if ($state->breakAfterLaps !== null) {
             $budget = min($budget, max(0, $state->breakAfterLaps - $state->lapsDone));
+        }
+
+        // A lap that is already behind means nothing: the plan was made for the moment it was frozen, and it is made again when it is reached.
+        if ($state->recomputeAfterLaps !== null && $state->recomputeAfterLaps > $state->lapsDone) {
+            $budget = min($budget, $state->recomputeAfterLaps - $state->lapsDone);
         }
 
         return $budget;
@@ -127,6 +135,11 @@ final class Settler
 
         if ($laps > 0 && $fuelMl < $config->fuelPerLapMl) {
             $events[] = SettlementEvent::fuelEmpty($cursor);
+        }
+
+        // Where a part has worn to its next stage or the service has moved on, the stretch ends: the configuration is made again for what follows.
+        if ($laps > 0 && $state->recomputeAfterLaps !== null && $lapsDone === $state->recomputeAfterLaps) {
+            $events[] = SettlementEvent::recompute($cursor);
         }
 
         return new SettlementResult(

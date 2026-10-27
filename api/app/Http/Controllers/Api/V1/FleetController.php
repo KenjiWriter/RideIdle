@@ -169,6 +169,7 @@ final class FleetController extends Controller
             'level' => $car->level,
             'selected' => $selected?->id === $car->id,
             'condition_percent' => (int) round($car->conditionPpm() / 10_000),
+            'mileage_km' => intdiv((int) $car->mileage_m, 1000),
             // What a sale pays, and why there is none now (`last_car`, `busy`) or null.
             'sale_cents' => $this->sales->quoteCents($car),
             'sell_blocked' => $this->sales->blockedReason($car, $carsOfDriver),

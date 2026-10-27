@@ -180,7 +180,7 @@ final class CityGarages
 
             $this->ledger->post($userId, -$price, 'wreck', $key);
 
-            return $this->park($userId, $vehicle, $region, $nowMs, valueCents: $price);
+            return $this->park($userId, $vehicle, $region, $nowMs, valueCents: $price, mileageKm: $this->rules->wreckMileageKm($vehicle));
         }, Ledger::DEADLOCK_ATTEMPTS);
     }
 
@@ -210,8 +210,9 @@ final class CityGarages
      *
      * @param  int  $conditionPpm  the condition of the car (1 000 000 is perfect): a worn car breaks down more
      * @param  int|null  $valueCents  what the car is worth, as the driver got it: a sale pays a share of it
+     * @param  int  $mileageKm  what the odometer says: its first service is due an interval after that
      */
-    public function park(int $userId, string $vehicle, string $region, ?int $nowMs = null, int $conditionPpm = 1_000_000, ?int $valueCents = null): Car
+    public function park(int $userId, string $vehicle, string $region, ?int $nowMs = null, int $conditionPpm = 1_000_000, ?int $valueCents = null, int $mileageKm = 0): Car
     {
         $track = $this->rules->tracksOf($region)[0];
 
@@ -222,9 +223,11 @@ final class CityGarages
             'xp' => $this->rules->carXpToReach($this->rules->carStartLevel()),
             'condition_ppm' => $conditionPpm,
             'value_cents' => $valueCents,
+            'mileage_m' => $mileageKm * 1000,
+            'serviced_at_m' => $mileageKm * 1000,
         ]);
 
-        $this->runs->start($userId, $vehicle, $track, $this->inputs->make($vehicle, $track, [], $conditionPpm), $this->inputs->tankMl($vehicle), $nowMs, $car);
+        $this->runs->start($userId, $vehicle, $track, $this->inputs->makeForCar($car, $track), $this->inputs->tankMl($vehicle), $nowMs, $car);
 
         return $car;
     }

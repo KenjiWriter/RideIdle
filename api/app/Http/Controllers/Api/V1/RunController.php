@@ -55,11 +55,14 @@ final class RunController extends Controller
 
         $this->assertTrackOpen((int) $request->user()->getAuthIdentifier(), $data['track']);
 
+        // The wreck has driven what the board of the wrecks says, and the run is frozen with that odometer, so that it wears and is serviced from its first lap.
+        $odometerM = $this->rules->wreckMileageKm($data['car']) * 1000;
+
         $run = $this->runs->startFirstRun(
             (int) $request->user()->getAuthIdentifier(),
             $data['car'],
             $data['track'],
-            $this->inputs->make($data['car'], $data['track']),
+            $this->inputs->make($data['car'], $data['track'], [], Ppm::ONE, ['mileage_m' => $odometerM, 'serviced_at_m' => $odometerM]),
             $this->inputs->tankMl($data['car']),
             parked: true,
         );
@@ -137,7 +140,7 @@ final class RunController extends Controller
             throw new RuleRefusedException('track_elsewhere');
         }
 
-        $changed = $this->runs->reconfigure($found->id, $this->inputs->make($found->car_slug, $data['track'], $this->mountedOn($found), $this->conditionOf($found)), trackSlug: $data['track']);
+        $changed = $this->runs->reconfigure($found->id, $this->inputs->forRun($found, $data['track']), trackSlug: $data['track']);
 
         return $this->respond($changed);
     }
@@ -162,7 +165,7 @@ final class RunController extends Controller
 
         $repaired = $this->runs->repair(
             $found->id,
-            $this->inputs->make($found->car_slug, $found->track_slug, $this->mountedOn($found), $this->conditionOf($found)),
+            $this->inputs->forRun($found),
             costCents: $this->rules->repairCostCents(),
             requestId: $data['request_id'],
         );
@@ -186,7 +189,7 @@ final class RunController extends Controller
             return $this->noRun();
         }
 
-        $towed = $this->runs->tow($found->id, $this->inputs->make($found->car_slug, $found->track_slug, $this->mountedOn($found), $this->conditionOf($found)), TowTerms::fromRules($this->rules));
+        $towed = $this->runs->tow($found->id, $this->inputs->forRun($found), TowTerms::fromRules($this->rules));
 
         return $this->respond($towed->run, 200, ['towed' => $towed->towed]);
     }
@@ -257,7 +260,7 @@ final class RunController extends Controller
                 ->limit(self::MAX_SETTLEMENTS)
                 ->with('events')
                 ->get()
-            : collect([$settled->settlement])->filter()->values();
+            : collect($settled->all());
 
         return $this->respond($run->refresh(), 200, [
             'settlements' => SettlementResource::collection($settlements)->resolve(),

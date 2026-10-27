@@ -15,10 +15,12 @@ use InvalidArgumentException;
 final readonly class FrozenRun
 {
     /**
-     * @param  array{lap_ms: array<string, int>, lap_cash_cents: array<string, int>, lap_xp: array<string, int>, fuel_per_lap_ml: int, weather: array{seed: string, chances_ppm: array<string, int>}, night_lap_ppm?: int, field?: array{position: int, size: int, reward_ppm: int, rows: list<array{name: string|null, type: string, lap_ms: int}>}}  $config
+     * @param  array{lap_ms: array<string, int>, lap_cash_cents: array<string, int>, lap_xp: array<string, int>, fuel_per_lap_ml: int, weather: array{seed: string, chances_ppm: array<string, int>}, night_lap_ppm?: int, wear?: array{length_m: int, ppb_per_lap: array<string, int>, ppb_per_km: array<string, int>}, field?: array{position: int, size: int, reward_ppm: int, rows: list<array{name: string|null, type: string, lap_ms: int}>}}  $config
      * @param  int|null  $breakAfterLaps  absolute lap number after which the car breaks down, null when no breakdown is planned
+     * @param  int|null  $recomputeAfterLaps  absolute lap number after which the configuration has to be made again because a part wears to its next stage
+     *                                        or the service moves on, null when nothing changes by itself
      */
-    public function __construct(public array $config, public ?int $breakAfterLaps) {}
+    public function __construct(public array $config, public ?int $breakAfterLaps, public ?int $recomputeAfterLaps = null) {}
 
     /** The configuration that Settler needs, with the weather rebuilt from its seed. */
     public function runConfig(): RunConfig

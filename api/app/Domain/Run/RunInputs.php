@@ -16,6 +16,7 @@ final readonly class RunInputs
      * @param  int  $breakChancePerLapPpm  chance that the car breaks down after a given lap, from its condition (0 = never)
      * @param  int  $nightLapPpm  how much of its time a lap takes at night: 1 000 000 on a track that is lit, more on one that is not
      * @param  FieldProfile|null  $field  the bots that the car races against and what the place among them pays, null for a car that races alone
+     * @param  WearPlan|null  $wear  the odometer, the wear of the parts and the service of the car, null for a car that has none (the configuration is then never made again by itself)
      */
     public function __construct(
         public CarStats $car,
@@ -26,6 +27,7 @@ final readonly class RunInputs
         public int $breakChancePerLapPpm = 0,
         public int $nightLapPpm = 1_000_000,
         public ?FieldProfile $field = null,
+        public ?WearPlan $wear = null,
     ) {
         if ($weatherChancesPpm === [] || array_sum($weatherChancesPpm) !== 1_000_000) {
             throw new InvalidArgumentException('The weather chances must add up to 1 000 000 ppm.');

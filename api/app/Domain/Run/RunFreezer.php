@@ -55,7 +55,9 @@ final class RunFreezer
             'weather' => ['seed' => $inputs->climateSeed, 'chances_ppm' => $inputs->weatherChancesPpm],
             'night_lap_ppm' => $inputs->nightLapPpm,
             ...($field === null ? [] : ['field' => $field]),
-        ], $this->breakdownLap($runSeed, $lapsDone, $inputs->breakChancePerLapPpm));
+            // What a lap and a kilometre do to the parts, for the settlement to put on the car: the odometer and the wear are counted from the laps.
+            ...($inputs->wear === null ? [] : ['wear' => ['length_m' => $inputs->wear->lengthM, 'ppb_per_lap' => $inputs->wear->perLapPpb, 'ppb_per_km' => $inputs->wear->perKmPpb]]),
+        ], $this->breakdownLap($runSeed, $lapsDone, $inputs->breakChancePerLapPpm), $this->recomputeLap($inputs, $lapsDone));
     }
 
     /**
@@ -82,6 +84,14 @@ final class RunFreezer
         }
 
         return max(1, (int) round($inputs->track->baseLapMs / ($perf ** self::LAP_TIME_EXPONENT)));
+    }
+
+    /** The lap after which the configuration has to be frozen again, because a part has worn to its next stage or the service has moved on. */
+    private function recomputeLap(RunInputs $inputs, int $lapsDone): ?int
+    {
+        $laps = $inputs->wear?->lapsToNextChange();
+
+        return $laps === null ? null : $lapsDone + $laps;
     }
 
     /**

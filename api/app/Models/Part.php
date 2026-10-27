@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Domain\Run\WearPlan;
 use Database\Factories\PartFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -25,6 +26,7 @@ class Part extends Model
             'car_id' => 'integer',
             'rarity' => 'integer',
             'upgrade_level' => 'integer',
+            'wear_ppb' => 'integer',
         ];
     }
 
@@ -38,6 +40,12 @@ class Part extends Model
     public function car(): BelongsTo
     {
         return $this->belongsTo(Car::class);
+    }
+
+    /** How much of its condition the part has left, in ppm (1 000 000 is new, 0 is worn out). */
+    public function conditionPpm(): int
+    {
+        return WearPlan::conditionPpm((int) $this->wear_ppb);
     }
 
     public function isMounted(): bool

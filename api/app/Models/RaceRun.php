@@ -55,6 +55,7 @@ class RaceRun extends Model
             'laps_done' => 'integer',
             'fuel_ml' => 'integer',
             'break_after_laps' => 'integer',
+            'recompute_after_laps' => 'integer',
             'state_version' => 'integer',
         ];
     }

@@ -14,8 +14,7 @@ final readonly class SettlementResult
         public int $laps,
         public int $cashCents,
         public int $xp,
-    ) {
-    }
+    ) {}
 
     /** Why the car stopped during this settlement: a breakdown wins over an empty tank. */
     public function stopReason(): ?EventType
@@ -33,6 +32,18 @@ final readonly class SettlementResult
         }
 
         return null;
+    }
+
+    /** Whether the settlement stopped where the frozen configuration has to be made again: the caller freezes it and settles on. */
+    public function needsRecompute(): bool
+    {
+        foreach ($this->events as $event) {
+            if ($event->type === EventType::Recompute) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public function isEmpty(): bool

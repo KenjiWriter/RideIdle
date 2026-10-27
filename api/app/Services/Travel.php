@@ -9,7 +9,6 @@ use App\Content\RunInputsFactory;
 use App\Domain\Run\CarStats;
 use App\Domain\Run\RoadMap;
 use App\Domain\Run\RunFreezer;
-use App\Domain\Settlement\Ppm;
 use App\Exceptions\RuleRefusedException;
 use App\Models\Car;
 use App\Models\RaceRun;
@@ -191,7 +190,7 @@ final class Travel
                     'demand' => $track['demand'],
                 ],
                 // How the car, with the parts it has, runs this track in the dry against the lap of a car that matches its reference.
-                'fit_percent' => $run === null ? null : (int) round(100 * $track['base_lap_ms'] / $freezer->freeze($this->inputs->make($run->car_slug, $trackSlug, $run->car?->mountedParts() ?? []), 'map', 0)->config['lap_ms']['dry']),
+                'fit_percent' => $run === null ? null : (int) round(100 * $track['base_lap_ms'] / $freezer->freeze($this->inputs->forRun($run, $trackSlug), 'map', 0)->config['lap_ms']['dry']),
                 'route' => $km === null || $stats === null ? null : ['km' => $km, ...$this->journeyOf($km, $stats)],
             ];
         }
@@ -247,7 +246,13 @@ final class Travel
             if ($run !== null) {
                 $track = $this->rules->tracksOf($journey->to_region)[0];
 
-                $this->runs->arrive($run, $this->inputs->make($run->car_slug, $track, $run->car?->mountedParts() ?? [], $run->car?->conditionPpm() ?? Ppm::ONE), $track, $journey->arrive_ms);
+                // The kilometres of the road are on its odometer and on its parts, whatever it was frozen with when it left.
+                if ($run->car_id !== null) {
+                    (new CarWear)->applyDistance($run->car_id, $run->config, (int) $journey->distance_km);
+                    $run->unsetRelation('car');
+                }
+
+                $this->runs->arrive($run, $this->inputs->forRun($run, $track), $track, $journey->arrive_ms);
             }
 
             $journey->forceFill(['status' => Journey::STATUS_ARRIVED])->save();

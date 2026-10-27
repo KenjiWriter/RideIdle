@@ -34,6 +34,8 @@ class Car extends Model
             'xp' => 'integer',
             'condition_ppm' => 'integer',
             'value_cents' => 'integer',
+            'mileage_m' => 'integer',
+            'serviced_at_m' => 'integer',
             'sold_at' => 'datetime',
         ];
     }
@@ -42,6 +44,16 @@ class Car extends Model
     public function conditionPpm(): int
     {
         return $this->condition_ppm ?? 1_000_000;
+    }
+
+    /**
+     * Where the odometer of the car is and where it was serviced last, in metres: what the wear plan of a run and the service are counted from.
+     *
+     * @return array{mileage_m: int, serviced_at_m: int}
+     */
+    public function odometer(): array
+    {
+        return ['mileage_m' => (int) $this->mileage_m, 'serviced_at_m' => (int) $this->serviced_at_m];
     }
 
     /** @return BelongsTo<User, $this> */
@@ -67,15 +79,15 @@ class Car extends Model
     }
 
     /**
-     * The parts that sit on the car, by slot, with their rarity and upgrade: what the statistics of the car are made of, since a part of a rarity,
-     * or one that is upgraded, gives more.
+     * The parts that sit on the car, by slot, with their rarity, upgrade and wear: what the statistics of the car are made of, since a part of a rarity,
+     * or one that is upgraded, gives more, and a worn one less.
      *
-     * @return array<string, array{slug: string, rarity: int, upgrade: int}>
+     * @return array<string, array{slug: string, rarity: int, upgrade: int, wear: int}>
      */
     public function mountedParts(): array
     {
         return $this->parts()->whereNotNull('mounted_slot')->orderBy('mounted_slot')->get()
-            ->mapWithKeys(static fn (Part $part): array => [$part->mounted_slot => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity, 'upgrade' => (int) $part->upgrade_level]])
+            ->mapWithKeys(static fn (Part $part): array => [$part->mounted_slot => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity, 'upgrade' => (int) $part->upgrade_level, 'wear' => (int) $part->wear_ppb]])
             ->all();
     }
 }

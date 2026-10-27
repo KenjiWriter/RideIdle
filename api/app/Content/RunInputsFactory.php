@@ -10,8 +10,11 @@ use App\Domain\Run\Rarity;
 use App\Domain\Run\RunInputs;
 use App\Domain\Run\Surface;
 use App\Domain\Run\TrackProfile;
+use App\Domain\Run\WearPlan;
 use App\Domain\Run\WeatherEffect;
 use App\Domain\Settlement\Ppm;
+use App\Models\Car;
+use App\Models\RaceRun;
 use InvalidArgumentException;
 
 /**
@@ -41,16 +44,18 @@ final class RunInputsFactory
     }
 
     /**
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int}>  $mounted  the parts on the car, by slot: the slug, or the slug with the rarity of the part
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot: the slug, or the slug with the rarity, the upgrade and the wear of the part
      * @param  int  $conditionPpm  the condition of the car (1 000 000 is perfect): a worn car breaks down more
+     * @param  array{mileage_m: int, serviced_at_m: int}|null  $odometer  how far the car has driven and where it was serviced last; without it the car has no wear plan and no service
      */
-    public function make(string $carSlug, string $trackSlug, array $mounted = [], int $conditionPpm = Ppm::ONE): RunInputs
+    public function make(string $carSlug, string $trackSlug, array $mounted = [], int $conditionPpm = Ppm::ONE, ?array $odometer = null): RunInputs
     {
         $vehicle = $this->vehicle($carSlug);
         $track = $this->rules->track($trackSlug) ?? throw new InvalidArgumentException("Unknown track {$trackSlug}.");
         $region = $this->rules->region($track['region']) ?? throw new InvalidArgumentException("Unknown region {$track['region']}.");
 
-        $car = $this->stats($carSlug, $mounted);
+        $plan = $odometer === null ? null : $this->wearPlan($carSlug, $trackSlug, $mounted, $odometer);
+        $car = $this->stats($carSlug, $mounted, $plan?->servicePenaltyPpm() ?? 0);
 
         $unsupported = array_diff(array_keys($track['demand']), array_keys($car->stats));
 
@@ -92,10 +97,82 @@ final class RunInputsFactory
             weatherChancesPpm: $region['weather_ppm'],
             weatherEffects: $effects,
             climateSeed: $region['climate_seed'],
-            breakChancePerLapPpm: $this->rules->breakChancePerLapPpmFor($conditionPpm),
+            breakChancePerLapPpm: $this->rules->breakChancePerLapPpmFor($conditionPpm, $plan?->meanWearPpm() ?? 0, $plan?->overdueSharePpm() ?? 0, $plan?->unserviceableParts($this->rules->unserviceablePpm()) ?? 0),
             nightLapPpm: $track['lit'] ? Ppm::ONE : $this->rules->nightLapPpm(),
             field: $this->field($trackSlug, (int) $vehicle['tier']),
+            wear: $plan,
         );
+    }
+
+    /**
+     * What a run is frozen from when something about it changes: its car as it is now (the parts with their wear, the odometer, the service) on the
+     * track it is on, or on another one. A run with no car of the driver (an old one) has the body of its car only.
+     */
+    public function forRun(RaceRun $run, ?string $trackSlug = null): RunInputs
+    {
+        return $run->car === null
+            ? $this->make($run->car_slug, $trackSlug ?? $run->track_slug)
+            : $this->makeForCar($run->car, $trackSlug ?? $run->track_slug);
+    }
+
+    /** The run of a car of the driver on a track: the parts it has with their wear, its condition, its odometer and its service. */
+    public function makeForCar(Car $car, string $trackSlug): RunInputs
+    {
+        return $this->make($car->vehicle_slug, $trackSlug, $car->mountedParts(), $car->conditionPpm(), $car->odometer());
+    }
+
+    /**
+     * What the wear of the parts on a car and its service come to on a track: how worn each part is, what a lap and a kilometre wear it by (on the ground of
+     * the track, with the power of the car and a booster if it has one), and the odometer. The floating point numbers are made here, once.
+     *
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
+     * @param  array{mileage_m: int, serviced_at_m: int}  $odometer
+     */
+    public function wearPlan(string $carSlug, string $trackSlug, array $mounted, array $odometer): WearPlan
+    {
+        $track = $this->rules->track($trackSlug) ?? throw new InvalidArgumentException("Unknown track {$trackSlug}.");
+        $lengthM = $this->rules->trackLengthM($trackSlug);
+        $power = $this->power($carSlug, $mounted);
+        $service = $this->rules->service();
+        $wear = [];
+        $perKm = [];
+        $perLap = [];
+
+        foreach ($mounted as $slot => $entry) {
+            $wear[$slot] = is_array($entry) ? (int) ($entry['wear'] ?? 0) : 0;
+            $perKm[$slot] = $this->rules->wearPerKmPpb($slot, $track['surface'], $power, isset($mounted['boost']));
+            $perLap[$slot] = intdiv($perKm[$slot] * $lengthM + 500, 1000);
+        }
+
+        return new WearPlan(
+            lengthM: $lengthM,
+            mileageM: $odometer['mileage_m'],
+            servicedAtM: $odometer['serviced_at_m'],
+            wearPpb: $wear,
+            perLapPpb: $perLap,
+            perKmPpb: $perKm,
+            stagePpb: $this->rules->wearStagePpb(),
+            serviceEveryM: $service['every_km'] * 1000,
+            serviceStepM: $service['step_km'] * 1000,
+            serviceMaxSteps: $service['max_steps'],
+            servicePenaltyPpmPerStep: $service['penalty_ppm_per_step'],
+        );
+    }
+
+    /**
+     * The power of a car with these parts on it, in kW: the power of the body times the `power_mult` of every part (as worn as it is).
+     *
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted
+     */
+    public function power(string $carSlug, array $mounted = []): float
+    {
+        $multiplier = 1.0;
+
+        foreach ($this->parts($mounted) as $part) {
+            $multiplier *= (float) ($part['stats']['power_mult'] ?? 1.0);
+        }
+
+        return $this->vehicle($carSlug)['power_kw'] * $multiplier;
     }
 
     /**
@@ -134,7 +211,7 @@ final class RunInputsFactory
     /**
      * What the tank of the car holds, in millilitres: the tank mounted on it, or the one of the body.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
      */
     public function tankMl(string $carSlug, array $mounted = []): int
     {
@@ -169,11 +246,14 @@ final class RunInputsFactory
      *
      * Averaging is a first rule that the economy simulator will check; the numbers are in the definitions of the parts.
      *
-     * The rarity of a part and its upgrade (+N) multiply what it adds (`Rules::scaledStats`), before any of this.
+     * The rarity of a part, its upgrade (+N) and its condition multiply what it adds (`Rules::scaledStats`), before any of this. A car that is overdue for
+     * its service gives less of everything but its clearance: `$servicePenaltyPpm` is taken off the acceleration, the top speed, the grip, the handling and
+     * the braking at the end.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
+     * @param  int  $servicePenaltyPpm  what the overdue of the service takes off the performance, in ppm
      */
-    public function stats(string $carSlug, array $mounted = []): CarStats
+    public function stats(string $carSlug, array $mounted = [], int $servicePenaltyPpm = 0): CarStats
     {
         $vehicle = $this->vehicle($carSlug);
         $parts = $this->parts($mounted);
@@ -195,13 +275,16 @@ final class RunInputsFactory
         // A heavy car turns and stops worse, a light one better; the stock Rdzak has the mass the rules take as the reference.
         $massFactor = $this->rules->massFactor($vehicle['mass_kg']);
 
+        // A car that is overdue for its service performs worse: everything but the clearance, which is about the body, not the engine and the wheels.
+        $kept = (Ppm::ONE - max(0, min(Ppm::ONE, $servicePenaltyPpm))) / Ppm::ONE;
+
         return new CarStats(
             stats: [
-                'accel' => $power / ($vehicle['mass_kg'] / 1000),
-                'top_speed' => $topSpeed,
-                'grip' => (float) $tires['stats']['grip'],
-                'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null) * $massFactor,
-                'braking' => $this->average($tires['stats']['braking'], $parts['brakes']['stats']['braking'] ?? null) * $massFactor,
+                'accel' => $power / ($vehicle['mass_kg'] / 1000) * $kept,
+                'top_speed' => $topSpeed * $kept,
+                'grip' => (float) $tires['stats']['grip'] * $kept,
+                'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null) * $massFactor * $kept,
+                'braking' => $this->average($tires['stats']['braking'], $parts['brakes']['stats']['braking'] ?? null) * $massFactor * $kept,
                 'clearance' => $this->average($vehicle['clearance'], $parts['suspension']['stats']['clearance'] ?? null),
             ],
             fuelUseMultiplier: (1.0 + self::FUEL_USE_POWER_SHARE * $power / $this->rules->fuelReferencePowerKw()) / self::FUEL_USE_BASE,
@@ -212,7 +295,7 @@ final class RunInputsFactory
      * The definitions of the mounted parts, by slot. A slug that is not in the pack, or a part in a slot it does not
      * belong to, is a mistake of whoever saved it, not something to drive on.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
      * @return array<string, array<string, mixed>>
      */
     private function parts(array $mounted): array
@@ -229,7 +312,8 @@ final class RunInputsFactory
                 throw new InvalidArgumentException("The part {$slug} belongs to the slot {$part['slot']}, not to {$slot}.");
             }
 
-            $part['stats'] = $this->rules->scaledStats($part['stats'] ?? [], $rarity, $upgrade);
+            $condition = $this->rules->stagedConditionPpm(is_array($entry) ? (int) ($entry['wear'] ?? 0) : 0);
+            $part['stats'] = $this->rules->scaledStats($part['stats'] ?? [], $rarity, $upgrade, $condition);
             $parts[$slot] = $part;
         }
 
@@ -239,7 +323,7 @@ final class RunInputsFactory
     /**
      * The kind of the tires on the car, which picks the column of the tire matrix: the stock tires when none are mounted.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
      */
     private function tireKind(array $mounted): string
     {

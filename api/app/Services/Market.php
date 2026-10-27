@@ -130,7 +130,7 @@ final class Market
             $this->garages->assertRoomIn($userId, $listing->region);
             $this->ledger->post($userId, -$listing->priceCents, 'exchange', "listing:{$userId}:{$listing->key}");
 
-            return $this->garages->park($userId, $listing->vehicle, $listing->region, $nowMs, $listing->conditionPpm, $listing->priceCents);
+            return $this->garages->park($userId, $listing->vehicle, $listing->region, $nowMs, $listing->conditionPpm, $listing->priceCents, $listing->mileageKm);
         }, Ledger::DEADLOCK_ATTEMPTS);
     }
 
@@ -170,7 +170,7 @@ final class Market
             $this->garages->assertRoomIn($userId, $region);
             $this->ledger->post($userId, -$definition['price_cents'], 'dealer', $key);
 
-            return $this->garages->park($userId, $vehicle, $region, $nowMs, valueCents: $definition['price_cents']);
+            return $this->garages->park($userId, $vehicle, $region, $nowMs, valueCents: $definition['price_cents'], mileageKm: $this->rules->dealerMileageKm());
         }, Ledger::DEADLOCK_ATTEMPTS);
     }
 
@@ -212,7 +212,7 @@ final class Market
             $seed = hash_hmac('sha256', "storage|{$userId}|{$unit}|{$index}", (string) config('app.key'));
             $outcome = $this->storage->open($seed, $unit, $this->storagePool($kind['pool_level']), $this->openingsSinceGood($userId, $unit));
 
-            $car = $this->garages->park($userId, $outcome->vehicle, $region, $nowMs, $outcome->conditionPpm, $outcome->valueCents);
+            $car = $this->garages->park($userId, $outcome->vehicle, $region, $nowMs, $outcome->conditionPpm, $outcome->valueCents, $outcome->mileageKm);
 
             StorageOpening::query()->create([
                 'user_id' => $userId,

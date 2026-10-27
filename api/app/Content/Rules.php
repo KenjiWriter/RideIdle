@@ -65,13 +65,128 @@ final class Rules
     /**
      * The chance of a breakdown after a lap for a car in a condition (1 000 000 is a perfect one): the base chance multiplied by
      * 1 + factor * (1 - condition), so a worn car breaks down more, and a perfect one as often as the base says.
+     *
+     * The parts and the service add to it (`wear.breakdown`): by 1 + 3 x the mean wear of the parts that sit on the car, by 1 + 2 x how far into its
+     * overdue the service is, and by 1 + 1 for every part that is unserviceable. A car with fresh parts and a service in time breaks down as the
+     * condition of the car says.
+     *
+     * @param  int  $meanWearPpm  the mean wear of the parts on the car, in ppm of their life
+     * @param  int  $overdueSharePpm  how far into the overdue of the service the car is, as a share of the longest, in ppm
+     * @param  int  $unserviceable  how many parts are unserviceable
      */
-    public function breakChancePerLapPpmFor(int $conditionPpm): int
+    public function breakChancePerLapPpmFor(int $conditionPpm, int $meanWearPpm = 0, int $overdueSharePpm = 0, int $unserviceable = 0): int
     {
         $worn = Ppm::ONE - max(0, min(Ppm::ONE, $conditionPpm));
         $multiplier = Ppm::ONE + $this->data['breakdown']['condition_factor'] * $worn;
+        $chance = min(Ppm::ONE, intdiv($this->breakChancePerLapPpm() * $multiplier + intdiv(Ppm::ONE, 2), Ppm::ONE));
 
-        return min(Ppm::ONE, intdiv($this->breakChancePerLapPpm() * $multiplier + intdiv(Ppm::ONE, 2), Ppm::ONE));
+        $wear = $this->data['wear']['breakdown'];
+
+        foreach ([
+            Ppm::ONE + $wear['wear_factor'] * $meanWearPpm,
+            Ppm::ONE + $wear['overdue_factor'] * $overdueSharePpm,
+            Ppm::ONE + $wear['unserviceable_factor'] * Ppm::ONE * $unserviceable,
+        ] as $factor) {
+            $chance = min(Ppm::ONE, Ppm::mul($chance, $factor));
+        }
+
+        return $chance;
+    }
+
+    /** What the odometer of a wreck of this car says, in km: the board of the wrecks (0 for a car that is not a wreck of the yard). */
+    public function wreckMileageKm(string $slug): int
+    {
+        return $this->data['garage']['wreck_mileage_km'][$slug] ?? 0;
+    }
+
+    /** What the odometer of a new car of the dealer says, in km. */
+    public function dealerMileageKm(): int
+    {
+        return $this->data['market']['dealer_mileage_km'];
+    }
+
+    /** How long a lap of a track is, in metres: what the odometer and the wear of the parts grow by with every lap. */
+    public function trackLengthM(string $slug): int
+    {
+        return $this->data['tracks'][$slug]['length_m'] ?? throw new \InvalidArgumentException("Unknown track {$slug}.");
+    }
+
+    /**
+     * What a kilometre wears a part of this slot by, in billionths of its life: 1 / life of the slot, times what the ground does to it (rough_ppm on
+     * gravel), times (power / reference power) ^ exponent for the power of the car (never under 0.8 or over 2), times what a booster does to the parts
+     * of the engine. The only place where this is a floating point number; it is rounded and frozen with the rest of the configuration.
+     */
+    public function wearPerKmPpb(string $slot, string $surface, float $powerKw, bool $boosted): int
+    {
+        $wear = $this->data['wear'];
+        $factor = ($surface === 'gravel' ? ($wear['rough_ppm'][$slot] ?? Ppm::ONE) : Ppm::ONE) / Ppm::ONE;
+        $factor *= max(0.8, min(2.0, ($powerKw / $this->data['fuel']['reference_power_kw']) ** ($wear['power_exponent_ppm'] / Ppm::ONE)));
+
+        if ($boosted && in_array($slot, ['engine', 'boost', 'gearbox', 'cooling'], true)) {
+            $factor *= $wear['boost_ppm'] / Ppm::ONE;
+        }
+
+        return (int) round(1_000_000_000 / $wear['life_km'][$slot] * $factor);
+    }
+
+    /** The odometer, the steps of the condition and the service of the rules, for the plan of a car. */
+    public function wearStagePpb(): int
+    {
+        return $this->data['wear']['stage_ppm'] * 1000;
+    }
+
+    /** The condition of a part that is this worn, rounded down to the stage it is in: what the frozen configuration of a run sees, in ppm. */
+    public function stagedConditionPpm(int $wearPpb): int
+    {
+        $stage = $this->wearStagePpb();
+
+        return max(0, Ppm::ONE - intdiv(min(1_000_000_000, intdiv(max(0, $wearPpb), $stage) * $stage), 1000));
+    }
+
+    /** What a part gives of its statistics at a condition: the floor (60%) and the rest in proportion to the condition. */
+    public function conditionStatPpm(int $conditionPpm): int
+    {
+        $floor = $this->data['wear']['stat_floor_ppm'];
+
+        return $floor + Ppm::mul(Ppm::ONE - $floor, max(0, min(Ppm::ONE, $conditionPpm)));
+    }
+
+    /** Under this condition a part is unserviceable, in ppm. */
+    public function unserviceablePpm(): int
+    {
+        return $this->data['wear']['unserviceable_ppm'];
+    }
+
+    /** The service of the rules: the interval, the steps of its overdue and what they cost, as the plan of a car needs them. */
+    public function service(): array
+    {
+        return $this->data['wear']['service'];
+    }
+
+    /** What the repair of a part costs: half of its price for the whole condition it is short of (the design: price x (1 - condition) x 0.5). */
+    public function partRepairCostCents(int $priceCents, int $conditionPpm): int
+    {
+        return Ppm::mul(Ppm::mul($priceCents, $this->data['wear']['repair_cost_ppm_of_price']), Ppm::ONE - max(0, min(Ppm::ONE, $conditionPpm)));
+    }
+
+    /** How long the repair of a part takes the mechanic: the time of putting it on for the whole condition it is short of (the design: base x (1 - condition)). */
+    public function partRepairMs(string $slot, int $tier, int $conditionPpm): int
+    {
+        return max(1, Ppm::mul($this->workshopJobMs($slot, $tier), Ppm::ONE - max(0, min(Ppm::ONE, $conditionPpm))));
+    }
+
+    /** What a service of a car costs: a share of its value, but not less than the minimum. */
+    public function serviceCostCents(int $valueCents): int
+    {
+        $service = $this->data['wear']['service'];
+
+        return max($service['min_cost_cents'], Ppm::mul($valueCents, $service['cost_ppm_of_value']));
+    }
+
+    /** How long a service takes the mechanic, cut by his level like any job. */
+    public function serviceJobMs(): int
+    {
+        return max(1, Ppm::mul($this->data['wear']['service']['time_ms'], Ppm::ONE - $this->mechanic()['time_cut_ppm']));
     }
 
     /** How long a towed car waits before it drives again, in ms. */
@@ -484,15 +599,16 @@ final class Rules
     }
 
     /**
-     * The statistics of a part of a rarity at +N: what the part adds to a car is multiplied (grip, handling, braking, clearance), and of the power only
+     * The statistics of a part of a rarity at +N and in a condition: what the part adds to a car is multiplied (grip, handling, braking, clearance), and of the power only
      * the gain is (a multiplier of 1.02 at x1.6 is 1.032). A limit, like the one of a gearbox, is not a gain and stays what it is.
      *
      * @param  array<string, int|float>  $stats  the statistics of the definition of the part
      * @return array<string, int|float>
      */
-    public function scaledStats(array $stats, Rarity $rarity, int $upgrade = 0): array
+    public function scaledStats(array $stats, Rarity $rarity, int $upgrade = 0, int $conditionPpm = Ppm::ONE): array
     {
-        $ppm = $this->statPpm($rarity, $upgrade);
+        // A worn part gives less (the design: x (0.6 + 0.4 x condition)), on top of what its rarity and its upgrade give.
+        $ppm = Ppm::mul($this->statPpm($rarity, $upgrade), $this->conditionStatPpm($conditionPpm));
 
         if ($ppm === Ppm::ONE) {
             return $stats;

@@ -12,8 +12,7 @@ final readonly class SettlementEvent
         public EventType $type,
         public int $atMs,
         public array $payload = [],
-    ) {
-    }
+    ) {}
 
     /** Laps finished within one weather segment, aggregated. */
     public static function lapBatch(int $segment, string $weather, int $laps, int $cashCents, int $xp, int $fromMs, int $toMs): self
@@ -37,6 +36,28 @@ final readonly class SettlementEvent
     public static function fuelEmpty(int $atMs): self
     {
         return new self(EventType::FuelEmpty, $atMs);
+    }
+
+    /** The settlement stopped where the frozen configuration has to be made again. */
+    public static function recompute(int $atMs): self
+    {
+        return new self(EventType::Recompute, $atMs);
+    }
+
+    /** The car is due for its service. */
+    public static function serviceDue(int $atMs, int $mileageKm): self
+    {
+        return new self(EventType::ServiceDue, $atMs, ['mileage_km' => $mileageKm]);
+    }
+
+    /**
+     * The same event with more in its payload: what only the caller knows (the part that broke down).
+     *
+     * @param  array<string, int|string>  $payload
+     */
+    public function withPayload(array $payload): self
+    {
+        return new self($this->type, $this->atMs, [...$this->payload, ...$payload]);
     }
 
     public function priority(): int

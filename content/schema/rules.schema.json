@@ -35,6 +35,58 @@
       "required": ["chance_per_lap_ppm", "condition_factor"],
       "additionalProperties": false
     },
+    "wear": {
+      "description": "Mileage, the condition of the parts and the service (Systemy III, point 11). A part that sits on a car wears with every kilometre by 1 / life_km of its life, faster on rough ground (rough_ppm), with the power of the car (power_exponent_ppm: wear x (power / reference power) ^ exponent) and with a booster on it (boost_ppm, for the parts of the engine). Its statistics are multiplied by stat_floor_ppm + (1 - stat_floor_ppm) x condition, and it is unserviceable under unserviceable_ppm. The condition counts in stages of stage_ppm, so that the frozen configuration of a run changes only when a part reaches the next one. A car is due for service every service.every_km; past it the performance falls by penalty_ppm_per_step for every step_km, at most max_steps steps.",
+      "type": "object",
+      "properties": {
+        "life_km": {
+          "description": "How many kilometres a part of the slot lasts from new to worn out, on smooth ground at the reference power.",
+          "type": "object",
+          "propertyNames": { "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"] },
+          "additionalProperties": { "type": "integer", "minimum": 1000 },
+          "minProperties": 1
+        },
+        "rough_ppm": {
+          "description": "How much faster a slot wears on gravel: 1 000 000 is as fast as on asphalt.",
+          "type": "object",
+          "propertyNames": { "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"] },
+          "additionalProperties": { "type": "integer", "minimum": 1000000 }
+        },
+        "power_exponent_ppm": { "type": "integer", "minimum": 0, "maximum": 2000000 },
+        "boost_ppm": { "description": "How much faster the parts of the engine (engine, booster, gearbox, cooling) wear with a booster on the car.", "type": "integer", "minimum": 1000000 },
+        "stage_ppm": { "type": "integer", "minimum": 1000, "maximum": 500000 },
+        "stat_floor_ppm": { "description": "What a worn out part still gives of its statistics (the design: 0.6).", "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "unserviceable_ppm": { "description": "Under this condition a part is unserviceable and the car breaks down more.", "type": "integer", "minimum": 0, "maximum": 1000000 },
+        "repair_cost_ppm_of_price": { "description": "What the repair of a part costs: this share of its price for the whole condition it is short of.", "type": "integer", "minimum": 0 },
+        "service": {
+          "type": "object",
+          "properties": {
+            "every_km": { "type": "integer", "minimum": 1 },
+            "step_km": { "type": "integer", "minimum": 1 },
+            "penalty_ppm_per_step": { "type": "integer", "minimum": 0, "maximum": 1000000 },
+            "max_steps": { "type": "integer", "minimum": 1 },
+            "cost_ppm_of_value": { "description": "What a service costs: this share of the value of the car.", "type": "integer", "minimum": 0 },
+            "min_cost_cents": { "$ref": "common.schema.json#/$defs/cents" },
+            "time_ms": { "description": "How long a service takes the mechanic, before the level of the mechanic cuts it.", "type": "integer", "minimum": 1000 }
+          },
+          "required": ["every_km", "step_km", "penalty_ppm_per_step", "max_steps", "cost_ppm_of_value", "min_cost_cents", "time_ms"],
+          "additionalProperties": false
+        },
+        "breakdown": {
+          "description": "How much the chance of a breakdown grows: by 1 + wear_factor x the mean wear of the parts, by 1 + overdue_factor x the share of the longest overdue of the service, and by 1 + unserviceable_factor for every unserviceable part.",
+          "type": "object",
+          "properties": {
+            "wear_factor": { "type": "integer", "minimum": 0 },
+            "overdue_factor": { "type": "integer", "minimum": 0 },
+            "unserviceable_factor": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["wear_factor", "overdue_factor", "unserviceable_factor"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["life_km", "rough_ppm", "power_exponent_ppm", "boost_ppm", "stage_ppm", "stat_floor_ppm", "unserviceable_ppm", "repair_cost_ppm_of_price", "service", "breakdown"],
+      "additionalProperties": false
+    },
     "tow": {
       "description": "The way out for a driver who cannot pay to get a stopped car going: the tow is free, but the car waits for it and the time it waits costs more than the repair and the fuel would have.",
       "type": "object",
@@ -135,9 +187,15 @@
           "type": "object",
           "propertyNames": { "$ref": "common.schema.json#/$defs/slug" },
           "additionalProperties": { "$ref": "common.schema.json#/$defs/cents" }
+        },
+        "wreck_mileage_km": {
+          "description": "What the odometer of a wreck says, by the slug of the car (the board of the wrecks: 220 000 to 300 000 km). A wreck has its first service due in the interval of the service after it.",
+          "type": "object",
+          "propertyNames": { "$ref": "common.schema.json#/$defs/slug" },
+          "additionalProperties": { "type": "integer", "minimum": 0 }
         }
       },
-      "required": ["capacity", "price_cents", "wreck_price_cents"],
+      "required": ["capacity", "price_cents", "wreck_price_cents", "wreck_mileage_km"],
       "additionalProperties": false
     },
     "market": {
@@ -202,6 +260,7 @@
           "required": ["age_kept_ppm", "class_floor_ppm", "mileage_per_year_km", "mileage_span_km", "mileage_floor_ppm", "condition_base_ppm"],
           "additionalProperties": false
         },
+        "dealer_mileage_km": { "description": "What the odometer of a new car of the dealer says (the board: 0 to 15 km).", "type": "integer", "minimum": 0 },
         "resale_ppm": { "description": "What a driver is paid for a car: this share of its value, as it was when the driver got it (the economy model has 70%).", "type": "integer", "minimum": 1, "maximum": 1000000 },
         "scrap_cents_per_kg": { "description": "The least a car is bought for, by the kilogram of its mass: what it is worth as scrap.", "type": "integer", "minimum": 0 },
         "storage": {
@@ -254,7 +313,7 @@
           "additionalProperties": false
         }
       },
-      "required": ["exchange", "pricing", "resale_ppm", "scrap_cents_per_kg", "storage"],
+      "required": ["exchange", "pricing", "dealer_mileage_km", "resale_ppm", "scrap_cents_per_kg", "storage"],
       "additionalProperties": false
     },
     "start": {
@@ -540,6 +599,7 @@
           "lit": { "description": "Whether the track has lights: a track that has none takes longer to drive at night.", "type": "boolean" },
           "min_player_level": { "description": "The level of the driver from which the track is open. A car is thought of as the level of the track when the tracks are compared: it can mount the tier that level reaches.", "type": "integer", "minimum": 1 },
           "base_lap_ms": { "description": "Lap time of a car that matches the reference exactly.", "type": "integer", "minimum": 1 },
+          "length_m": { "description": "How long a lap is, in metres: what the odometer of a car and the wear of its parts grow by with every lap.", "type": "integer", "minimum": 1 },
           "fuel_per_lap_ml": { "type": "integer", "minimum": 1 },
           "reward_cents_per_lap": { "$ref": "common.schema.json#/$defs/cents" },
           "xp_per_lap": { "description": "The XP of a lap of the base time, in dry weather. A car that laps faster gets the share of it that its lap is of the base lap, so that an hour on the track gives every car the same XP: XP is for the time of driving, and a faster car only drives more laps. A car that is slower gets all of it.", "type": "integer", "minimum": 0 },
@@ -558,12 +618,12 @@
             "additionalProperties": { "type": "number", "exclusiveMinimum": 0 }
           }
         },
-        "required": ["name", "region", "surface", "lit", "min_player_level", "base_lap_ms", "fuel_per_lap_ml", "reward_cents_per_lap", "xp_per_lap", "demand", "reference"],
+        "required": ["name", "region", "surface", "lit", "min_player_level", "base_lap_ms", "length_m", "fuel_per_lap_ml", "reward_cents_per_lap", "xp_per_lap", "demand", "reference"],
         "additionalProperties": false
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "tow", "stock_tires", "car", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks", "bots"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "wear", "tow", "stock_tires", "car", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks", "bots"],
   "additionalProperties": false,
   "$defs": {
     "crateOdds": {

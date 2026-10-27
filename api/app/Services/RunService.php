@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Content\Rules;
+use App\Content\RunInputsFactory;
 use App\Domain\Run\FrozenRun;
 use App\Domain\Run\RunFreezer;
 use App\Domain\Run\RunInputs;
 use App\Domain\Settlement\EventType;
 use App\Domain\Settlement\RunState;
 use App\Domain\Settlement\SettlementEvent;
+use App\Domain\Settlement\SettlementResult;
 use App\Domain\Settlement\Settler;
 use App\Exceptions\IdempotencyConflictException;
 use App\Exceptions\InsufficientFundsException;
@@ -37,6 +39,9 @@ final class RunService
     /** Leaves room in the 128 characters of a ledger key for refuel:{run}:{id}. */
     public const MAX_REQUEST_ID_LENGTH = 64;
 
+    /** How many times one settlement freezes the configuration again at most: a stage of wear is thousands of laps, so a long absence needs a few dozen. */
+    private const MAX_PASSES = 200;
+
     public function __construct(
         private readonly Ledger $ledger,
         private readonly Settler $settler = new Settler,
@@ -44,6 +49,7 @@ final class RunService
         private readonly ?Rules $rules = null,
         private readonly ?CarProgress $progress = null,
         private readonly ?TutorialScript $script = null,
+        private ?CarWear $carWear = null,
     ) {}
 
     /** Milliseconds since the Unix epoch from the (testable) application clock. */
@@ -74,6 +80,9 @@ final class RunService
             'xp' => $rules->carXpToReach($rules->carStartLevel()),
             // A wreck is worth what the yard asks for it, which is what a sale pays a share of.
             'value_cents' => $rules->wreckPriceCents($carSlug),
+            // It has driven what the board of the wrecks says, and its first service is due an interval after that.
+            'mileage_m' => $rules->wreckMileageKm($carSlug) * 1000,
+            'serviced_at_m' => $rules->wreckMileageKm($carSlug) * 1000,
         ]);
 
         return RaceRun::query()->create([
@@ -87,6 +96,7 @@ final class RunService
             'laps_done' => 0,
             'fuel_ml' => $fuelMl,
             'break_after_laps' => $breakAfter,
+            'recompute_after_laps' => $frozen->recomputeAfterLaps,
             'seed' => $seed,
             'config' => $frozen->config,
             'ruleset_version' => $this->rulesetVersion(),
@@ -175,6 +185,7 @@ final class RunService
                 'track_slug' => $trackSlug ?? $run->track_slug,
                 'config' => $frozen->config,
                 'break_after_laps' => $this->script?->breakdownLap($run->user_id, $run->id, $run->laps_done) ?? $frozen->breakAfterLaps,
+                'recompute_after_laps' => $frozen->recomputeAfterLaps,
                 'ruleset_version' => $this->rulesetVersion(),
                 'cursor_ms' => $run->status === RaceRun::STATUS_RUNNING ? max($run->cursor_ms, $now) : $run->cursor_ms,
                 'state_version' => $run->state_version + 1,
@@ -236,6 +247,7 @@ final class RunService
                 'seed' => $seed,
                 'config' => $frozen->config,
                 'break_after_laps' => $frozen->breakAfterLaps,
+                'recompute_after_laps' => $frozen->recomputeAfterLaps,
                 'ruleset_version' => $this->rulesetVersion(),
                 'status' => $canDrive ? RaceRun::STATUS_RUNNING : RaceRun::STATUS_STOPPED,
                 'stop_reason' => $canDrive ? null : EventType::FuelEmpty->value,
@@ -276,6 +288,7 @@ final class RunService
                     'seed' => $seed,
                     'config' => $frozen->config,
                     'break_after_laps' => $frozen->breakAfterLaps,
+                    'recompute_after_laps' => $frozen->recomputeAfterLaps,
                     'ruleset_version' => $this->rulesetVersion(),
                 ];
                 $config = $frozen->config;
@@ -391,6 +404,7 @@ final class RunService
         $run->forceFill([
             'config' => $frozen->config,
             'break_after_laps' => $frozen->breakAfterLaps,
+            'recompute_after_laps' => $frozen->recomputeAfterLaps,
             'ruleset_version' => $this->rulesetVersion(),
             'status' => $resumes ? RaceRun::STATUS_RUNNING : $run->status,
             'stop_reason' => $resumes ? null : $run->stop_reason,
@@ -426,6 +440,7 @@ final class RunService
         $run->forceFill([
             'config' => $frozen->config,
             'break_after_laps' => $frozen->breakAfterLaps,
+            'recompute_after_laps' => $frozen->recomputeAfterLaps,
             'track_slug' => $trackSlug,
             'ruleset_version' => $this->rulesetVersion(),
             'status' => $resumes ? RaceRun::STATUS_RUNNING : $run->status,
@@ -441,7 +456,67 @@ final class RunService
      */
     public function settleLocked(RaceRun $run, int $nowMs): Settled
     {
-        $state = new RunState($run->cursor_ms, $run->laps_done, $run->fuel_ml, $run->break_after_laps);
+        $settled = $this->settleOnce($run, $nowMs);
+
+        // A part that has worn to its next stage, or a service that has moved on, changes the car at a lap that was known when the configuration was frozen:
+        // the settlement stops there, the configuration is frozen again with what the car is now (the same seed), and the rest is settled with it. Wear is a
+        // function of the laps, so this gives what one pass would if the car were looked at in between, and the passes are few (a stage is thousands of laps).
+        for ($pass = 0; $pass < self::MAX_PASSES && $this->mustFreezeAgain($run); $pass++) {
+            $this->freezeAgain($run);
+            $settled = self::together($settled, $this->settleOnce($run, $nowMs));
+        }
+
+        return $settled;
+    }
+
+    /** Whether the run has reached the lap at which its configuration has to be made again. */
+    private function mustFreezeAgain(RaceRun $run): bool
+    {
+        return $run->car_id !== null && $run->recompute_after_laps !== null && $run->laps_done >= $run->recompute_after_laps;
+    }
+
+    /**
+     * Freezes the configuration of the run again with the car as it is now (the parts with their wear, the odometer, the service), without touching the
+     * seed. A car that stands because it broke down keeps the lap of its breakdown: the new plan is made when it is repaired.
+     */
+    private function freezeAgain(RaceRun $run): void
+    {
+        $car = Car::query()->find($run->car_id);
+
+        if ($car === null) {
+            $run->forceFill(['recompute_after_laps' => null])->save();
+
+            return;
+        }
+
+        $frozen = $this->freezer->freeze(app(RunInputsFactory::class)->makeForCar($car, $run->track_slug), $run->seed, $run->laps_done);
+
+        $run->forceFill([
+            'config' => $frozen->config,
+            'break_after_laps' => $run->status === RaceRun::STATUS_STOPPED ? $run->break_after_laps : ($this->script?->breakdownLap($run->user_id, $run->id, $run->laps_done) ?? $frozen->breakAfterLaps),
+            'recompute_after_laps' => $frozen->recomputeAfterLaps,
+            'ruleset_version' => $this->rulesetVersion(),
+            'state_version' => $run->state_version + 1,
+        ])->save();
+    }
+
+    /** What two passes of settling one run come to: the laps and the cash added up, the events in order, and the state of the last pass. */
+    private static function together(Settled $first, Settled $second): Settled
+    {
+        $events = [...$first->result->events, ...$second->result->events];
+        usort($events, static fn (SettlementEvent $a, SettlementEvent $b): int => [$a->atMs, $a->priority()] <=> [$b->atMs, $b->priority()]);
+
+        return new Settled(
+            new SettlementResult($second->result->state, $events, $first->result->laps + $second->result->laps, $first->result->cashCents + $second->result->cashCents, $first->result->xp + $second->result->xp),
+            $second->settlement ?? $first->settlement,
+            [...$first->all(), ...$second->all()],
+        );
+    }
+
+    /** One pass of settling: up to now, or up to the lap at which the configuration has to be made again, whichever comes first. */
+    private function settleOnce(RaceRun $run, int $nowMs): Settled
+    {
+        $state = new RunState($run->cursor_ms, $run->laps_done, $run->fuel_ml, $run->break_after_laps, $run->recompute_after_laps);
         $config = FrozenRun::configFromArray($run->config);
 
         // A car in the workshop earns nothing: for settlement no time passes until it leaves, and then it drives from the
@@ -469,6 +544,9 @@ final class RunService
             'stop_reason' => $result->stopReason()?->value,
         ]);
 
+        // The car has driven the laps: its odometer and its parts are put forward, and what that makes of the log is told (the part that broke down, the service).
+        $events = array_values(array_filter($this->afterDriving($run, $result), static fn (SettlementEvent $event): bool => $event->type !== EventType::Recompute));
+
         $settlement->events()->createMany(array_map(
             static fn (SettlementEvent $event, int $index): array => [
                 'seq' => $index + 1,
@@ -476,8 +554,8 @@ final class RunService
                 'at_ms' => $event->atMs,
                 'payload' => $event->payload,
             ],
-            $result->events,
-            array_keys($result->events),
+            $events,
+            array_keys($events),
         ));
 
         if ($result->cashCents > 0) {
@@ -505,6 +583,46 @@ final class RunService
         }
 
         return new Settled($result, $settlement);
+    }
+
+    /**
+     * Puts the odometer and the wear of the parts of the car forward by the laps of a settlement, and tells what that makes of its log: the breakdown says
+     * which part it was, and the car that drove past the moment its service was due says so.
+     *
+     * @return list<SettlementEvent>
+     */
+    private function afterDriving(RaceRun $run, SettlementResult $result): array
+    {
+        $events = $result->events;
+        $wear = $run->config['wear'] ?? null;
+        $car = $wear === null || $run->car_id === null ? null : Car::query()->find($run->car_id);
+
+        if ($car === null || $result->laps <= 0) {
+            return $events;
+        }
+
+        $before = (int) $car->mileage_m;
+        $after = $before + $result->laps * (int) $wear['length_m'];
+        $dueAt = (int) $car->serviced_at_m + ($this->rules ?? Rules::fromConfig())->service()['every_km'] * 1000;
+
+        $this->wear()->apply($car->id, $run->config, $result->laps);
+
+        if ($before < $dueAt && $after >= $dueAt) {
+            $events[] = SettlementEvent::serviceDue($result->state->cursorMs, intdiv($after, 1000));
+        }
+
+        foreach ($events as $index => $event) {
+            if ($event->type === EventType::Breakdown && ($part = $this->wear()->breakdownPart($car->id, $run->seed, $result->state->lapsDone)) !== null) {
+                $events[$index] = $event->withPayload(['part' => $part]);
+            }
+        }
+
+        return $events;
+    }
+
+    private function wear(): CarWear
+    {
+        return $this->carWear ??= new CarWear;
     }
 
     /**
