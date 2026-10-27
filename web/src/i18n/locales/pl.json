@@ -322,7 +322,13 @@
       "capacity_l": "{value} l",
       "gears": "{value} biegów",
       "top_speed_cap_kmh": "Limit {value} km/h",
-      "clearance": "Terenowość {value}"
+      "clearance": "Terenowość {value}",
+      "lag": "Opóźnienie {value}/10",
+      "fuel_mult": "Spalanie ×{value}",
+      "engine_load": "Obciążenie silnika {value}",
+      "boost_gain": "Moc doładowania +{value}%",
+      "mass_kg": "Masa {value} kg",
+      "launch": "Start {value}%"
     },
     "surface": {
       "asphalt_dry": "Sucho",
@@ -330,6 +336,14 @@
       "gravel_dry": "Żwir",
       "mud": "Błoto",
       "snow": "Śnieg"
+    },
+    "requires": {
+      "cylinders": "Wymaga silnika z co najmniej {count} cylindrami",
+      "booster": "Działa tylko z doładowaniem"
+    },
+    "lock": {
+      "cylinders": "Cylindry w tym aucie: {current}, część wymaga: {required}",
+      "booster": "Najpierw załóż w aucie doładowanie"
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Stan: {percent}%",
@@ -351,6 +365,8 @@
     "noCar": "Nie masz jeszcze auta.",
     "last": "Ostatni zakup",
     "getXp": "Zdobywasz XP, jeżdżąc tym autem.",
+    "filter": "Pokaż części z miejsca",
+    "allSlots": "Wszystkie",
     "partsTitle": "Części",
     "crates": {
       "title": "Skrzynki",

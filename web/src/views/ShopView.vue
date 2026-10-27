@@ -9,6 +9,7 @@ import CityTabs from '@/components/CityTabs.vue'
 import GameShell from '@/components/GameShell.vue'
 import PartStats from '@/components/PartStats.vue'
 import RarityMark from '@/components/RarityMark.vue'
+import { lockText } from '@/features/parts/lock'
 import { RARITIES, rankOf } from '@/features/parts/rarity'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -55,6 +56,27 @@ async function open(): Promise<void> {
 }
 
 onMounted(open)
+
+/** The slots in the order the garage shows them: the parts of the shop are listed under their slot. */
+const SLOT_ORDER = ['tires', 'suspension', 'brakes', 'engine', 'boost', 'gearbox', 'exhaust', 'cooling', 'tank', 'ecu']
+
+/** The slot the driver narrows the list of parts to, or all of them. */
+const slotFilter = ref<string>('all')
+
+/** The slots that have a part for sale, in order. */
+const partSlots = computed(() => SLOT_ORDER.filter((slot) => store.offers.some((offer) => offer.slot === slot)))
+
+/** The parts for sale by slot: the shop grows as the car rises, so the list is told apart by what the parts are. */
+const offerGroups = computed(() =>
+  partSlots.value
+    .filter((slot) => slotFilter.value === 'all' || slotFilter.value === slot)
+    .map((slot) => ({ slot, offers: store.offers.filter((offer) => offer.slot === slot) })),
+)
+
+/** Whether the level of the car is what stands between it and the part (the cylinders and the booster are told apart). */
+function levelLocked(offer: ShopOffer): boolean {
+  return store.shopCar !== null && store.shopCar.level < offer.required_car_level
+}
 
 function affordable(offer: ShopOffer): boolean {
   return (store.cash?.cash_cents ?? 0) >= (offer.price_cents ?? 0)
@@ -266,35 +288,69 @@ async function openCrate(kind: CrateOffer): Promise<void> {
 
       <h2 class="kick !mb-0">{{ t('shop.partsTitle') }}</h2>
 
-      <ul class="flex flex-col gap-2.5">
-        <li v-for="offer in store.offers" :key="offer.slug" class="card flex flex-col gap-1.5 !p-3" :data-test="`offer-${offer.slug}`">
-          <div class="flex items-center justify-between gap-2.5">
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <h2 class="text-[15px] font-bold text-ink">{{ offer.name }}</h2>
-                <span class="tag">{{ t('part.tier', { tier: offer.tier ?? 0 }) }}</span>
+      <!-- With the engine group the list is long: the parts are told apart by slot, and one slot can be looked at alone. -->
+      <div v-if="partSlots.length > 1" class="flex flex-wrap gap-1.5" role="radiogroup" :aria-label="t('shop.filter')" data-test="part-filter">
+        <button
+          type="button"
+          role="radio"
+          class="chip cursor-pointer"
+          :class="{ 'chip-am': slotFilter === 'all' }"
+          :aria-checked="slotFilter === 'all'"
+          data-test="filter-all"
+          @click="slotFilter = 'all'"
+        >
+          {{ t('shop.allSlots') }}
+        </button>
+        <button
+          v-for="slot in partSlots"
+          :key="slot"
+          type="button"
+          role="radio"
+          class="chip cursor-pointer"
+          :class="{ 'chip-am': slotFilter === slot }"
+          :aria-checked="slotFilter === slot"
+          :data-test="`filter-${slot}`"
+          @click="slotFilter = slot"
+        >
+          {{ t(`slot.${slot}`) }}
+        </button>
+      </div>
+
+      <section v-for="group in offerGroups" :key="group.slot" class="flex flex-col gap-2.5" :aria-label="t(`slot.${group.slot}`)" :data-test="`group-${group.slot}`">
+        <h3 v-if="partSlots.length > 1" class="kick !mb-0 mt-1" data-test="group-title">{{ t(`slot.${group.slot}`) }}</h3>
+
+        <ul class="flex flex-col gap-2.5">
+          <li v-for="offer in group.offers" :key="offer.slug" class="card flex flex-col gap-1.5 !p-3" :data-test="`offer-${offer.slug}`">
+            <div class="flex items-center justify-between gap-2.5">
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <h2 class="text-[15px] font-bold text-ink">{{ offer.name }}</h2>
+                  <span class="tag">{{ t('part.tier', { tier: offer.tier ?? 0 }) }}</span>
+                </div>
+                <p class="sub">{{ t(`slot.${offer.slot}`) }}</p>
               </div>
-              <p class="sub">{{ t(`slot.${offer.slot}`) }}</p>
+              <button
+                type="button"
+                class="btn btn-primary btn-sm shrink-0"
+                :disabled="buying !== null || !affordable(offer)"
+                :data-test="`buy-${offer.slug}`"
+                @click="buy(offer)"
+              >
+                {{ buying === offer.slug ? t('shop.buying') : t('shop.buy', { price: money(offer.price_cents ?? 0, 2) }) }}
+              </button>
             </div>
-            <button
-              type="button"
-              class="btn btn-primary btn-sm shrink-0"
-              :disabled="buying !== null || !affordable(offer)"
-              :data-test="`buy-${offer.slug}`"
-              @click="buy(offer)"
-            >
-              {{ buying === offer.slug ? t('shop.buying') : t('shop.buy', { price: money(offer.price_cents ?? 0, 2) }) }}
-            </button>
-          </div>
 
-          <PartStats :part="offer" />
+            <PartStats :part="offer" />
 
-          <p v-if="!affordable(offer)" class="sub" data-test="no-cash">{{ t('shop.noCash') }}</p>
-          <p v-if="store.shopCar && !offer.mountable" class="text-sm text-danger" data-test="needs-level">
-            {{ t('shop.needsLevel', { level: offer.required_car_level }) }} {{ t('shop.yourLevel', { level: store.shopCar.level }) }} {{ t('shop.getXp') }}
-          </p>
-        </li>
-      </ul>
+            <p v-if="!affordable(offer)" class="sub" data-test="no-cash">{{ t('shop.noCash') }}</p>
+            <p v-if="store.shopCar && levelLocked(offer)" class="text-sm text-danger" data-test="needs-level">
+              {{ t('shop.needsLevel', { level: offer.required_car_level }) }} {{ t('shop.yourLevel', { level: store.shopCar.level }) }} {{ t('shop.getXp') }}
+            </p>
+            <!-- What the car lacks besides its level: the cylinders of its engine, or a booster. It can be bought, but it cannot be put on yet. -->
+            <p v-if="store.shopCar && offer.blocked_by" class="text-sm text-danger" data-test="blocked">{{ lockText(t, offer.blocked_by) }}</p>
+          </li>
+        </ul>
+      </section>
     </template>
   </GameShell>
 </template>

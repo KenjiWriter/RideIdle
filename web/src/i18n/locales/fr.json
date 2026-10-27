@@ -322,7 +322,13 @@
       "capacity_l": "{value} l",
       "gears": "{value} rapports",
       "top_speed_cap_kmh": "Limite {value} km/h",
-      "clearance": "Tout-terrain {value}"
+      "clearance": "Tout-terrain {value}",
+      "lag": "Temps de réponse {value}/10",
+      "fuel_mult": "Consommation ×{value}",
+      "engine_load": "Charge moteur {value}",
+      "boost_gain": "Gain de suralimentation +{value} %",
+      "mass_kg": "Masse {value} kg",
+      "launch": "Démarrage {value} %"
     },
     "surface": {
       "asphalt_dry": "Sec",
@@ -330,6 +336,14 @@
       "gravel_dry": "Gravier",
       "mud": "Boue",
       "snow": "Neige"
+    },
+    "requires": {
+      "cylinders": "Demande un moteur d’au moins {count} cylindres",
+      "booster": "Ne fonctionne qu’avec une suralimentation"
+    },
+    "lock": {
+      "cylinders": "Cylindres de cette voiture : {current}, la pièce en demande : {required}",
+      "booster": "Monte d’abord une suralimentation sur la voiture"
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "État : {percent} %",
@@ -351,6 +365,8 @@
     "noCar": "Vous n’avez pas encore de voiture.",
     "last": "Dernier achat",
     "getXp": "Vous gagnez de l’XP en conduisant cette voiture.",
+    "filter": "Afficher les pièces de l’emplacement",
+    "allSlots": "Tout",
     "partsTitle": "Pièces",
     "crates": {
       "title": "Caisses",

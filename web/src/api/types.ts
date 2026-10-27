@@ -261,6 +261,15 @@ export type SurfaceKey = 'asphalt_dry' | 'asphalt_wet' | 'gravel_dry' | 'mud' | 
 /** How rare a part is: it multiplies what the part gives to a car. */
 export type PartRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
 
+/** What the car must have for a part: an engine with at least `min_cylinders` cylinders, and, for an intercooler, a booster. */
+export interface PartRequires {
+  min_cylinders?: number
+  booster?: true
+}
+
+/** What a car lacks for a part, besides its level: the cylinders (`required` and the `current` number), or a booster. */
+export type PartLock = { reason: 'cylinders'; required: number; current: number } | { reason: 'booster' }
+
 export interface PartInfo {
   slug: string
   name: string
@@ -269,6 +278,8 @@ export interface PartInfo {
   price_cents: number | null
   /** What the part gives, with its rarity applied. */
   stats: Record<string, number>
+  /** What the car needs for the part: null when it needs nothing. */
+  requires?: PartRequires | null
   rarity: PartRarity
   /** 1 (common) to 5 (legendary): the number of the filled squares. */
   rarity_rank: number
@@ -306,6 +317,8 @@ export interface RepairNext {
 export interface SlotJobNext {
   cost_cents: number
   duration_ms: number
+  /** What the car lacks for putting the part on (cylinders, a booster), or null; the job is refused then. */
+  locked?: PartLock | null
 }
 
 /** A part of the driver, in the inventory or on the car. */
@@ -326,7 +339,10 @@ export interface OwnedPart extends PartInfo {
 /** A part for sale, with what the car of the driver says about it. */
 export interface ShopOffer extends PartInfo {
   required_car_level: number
+  /** False when the car cannot have it mounted: its level is too low, or it lacks what `blocked_by` says. */
   mountable: boolean
+  /** What the car lacks for the part besides its level (cylinders, a booster), or null. */
+  blocked_by?: PartLock | null
 }
 
 /** The kinds of crate: the driver chooses the slot (slot, premium), or it is drawn (mixed). */

@@ -450,4 +450,97 @@ describe('ShopView', () => {
       expect(wrapper.get('[data-test="guarantee-text"]').text()).toBe('Gwarancja (Rzadka lub lepsza): jeszcze 4')
     })
   })
+
+  describe('the engine group', () => {
+    const grande = anOffer({
+      slug: 'turbo-grande-t6',
+      name: 'Turbo Grande',
+      slot: 'boost',
+      tier: 6,
+      price_cents: 2_100_000,
+      stats: { power_mult: 1.4, lag: 6, fuel_mult: 1.2, engine_load: 13 },
+      requires: { min_cylinders: 6 },
+      required_car_level: 15,
+      mountable: false,
+      blocked_by: { reason: 'cylinders', required: 6, current: 4 },
+    })
+    const intercooler = anOffer({
+      slug: 'intercooler-factory-t2',
+      name: 'Factory intercooler',
+      slot: 'cooling',
+      tier: 2,
+      price_cents: 120_000,
+      stats: { boost_gain: 0.01, engine_load: -2, mass_kg: 3 },
+      requires: { booster: true },
+      required_car_level: 3,
+      mountable: false,
+      blocked_by: { reason: 'booster' },
+    })
+    const roots = anOffer({ slug: 'roots-mini-t2', name: 'Roots mini', slot: 'boost', tier: 2, price_cents: 360_000, stats: { power_mult: 1.12, lag: 0, fuel_mult: 1.1, engine_load: 4 }, requires: null, required_car_level: 3, mountable: true, blocked_by: null })
+    const tires = anOffer({ slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', price_cents: 57_000, stats: { grip: 100, handling: 98, braking: 100 }, required_car_level: 3, mountable: true })
+    const parts = [tires, roots, grande, intercooler]
+    const engineShop = (level = 15) => respond(200, { data: { crates: aCrates(), parts, car: { id: 5, level } }, wallet: { cash_cents: 10_000_000, xp: 0 } })
+
+    it('lists the parts under their slot, in the order of the garage', async () => {
+      serve({ 'GET /api/v1/shop': () => engineShop() })
+
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+
+      expect(wrapper.findAll('[data-test="group-title"]').map((title) => title.text())).toEqual(['Tires', 'Forced induction', 'Cooling'])
+      expect(wrapper.findAll('[data-test="group-boost"] [data-test^="offer-"]').map((offer) => offer.attributes('data-test'))).toEqual(['offer-roots-mini-t2', 'offer-turbo-grande-t6'])
+    })
+
+    it('narrows the list to one slot, and back to all of them', async () => {
+      serve({ 'GET /api/v1/shop': () => engineShop() })
+
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+      await wrapper.get('[data-test="filter-cooling"]').trigger('click')
+
+      expect(wrapper.findAll('[data-test^="offer-"]').map((offer) => offer.attributes('data-test'))).toEqual(['offer-intercooler-factory-t2'])
+      expect(wrapper.get('[data-test="filter-cooling"]').attributes('aria-checked')).toBe('true')
+
+      await wrapper.get('[data-test="filter-all"]').trigger('click')
+
+      expect(wrapper.findAll('[data-test^="offer-"]')).toHaveLength(4)
+    })
+
+    it('has no filter and no titles when the shop has parts of one slot only', async () => {
+      serve({ 'GET /api/v1/shop': () => respond(200, { data: { crates: aCrates(), parts: [tires], car: { id: 5, level: 3 } }, wallet: { cash_cents: 90_000, xp: 0 } }) })
+
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="part-filter"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="group-title"]').exists()).toBe(false)
+    })
+
+    it('says what the car lacks for a part besides its level, and still lets the driver buy it', async () => {
+      serve({ 'GET /api/v1/shop': () => engineShop(15) })
+
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="offer-turbo-grande-t6"] [data-test="blocked"]').text()).toBe('This car has 4 cylinders, the part needs 6')
+      expect(wrapper.get('[data-test="offer-intercooler-factory-t2"] [data-test="blocked"]').text()).toBe('Put a booster on the car first')
+      expect(wrapper.find('[data-test="offer-roots-mini-t2"] [data-test="blocked"]').exists()).toBe(false)
+      // The level of the car (15) is what the Grande asks, so the level is not what is said to be missing.
+      expect(wrapper.find('[data-test="offer-turbo-grande-t6"] [data-test="needs-level"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="buy-turbo-grande-t6"]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.get('[data-test="offer-turbo-grande-t6"] [data-test="part-requires"]').text()).toBe('Needs an engine with at least 6 cylinders')
+    })
+
+    it('says both when the level and the engine are what the car lacks', async () => {
+      serve({ 'GET /api/v1/shop': () => engineShop(3) })
+
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+
+      const offer = wrapper.get('[data-test="offer-turbo-grande-t6"]')
+
+      expect(offer.get('[data-test="needs-level"]').text()).toContain('Needs car level 15')
+      expect(offer.get('[data-test="blocked"]').text()).toBe('This car has 4 cylinders, the part needs 6')
+    })
+  })
 })

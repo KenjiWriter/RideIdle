@@ -322,7 +322,13 @@
       "capacity_l": "{value} l",
       "gears": "{value} marchas",
       "top_speed_cap_kmh": "Limite {value} km/h",
-      "clearance": "Off-road {value}"
+      "clearance": "Off-road {value}",
+      "lag": "Atraso {value}/10",
+      "fuel_mult": "Consumo ×{value}",
+      "engine_load": "Carga do motor {value}",
+      "boost_gain": "Ganho de sobrealimentação +{value}%",
+      "mass_kg": "Massa {value} kg",
+      "launch": "Largada {value}%"
     },
     "surface": {
       "asphalt_dry": "Seco",
@@ -330,6 +336,14 @@
       "gravel_dry": "Cascalho",
       "mud": "Lama",
       "snow": "Neve"
+    },
+    "requires": {
+      "cylinders": "Exige um motor com pelo menos {count} cilindros",
+      "booster": "Só funciona com sobrealimentação"
+    },
+    "lock": {
+      "cylinders": "Cilindros deste carro: {current}, a peça exige: {required}",
+      "booster": "Coloque antes uma sobrealimentação no carro"
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Estado: {percent}%",
@@ -351,6 +365,8 @@
     "noCar": "Você ainda não tem um carro.",
     "last": "Última compra",
     "getXp": "Você ganha XP dirigindo este carro.",
+    "filter": "Mostrar peças do espaço",
+    "allSlots": "Todos",
     "partsTitle": "Peças",
     "crates": {
       "title": "Caixas",

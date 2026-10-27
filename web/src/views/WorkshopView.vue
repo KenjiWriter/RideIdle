@@ -17,6 +17,7 @@ import { rankOf } from '@/features/parts/rarity'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
+import { lockText } from '@/features/parts/lock'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useGarageStore } from '@/stores/garage'
@@ -630,14 +631,16 @@ async function cancel(jobId: number): Promise<void> {
               <button
                 type="button"
                 class="btn btn-primary btn-sm"
-                :disabled="busy || busyPartIds.has(part.id)"
+                :disabled="busy || busyPartIds.has(part.id) || !!part.mount_next?.locked"
                 :data-tutorial="part.id === mountTarget ? 'mount' : undefined"
                 :data-test="`put-on-${part.id}`"
                 @click="act('mount', part)"
               >
                 {{ t('workshop.putOn') }}
               </button>
-              <p v-if="part.mount_next" class="sub" :data-test="`put-on-info-${part.id}`">{{ slotJobInfo(part.mount_next) }}</p>
+              <!-- A part the car cannot take (too few cylinders, no booster for an intercooler) says why instead of the price: the job would be refused. -->
+              <p v-if="part.mount_next?.locked" class="sub text-danger" :data-test="`put-on-lock-${part.id}`">{{ lockText(t, part.mount_next.locked) }}</p>
+              <p v-else-if="part.mount_next" class="sub" :data-test="`put-on-info-${part.id}`">{{ slotJobInfo(part.mount_next) }}</p>
               <!-- A worn part of the inventory is put right without the car: the repair costs and takes what its condition says. -->
               <button
                 v-if="canRepair(part.repair_next)"

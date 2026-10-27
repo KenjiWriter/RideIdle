@@ -322,7 +322,13 @@
       "capacity_l": "{value} l",
       "gears": "{value} gears",
       "top_speed_cap_kmh": "Limit {value} km/h",
-      "clearance": "Off-road {value}"
+      "clearance": "Off-road {value}",
+      "lag": "Lag {value}/10",
+      "fuel_mult": "Fuel ×{value}",
+      "engine_load": "Engine load {value}",
+      "boost_gain": "Boost gain +{value}%",
+      "mass_kg": "Mass {value} kg",
+      "launch": "Launch {value}%"
     },
     "surface": {
       "asphalt_dry": "Dry",
@@ -330,6 +336,14 @@
       "gravel_dry": "Gravel",
       "mud": "Mud",
       "snow": "Snow"
+    },
+    "requires": {
+      "cylinders": "Needs an engine with at least {count} cylinders",
+      "booster": "Works only with a booster"
+    },
+    "lock": {
+      "cylinders": "This car has {current} cylinders, the part needs {required}",
+      "booster": "Put a booster on the car first"
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Condition: {percent}%",
@@ -351,6 +365,8 @@
     "noCar": "You have no car yet.",
     "last": "Last purchase",
     "getXp": "You get XP by driving this car.",
+    "filter": "Show parts of the slot",
+    "allSlots": "All",
     "partsTitle": "Parts",
     "crates": {
       "title": "Crates",

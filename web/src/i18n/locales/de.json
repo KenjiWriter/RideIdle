@@ -322,7 +322,13 @@
       "capacity_l": "{value} l",
       "gears": "{value} Gänge",
       "top_speed_cap_kmh": "Grenze {value} km/h",
-      "clearance": "Gelände {value}"
+      "clearance": "Gelände {value}",
+      "lag": "Verzögerung {value}/10",
+      "fuel_mult": "Verbrauch ×{value}",
+      "engine_load": "Motorlast {value}",
+      "boost_gain": "Ladeleistung +{value} %",
+      "mass_kg": "Masse {value} kg",
+      "launch": "Anfahren {value} %"
     },
     "surface": {
       "asphalt_dry": "Trocken",
@@ -330,6 +336,14 @@
       "gravel_dry": "Schotter",
       "mud": "Schlamm",
       "snow": "Schnee"
+    },
+    "requires": {
+      "cylinders": "Braucht einen Motor mit mindestens {count} Zylindern",
+      "booster": "Funktioniert nur mit Aufladung"
+    },
+    "lock": {
+      "cylinders": "Zylinder dieses Autos: {current}, das Teil braucht: {required}",
+      "booster": "Baue zuerst eine Aufladung ein"
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Zustand: {percent} %",
@@ -351,6 +365,8 @@
     "noCar": "Du hast noch kein Auto.",
     "last": "Letzter Kauf",
     "getXp": "XP bekommst du, indem du dieses Auto fährst.",
+    "filter": "Teile des Platzes zeigen",
+    "allSlots": "Alle",
     "partsTitle": "Teile",
     "crates": {
       "title": "Kisten",

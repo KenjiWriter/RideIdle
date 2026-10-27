@@ -51,4 +51,40 @@ describe('PartStats', () => {
 
     expect(wrapper.findAll('[data-test="part-stats"] li').map((line) => line.text())).toEqual(['Grip 138', 'Handling 135.2', 'Braking 138', 'Power +4.4%'])
   })
+
+  describe('the engine group', () => {
+    const lines = (part: InstanceType<typeof PartStats>['$props']['part']) => show(part).findAll('[data-test="part-stats"] li').map((line) => line.text())
+
+    it('says what a booster does: the power it gains, its lag, its fuel and the load it puts on the engine', () => {
+      expect(lines({ stats: { power_mult: 1.25, lag: 3, fuel_mult: 1.15, engine_load: 8 } })).toEqual(['Power +25%', 'Lag 3/10', 'Fuel ×1.15', 'Engine load +8'])
+    })
+
+    it('says what an intercooler and a radiator do, with the sign of the load and of the mass', () => {
+      expect(lines({ stats: { boost_gain: 0.02, engine_load: -4, mass_kg: 5 } })).toEqual(['Boost gain +2%', 'Engine load −4', 'Mass +5 kg'])
+      expect(lines({ stats: { engine_load: -3, mass_kg: -3 } })).toEqual(['Engine load −3', 'Mass −3 kg'])
+    })
+
+    it('says what a gearbox does: the gears, the limit of speed and the launch, and says nothing of a launch that is none', () => {
+      expect(lines({ stats: { gears: 6, top_speed_cap_kmh: 240, launch: 2 } })).toEqual(['6 gears', 'Limit 240 km/h', 'Launch +2%'])
+      expect(lines({ stats: { gears: 5, top_speed_cap_kmh: 190, launch: 0 } })).toEqual(['5 gears', 'Limit 190 km/h'])
+      expect(lines({ stats: { gears: 6, launch: -2 } })).toEqual(['6 gears', 'Launch −2%'])
+    })
+
+    it('says nothing of the lag of a supercharger that answers at once', () => {
+      expect(lines({ stats: { power_mult: 1.12, lag: 0, fuel_mult: 1.1, engine_load: 4 } })).toEqual(['Power +12%', 'Fuel ×1.10', 'Engine load +4'])
+    })
+
+    it('writes the numbers the way the language does', async () => {
+      await setLocale('pl')
+
+      expect(lines({ stats: { power_mult: 1.25, lag: 3, fuel_mult: 1.15, engine_load: 8 } })).toEqual(['Moc +25%', 'Opóźnienie 3/10', 'Spalanie ×1,15', 'Obciążenie silnika +8'])
+    })
+
+    it('says what the car must have for the part, and nothing for a part that needs nothing', () => {
+      expect(show({ stats: { power_mult: 1.4 }, requires: { min_cylinders: 6 } }).get('[data-test="part-requires"]').text()).toBe('Needs an engine with at least 6 cylinders')
+      expect(show({ stats: { boost_gain: 0.02 }, requires: { booster: true } }).get('[data-test="part-requires"]').text()).toBe('Works only with a booster')
+      expect(show({ stats: { power_mult: 1.12 }, requires: null }).find('[data-test="part-requires"]').exists()).toBe(false)
+      expect(show({ stats: { power_mult: 1.12 } }).find('[data-test="part-requires"]').exists()).toBe(false)
+    })
+  })
 })

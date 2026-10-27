@@ -1311,6 +1311,40 @@ describe('WorkshopView', () => {
       expect(wrapper.get('[data-test="take-off-info-11"]').text()).toBe('Vulcanizer $30.00 · 1 min 10 s')
     })
 
+    it('shuts the button of a part the car cannot take and says why where the price was, and keeps the button of one it can', async () => {
+      const grande = aPart({ id: 31, slug: 'turbo-grande-t6', name: 'Turbo Grande', slot: 'boost', tier: 6, stats: { power_mult: 1.4, lag: 6 }, requires: { min_cylinders: 6 } })
+      const intercooler = aPart({ id: 32, slug: 'intercooler-factory-t2', name: 'Factory intercooler', slot: 'cooling', tier: 2, stats: { boost_gain: 0.01 }, requires: { booster: true } })
+      const roots = aPart({ id: 33, slug: 'roots-mini-t2', name: 'Roots mini', slot: 'boost', tier: 2, stats: { power_mult: 1.12 } })
+      serve({
+        'GET /api/v1/garage': () =>
+          respond(
+            200,
+            aGarage({
+              car: aCar(),
+              inventory: [
+                { ...grande, mount_next: { cost_cents: 0, duration_ms: 480_000, locked: { reason: 'cylinders', required: 6, current: 4 } } },
+                { ...intercooler, mount_next: { cost_cents: 0, duration_ms: 235_200, locked: { reason: 'booster' } } },
+                { ...roots, mount_next: { cost_cents: 0, duration_ms: 235_200, locked: null } },
+              ],
+            }),
+          ),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="put-on-31"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-test="put-on-lock-31"]').text()).toBe('This car has 4 cylinders, the part needs 6')
+      expect(wrapper.find('[data-test="put-on-info-31"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="put-on-32"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-test="put-on-lock-32"]').text()).toBe('Put a booster on the car first')
+      expect(wrapper.get('[data-test="put-on-33"]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.find('[data-test="put-on-lock-33"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="put-on-info-33"]').text()).toBe('Time: 3 min 55 s')
+      expect(wrapper.get('[data-test="part-31"] [data-test="part-requires"]').text()).toBe('Needs an engine with at least 6 cylinders')
+    })
+
     it('says nothing when the server gave no quote', async () => {
       serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust }), inventory: [tires] })), 'GET /api/v1/runs/current': noRun })
 
