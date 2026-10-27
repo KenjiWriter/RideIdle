@@ -126,9 +126,9 @@ export const useGarageStore = defineStore('garage', () => {
     return response.opened
   }
 
-  /** Queues a job of the workshop: puts a part on the car, or takes it off. */
-  async function queue(kind: JobKind, partId: number): Promise<void> {
-    applyGarage(await api<GarageResponse>('/v1/garage/jobs', { method: 'POST', body: JSON.stringify({ kind, part: partId }) }))
+  /** Queues a job of the workshop: puts a part on the car, takes it off, upgrades it, or merges it with a second part of the inventory (`withId`). */
+  async function queue(kind: JobKind, partId: number, withId?: number): Promise<void> {
+    applyGarage(await api<GarageResponse>('/v1/garage/jobs', { method: 'POST', body: JSON.stringify({ kind, part: partId, ...(withId === undefined ? {} : { with: withId }) }) }))
     syncRun()
   }
 

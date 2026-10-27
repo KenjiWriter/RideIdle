@@ -1,4 +1,4 @@
-import type { GarageCar, GarageResponse, MountedPart, OpenedCrate, OwnedPart, ShopCrates, ShopOffer, UpgradeNext, WorkshopJob } from '@/api/types'
+import type { GarageCar, GarageResponse, MergeOffer, MergeResult, MountedPart, OpenedCrate, OwnedPart, ShopCrates, ShopOffer, UpgradeNext, WorkshopJob } from '@/api/types'
 
 /** The time of the server in the fixtures. */
 export const NOW = 1_792_692_000_000
@@ -25,6 +25,16 @@ export function aPart(overrides: Partial<OwnedPart> = {}): OwnedPart {
 /** What the next step of an upgrade is on a car of level 3: +1 for $199.50 and 4 min 54 s (the street tires of tier 2, as the server prices them). */
 export function anUpgradeStep(overrides: Partial<UpgradeNext> = {}): UpgradeNext {
   return { to: 1, cost_cents: 19_950, duration_ms: 294_000, locked: null, ...overrides }
+}
+
+/** What merging a part of the inventory would do: common to uncommon with the 80% and the 1 point of the workshop, $57.00 (a tenth of the model) and 7 min 50 s, with `with` the other parts it can go with. */
+export function aMergeOffer(overrides: Partial<MergeOffer> = {}): MergeOffer {
+  return { to: 'uncommon', chance_ppm: 810_000, pity_ppm: 0, cost_cents: 5_700, duration_ms: 470_400, scrap_cents: 14_250, with: [], ...overrides }
+}
+
+/** What became of an attempt of merging: a success by default, which made the uncommon street tires of tier 2. */
+export function aMergeResult(overrides: Partial<MergeResult> = {}): MergeResult {
+  return { id: 1, success: true, slot: 'tires', tier: 2, to: 'uncommon', name: 'Street tires T2', chance_ppm: 810_000, scrap_cents: 0, part: null, finished_ms: NOW - 60_000, ...overrides }
 }
 
 /** A part that sits on the car, with the next step of its upgrade. */
@@ -59,7 +69,7 @@ export function aCar(overrides: Partial<GarageCar> = {}, mounted: Record<string,
 }
 
 export function aJob(overrides: Partial<WorkshopJob> = {}): WorkshopJob {
-  return { id: 1, kind: 'mount', cost_cents: 0, upgrade_to: null, status: 'working', part: aPart(), start_ms: NOW - 60_000, finish_ms: NOW + 175_000, ...overrides }
+  return { id: 1, kind: 'mount', cost_cents: 0, upgrade_to: null, merge_with: null, merge_to: null, status: 'working', part: aPart(), start_ms: NOW - 60_000, finish_ms: NOW + 175_000, ...overrides }
 }
 
 export function aGarage(data: Partial<GarageResponse['data']> = {}, nowMs = NOW): GarageResponse {
@@ -67,6 +77,7 @@ export function aGarage(data: Partial<GarageResponse['data']> = {}, nowMs = NOW)
     data: {
       car: aCar(),
       inventory: [],
+      merges: [],
       workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [] },
       ...data,
     },

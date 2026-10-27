@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
-import { NOW, aCar, aGarage, aJob, aMountedPart, aPart, anUpgradeStep } from '@/test/garageFixtures'
+import { NOW, aCar, aGarage, aJob, aMergeOffer, aMergeResult, aMountedPart, aPart, anUpgradeStep } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
 import { aTutorial } from '@/test/tutorialFixtures'
 
@@ -557,6 +557,244 @@ describe('WorkshopView', () => {
       expect(wrapper.get('[data-test="upgrade-info-12"]').text()).toBe('Pełne ulepszenie')
       expect(wrapper.get('[data-test="upgrade-info-11"]').text()).toBe('199,50 $ · 4 min 54 s')
       expect(wrapper.get('[data-test="job-4"]').text()).toContain('Ulepszanie do +1: Sport exhaust')
+    })
+  })
+
+  describe('merging parts', () => {
+    // Two street tires of tier 2 that go together, a rare pair that does not go with them, and an exhaust with no partner at all.
+    const base = (overrides: Parameters<typeof aPart>[0] = {}) =>
+      aPart({ id: 21, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, merge: aMergeOffer({ with: [22] }), ...overrides })
+    const spare = aPart({ id: 22, slug: 'street-tires-t2', name: 'Spare tires', slot: 'tires', tier: 2, upgrade: 2, merge: aMergeOffer({ with: [21] }) })
+    const rarePair = aPart({ id: 23, slug: 'street-tires-t2', name: 'Rare tires', slot: 'tires', tier: 2, rarity: 'rare', rarity_rank: 3, merge: aMergeOffer({ to: 'epic', with: [] }) })
+    const lonely = aPart({ id: 24, name: 'Lonely exhaust', merge: aMergeOffer({ with: [] }) })
+    const sheet = (inventory: ReturnType<typeof aPart>[], extra: Partial<ReturnType<typeof aGarage>['data']> = {}) => aGarage({ inventory, ...extra })
+    const mergeJob = (overrides: Parameters<typeof aJob>[0] = {}) =>
+      aJob({ id: 6, kind: 'merge', cost_cents: 5_700, part: base(), merge_with: spare, merge_to: 'uncommon', status: 'queued', start_ms: NOW, finish_ms: NOW + 470_400, ...overrides })
+    const withJobs = (jobs: ReturnType<typeof aJob>[], inventory: ReturnType<typeof aPart>[] = [base({ merge: null }), { ...spare, merge: null }]) =>
+      sheet(inventory, { workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+
+    it('offers the merge only on the parts that can be merged, and lists only the partners the server named', async () => {
+      // A legendary part, or one that waits in a job, has no offer: it has no button either.
+      const legendary = aPart({ id: 25, name: 'Legendary exhaust', rarity: 'legendary', rarity_rank: 5, merge: null })
+      serve({ 'GET /api/v1/garage': () => respond(200, sheet([base(), spare, rarePair, lonely, legendary])) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="merge-open-21"]').text()).toBe('Merge')
+      expect(wrapper.get('[data-test="merge-open-21"]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.find('[data-test="merge-open-25"]').exists()).toBe(false)
+      // The chooser is closed until it is asked for.
+      expect(wrapper.find('[data-test="merge-21"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="merge-open-21"]').trigger('click')
+
+      // The spare tires are the only partner: not the rare ones (another rarity), and not the exhaust (another slot).
+      expect(wrapper.findAll('[data-test^="merge-partner-"]').map((button) => button.attributes('data-test'))).toEqual(['merge-partner-22'])
+      expect(wrapper.get('[data-test="merge-partner-22"]').text()).toContain('Spare tires')
+      expect(wrapper.get('[data-test="merge-partner-22"] [data-test="upgrade-mark"]').text()).toBe('+2')
+      expect(wrapper.find('[data-test="merge-hint"]').exists()).toBe(false)
+      // Nothing is said about the attempt before a partner is chosen, and nothing can be confirmed.
+      expect(wrapper.find('[data-test="merge-summary"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="merge-confirm-21"]').attributes('disabled')).toBeDefined()
+    })
+
+    it('says that a second part is needed when there is nothing to merge a part with, and offers no confirmation', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, sheet([lonely])) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="merge-open-24"]').trigger('click')
+
+      expect(wrapper.get('[data-test="merge-hint"]').text()).toBe('You need a second part of the same slot, tier and rarity: Exhaust, T2, Common.')
+      expect(wrapper.find('[data-test="merge-partner-22"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="merge-confirm-24"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="merge-close-24"]').trigger('click')
+
+      expect(wrapper.find('[data-test="merge-24"]').exists()).toBe(false)
+    })
+
+    it('shows what the attempt does once a partner is chosen, and queues it when it is confirmed', async () => {
+      const offer = aMergeOffer({ to: 'uncommon', chance_ppm: 460_000, pity_ppm: 60_000, cost_cents: 5_700, duration_ms: 470_400, scrap_cents: 14_250, with: [22] })
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, sheet([base({ merge: offer }), spare])),
+        'POST /api/v1/garage/jobs': () => respond(201, withJobs([mergeJob()])),
+        'GET /api/v1/tutorial': () => respond(200, aTutorial(null)),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="merge-open-21"]').trigger('click')
+      await wrapper.get('[data-test="merge-partner-22"]').trigger('click')
+
+      expect(wrapper.findAll('[data-test="merge-target"] [data-test="rarity"]').map((mark) => mark.text())).toEqual(['Common', 'Uncommon'])
+      expect(wrapper.get('[data-test="merge-target"]').text()).toContain('→')
+      expect(wrapper.get('[data-test="merge-chance"]').text()).toBe('Chance: 46% (40% + 6 points of protection from bad luck)')
+      expect(wrapper.get('[data-test="merge-cost"]').text()).toBe('An attempt costs $57.00 and takes 7 min 50 s.')
+      expect(wrapper.get('[data-test="merge-keeps"]').text()).toBe('The model and the upgrade of Street tires T2 stay; Spare tires is used up.')
+      expect(wrapper.get('[data-test="merge-failure"]').text()).toBe('If it fails, both parts are lost and you get $142.50 in scrap.')
+      expect(calls.some((call) => call.method === 'POST')).toBe(false)
+
+      await wrapper.get('[data-test="merge-confirm-21"]').trigger('click')
+      await flushPromises()
+
+      // The first part is the one that stays, and the second is the one that is used up.
+      expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ kind: 'merge', part: 21, with: 22 })
+      // The server moves the tutorial when it is asked, and a job in the queue is what a step waits for.
+      expect(calls.some((call) => call.url === '/api/v1/tutorial')).toBe(true)
+      expect(wrapper.get('[data-test="job-6"]').text()).toContain('Merging: Street tires T2 + Spare tires → Uncommon')
+      expect(wrapper.get('[data-test="job-6-state"]').text()).toBe('Waiting')
+      // The chooser closes, and the two parts that wait in the job cannot be put on or merged again.
+      expect(wrapper.find('[data-test="merge-21"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="put-on-21"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-test="put-on-22"]').attributes('disabled')).toBeDefined()
+    })
+
+    it('says only the chance when the protection from bad luck has not built up yet', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, sheet([base({ merge: aMergeOffer({ chance_ppm: 810_000, pity_ppm: 0, with: [22] }) }), spare])),
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="merge-open-21"]').trigger('click')
+      await wrapper.get('[data-test="merge-partner-22"]').trigger('click')
+
+      expect(wrapper.get('[data-test="merge-chance"]').text()).toBe('Chance: 81%')
+      expect(calls.some((call) => call.method === 'POST')).toBe(false)
+    })
+
+    it('shows what the server says when it refuses a merge, and keeps the chooser open', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, sheet([base(), spare])),
+        'POST /api/v1/garage/jobs': () => respond(422, { message: 'These parts do not go together.', code: 'merge_parts_differ' }),
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="merge-open-21"]').trigger('click')
+      await wrapper.get('[data-test="merge-partner-22"]').trigger('click')
+      await wrapper.get('[data-test="merge-confirm-21"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="error"]').text()).toBe('These parts do not go together.')
+      expect(wrapper.find('[data-test="job-6"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="merge-21"]').exists()).toBe(true)
+    })
+
+    it('asks first about a merge that the mechanic is at, and says that its price is lost while the parts stay', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, withJobs([mergeJob({ status: 'working', start_ms: NOW - 60_000 })])),
+        'DELETE /api/v1/garage/jobs/6': () => respond(200, { ...sheet([base(), spare]), cancelled: [6] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      // The car does not stand for a merge: the parts are not on it.
+      expect(wrapper.find('[data-test="standing"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="job-6"]').text()).toContain('Merging: Street tires T2 + Spare tires → Uncommon')
+
+      await wrapper.get('[data-test="cancel-6"]').trigger('click')
+
+      expect(wrapper.get('[data-test="cancel-sure-6"]').text()).toContain('The work already done and the $57.00 paid for the attempt are lost, and both parts stay in the inventory.')
+      expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
+
+      await wrapper.get('[data-test="cancel-confirm-6"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.filter((call) => call.method === 'DELETE')).toHaveLength(1)
+      expect(wrapper.get('[data-test="cancelled"]').text()).toBe('Job cancelled.')
+    })
+
+    it('cancels a merge that waits at once, and says that its price is back', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, withJobs([mergeJob()])),
+        'DELETE /api/v1/garage/jobs/6': () => respond(200, { ...sheet([base(), spare]), cancelled: [6] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="cancel-6"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="cancel-sure-6"]').exists()).toBe(false)
+      expect(calls.some((call) => call.method === 'DELETE' && call.url === '/api/v1/garage/jobs/6')).toBe(true)
+      expect(wrapper.find('[data-test="job-6"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="cancelled"]').text()).toBe('Job cancelled. $57.00 is back in your wallet.')
+    })
+
+    it('shows the last results: what a success made, and what a failure lost and gave back', async () => {
+      serve({
+        'GET /api/v1/garage': () =>
+          respond(
+            200,
+            sheet([], {
+              merges: [
+                aMergeResult({ id: 9, success: false, to: 'rare', name: 'Rally suspension', slot: 'suspension', tier: 2, chance_ppm: 630_000, scrap_cents: 14_250 }),
+                aMergeResult({ id: 8, success: true, to: 'uncommon', name: 'Street tires T2', slot: 'tires', tier: 2, chance_ppm: 810_000 }),
+              ],
+            }),
+          ),
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="merges"] h2').text()).toBe('Last merges')
+
+      // The newest first, as the server sends them.
+      expect(wrapper.findAll('[data-test^="merge-result-"]:not([data-test="merge-result-scrap"])').map((card) => card.attributes('data-test'))).toEqual(['merge-result-9', 'merge-result-8'])
+
+      const failure = wrapper.get('[data-test="merge-result-9"]')
+      expect(failure.attributes('data-success')).toBe('false')
+      expect(failure.text()).toContain('Failed: Rally suspension')
+      expect(failure.get('[data-test="rarity"]').text()).toBe('Rare')
+      expect(failure.text()).toContain('Suspension · Chance: 63%')
+      expect(failure.get('[data-test="merge-result-scrap"]').text()).toBe('Both parts are lost, scrap: $142.50.')
+
+      const success = wrapper.get('[data-test="merge-result-8"]')
+      expect(success.attributes('data-success')).toBe('true')
+      expect(success.text()).toContain('Success: Street tires T2')
+      expect(success.get('[data-test="rarity"]').text()).toBe('Uncommon')
+      expect(success.find('[data-test="merge-result-scrap"]').exists()).toBe(false)
+    })
+
+    it('shows no card of results before there is one', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, sheet([base(), spare])) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="merges"]').exists()).toBe(false)
+    })
+
+    it('speaks the language of the driver', async () => {
+      await setLocale('pl')
+      const offer = aMergeOffer({ chance_ppm: 460_000, pity_ppm: 60_000, with: [22] })
+      serve({
+        'GET /api/v1/garage': () =>
+          respond(200, withJobs([mergeJob({ id: 7, part: base({ id: 25, name: 'Opony A', merge: null }), merge_with: { ...spare, id: 26, name: 'Opony B' } })], [base({ merge: offer }), spare])),
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="merge-open-21"]').text()).toBe('Połącz')
+      await wrapper.get('[data-test="merge-open-21"]').trigger('click')
+      await wrapper.get('[data-test="merge-partner-22"]').trigger('click')
+
+      // The money and the time are set with the spaces of the language, which do not break a line.
+      const plain = (data: string) => wrapper.get(`[data-test="${data}"]`).text().replace(/ | /g, ' ')
+
+      expect(plain('merge-chance')).toBe('Szansa: 46% (40% + 6 pp ochrony przed pechem)')
+      expect(plain('merge-cost')).toBe('Próba kosztuje 57,00 $ i trwa 7 min 50 s.')
+      expect(plain('merge-failure')).toBe('Przy porażce obie części przepadają, a Ty dostajesz 142,50 $ złomu.')
+      expect(wrapper.get('[data-test="job-7"]').text()).toContain('Łączenie: Opony A + Opony B → Niezwykła')
     })
   })
 

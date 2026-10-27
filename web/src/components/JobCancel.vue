@@ -23,6 +23,19 @@ const asking = ref(false)
 const loses = computed(() => props.job.status === 'working')
 const needsAnswer = computed(() => loses.value || props.dependents.length > 0)
 
+/** What is lost with a job at work: the work, and the price of an upgrade or of a merge (the parts of a merge stay). */
+const lostText = computed(() => {
+  if (props.job.cost_cents > 0 && props.job.kind === 'upgrade') {
+    return t('workshop.cancelLosesUpgrade', { price: money(props.job.cost_cents, 2) })
+  }
+
+  if (props.job.cost_cents > 0 && props.job.kind === 'merge') {
+    return t('workshop.cancelLosesMerge', { price: money(props.job.cost_cents, 2) })
+  }
+
+  return t('workshop.cancelLoses')
+})
+
 function cancel(): void {
   asking.value = false
   emit('cancel', props.job.id)
@@ -40,9 +53,9 @@ function ask(): void {
 <template>
   <div v-if="asking" class="flex w-full basis-full flex-col gap-1.5 border-t border-line pt-2" role="alert" :data-test="`cancel-sure-${job.id}`">
     <p class="text-[13px] font-semibold text-ink">{{ t('workshop.cancelSure') }}</p>
-    <!-- The price of an upgrade is paid back only while the mechanic has not started on it, so for one at work it is lost with the work. -->
+    <!-- The price of an upgrade or of a merge is paid back only while the mechanic has not started on it, so for one at work it is lost with the work. -->
     <p v-if="loses" class="sub">
-      {{ job.kind === 'upgrade' && job.cost_cents > 0 ? t('workshop.cancelLosesUpgrade', { price: money(job.cost_cents, 2) }) : t('workshop.cancelLoses') }}
+      {{ lostText }}
     </p>
     <p v-for="other in dependents" :key="other.id" class="sub">{{ t('workshop.cancelAlso', { part: other.part.name }) }}</p>
     <div class="flex gap-2">

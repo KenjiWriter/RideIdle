@@ -279,11 +279,28 @@ export interface PartInfo {
   surfaces?: Record<SurfaceKey, number> | null
 }
 
+/**
+ * What merging this part would do (the inventory of the garage only): two parts of one slot, tier and rarity make one of the next rarity, or fail and are lost.
+ * `chance_ppm` is the chance in ppm (1 000 000 is certain), of which `pity_ppm` is the protection from bad luck (3 points for every failure since the last success
+ * at that slot and rarity); `with` are the ids of the other parts of the inventory it can be merged with.
+ */
+export interface MergeOffer {
+  to: PartRarity
+  chance_ppm: number
+  pity_ppm: number
+  cost_cents: number
+  duration_ms: number
+  scrap_cents: number
+  with: number[]
+}
+
 /** A part of the driver, in the inventory or on the car. */
 export interface OwnedPart extends PartInfo {
   id: number
   mounted: boolean
   car_id: number | null
+  /** What merging it would do: null when it cannot be merged now (it is legendary, or waits in a job). Only the parts of the inventory of the garage have it. */
+  merge?: MergeOffer | null
 }
 
 /** A part for sale, with what the car of the driver says about it. */
@@ -411,7 +428,7 @@ export interface GarageCar {
   run: { id: number; status: RunStatus; stop_reason: StopReason | null } | null
 }
 
-export type JobKind = 'mount' | 'unmount' | 'upgrade'
+export type JobKind = 'mount' | 'unmount' | 'upgrade' | 'merge'
 
 /** A job of the workshop. The times are ms of the clock of the server. */
 export interface WorkshopJob {
@@ -421,11 +438,32 @@ export interface WorkshopJob {
   cost_cents: number
   /** The level an upgrade takes the part to (null for the other jobs). */
   upgrade_to: number | null
-  /** Waiting for the mechanic, or being done (the car stands in the workshop). */
+  /** A merge: the part that is used up with `part` (which is the one that stays), and the rarity the attempt aims at (null for the other jobs). */
+  merge_with: OwnedPart | null
+  merge_to: PartRarity | null
+  /** Waiting for the mechanic, or being done (the car stands in the workshop, except for a merge, which is not done on the car). */
   status: 'queued' | 'working'
   part: OwnedPart
   start_ms: number
   finish_ms: number
+}
+
+/** What became of an attempt of merging, as the garage tells the last five. */
+export interface MergeResult {
+  id: number
+  success: boolean
+  slot: string
+  tier: number
+  /** The rarity the attempt aimed at. */
+  to: PartRarity
+  /** The model of the part, in the language of the driver. */
+  name: string
+  chance_ppm: number
+  /** What a failure gave back (0 for a success). */
+  scrap_cents: number
+  /** The part that was made: null for a failure, and for a success whose part is gone. */
+  part: OwnedPart | null
+  finished_ms: number
 }
 
 /** GET /api/v1/garage, and the answer of POST /api/v1/garage/jobs. `now_ms` is the clock of the server. */
@@ -433,6 +471,8 @@ export interface GarageResponse {
   data: {
     car: GarageCar | null
     inventory: OwnedPart[]
+    /** The last results of merging, the newest first. */
+    merges: MergeResult[]
     /** The workshop of the city the car stands in: its queue, and the mechanic who works the cars of the driver there one after another. */
     workshop: { city: { slug: string; name: string }; queue_max: number; mechanic: { level: number; time_cut_ppm: number }; jobs: WorkshopJob[] }
   }

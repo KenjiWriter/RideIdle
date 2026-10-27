@@ -3,13 +3,15 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
-import type { CarStatKey, JobKind, OwnedPart, UpgradeNext, WorkshopJob } from '@/api/types'
+import type { CarStatKey, JobKind, MergeResult, OwnedPart, UpgradeNext, WorkshopJob } from '@/api/types'
 import GameShell from '@/components/GameShell.vue'
 import JobCancel from '@/components/JobCancel.vue'
+import PartMerge from '@/components/PartMerge.vue'
 import PartStats from '@/components/PartStats.vue'
 import RarityMark from '@/components/RarityMark.vue'
 import UpgradeMark from '@/components/UpgradeMark.vue'
 import { statFill } from '@/features/car/statFill'
+import { rankOf } from '@/features/parts/rarity'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
@@ -27,7 +29,7 @@ const MIN_ASK_MS = 3_000
 const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking', 'clearance']
 
 const { t } = useI18n()
-const { number, money } = useFormat()
+const { number, money, percent } = useFormat()
 const store = useGarageStore()
 const tutorial = useTutorialStore()
 
@@ -52,7 +54,11 @@ const inventory = computed(() => store.garage?.inventory ?? [])
 /** The part that the tutorial points at when it asks for the tires to be put on: the first pair of tires in the inventory, or the first part. */
 const mountTarget = computed(() => (inventory.value.find((part) => part.slot === 'tires') ?? inventory.value[0])?.id ?? null)
 const standing = computed(() => car.value?.run?.stop_reason === 'workshop')
-const busyPartIds = computed(() => new Set(jobs.value.map((job) => job.part.id)))
+/** The parts that wait in a job: a merge keeps the two of them busy. */
+const busyPartIds = computed(() => new Set(jobs.value.flatMap((job) => (job.merge_with ? [job.part.id, job.merge_with.id] : [job.part.id]))))
+const merges = computed(() => store.garage?.merges ?? [])
+/** The part of the inventory whose chooser of a merge is open. */
+const merging = ref<number | null>(null)
 const cut = computed(() => Math.round((store.garage?.workshop.mechanic.time_cut_ppm ?? 0) / 10_000))
 
 async function load(): Promise<void> {
@@ -106,9 +112,25 @@ function progress(job: WorkshopJob): number {
   return total > 0 ? Math.min(100, Math.max(0, Math.round(((now.value - job.start_ms) / total) * 100))) : 100
 }
 
-/** What a job is doing, in words: putting a part on, taking it off, or upgrading it (and to what level). */
+/** What a job is doing, in words: putting a part on, taking it off, upgrading it (and to what level), or merging two (and into what rarity). */
 function jobText(job: WorkshopJob): string {
-  return t(`workshop.${job.kind}`, { part: job.part.name, to: job.upgrade_to ?? 0 })
+  return t(`workshop.${job.kind}`, {
+    part: job.part.name,
+    to: job.kind === 'merge' && job.merge_to ? t(`rarity.${job.merge_to}`) : (job.upgrade_to ?? 0),
+    other: job.merge_with?.name ?? '',
+  })
+}
+
+/** The other parts of the inventory that a part can be merged with, in the order of the inventory: the ones the server listed. */
+function partnersOf(part: OwnedPart): OwnedPart[] {
+  const ids = new Set(part.merge?.with ?? [])
+
+  return inventory.value.filter((other) => ids.has(other.id))
+}
+
+/** What became of an attempt of merging, in words: what was made, or that both parts were lost and what the scrap was. */
+function resultText(result: MergeResult): string {
+  return result.success ? t('workshop.mergeMade', { name: result.name }) : t('workshop.mergeLost', { name: result.name })
 }
 
 /** What the next step of an upgrade says under its button: what it costs and how long it takes, or what stops it. */
@@ -140,7 +162,7 @@ function failureText(failure: unknown): string {
       : t('common.error')
 }
 
-async function act(kind: JobKind, part: OwnedPart): Promise<void> {
+async function act(kind: JobKind, part: OwnedPart, other?: OwnedPart['id']): Promise<void> {
   if (busy.value) {
     return
   }
@@ -150,7 +172,8 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
   clearCancelled()
 
   try {
-    await store.queue(kind, part.id)
+    await store.queue(kind, part.id, other)
+    merging.value = null
     now.value = store.serverNow()
     // The server moves the tutorial when it is asked, and a job in the queue is what a step waits for.
     void tutorial.load().catch(() => undefined)
@@ -189,9 +212,9 @@ async function cancel(jobId: number): Promise<void> {
     const gone = await store.cancelJob(jobId)
     now.value = store.serverNow()
 
-    // The part of a job that went with the one asked for, or the price of an upgrade that was given back (one that had not started).
+    // The part of a job that went with the one asked for, or the price of an upgrade or of a merge that was given back (one that had not started).
     const [asked, withIt] = gone
-    const refund = asked && asked.kind === 'upgrade' && asked.status === 'queued' ? asked.cost_cents : 0
+    const refund = asked && (asked.kind === 'upgrade' || asked.kind === 'merge') && asked.status === 'queued' ? asked.cost_cents : 0
     showCancelled(
       withIt ? t('workshop.cancelledWith', { part: withIt.part.name }) : refund > 0 ? t('workshop.cancelledRefund', { price: money(refund, 2) }) : t('workshop.cancelled'),
     )
@@ -282,6 +305,28 @@ async function cancel(jobId: number): Promise<void> {
         </ol>
       </section>
 
+      <section v-if="merges.length > 0" class="flex flex-col gap-2" aria-labelledby="merges-title" data-test="merges">
+        <h2 id="merges-title" class="kick !mb-0">{{ t('workshop.mergesTitle') }}</h2>
+        <ul class="flex flex-col gap-2">
+          <li
+            v-for="result in merges"
+            :key="result.id"
+            class="card flex flex-col gap-1 !p-3"
+            :style="result.success ? { borderColor: `var(--color-r${rankOf(result.to)})` } : undefined"
+            :data-success="result.success"
+            :data-test="`merge-result-${result.id}`"
+          >
+            <p class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] font-semibold" :class="result.success ? 'text-ink' : 'text-danger'">
+              {{ resultText(result) }}
+              <RarityMark :rarity="result.to" />
+              <span class="tag">{{ t('part.tier', { tier: result.tier }) }}</span>
+            </p>
+            <p class="sub">{{ t(`slot.${result.slot}`) }} · {{ t('workshop.mergeChance', { chance: percent(result.chance_ppm / 10_000) }) }}</p>
+            <p v-if="!result.success" class="sub" data-test="merge-result-scrap">{{ t('workshop.mergeScrap', { scrap: money(result.scrap_cents, 2) }) }}</p>
+          </li>
+        </ul>
+      </section>
+
       <section class="flex flex-col gap-3" aria-labelledby="car-title" data-test="car">
         <div class="flex items-start justify-between gap-3">
           <h2 id="car-title" class="ttl text-2xl">{{ car.vehicle.name }}</h2>
@@ -354,7 +399,7 @@ async function cancel(jobId: number): Promise<void> {
         <p v-if="inventory.length === 0" class="sub" data-test="inventory-empty">{{ t('workshop.inventoryEmpty') }}</p>
 
         <ul v-else class="flex flex-col gap-2">
-          <li v-for="part in inventory" :key="part.id" class="card flex items-start justify-between gap-2.5 !p-3" :data-test="`part-${part.id}`">
+          <li v-for="part in inventory" :key="part.id" class="card flex flex-wrap items-start justify-between gap-2.5 !p-3" :data-test="`part-${part.id}`">
             <div class="min-w-0">
               <p class="flex items-center gap-2 text-[15px] font-bold text-ink">
                 {{ part.name }}
@@ -367,16 +412,39 @@ async function cancel(jobId: number): Promise<void> {
               </p>
               <PartStats :part="part" />
             </div>
-            <button
-              type="button"
-              class="btn btn-primary btn-sm shrink-0"
-              :disabled="busy || busyPartIds.has(part.id)"
-              :data-tutorial="part.id === mountTarget ? 'mount' : undefined"
-              :data-test="`put-on-${part.id}`"
-              @click="act('mount', part)"
-            >
-              {{ t('workshop.putOn') }}
-            </button>
+            <div class="flex shrink-0 flex-col gap-1.5">
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                :disabled="busy || busyPartIds.has(part.id)"
+                :data-tutorial="part.id === mountTarget ? 'mount' : undefined"
+                :data-test="`put-on-${part.id}`"
+                @click="act('mount', part)"
+              >
+                {{ t('workshop.putOn') }}
+              </button>
+              <!-- Merging two parts of one slot, tier and rarity into one of the next rarity: the server says what a part can be merged with. -->
+              <button
+                v-if="part.merge"
+                type="button"
+                class="btn btn-secondary btn-sm"
+                :disabled="busy || busyPartIds.has(part.id)"
+                :aria-expanded="merging === part.id"
+                :data-test="`merge-open-${part.id}`"
+                @click="merging = merging === part.id ? null : part.id"
+              >
+                {{ t('workshop.mergeOpen') }}
+              </button>
+            </div>
+            <PartMerge
+              v-if="part.merge && merging === part.id"
+              :part="part"
+              :offer="part.merge"
+              :partners="partnersOf(part)"
+              :disabled="busy"
+              @merge="(other) => act('merge', part, other)"
+              @close="merging = null"
+            />
           </li>
         </ul>
       </section>
