@@ -172,8 +172,9 @@ final class GarageController extends Controller
             'vehicle' => [
                 'slug' => $car->vehicle_slug,
                 'name' => $vehicle !== null ? I18nText::from($vehicle['name'])->for() : $car->vehicle_slug,
-                'engine' => $vehicle !== null ? "{$vehicle['engine']['layout']} {$vehicle['engine']['displacement_l']}" : null,
-                'power_kw' => $vehicle['power_kw'] ?? null,
+                // The engine that is in the car: the engine part on it, else the factory engine of the body, and what it makes (no booster counted).
+                'engine' => $vehicle !== null ? $this->engineLabel($this->catalog->part($mounted->get('engine')?->part_slug ?? '')['engine'] ?? $vehicle['engine']) : null,
+                'power_kw' => $vehicle !== null ? (int) round($this->inputs->enginePowerKw($car->vehicle_slug, $slugs)) : null,
                 'drivetrain' => $vehicle['drivetrain'] ?? null,
             ],
             'stats' => $this->rounded($this->inputs->stats($car->vehicle_slug, $slugs, $plan->servicePenaltyPpm())->stats),
@@ -203,6 +204,16 @@ final class GarageController extends Controller
             'lap_ms' => $run?->config['lap_ms'] ?? null,
             'run' => $run === null ? null : ['id' => $run->id, 'status' => $run->status, 'stop_reason' => $run->stop_reason],
         ];
+    }
+
+    /**
+     * The name of an engine as it is shown: the layout and the litres with a decimal (R6 3.0).
+     *
+     * @param  array{layout: string, displacement_l: int|float}  $engine
+     */
+    private function engineLabel(array $engine): string
+    {
+        return $engine['layout'].' '.number_format((float) $engine['displacement_l'], 1, '.', '');
     }
 
     /**

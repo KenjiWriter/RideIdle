@@ -44,10 +44,11 @@ describe('the shop', function () {
 
         $parts = collect($response->json('data.parts'))->keyBy('slug');
 
-        // A car of level 3 sees up to tier 3: the tires, the suspension, the brakes and the exhaust, and what of the engine group is of those tiers.
+        // A car of level 3 sees up to tier 3: the tires, the suspension, the brakes and the exhaust, and what of the engine group and of the engines is of those tiers.
         expect($parts->keys()->all())->toBe([
             'street-tires-t2', 'all-season-tires-t1', 'offroad-tires-t2', 'rain-tires-t3', 'winter-tires-t3', 'sport-suspension-t1', 'rally-suspension-t2', 'disc-brakes-t2', 'sport-exhaust-t2',
             'turbo-osemka-t2', 'turbo-mini-twin-scroll-t3', 'roots-mini-t2', 'factory-cooling-t1', 'intercooler-factory-t2', 'radiator-aluminium-t3', 'manual-4-gearbox-t1', 'manual-5-gearbox-t2', 'manual-6-gearbox-t3',
+            'engine-r4-1-0-t1', 'engine-r4-1-3-t1', 'engine-r4-1-6-t2', 'engine-r4-1-8-t2', 'engine-r4-2-0-t3', 'engine-v6-2-5-t3',
         ])
             ->and($parts['sport-exhaust-t2'])->toMatchArray([
                 'name' => 'Wydech sportowy',

@@ -66,10 +66,11 @@ final class SimulateEconomy extends Command
     private const UPKEEP_SLOTS = ['tires', 'suspension', 'brakes', 'exhaust'];
 
     /**
-     * The slots of the engine group. Its parts are priced by the board of the catalog (a turbo costs two to five times what the curve of the anchors gives
-     * a part of its tier), so their prices are not set against that curve; the check covers the parts the curve describes.
+     * The slots of the engine group and the engines. Their parts are priced by the board of the catalog (a turbo costs two to five times what the curve of the
+     * anchors gives a part of its tier, and an engine by the litre of its layout, so a V12 costs three and a R4 a third of what the tier asks), so their prices
+     * are not set against that curve; the check covers the parts the curve describes.
      */
-    private const ENGINE_GROUP_SLOTS = ['boost', 'cooling', 'gearbox'];
+    private const ENGINE_GROUP_SLOTS = ['boost', 'cooling', 'gearbox', 'engine'];
 
     protected $signature = 'economy:simulate
         {--ruleset= : The ruleset to play, a file of the shape of content/rules/economy.json (that file when left out)}
@@ -374,7 +375,7 @@ final class SimulateEconomy extends Command
         $this->printUpkeep($upkeep);
 
         $this->newLine();
-        $this->line('The rules of the game against the anchors (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'; the engine group, priced by the board of the catalog, is not set against the curve of the parts):');
+        $this->line('The rules of the game against the anchors (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'; the engine group and the engines, priced by the board of the catalog, are not set against the curve of the parts):');
         $this->table(
             ['number', 'anchors', 'game', 'off', ''],
             array_map(fn (Finding $finding): array => [

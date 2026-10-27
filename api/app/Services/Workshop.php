@@ -358,7 +358,7 @@ final class Workshop
         $firstMountMs = $this->script->firstMountMs((int) $car->user_id);
         $occupants = Part::query()->where('car_id', $car->id)->whereNotNull('mounted_slot')->get()->keyBy('mounted_slot');
         $leaving = $pending->where('kind', WorkshopJob::KIND_UNMOUNT)->where('car_id', $car->id)->pluck('part_id');
-        $boosterOn = $this->requirements->boosterOn($car);
+        $state = $this->requirements->stateOf($car);
         $quotes = [];
 
         foreach ($inventory as $part) {
@@ -378,20 +378,28 @@ final class Workshop
                 $quote = ['cost_cents' => $quote['cost_cents'] + $removal['cost_cents'], 'duration_ms' => $quote['duration_ms'] + $removal['duration_ms']];
             }
 
-            $quotes[$part->id] = [...$quote, 'locked' => $this->requirements->lack($definition, $car, $boosterOn)];
+            $quotes[$part->id] = [...$quote, 'locked' => $this->requirements->lack($definition, $car, $state)];
         }
 
         return $quotes;
     }
 
     /**
-     * What taking a part off the car costs and takes.
+     * What taking a part off the car costs and takes. The engine says in `locked` what stops it from coming out: the booster on the car needs more cylinders than
+     * the factory engine has.
      *
-     * @return array{cost_cents: int, duration_ms: int}|null null for a part with no definition
+     * @return array{cost_cents: int, duration_ms: int, locked?: array{reason: string, required: int, current: int}|null}|null null for a part with no definition
      */
     public function unmountQuote(Part $part, WorkshopGear $gear): ?array
     {
-        return $this->catalog->part($part->part_slug) === null ? null : $this->slotJobQuote(WorkshopJob::KIND_UNMOUNT, $part, $gear, null);
+        if ($this->catalog->part($part->part_slug) === null) {
+            return null;
+        }
+
+        $quote = $this->slotJobQuote(WorkshopJob::KIND_UNMOUNT, $part, $gear, null);
+        $car = $part->slot === 'engine' && $part->car_id !== null ? Car::query()->find($part->car_id) : null;
+
+        return $car === null ? $quote : [...$quote, 'locked' => $this->requirements->lackWithoutEngine($car)];
     }
 
     /**
@@ -416,11 +424,11 @@ final class Workshop
             throw new RuleRefusedException('car_level_required', ['required' => $required, 'current' => $car->level]);
         }
 
-        // An engine with too few cylinders cannot take the turbo, and an intercooler has nothing to cool without a booster.
+        // An engine with too few cylinders cannot take the turbo, an intercooler has nothing to cool without a booster, and an engine has to fit the bay of the body.
         $lack = $this->requirements->lack($definition, $car);
 
         if ($lack !== null) {
-            throw new RuleRefusedException($lack['reason'] === 'cylinders' ? 'part_requires_cylinders' : 'part_requires_booster', array_diff_key($lack, ['reason' => 1]));
+            throw new RuleRefusedException($this->lackCode($lack['reason']), $this->lackParams($lack));
         }
 
         // Another part of this slot is already on its way onto the car.
@@ -453,7 +461,37 @@ final class Workshop
             throw new RuleRefusedException('part_not_mounted');
         }
 
+        // The booster on the car may need more cylinders than the factory engine that the car goes back to has.
+        $lack = $part->slot === 'engine' ? $this->requirements->lackWithoutEngine($car) : null;
+
+        if ($lack !== null) {
+            throw new RuleRefusedException($this->lackCode($lack['reason']), $this->lackParams($lack));
+        }
+
         return [[WorkshopJob::KIND_UNMOUNT, $part]];
+    }
+
+    /**
+     * What a refusal says about what the car lacks, for the message: the numbers and names (a list of layouts is made into words).
+     *
+     * @param  array<string, mixed>  $lack
+     * @return array<string, int|float|string>
+     */
+    private function lackParams(array $lack): array
+    {
+        return array_map(static fn (mixed $value): int|float|string => is_array($value) ? implode(', ', $value) : $value, array_diff_key($lack, ['reason' => 1]));
+    }
+
+    /** The code of the refusal for what a car lacks (`PartRequirements::lack`). */
+    private function lackCode(string $reason): string
+    {
+        return match ($reason) {
+            'cylinders' => 'part_requires_cylinders',
+            'bay_layout' => 'engine_bay_layout',
+            'bay_size' => 'engine_bay_size',
+            'booster_cylinders' => 'engine_booster_cylinders',
+            default => 'part_requires_booster',
+        };
     }
 
     /**

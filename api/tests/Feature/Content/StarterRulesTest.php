@@ -56,6 +56,12 @@ function rulesSchemaErrors(array $rules): array
         $data->shop->crates->slots = array_values((array) $data->shop->crates->slots);
     }
 
+    foreach ((array) ($data->engines->bays ?? []) as $bay) {
+        if (isset($bay->layouts) && is_object($bay->layouts)) {
+            $bay->layouts = array_values((array) $bay->layouts);
+        }
+    }
+
     foreach (['bays', 'mechanics'] as $key) {
         if (isset($data->workshop->{$key}->price_cents) && is_object($data->workshop->{$key}->price_cents)) {
             $data->workshop->{$key}->price_cents = array_values((array) $data->workshop->{$key}->price_cents);

@@ -38,8 +38,8 @@ final class Shop
      * What is for sale, with what the driver's car says about it: the level the car needs to have the part mounted and
      * whether it has it. Without a car nothing can be mounted.
      *
-     * A part that the car cannot take for another reason than its level (a turbo for six cylinders on an engine of four, an intercooler with no booster) says
-     * what it lacks in `blocked_by` (see `PartRequirements::lack`), and is not `mountable`.
+     * A part that the car cannot take for another reason than its level (a turbo for six cylinders on an engine of four, an intercooler with no booster, an
+     * engine that does not fit the bay of the body) says what it lacks in `blocked_by` (see `PartRequirements::lack`), and is not `mountable`.
      *
      * The shop shows the parts up to one tier above what the car can have mounted (a car without a part shows as a new one), so the next tier is something to aim
      * for and nothing is out of sight: the engine group comes into view as the car rises.
@@ -48,13 +48,13 @@ final class Shop
      */
     public function offers(?Car $car): array
     {
-        $boosterOn = $car !== null && $this->requirements->boosterOn($car);
+        $state = $car === null ? null : $this->requirements->stateOf($car);
         $slugs = array_values(array_filter($this->rules->shopParts(), fn (string $slug): bool => $this->definition($slug)['tier'] <= $this->highestTierShown($car)));
 
-        return array_map(function (string $slug) use ($car, $boosterOn): array {
+        return array_map(function (string $slug) use ($car, $state): array {
             $part = $this->definition($slug);
             $required = $this->rules->requiredCarLevel($part['tier']);
-            $lack = $car === null ? null : $this->requirements->lack($part, $car, $boosterOn);
+            $lack = $car === null ? null : $this->requirements->lack($part, $car, $state);
 
             return [
                 ...$part,

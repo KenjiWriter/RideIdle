@@ -76,8 +76,9 @@ describe('the parts of the engine group', function () {
             ->and($coolers)->toHaveCount(9)
             ->and($intercoolers)->toHaveCount(5)
             ->and($bySlot['gearbox'])->toHaveCount(6)
-            ->and(count($slugs))->toBe(40)
-            ->and(count(array_unique($slugs)))->toBe(40);
+            // The 40 of the engine group and what was there before, and the 31 engines of the catalog of the engines.
+            ->and(count($slugs))->toBe(71)
+            ->and(count(array_unique($slugs)))->toBe(71);
     });
 
     it('has the numbers of the board: a turbo for six cylinders, the lag, the fuel and the load of each', function () {
@@ -296,8 +297,8 @@ describe('the shop and the tiers', function () {
         expect($tiers())->toBe([1, 2, 3, 4, 5, 6]);
 
         $run->car->forceFill(['level' => 30])->save();
-        expect($tiers())->toBe([1, 2, 3, 4, 5, 6, 7, 8, 9])
-            ->and(test()->getJson('/api/v1/shop', bearerFor($driver))->json('data.parts'))->toHaveCount(40);
+        expect($tiers())->toBe([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+            ->and(test()->getJson('/api/v1/shop', bearerFor($driver))->json('data.parts'))->toHaveCount(71);
     });
 
     it('does not sell a part that the shop does not show to the car yet', function () {

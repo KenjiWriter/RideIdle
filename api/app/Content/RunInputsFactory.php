@@ -161,14 +161,54 @@ final class RunInputsFactory
     }
 
     /**
-     * The power of a car with these parts on it, in kW: the power of the body times the `power_mult` of every part (as worn as it is), where the gain of a
+     * The power of a car with these parts on it, in kW: the power of its engine times the `power_mult` of every part (as worn as it is), where the gain of a
      * booster is grown by the intercooler that works with it.
      *
      * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted
      */
     public function power(string $carSlug, array $mounted = []): float
     {
-        return $this->vehicle($carSlug)['power_kw'] * $this->powerMultiplier($this->parts($mounted));
+        $parts = $this->parts($mounted);
+
+        return $this->enginePower($this->vehicle($carSlug), $parts) * $this->powerMultiplier($parts);
+    }
+
+    /**
+     * The power of the engine of a car alone, in kW, with no booster and nothing else counted: the engine part on it as worn as it is, or the factory engine.
+     *
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted
+     */
+    public function enginePowerKw(string $carSlug, array $mounted = []): float
+    {
+        return $this->enginePower($this->vehicle($carSlug), $this->parts($mounted));
+    }
+
+    /**
+     * The power of the engine that is in the car: the part in the slot engine (its power with its rarity, upgrade and condition), or the factory engine of the
+     * definition of the car.
+     *
+     * @param  array<string, mixed>  $vehicle
+     * @param  array<string, array<string, mixed>>  $parts  the definitions of the mounted parts, by slot
+     */
+    private function enginePower(array $vehicle, array $parts): float
+    {
+        return (float) ($parts['engine']['stats']['power_kw'] ?? $vehicle['power_kw']);
+    }
+
+    /**
+     * What the engine part changes in the mass of the car: its own mass less the one of the factory engine, whose layout and displacement the definition of the
+     * car says (the mass of the car counts that engine in). Nothing without an engine part.
+     *
+     * @param  array<string, mixed>  $vehicle
+     * @param  array<string, array<string, mixed>>  $parts  the definitions of the mounted parts, by slot
+     */
+    private function engineMassChange(array $vehicle, array $parts): float
+    {
+        if (! isset($parts['engine'])) {
+            return 0.0;
+        }
+
+        return (float) $parts['engine']['stats']['engine_mass_kg'] - $this->rules->engineMassKg($vehicle['engine']['layout'], (float) $vehicle['engine']['displacement_l']);
     }
 
     /**
@@ -278,9 +318,10 @@ final class RunInputsFactory
     /**
      * The statistics of a car with these parts on it: the pipeline of the design.
      *
-     * - Power is the power of the body times the `power_mult` of every part (the gain of a booster grown by its intercooler), and acceleration is power per
-     *   tonne, of the body and of the parts that weigh something (`mass_kg`), less the lag of the booster (1% a point) and with the launch of the gearbox.
-     * - Top speed is the one of the body, grown with the cube root of the power gained, and never above the cap of the gearbox.
+     * - Power is the power of the engine (the factory one, or the engine part that replaces it) times the `power_mult` of every part (the gain of a booster
+     *   grown by its intercooler), and acceleration is power per tonne, of the body (an engine part weighs what it weighs instead of the factory engine) and of
+     *   the parts that weigh something (`mass_kg`), less the lag of the booster (1% a point) and with the launch of the gearbox.
+     * - Top speed is the one of the body, grown with the cube root of the power gained over the factory engine, and never above the cap of the gearbox.
      * - Grip, handling and braking start from the tires, and the suspension and the brakes are averaged with the handling and
      *   the braking of the tires. A slot without a part adds nothing, so the stock car is the reference of the tracks.
      * - Handling and braking are then multiplied by the factor of the mass of the body (`Rules::massFactor`).
@@ -305,21 +346,24 @@ final class RunInputsFactory
         $tires = $parts['tires'] ?? $this->stockTires();
 
         $powerMultiplier = $this->powerMultiplier($parts);
-        $power = $vehicle['power_kw'] * $powerMultiplier;
-        $topSpeed = $vehicle['top_speed_kmh'] * $powerMultiplier ** (1 / 3);
+        $enginePower = $this->enginePower($vehicle, $parts);
+        $power = $enginePower * $powerMultiplier;
+        // The top speed of the body grows with the cube root of the power gained over the factory engine, by the engine and by the booster alike.
+        $topSpeed = $vehicle['top_speed_kmh'] * ($power / $vehicle['power_kw']) ** (1 / 3);
 
         if (isset($parts['gearbox']['stats']['top_speed_cap_kmh'])) {
             $topSpeed = min($topSpeed, (float) $parts['gearbox']['stats']['top_speed_cap_kmh']);
         }
 
-        // The parts that weigh something (the intercoolers and the radiators, in kilograms, which may be less than nothing) are added to the body.
-        $mass = $vehicle['mass_kg'] + array_sum(array_map(static fn (array $part): float => (float) ($part['stats']['mass_kg'] ?? 0.0), $parts));
+        // The parts that weigh something (the intercoolers and the radiators, in kilograms, which may be less than nothing) are added to the body, and an engine
+        // part brings what it weighs more or less than the factory engine.
+        $mass = $vehicle['mass_kg'] + $this->engineMassChange($vehicle, $parts) + array_sum(array_map(static fn (array $part): float => (float) ($part['stats']['mass_kg'] ?? 0.0), $parts));
         // A heavy car turns and stops worse, a light one better; the stock Rdzak has the mass the rules take as the reference.
         $massFactor = $this->rules->massFactor($mass);
         // What the booster takes off the acceleration for its lag, and the launch of the gearbox adds to it or takes off (in percent).
         $startFactor = $this->rules->lagFactor((float) ($parts['boost']['stats']['lag'] ?? 0.0)) * (1.0 + (float) ($parts['gearbox']['stats']['launch'] ?? 0.0) / 100.0);
         // The booster burns more through its own `fuel_mult`, so its gain is not counted again in the power that fuel use grows with.
-        $fuelPower = $vehicle['power_kw'] * $this->powerMultiplier($parts, withBooster: false);
+        $fuelPower = $enginePower * $this->powerMultiplier($parts, withBooster: false);
         $fuelMultiplier = array_product(array_map(static fn (array $part): float => (float) ($part['stats']['fuel_mult'] ?? 1.0), $parts));
 
         // A car that is overdue for its service performs worse: everything but the clearance, which is about the body, not the engine and the wheels.

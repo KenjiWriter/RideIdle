@@ -10,6 +10,7 @@ use App\Domain\Run\Surface;
 use App\Domain\Settlement\Ppm;
 use App\Domain\Workshop\WorkshopGear;
 use App\Support\I18nText;
+use InvalidArgumentException;
 
 /**
  * The rules of a run (content/rules/starter.json): tracks, regional climate, weather effects and prices.
@@ -109,7 +110,7 @@ final class Rules
     /** How long a lap of a track is, in metres: what the odometer and the wear of the parts grow by with every lap. */
     public function trackLengthM(string $slug): int
     {
-        return $this->data['tracks'][$slug]['length_m'] ?? throw new \InvalidArgumentException("Unknown track {$slug}.");
+        return $this->data['tracks'][$slug]['length_m'] ?? throw new InvalidArgumentException("Unknown track {$slug}.");
     }
 
     /**
@@ -464,7 +465,7 @@ final class Rules
     {
         $levels = array_map(fn (string $track): int => $this->trackMinPlayerLevel($track), $this->tracksOf($region));
 
-        return $levels === [] ? throw new \InvalidArgumentException("The city {$region} has no track.") : min($levels);
+        return $levels === [] ? throw new InvalidArgumentException("The city {$region} has no track.") : min($levels);
     }
 
     /** @return list<array{from: string, to: string, km: int}> */
@@ -494,7 +495,7 @@ final class Rules
     /** The level of the driver from which a track is open. */
     public function trackMinPlayerLevel(string $slug): int
     {
-        return $this->data['tracks'][$slug]['min_player_level'] ?? throw new \InvalidArgumentException("Unknown track {$slug}.");
+        return $this->data['tracks'][$slug]['min_player_level'] ?? throw new InvalidArgumentException("Unknown track {$slug}.");
     }
 
     /**
@@ -506,6 +507,46 @@ final class Rules
         $mass = $this->data['car']['mass'];
 
         return ($mass['reference_kg'] / $massKg) ** $mass['exponent'];
+    }
+
+    /** What an engine of this tier makes of every litre, as a multiplier: 1 + 7.5% for every tier above the first (the rules `engines`). */
+    public function engineTierEfficiency(int $tier): float
+    {
+        return 1.0 + $this->data['engines']['tier_efficiency_ppm_per_tier'] * (max(1, $tier) - 1) / Ppm::ONE;
+    }
+
+    /** The power of an engine in kW: what a litre of the layout makes, times the litres, times the efficiency of the tier. */
+    public function enginePowerKw(string $layout, float $displacementL, int $tier): float
+    {
+        return $this->engineLayout($layout)['kw_per_litre'] * $displacementL * $this->engineTierEfficiency($tier);
+    }
+
+    /** What an engine weighs in kg: the mass of its layout and of every litre of it. */
+    public function engineMassKg(string $layout, float $displacementL): float
+    {
+        $spec = $this->engineLayout($layout);
+
+        return $spec['base_mass_kg'] + $spec['kg_per_litre'] * $displacementL;
+    }
+
+    /**
+     * The layout of an engine (R4, V6, ...) as the rules give it.
+     *
+     * @return array{kw_per_litre: int|float, base_mass_kg: int|float, kg_per_litre: int|float}
+     */
+    public function engineLayout(string $layout): array
+    {
+        return $this->data['engines']['layouts'][$layout] ?? throw new InvalidArgumentException("The rules have no engine layout {$layout}.");
+    }
+
+    /**
+     * What the bay of a body class takes: the layouts and the displacement it holds at the most. A class the rules do not name takes nothing.
+     *
+     * @return array{layouts: list<string>, max_displacement_l: int|float}|null
+     */
+    public function engineBay(string $class): ?array
+    {
+        return $this->data['engines']['bays'][$class] ?? null;
     }
 
     /** The highest tier of a part that a car of this level can have mounted: 1 + floor(level / levels per tier). */
@@ -635,8 +676,9 @@ final class Rules
     }
 
     /**
-     * The statistics of a part of a rarity at +N and in a condition: what the part adds to a car is multiplied (grip, handling, braking, clearance), and of the power only
-     * the gain is (a multiplier of 1.02 at x1.6 is 1.032). A limit, like the one of a gearbox, is not a gain and stays what it is.
+     * The statistics of a part of a rarity at +N and in a condition: what the part adds to a car is multiplied (grip, handling, braking, clearance), and so is the
+     * power of an engine (`power_kw`); of a multiplier of the power only the gain is (1.02 at x1.6 is 1.032). A limit, like the one of a gearbox, and the mass
+     * of an engine are not gains and stay what they are.
      *
      * @param  array<string, int|float>  $stats  the statistics of the definition of the part
      * @return array<string, int|float>
@@ -651,7 +693,7 @@ final class Rules
         }
 
         foreach ($stats as $name => $value) {
-            if (in_array($name, ['grip', 'handling', 'braking', 'clearance'], true)) {
+            if (in_array($name, ['grip', 'handling', 'braking', 'clearance', 'power_kw'], true)) {
                 $stats[$name] = round($value * $ppm / Ppm::ONE, 6);
             } elseif ($name === 'power_mult') {
                 $stats[$name] = round(1 + ($value - 1) * $ppm / Ppm::ONE, 6);
@@ -702,7 +744,7 @@ final class Rules
     public function workshopJobMs(string $slot, int $tier, bool $removal = false, ?WorkshopGear $gear = null, bool $slotEquipment = true): int
     {
         $workshop = $this->data['workshop'];
-        $base = $workshop['base_time_ms'][$slot] ?? throw new \InvalidArgumentException("The workshop has no time for the slot {$slot}.");
+        $base = $workshop['base_time_ms'][$slot] ?? throw new InvalidArgumentException("The workshop has no time for the slot {$slot}.");
 
         $ms = $this->withGear(Ppm::mul($base * $tier, Ppm::ONE - $this->mechanic()['time_cut_ppm']), $gear, $slotEquipment ? $slot : null);
 
@@ -800,7 +842,7 @@ final class Rules
      */
     public function tireGripPpm(string $kind, string $surface): int
     {
-        return $this->data['tire_matrix'][$kind][$surface] ?? throw new \InvalidArgumentException("The tire matrix has no {$kind} tires on {$surface}.");
+        return $this->data['tire_matrix'][$kind][$surface] ?? throw new InvalidArgumentException("The tire matrix has no {$kind} tires on {$surface}.");
     }
 
     /**
