@@ -200,11 +200,11 @@
           "pt-BR": "Sou eu de novo, outro número novo. Chegou uma coisa para você."
         },
         {
-          "pl": "Dorzuciłem Ci do inwentarza nowe opony. Idź do Warsztatu i załóż je na auto: zobaczysz, co daje tuning. — K.",
-          "en": "I put a new pair of tires in your inventory. Go to the Workshop and fit them on the car, and you’ll see what tuning does. — K.",
-          "fr": "J’ai mis une paire de pneus neufs dans ton inventaire. Va à l’Atelier et monte-les sur la voiture : tu verras ce que donne le tuning. — K.",
-          "de": "Ich habe dir ein neues Paar Reifen ins Inventar gelegt. Geh in die Werkstatt und zieh sie auf das Auto, dann siehst du, was Tuning bringt. — K.",
-          "pt-BR": "Coloquei um par de pneus novos no seu inventário. Vá à Oficina e monte no carro: você vai ver o que o tuning faz. — K."
+          "pl": "Dorzuciłem Ci do inwentarza nowe opony. Wejdź w „Warsztat” na dolnym pasku i załóż je na auto: zobaczysz, co daje tuning. — K.",
+          "en": "I put a new pair of tires in your inventory. Open “Workshop” on the bottom bar and fit them on the car, and you’ll see what tuning does. — K.",
+          "fr": "J’ai mis une paire de pneus neufs dans ton inventaire. Ouvre « Atelier » dans la barre du bas et monte-les sur la voiture : tu verras ce que donne le tuning. — K.",
+          "de": "Ich habe dir ein neues Paar Reifen ins Inventar gelegt. Öffne unten in der Leiste „Werkstatt“ und zieh sie auf das Auto, dann siehst du, was Tuning bringt. — K.",
+          "pt-BR": "Coloquei um par de pneus novos no seu inventário. Abra “Oficina” na barra de baixo e monte no carro: você vai ver o que o tuning faz. — K."
         }
       ],
       "reply": {
@@ -234,11 +234,11 @@
           "pt-BR": "Sou eu. O número mudou de novo, como sempre."
         },
         {
-          "pl": "W Sklepie czeka skrzynka z częściami, a pierwsza idzie na mój koszt. Otwórz ją i zobacz, co wylosujesz: szanse masz na ekranie, nic nie jest ukryte. — K.",
-          "en": "A crate of parts is waiting in the Shop, and the first one is on me. Open it and see what you draw: the odds are on the screen, nothing is hidden. — K.",
-          "fr": "Une caisse de pièces t’attend à la Boutique, et la première est pour moi. Ouvre-la et vois ce que tu tires : les chances sont à l’écran, rien n’est caché. — K.",
-          "de": "Im Shop wartet eine Teilekiste, und die erste geht auf mich. Öffne sie und sieh, was du ziehst: Die Chancen stehen auf dem Bildschirm, nichts ist versteckt. — K.",
-          "pt-BR": "Uma caixa de peças espera na Loja, e a primeira é por minha conta. Abra e veja o que sai: as chances estão na tela, nada fica escondido. — K."
+          "pl": "Wejdź w „Miasto” na dolnym pasku, do zakładki Sklep: czeka tam skrzynka z częściami, a pierwsza idzie na mój koszt. Szanse masz na ekranie, nic nie jest ukryte. — K.",
+          "en": "Open “City” on the bottom bar, then the Shop tab: a crate of parts is waiting there, and the first one is on me. The odds are on the screen, nothing is hidden. — K.",
+          "fr": "Ouvre « Ville » dans la barre du bas, onglet Boutique : une caisse de pièces t’y attend, et la première est pour moi. Les chances sont à l’écran, rien n’est caché. — K.",
+          "de": "Öffne unten in der Leiste „Stadt“ und dort den Reiter Shop: Dort wartet eine Teilekiste, und die erste geht auf mich. Die Chancen stehen auf dem Bildschirm, nichts ist versteckt. — K.",
+          "pt-BR": "Abra “Cidade” na barra de baixo, na aba Loja: lá espera uma caixa de peças, e a primeira é por minha conta. As chances estão na tela, nada fica escondido. — K."
         }
       ],
       "reply": {
