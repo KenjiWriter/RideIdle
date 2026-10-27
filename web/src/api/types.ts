@@ -120,7 +120,8 @@ export interface Wallet {
 }
 
 export interface SettlementEvent {
-  type: 'lap_batch' | 'breakdown' | 'fuel_empty'
+  /** `service_due` says the car has driven as far as its service falls due (`mileage_km`); a `breakdown` may say which part it was (`part`, the name of the slot). */
+  type: 'lap_batch' | 'breakdown' | 'fuel_empty' | 'service_due'
   at_ms: number
   payload: Record<string, number | string>
 }
@@ -294,11 +295,22 @@ export interface MergeOffer {
   with: number[]
 }
 
+/** What putting a worn part right costs and takes, and what stops it: the part is not worn (`fine`), it is worn out and has to be replaced (`worn_out`), or it has no price (`unavailable`). */
+export interface RepairNext {
+  cost_cents: number | null
+  duration_ms: number | null
+  locked: { reason: 'fine' | 'worn_out' | 'unavailable' } | null
+}
+
 /** A part of the driver, in the inventory or on the car. */
 export interface OwnedPart extends PartInfo {
   id: number
   mounted: boolean
   car_id: number | null
+  /** How much of its life the part has left, in percent: 100 is new, and the statistics above already count it (x 0.6 + 0.4 x condition). */
+  condition_percent: number
+  /** What putting it right would cost and take: the parts of the inventory of the garage have it (those on the car have it in `MountedPart`). */
+  repair_next?: RepairNext
   /** What merging it would do: null when it cannot be merged now (it is legendary, or waits in a job). Only the parts of the inventory of the garage have it. */
   merge?: MergeOffer | null
 }
@@ -397,9 +409,24 @@ export interface UpgradeNext {
   locked: UpgradeLock | null
 }
 
-/** A part that sits on the car, which says what the next step of its upgrade is. */
+/** A part that sits on the car, which says what the next step of its upgrade is and what putting it right would take. */
 export interface MountedPart extends OwnedPart {
   upgrade_next: UpgradeNext
+  repair_next: RepairNext
+}
+
+/**
+ * The service of the car: it is due every `every_km`, `since_km` is how far it has driven since the last one and `due_in_km` how far it is from the next (less than
+ * nothing when it is overdue, by `overdue_km`, which takes `penalty_percent` off the performance). A service costs `cost_cents` and takes `duration_ms`.
+ */
+export interface ServiceState {
+  every_km: number
+  since_km: number
+  due_in_km: number
+  overdue_km: number
+  penalty_percent: number
+  cost_cents: number
+  duration_ms: number
 }
 
 export interface GarageSlot {
@@ -423,27 +450,33 @@ export interface GarageCar {
   /** The value of a statistic at which its bar is full: what the best car of the whole game reaches. */
   ceilings: Record<CarStatKey, number>
   tank_ml: number
+  /** What the odometer says. */
+  mileage_km: number
+  service: ServiceState
+  /** How often it breaks down: the chance after a lap, in ppm (1 000 000 is certain), with its condition, the wear of its parts and its service counted. */
+  breakdown: { chance_ppm: number }
   slots: GarageSlot[]
   lap_ms: Record<string, number> | null
   run: { id: number; status: RunStatus; stop_reason: StopReason | null } | null
 }
 
-export type JobKind = 'mount' | 'unmount' | 'upgrade' | 'merge'
+export type JobKind = 'mount' | 'unmount' | 'upgrade' | 'merge' | 'repair' | 'service'
 
 /** A job of the workshop. The times are ms of the clock of the server. */
 export interface WorkshopJob {
   id: number
   kind: JobKind
-  /** What an upgrade cost, paid when it was queued (0 for the other jobs). */
+  /** What an upgrade, a merge, a repair or a service cost, paid when it was queued (0 for the other jobs). */
   cost_cents: number
   /** The level an upgrade takes the part to (null for the other jobs). */
   upgrade_to: number | null
   /** A merge: the part that is used up with `part` (which is the one that stays), and the rarity the attempt aims at (null for the other jobs). */
   merge_with: OwnedPart | null
   merge_to: PartRarity | null
-  /** Waiting for the mechanic, or being done (the car stands in the workshop, except for a merge, which is not done on the car). */
+  /** Waiting for the mechanic, or being done (the car stands in the workshop, except for a merge and the repair of a part of the inventory, which are not done on the car). */
   status: 'queued' | 'working'
-  part: OwnedPart
+  /** The part the job is about: none for a service, which is a job on the car. */
+  part: OwnedPart | null
   start_ms: number
   finish_ms: number
 }

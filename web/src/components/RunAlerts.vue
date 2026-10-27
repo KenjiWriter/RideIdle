@@ -13,7 +13,7 @@ import TowControl from './TowControl.vue'
 
 const props = defineProps<{ run: Run }>()
 
-const { t } = useI18n()
+const { t, te } = useI18n()
 const route = useRoute()
 const { stopped, towing, towMs } = useRunStatus()
 const store = useRunStore()
@@ -29,6 +29,9 @@ onMounted(() => {
 onBeforeUnmount(() => clearInterval(ticker))
 
 const leftMs = computed(() => (props.run.travel ? Math.max(0, props.run.travel.arrive_ms - now.value) : 0))
+
+/** The part that the breakdown was, when the server said it: the name of its slot, or the slot itself when the messages do not know it. */
+const brokenName = computed(() => (store.brokenPart === null ? null : te(`slot.${store.brokenPart}`) ? t(`slot.${store.brokenPart}`) : store.brokenPart))
 </script>
 
 <template>
@@ -44,6 +47,7 @@ const leftMs = computed(() => (props.run.travel ? Math.max(0, props.run.travel.a
     </div>
     <p v-else-if="stopped && run.stop_reason && run.stop_reason !== 'parked'" class="card card-hi text-sm" role="status" data-test="banner">
       {{ t(`run.banner.${run.stop_reason}`) }}
+      <span v-if="run.stop_reason === 'breakdown' && brokenName" data-test="broken-part">{{ t('run.banner.breakdownPart', { part: brokenName }) }}</span>
     </p>
 
     <RepairControl :run="run" />

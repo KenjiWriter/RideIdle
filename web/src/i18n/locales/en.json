@@ -122,7 +122,8 @@
       "breakdown": "The car broke down. It stands until it is repaired.",
       "workshop": "The car stands in the workshop while the mechanic works. It drives again when the last job is done.",
       "travel": "The car is on its way to {city}, arriving in {time}. It earns nothing on the road.",
-      "parked": "The car is waiting in the garage. It earns nothing until you send it out with Start."
+      "parked": "The car is waiting in the garage. It earns nothing until you send it out with Start.",
+      "breakdownPart": "It was the {part}."
     },
     "fuel": {
       "title": "Fuel",
@@ -330,7 +331,9 @@
       "mud": "Mud",
       "snow": "Snow"
     },
-    "surfaceLine": "{surface} ×{value}"
+    "surfaceLine": "{surface} ×{value}",
+    "condition": "Condition: {percent}%",
+    "unserviceable": "Unserviceable"
   },
   "shop": {
     "title": "Shop",
@@ -429,7 +432,23 @@
     "mergesTitle": "Last merges",
     "mergeMade": "Success: {name}",
     "mergeLost": "Failed: {name}",
-    "mergeScrap": "Both parts are lost, scrap: {scrap}."
+    "mergeScrap": "Both parts are lost, scrap: {scrap}.",
+    "repair": "Repairing: {part}",
+    "service": "Servicing the car",
+    "repairAction": "Repair",
+    "repairCost": "{price} · {time}",
+    "repairWornOut": "Worn out: it has to be replaced",
+    "conditionTitle": "Technical condition",
+    "mileage": "Mileage: {km} km",
+    "serviceIn": "Service in {km} km",
+    "serviceLate": "Service overdue by {km} km",
+    "serviceLatePenalty": "Service overdue by {km} km: −{percent}% performance",
+    "serviceButton": "Service",
+    "serviceCost": "{price} · {time}",
+    "serviceWaits": "A service is in the queue.",
+    "breakdownEvery": "A breakdown about every {time} on average",
+    "cancelLosesRepair": "The work already done and the {price} paid for the repair are lost, and the part stays as it was.",
+    "cancelLosesService": "The work already done and the {price} paid for the service are lost."
   },
   "hud": {
     "level": "LV",

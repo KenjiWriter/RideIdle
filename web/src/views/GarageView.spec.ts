@@ -7,7 +7,7 @@ import { POLL_MS } from '@/features/run/useRunPolling'
 import { readSeen, storeSeen } from '@/features/run/seen'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
-import { aCar, aGarage, aMountedPart, aPart } from '@/test/garageFixtures'
+import { aCar, aGarage, aMountedPart, aPart, aService } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
 import { aStep, aTutorial } from '@/test/tutorialFixtures'
 
@@ -870,6 +870,61 @@ describe('GarageView', () => {
 
     expect(wrapper.get('[data-test="slot-tires"] [data-test="upgrade-mark"]').text()).toBe('+3')
     expect(wrapper.find('[data-test="slot-brakes"] [data-test="upgrade-mark"]').exists()).toBe(false)
+  })
+
+  it('says how much of its life a worn part has left on its tile, in red when it is unserviceable, and leaves a part as good as new as it is', async () => {
+    const worn = aMountedPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, condition_percent: 63 })
+    const dead = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', condition_percent: 9 })
+    const fresh = aMountedPart({ id: 11 })
+    serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: worn, brakes: dead, exhaust: fresh }) })) })
+
+    const { wrapper } = await show()
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="slot-condition-tires"]').text()).toBe('Condition: 63%')
+    expect(wrapper.get('[data-test="slot-condition-tires"]').classes()).not.toContain('text-danger')
+    expect(wrapper.get('[data-test="slot-condition-brakes"]').text()).toBe('Condition: 9%')
+    expect(wrapper.get('[data-test="slot-condition-brakes"]').classes()).toContain('text-danger')
+    expect(wrapper.find('[data-test="slot-condition-exhaust"]').exists()).toBe(false)
+  })
+
+  it('shows the odometer of the car and how far its service is, and how late it is when it is overdue', async () => {
+    serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage()) })
+
+    const { wrapper } = await show()
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="upkeep"]').text()).toBe('Mileage: 260,123 km · Service in 3,420 km')
+    expect(wrapper.get('[data-test="upkeep-service"]').classes()).not.toContain('text-danger')
+
+    serve(() => respond(200, runAnswer(aRun())), undefined, {
+      'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ mileage_km: 265_800, service: aService({ since_km: 5_800, due_in_km: -800, overdue_km: 800, penalty_percent: 4 }) }) })),
+    })
+    const late = await show()
+    await flushPromises()
+
+    expect(late.wrapper.get('[data-test="upkeep"]').text()).toBe('Mileage: 265,800 km · Service overdue by 800 km: −4% performance')
+    expect(late.wrapper.get('[data-test="upkeep-service"]').classes()).toContain('text-danger')
+  })
+
+  it('says which part broke down when the server told it, and says nothing more when it did not', async () => {
+    const broke = { ...runAnswer(aRun({ status: 'stopped', stop_reason: 'breakdown' })), settlements: [{ version: 5, from_ms: NOW - 60_000, to_ms: NOW, at_ms: NOW, laps: 3, cash_cents: 4_650, xp: 75, stop_reason: 'breakdown' as const, events: [{ type: 'breakdown' as const, at_ms: NOW, payload: { part: 'tires' } }] }] }
+    serve(() => respond(200, broke))
+
+    const { wrapper } = await show()
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="banner"]').text()).toBe('The car broke down. It stands until it is repaired. It was the Tires.')
+    expect(wrapper.get('[data-test="broken-part"]').text()).toBe('It was the Tires.')
+
+    // An event of a kind that the screen does not know is no reason for anything.
+    const odd = { ...runAnswer(aRun({ status: 'stopped', stop_reason: 'breakdown' })), settlements: [{ ...broke.settlements[0], events: [{ type: 'service_due' as const, at_ms: NOW, payload: { mileage_km: 265_000 } }] }] }
+    serve(() => respond(200, odd))
+    const plain = await show()
+    await flushPromises()
+
+    expect(plain.wrapper.get('[data-test="banner"]').text()).toBe('The car broke down. It stands until it is repaired.')
+    expect(plain.wrapper.find('[data-test="broken-part"]').exists()).toBe(false)
   })
 
   it('marks the tile of a rarer part with the color and the name of its rarity, and leaves a common one as it is', async () => {

@@ -122,7 +122,8 @@
       "breakdown": "Auto się zepsuło. Stoi, dopóki go nie naprawisz.",
       "workshop": "Auto stoi w warsztacie, dopóki mechanik pracuje. Pojedzie dalej, gdy skończy się ostatnie zlecenie.",
       "travel": "Auto jedzie do miasta {city}, dojazd za {time}. W drodze nic nie zarabia.",
-      "parked": "Auto czeka w garażu. Nic nie zarabia, dopóki nie wyślesz go przyciskiem Start."
+      "parked": "Auto czeka w garażu. Nic nie zarabia, dopóki nie wyślesz go przyciskiem Start.",
+      "breakdownPart": "Zepsuło się: {part}."
     },
     "fuel": {
       "title": "Paliwo",
@@ -330,7 +331,9 @@
       "mud": "Błoto",
       "snow": "Śnieg"
     },
-    "surfaceLine": "{surface} ×{value}"
+    "surfaceLine": "{surface} ×{value}",
+    "condition": "Stan: {percent}%",
+    "unserviceable": "Niesprawna"
   },
   "shop": {
     "title": "Sklep",
@@ -429,7 +432,23 @@
     "mergesTitle": "Ostatnie łączenia",
     "mergeMade": "Udało się: {name}",
     "mergeLost": "Nie udało się: {name}",
-    "mergeScrap": "Obie części przepadły, złom: {scrap}."
+    "mergeScrap": "Obie części przepadły, złom: {scrap}.",
+    "repair": "Naprawa: {part}",
+    "service": "Serwis auta",
+    "repairAction": "Napraw",
+    "repairCost": "{price} · {time}",
+    "repairWornOut": "Zużyta do końca: trzeba wymienić",
+    "conditionTitle": "Stan techniczny",
+    "mileage": "Przebieg: {km} km",
+    "serviceIn": "Serwis za {km} km",
+    "serviceLate": "Serwis spóźniony o {km} km",
+    "serviceLatePenalty": "Serwis spóźniony o {km} km: −{percent}% osiągów",
+    "serviceButton": "Serwis",
+    "serviceCost": "{price} · {time}",
+    "serviceWaits": "Serwis czeka w kolejce.",
+    "breakdownEvery": "Awaria średnio co ok. {time}",
+    "cancelLosesRepair": "Praca, która już trwa, i {price} zapłacone za naprawę przepadną, a część zostaje taka, jak była.",
+    "cancelLosesService": "Praca, która już trwa, i {price} zapłacone za serwis przepadną."
   },
   "hud": {
     "level": "LV",

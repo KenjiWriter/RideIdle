@@ -17,6 +17,7 @@ import UpgradeMark from '@/components/UpgradeMark.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RunAlerts from '@/components/RunAlerts.vue'
 import { carPicture } from '@/features/art'
+import { useServiceLine } from '@/features/car/serviceLine'
 import { statFill } from '@/features/car/statFill'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { useFlash } from '@/features/run/useFlash'
@@ -38,6 +39,7 @@ const run = useRunStore()
 const garage = useGarageStore()
 const tutorial = useTutorialStore()
 const { money, number } = useFormat()
+const { serviceLine } = useServiceLine()
 
 useLeaveOnSignOut()
 useRunPolling()
@@ -240,6 +242,11 @@ async function useCode(): Promise<void> {
             <em v-if="delta(stat) !== 0" :class="{ dn: delta(stat) < 0 }" :data-test="`delta-${stat}`">{{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 0) }}</em>
           </span>
         </div>
+        <!-- The odometer and the service of the car: the place to see that it is due is here, the place to do it is the workshop. -->
+        <p class="sub mt-1" data-test="upkeep">
+          {{ t('workshop.mileage', { km: number(car.mileage_km) }) }} ·
+          <span :class="{ 'text-danger': car.service.due_in_km < 0 }" data-test="upkeep-service">{{ serviceLine(car.service) }}</span>
+        </p>
       </section>
 
       <section v-if="car" class="grid grid-cols-3 gap-2" :aria-label="t('workshop.slots')" data-test="slots">
@@ -256,6 +263,10 @@ async function useCode(): Promise<void> {
           <span v-if="slot.part" class="mono text-[10px] text-faint">{{ t('part.tier', { tier: slot.part.tier ?? 0 }) }}</span>
           <RarityMark v-if="slot.part && slot.part.rarity_rank > 1" :rarity="slot.part.rarity" />
           <UpgradeMark v-if="slot.part" :level="slot.part.upgrade" />
+          <!-- A part that has worn says how much of its life is left, in red when it is unserviceable. -->
+          <span v-if="slot.part && slot.part.condition_percent < 100" class="mono text-[10px]" :class="slot.part.condition_percent < 20 ? 'text-danger' : 'text-faint'" :data-test="`slot-condition-${slot.slot}`">
+            {{ t('part.condition', { percent: slot.part.condition_percent }) }}
+          </span>
         </RouterLink>
       </section>
 

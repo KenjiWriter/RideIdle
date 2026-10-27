@@ -122,7 +122,8 @@
       "breakdown": "Das Auto hat eine Panne. Es steht, bis es repariert ist.",
       "workshop": "Das Auto steht in der Werkstatt, solange der Mechaniker arbeitet. Es fährt wieder, wenn der letzte Auftrag erledigt ist.",
       "travel": "Das Auto ist nach {city} unterwegs und kommt in {time} an. Unterwegs verdient es nichts.",
-      "parked": "Das Auto wartet in der Garage. Es verdient nichts, bis du es mit Start losschickst."
+      "parked": "Das Auto wartet in der Garage. Es verdient nichts, bis du es mit Start losschickst.",
+      "breakdownPart": "Betroffen war: {part}."
     },
     "fuel": {
       "title": "Kraftstoff",
@@ -330,7 +331,9 @@
       "mud": "Schlamm",
       "snow": "Schnee"
     },
-    "surfaceLine": "{surface} ×{value}"
+    "surfaceLine": "{surface} ×{value}",
+    "condition": "Zustand: {percent} %",
+    "unserviceable": "Unbrauchbar"
   },
   "shop": {
     "title": "Shop",
@@ -429,7 +432,23 @@
     "mergesTitle": "Letzte Verschmelzungen",
     "mergeMade": "Gelungen: {name}",
     "mergeLost": "Fehlgeschlagen: {name}",
-    "mergeScrap": "Beide Teile sind verloren, Schrott: {scrap}."
+    "mergeScrap": "Beide Teile sind verloren, Schrott: {scrap}.",
+    "repair": "Reparatur: {part}",
+    "service": "Wartung des Autos",
+    "repairAction": "Reparieren",
+    "repairCost": "{price} · {time}",
+    "repairWornOut": "Völlig verschlissen: muss ersetzt werden",
+    "conditionTitle": "Technischer Zustand",
+    "mileage": "Laufleistung: {km} km",
+    "serviceIn": "Wartung in {km} km",
+    "serviceLate": "Wartung überfällig um {km} km",
+    "serviceLatePenalty": "Wartung überfällig um {km} km: −{percent} % Leistung",
+    "serviceButton": "Wartung",
+    "serviceCost": "{price} · {time}",
+    "serviceWaits": "Eine Wartung ist in der Warteschlange.",
+    "breakdownEvery": "Eine Panne durchschnittlich etwa alle {time}",
+    "cancelLosesRepair": "Die bereits geleistete Arbeit und die {price} für die Reparatur gehen verloren, und das Teil bleibt, wie es war.",
+    "cancelLosesService": "Die bereits geleistete Arbeit und die {price} für die Wartung gehen verloren."
   },
   "hud": {
     "level": "LV",

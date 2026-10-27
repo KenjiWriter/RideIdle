@@ -122,7 +122,8 @@
       "breakdown": "La voiture est tombée en panne. Elle reste arrêtée tant qu’elle n’est pas réparée.",
       "workshop": "La voiture reste à l’atelier pendant que le mécanicien travaille. Elle repart quand le dernier travail est terminé.",
       "travel": "La voiture roule vers {city}, arrivée dans {time}. Elle ne gagne rien en route.",
-      "parked": "La voiture attend dans le garage. Elle ne rapporte rien tant que tu ne l’envoies pas avec Démarrer."
+      "parked": "La voiture attend dans le garage. Elle ne rapporte rien tant que tu ne l’envoies pas avec Démarrer.",
+      "breakdownPart": "Pièce en cause : {part}."
     },
     "fuel": {
       "title": "Carburant",
@@ -330,7 +331,9 @@
       "mud": "Boue",
       "snow": "Neige"
     },
-    "surfaceLine": "{surface} ×{value}"
+    "surfaceLine": "{surface} ×{value}",
+    "condition": "État : {percent} %",
+    "unserviceable": "Hors service"
   },
   "shop": {
     "title": "Boutique",
@@ -429,7 +432,23 @@
     "mergesTitle": "Dernières fusions",
     "mergeMade": "Réussi : {name}",
     "mergeLost": "Échec : {name}",
-    "mergeScrap": "Les deux pièces sont perdues, ferraille : {scrap}."
+    "mergeScrap": "Les deux pièces sont perdues, ferraille : {scrap}.",
+    "repair": "Réparation : {part}",
+    "service": "Entretien de la voiture",
+    "repairAction": "Réparer",
+    "repairCost": "{price} · {time}",
+    "repairWornOut": "Complètement usée : à remplacer",
+    "conditionTitle": "État technique",
+    "mileage": "Kilométrage : {km} km",
+    "serviceIn": "Entretien dans {km} km",
+    "serviceLate": "Entretien en retard de {km} km",
+    "serviceLatePenalty": "Entretien en retard de {km} km : −{percent} % de performances",
+    "serviceButton": "Entretien",
+    "serviceCost": "{price} · {time}",
+    "serviceWaits": "Un entretien est dans la file.",
+    "breakdownEvery": "Une panne environ toutes les {time} en moyenne",
+    "cancelLosesRepair": "Le travail déjà fait et les {price} payés pour la réparation sont perdus, et la pièce reste comme elle était.",
+    "cancelLosesService": "Le travail déjà fait et les {price} payés pour l’entretien sont perdus."
   },
   "hud": {
     "level": "LV",

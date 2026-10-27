@@ -1,4 +1,4 @@
-import type { GarageCar, GarageResponse, MergeOffer, MergeResult, MountedPart, OpenedCrate, OwnedPart, ShopCrates, ShopOffer, UpgradeNext, WorkshopJob } from '@/api/types'
+import type { GarageCar, GarageResponse, MergeOffer, MergeResult, MountedPart, OpenedCrate, OwnedPart, RepairNext, ServiceState, ShopCrates, ShopOffer, UpgradeNext, WorkshopJob } from '@/api/types'
 
 /** The time of the server in the fixtures. */
 export const NOW = 1_792_692_000_000
@@ -16,6 +16,7 @@ export function aPart(overrides: Partial<OwnedPart> = {}): OwnedPart {
     rarity_rank: 1,
     upgrade: 0,
     upgrade_max: 3,
+    condition_percent: 100,
     mounted: false,
     car_id: null,
     ...overrides,
@@ -25,6 +26,19 @@ export function aPart(overrides: Partial<OwnedPart> = {}): OwnedPart {
 /** What the next step of an upgrade is on a car of level 3: +1 for $199.50 and 4 min 54 s (the street tires of tier 2, as the server prices them). */
 export function anUpgradeStep(overrides: Partial<UpgradeNext> = {}): UpgradeNext {
   return { to: 1, cost_cents: 19_950, duration_ms: 294_000, locked: null, ...overrides }
+}
+
+/** What putting a worn part right would cost and take: $142.50 and 1 min 57 s (street tires of tier 2 at half their life). A part that is not worn has nothing to put right. */
+export function aRepairStep(overrides: Partial<RepairNext> = {}): RepairNext {
+  return { cost_cents: 14_250, duration_ms: 117_600, locked: null, ...overrides }
+}
+
+/** The part is as good as new: there is nothing to repair. */
+export const NOTHING_TO_REPAIR: RepairNext = { cost_cents: null, duration_ms: null, locked: { reason: 'fine' } }
+
+/** The service of a car that has driven 1 580 km since the last one: 3 420 km to go, $45.60 and 14 min 42 s. */
+export function aService(overrides: Partial<ServiceState> = {}): ServiceState {
+  return { every_km: 5_000, since_km: 1_580, due_in_km: 3_420, overdue_km: 0, penalty_percent: 0, cost_cents: 4_560, duration_ms: 882_000, ...overrides }
 }
 
 /** What merging a part of the inventory would do: common to uncommon with the 80% and the 1 point of the workshop, $57.00 (a tenth of the model) and 7 min 50 s, with `with` the other parts it can go with. */
@@ -39,7 +53,7 @@ export function aMergeResult(overrides: Partial<MergeResult> = {}): MergeResult 
 
 /** A part that sits on the car, with the next step of its upgrade. */
 export function aMountedPart(overrides: Partial<MountedPart> = {}): MountedPart {
-  return { ...aPart({ mounted: true, car_id: 5 }), upgrade_next: anUpgradeStep(), ...overrides }
+  return { ...aPart({ mounted: true, car_id: 5 }), upgrade_next: anUpgradeStep(), repair_next: NOTHING_TO_REPAIR, ...overrides }
 }
 
 export function anOffer(overrides: Partial<ShopOffer> = {}): ShopOffer {
@@ -60,8 +74,12 @@ export function aCar(overrides: Partial<GarageCar> = {}, mounted: Record<string,
     base_stats: { accel: 97, top_speed: 175, grip: 90, handling: 88, braking: 90, clearance: 20 },
     ceilings: { accel: 400, top_speed: 450, grip: 250, handling: 250, braking: 250, clearance: 200 },
     tank_ml: 45_000,
-    // A part that sits on the car comes with the next step of its upgrade, as the server sends it.
-    slots: SLOTS.map((slot) => ({ slot, part: mounted[slot] ? { upgrade_next: anUpgradeStep(), ...mounted[slot] } : null, built_in: slot === 'engine' })),
+    mileage_km: 260_123,
+    service: aService(),
+    // One breakdown in about 1 000 laps (about 21 hours of laps of 75 s).
+    breakdown: { chance_ppm: 1_000 },
+    // A part that sits on the car comes with the next step of its upgrade and of its repair, as the server sends it.
+    slots: SLOTS.map((slot) => ({ slot, part: mounted[slot] ? { upgrade_next: anUpgradeStep(), repair_next: NOTHING_TO_REPAIR, ...mounted[slot] } : null, built_in: slot === 'engine' })),
     lap_ms: { dry: 75_000 },
     run: { id: 7, status: 'running', stop_reason: null },
     ...overrides,

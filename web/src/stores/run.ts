@@ -24,6 +24,8 @@ export const useRunStore = defineStore('run', () => {
   const away = ref<RunSummary | null>(null)
   /** The clock of the server minus the clock of this device, as it was at the last answer. */
   const clockOffsetMs = ref(0)
+  /** The part (the name of its slot) that the last breakdown was told to be, while the car stands for it: the banner says it. */
+  const brokenPart = ref<string | null>(null)
 
   const starters = ref<StarterCar[]>([])
   const startTrack = ref<{ slug: string; name: string } | null>(null)
@@ -39,6 +41,18 @@ export const useRunStore = defineStore('run', () => {
     wallet.value = response.wallet
     tow.value = response.tow ?? null
     loaded.value = true
+
+    // A breakdown may say which part it was: it is told as long as the car stands for it.
+    if (response.data.stop_reason !== 'breakdown') {
+      brokenPart.value = null
+    } else {
+      const told = (response.settlements ?? [])
+        .flatMap((settlement) => settlement.events)
+        .reverse()
+        .find((event) => event.type === 'breakdown' && typeof event.payload.part === 'string')
+
+      brokenPart.value = told ? String(told.payload.part) : brokenPart.value
+    }
   }
 
   function remember(current: Run): void {
@@ -241,6 +255,7 @@ export const useRunStore = defineStore('run', () => {
     tow.value = null
     loaded.value = false
     away.value = null
+    brokenPart.value = null
     starters.value = []
     startTrack.value = null
     clockOffsetMs.value = 0
@@ -248,5 +263,5 @@ export const useRunStore = defineStore('run', () => {
     clearSeen()
   }
 
-  return { run, wallet, tow, loaded, away, starters, startTrack, serverNow, loadStarters, start, begin, load, refresh, refuel, repair, towCar, dismissAway, reset }
+  return { run, wallet, tow, loaded, away, brokenPart, starters, startTrack, serverNow, loadStarters, start, begin, load, refresh, refuel, repair, towCar, dismissAway, reset }
 })

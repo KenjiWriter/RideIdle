@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
-import { NOW, aCar, aGarage, aJob, aMergeOffer, aMergeResult, aMountedPart, aPart, anUpgradeStep } from '@/test/garageFixtures'
+import { NOTHING_TO_REPAIR, NOW, aCar, aGarage, aJob, aMergeOffer, aMergeResult, aMountedPart, aPart, aRepairStep, aService, anUpgradeStep } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
 import { aTutorial } from '@/test/tutorialFixtures'
 
@@ -795,6 +795,277 @@ describe('WorkshopView', () => {
       expect(plain('merge-cost')).toBe('Próba kosztuje 57,00 $ i trwa 7 min 50 s.')
       expect(plain('merge-failure')).toBe('Przy porażce obie części przepadają, a Ty dostajesz 142,50 $ złomu.')
       expect(wrapper.get('[data-test="job-7"]').text()).toContain('Łączenie: Opony A + Opony B → Niezwykła')
+    })
+  })
+
+  describe('the technical condition: mileage, service and repair', () => {
+    const wornTires = (overrides: Parameters<typeof aMountedPart>[0] = {}) =>
+      aMountedPart({ id: 21, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, stats: { grip: 92, handling: 90, braking: 92 }, condition_percent: 50, repair_next: aRepairStep(), ...overrides })
+    const queueOf = (jobs: ReturnType<typeof aJob>[], car = aCar({ run: { id: 7, status: 'stopped', stop_reason: 'workshop' } }, { tires: wornTires() })) =>
+      aGarage({ car, workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+    const repairJob = (overrides: Parameters<typeof aJob>[0] = {}) => aJob({ id: 6, kind: 'repair', cost_cents: 14_250, part: wornTires(), finish_ms: NOW + 117_600, ...overrides })
+    const serviceJob = (overrides: Parameters<typeof aJob>[0] = {}) => aJob({ id: 5, kind: 'service', cost_cents: 4_560, part: null, finish_ms: NOW + 882_000, ...overrides })
+
+    it('shows the odometer, how far the service is with what it costs, and how often the car breaks down', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage()) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="mileage"]').text()).toBe('Mileage: 260,123 km')
+      expect(wrapper.get('[data-test="service-line"]').text()).toBe('Service in 3,420 km')
+      expect(wrapper.get('[data-test="service-line"]').classes()).not.toContain('text-danger')
+      expect(wrapper.get('[data-test="service-info"]').text()).toBe('$45.60 · 14 min 42 s')
+      // One breakdown in a thousand laps, and 48 laps of 75 s in an hour: about every 21 hours.
+      expect(wrapper.get('[data-test="breakdown-line"]').text()).toBe('A breakdown about every 21 h on average')
+      expect(wrapper.get('[data-test="service"]').text()).toBe('Service')
+      expect(wrapper.get('[data-test="service"]').attributes('disabled')).toBeUndefined()
+    })
+
+    it('says in minutes how often a car breaks down that does it every few laps, and says nothing for one that never does', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ breakdown: { chance_ppm: 40_000 } }) })) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      // 4% of a lap: 1.9 breakdowns an hour.
+      expect(wrapper.get('[data-test="breakdown-line"]').text()).toBe('A breakdown about every 31 min on average')
+
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ breakdown: { chance_ppm: 0 } }) })) })
+      const never = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(never.wrapper.find('[data-test="breakdown-line"]').exists()).toBe(false)
+    })
+
+    it('says how late the service is, and what the lateness takes off the performance, in red', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ service: aService({ since_km: 5_800, due_in_km: -800, overdue_km: 800, penalty_percent: 4 }) }) })) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="service-line"]').text()).toBe('Service overdue by 800 km: −4% performance')
+      expect(wrapper.get('[data-test="service-line"]').classes()).toContain('text-danger')
+
+      // Less than a step late: it is overdue, and costs nothing yet.
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ service: aService({ since_km: 5_300, due_in_km: -300, overdue_km: 300, penalty_percent: 0 }) }) })) })
+      const soft = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(soft.wrapper.get('[data-test="service-line"]').text()).toBe('Service overdue by 300 km')
+    })
+
+    it('queues a service with no part, shows the job, and does not offer a second one while it waits', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, aGarage()),
+        'POST /api/v1/garage/jobs': () => respond(201, queueOf([serviceJob()], aCar({ run: { id: 7, status: 'stopped', stop_reason: 'workshop' } }))),
+        'GET /api/v1/tutorial': () => respond(200, aTutorial(null)),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      await wrapper.get('[data-test="service"]').trigger('click')
+      await flushPromises()
+
+      // The service is a job on the car: it has no part, and the request says so.
+      expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ kind: 'service' })
+      expect(wrapper.get('[data-test="job-5"]').text()).toContain('Servicing the car')
+      expect(wrapper.get('[data-test="job-5-state"]').text()).toContain('In progress: 14 min 42 s left')
+      expect(wrapper.get('[data-test="service"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-test="service-info"]').text()).toBe('A service is in the queue.')
+      expect(wrapper.find('[data-test="standing"]').exists()).toBe(true)
+    })
+
+    it('shows what the server says when a service or a repair is refused', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: wornTires() }) })),
+        'POST /api/v1/garage/jobs': () => respond(422, { message: 'Not enough cash.', code: 'insufficient_funds' }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="service"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="error"]').text()).toBe('Not enough cash.')
+      expect(wrapper.find('[data-test="job-5"]').exists()).toBe(false)
+    })
+
+    it('shows the condition of a worn part on its tile and in the inventory, in red when it is unserviceable, and nothing for a part as good as new', async () => {
+      const brakes = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', condition_percent: 12 })
+      const exhaust = aMountedPart({ id: 11 })
+      const spare = aPart({ id: 22, slug: 'street-tires-t2', name: 'Spare tires', slot: 'tires', tier: 2, condition_percent: 80, repair_next: aRepairStep() })
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: wornTires(), brakes, exhaust }), inventory: [spare, tires] })) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="slot-tires"] [data-test="part-condition-value"]').text()).toBe('Condition: 50%')
+      expect(wrapper.find('[data-test="slot-tires"] [data-test="part-unserviceable"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="slot-tires"] [role="progressbar"]').attributes('aria-valuenow')).toBe('50')
+      expect(wrapper.get('[data-test="slot-tires"] .bar > i').attributes('style')).toContain('width: 50%')
+
+      // Under a fifth of its life a part is unserviceable.
+      expect(wrapper.get('[data-test="slot-brakes"] [data-test="part-unserviceable"]').text()).toBe('Unserviceable')
+      expect(wrapper.get('[data-test="slot-brakes"] .bar').classes()).toContain('bar-bad')
+
+      expect(wrapper.find('[data-test="slot-exhaust"] [data-test="part-condition"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="part-22"] [data-test="part-condition-value"]').text()).toBe('Condition: 80%')
+      expect(wrapper.find('[data-test="part-21"] [data-test="part-condition"]').exists()).toBe(false)
+    })
+
+    it('offers the repair of a worn part on the car with its price and time, and queues it when asked', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: wornTires() }) })),
+        'POST /api/v1/garage/jobs': () => respond(201, queueOf([repairJob()])),
+        'GET /api/v1/tutorial': () => respond(200, aTutorial(null)),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="repair-21"]').text()).toBe('Repair')
+      expect(wrapper.get('[data-test="repair-info-21"]').text()).toBe('$142.50 · 1 min 57 s')
+
+      await wrapper.get('[data-test="repair-21"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ kind: 'repair', part: 21 })
+      expect(wrapper.get('[data-test="job-6"]').text()).toContain('Repairing: Street tires T2')
+      // The part that is in the workshop cannot be repaired again, or taken off.
+      expect(wrapper.get('[data-test="repair-21"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-test="take-off-21"]').attributes('disabled')).toBeDefined()
+    })
+
+    it('offers the repair of a worn part of the inventory too, and nothing for a part that is not worn', async () => {
+      const spare = aPart({ id: 22, slug: 'street-tires-t2', name: 'Spare tires', slot: 'tires', tier: 2, condition_percent: 80, repair_next: aRepairStep({ cost_cents: 5_700, duration_ms: 47_040 }) })
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ inventory: [spare, { ...tires, repair_next: NOTHING_TO_REPAIR }] })),
+        'POST /api/v1/garage/jobs': () => respond(201, aGarage({ inventory: [spare, tires] })),
+        'GET /api/v1/tutorial': () => respond(200, aTutorial(null)),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="repair-info-22"]').text()).toBe('$57.00 · 0 min 47 s')
+      expect(wrapper.find('[data-test="repair-21"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="repair-22"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ kind: 'repair', part: 22 })
+    })
+
+    it('says that a part that is worn out has to be replaced, and offers no repair for it', async () => {
+      const gone = { cost_cents: null, duration_ms: null, locked: { reason: 'worn_out' as const } }
+      const brakes = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', condition_percent: 0, repair_next: gone })
+      const spare = aPart({ id: 22, slug: 'street-tires-t2', name: 'Spare tires', slot: 'tires', tier: 2, condition_percent: 0, repair_next: gone })
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { brakes }), inventory: [spare] })) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="repair-info-12"]').text()).toBe('Worn out: it has to be replaced')
+      expect(wrapper.find('[data-test="repair-12"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="repair-info-22"]').text()).toBe('Worn out: it has to be replaced')
+      expect(wrapper.find('[data-test="repair-22"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="slot-brakes"] [data-test="part-unserviceable"]').exists()).toBe(true)
+    })
+
+    it('asks first about a repair that the mechanic is at, and says that its price is lost with the work', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, queueOf([repairJob()])),
+        'DELETE /api/v1/garage/jobs/6': () => respond(200, { ...queueOf([]), cancelled: [6] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="cancel-6"]').trigger('click')
+
+      expect(wrapper.get('[data-test="cancel-sure-6"]').text()).toContain('The work already done and the $142.50 paid for the repair are lost, and the part stays as it was.')
+      expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
+
+      await wrapper.get('[data-test="cancel-confirm-6"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.filter((call) => call.method === 'DELETE')).toHaveLength(1)
+      expect(wrapper.get('[data-test="cancelled"]').text()).toBe('Job cancelled.')
+    })
+
+    it('asks first about a service that the mechanic is at, which has no part, and says that its price is lost', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, queueOf([serviceJob()], aCar({ run: { id: 7, status: 'stopped', stop_reason: 'workshop' } }))),
+        'DELETE /api/v1/garage/jobs/5': () => respond(200, { ...queueOf([], aCar()), cancelled: [5] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="job-5"]').text()).toContain('Servicing the car')
+
+      await wrapper.get('[data-test="cancel-5"]').trigger('click')
+
+      expect(wrapper.get('[data-test="cancel-sure-5"]').text()).toContain('The work already done and the $45.60 paid for the service are lost.')
+
+      await wrapper.get('[data-test="cancel-confirm-5"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="cancelled"]').text()).toBe('Job cancelled.')
+      expect(wrapper.find('[data-test="job-5"]').exists()).toBe(false)
+    })
+
+    it('cancels a service and a repair that wait at once, and says that the price is back', async () => {
+      const working = repairJob({ id: 3, cost_cents: 9_000, part: aMountedPart({ id: 12, name: 'Disc brakes', slot: 'brakes', condition_percent: 40 }), finish_ms: NOW + 100_000 })
+      const waiting = serviceJob({ status: 'queued', start_ms: NOW + 100_000, finish_ms: NOW + 982_000 })
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, queueOf([working, waiting])),
+        'DELETE /api/v1/garage/jobs/5': () => respond(200, { ...queueOf([working]), cancelled: [5] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="job-5"]').text()).toContain('Servicing the car')
+
+      await wrapper.get('[data-test="cancel-5"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="cancel-sure-5"]').exists()).toBe(false)
+      expect(calls.some((call) => call.method === 'DELETE' && call.url === '/api/v1/garage/jobs/5')).toBe(true)
+      expect(wrapper.get('[data-test="cancelled"]').text()).toBe('Job cancelled. $45.60 is back in your wallet.')
+    })
+
+    it('speaks the language of the driver', async () => {
+      await setLocale('pl')
+      const brakes = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', condition_percent: 0, repair_next: { cost_cents: null, duration_ms: null, locked: { reason: 'worn_out' } } })
+      serve({
+        'GET /api/v1/garage': () =>
+          respond(200, queueOf([serviceJob({ status: 'queued' })], aCar({ service: aService({ since_km: 5_800, due_in_km: -800, overdue_km: 800, penalty_percent: 4 }) }, { tires: wornTires(), brakes }))),
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      // The thousands are separated with a space that does not break a line.
+      expect(wrapper.get('[data-test="mileage"]').text().replace(/[  ]/g, ' ')).toBe('Przebieg: 260 123 km')
+      expect(wrapper.get('[data-test="service-line"]').text()).toBe('Serwis spóźniony o 800 km: −4% osiągów')
+      expect(wrapper.get('[data-test="service"]').text()).toBe('Serwis')
+      expect(wrapper.get('[data-test="service-info"]').text()).toBe('Serwis czeka w kolejce.')
+      expect(wrapper.get('[data-test="breakdown-line"]').text()).toBe('Awaria średnio co ok. 21 h')
+      expect(wrapper.get('[data-test="repair-21"]').text()).toBe('Napraw')
+      expect(wrapper.get('[data-test="slot-tires"] [data-test="part-condition-value"]').text()).toBe('Stan: 50%')
+      expect(wrapper.get('[data-test="repair-info-12"]').text()).toBe('Zużyta do końca: trzeba wymienić')
+      expect(wrapper.get('[data-test="slot-brakes"] [data-test="part-unserviceable"]').text()).toBe('Niesprawna')
+      expect(wrapper.get('[data-test="job-5"]').text()).toContain('Serwis auta')
     })
   })
 

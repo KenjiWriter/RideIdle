@@ -3,13 +3,15 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
-import type { CarStatKey, JobKind, MergeResult, OwnedPart, UpgradeNext, WorkshopJob } from '@/api/types'
+import type { CarStatKey, JobKind, MergeResult, OwnedPart, RepairNext, UpgradeNext, WorkshopJob } from '@/api/types'
 import GameShell from '@/components/GameShell.vue'
 import JobCancel from '@/components/JobCancel.vue'
+import PartCondition from '@/components/PartCondition.vue'
 import PartMerge from '@/components/PartMerge.vue'
 import PartStats from '@/components/PartStats.vue'
 import RarityMark from '@/components/RarityMark.vue'
 import UpgradeMark from '@/components/UpgradeMark.vue'
+import { useServiceLine } from '@/features/car/serviceLine'
 import { statFill } from '@/features/car/statFill'
 import { rankOf } from '@/features/parts/rarity'
 import { useFlash } from '@/features/run/useFlash'
@@ -32,6 +34,7 @@ const { t } = useI18n()
 const { number, money, percent } = useFormat()
 const store = useGarageStore()
 const tutorial = useTutorialStore()
+const { serviceLine, breakdownLine } = useServiceLine()
 
 useLeaveOnSignOut()
 
@@ -54,8 +57,10 @@ const inventory = computed(() => store.garage?.inventory ?? [])
 /** The part that the tutorial points at when it asks for the tires to be put on: the first pair of tires in the inventory, or the first part. */
 const mountTarget = computed(() => (inventory.value.find((part) => part.slot === 'tires') ?? inventory.value[0])?.id ?? null)
 const standing = computed(() => car.value?.run?.stop_reason === 'workshop')
-/** The parts that wait in a job: a merge keeps the two of them busy. */
-const busyPartIds = computed(() => new Set(jobs.value.flatMap((job) => (job.merge_with ? [job.part.id, job.merge_with.id] : [job.part.id]))))
+/** The parts that wait in a job: a merge keeps the two of them busy, and a service is a job on the car, with no part. */
+const busyPartIds = computed(() => new Set(jobs.value.flatMap((job) => [job.part?.id, job.merge_with?.id].filter((id): id is number => id !== undefined))))
+/** A service that waits for the mechanic or is done by him: there is no use in asking for a second. */
+const servicing = computed(() => jobs.value.some((job) => job.kind === 'service'))
 const merges = computed(() => store.garage?.merges ?? [])
 /** The part of the inventory whose chooser of a merge is open. */
 const merging = ref<number | null>(null)
@@ -112,10 +117,10 @@ function progress(job: WorkshopJob): number {
   return total > 0 ? Math.min(100, Math.max(0, Math.round(((now.value - job.start_ms) / total) * 100))) : 100
 }
 
-/** What a job is doing, in words: putting a part on, taking it off, upgrading it (and to what level), or merging two (and into what rarity). */
+/** What a job is doing, in words: putting a part on, taking it off, upgrading it (and to what level), repairing it, merging two (and into what rarity), or servicing the car. */
 function jobText(job: WorkshopJob): string {
   return t(`workshop.${job.kind}`, {
-    part: job.part.name,
+    part: job.part?.name ?? '',
     to: job.kind === 'merge' && job.merge_to ? t(`rarity.${job.merge_to}`) : (job.upgrade_to ?? 0),
     other: job.merge_with?.name ?? '',
   })
@@ -146,6 +151,15 @@ function upgradeInfo(next: UpgradeNext): string {
   return t('workshop.upgradeCost', { price: money(next.cost_cents ?? 0, 2), time: formatDuration(next.duration_ms ?? 0) })
 }
 
+/** Whether a worn part can be put right: the server says what it costs, or why not (it is worn out, which is said in words; it is not worn, or has no price: nothing is offered). */
+function canRepair(next: RepairNext | undefined): next is RepairNext & { cost_cents: number; duration_ms: number } {
+  return next !== undefined && next.locked === null && next.cost_cents !== null && next.duration_ms !== null
+}
+
+function repairInfo(next: RepairNext): string {
+  return next.locked?.reason === 'worn_out' ? t('workshop.repairWornOut') : t('workshop.repairCost', { price: money(next.cost_cents ?? 0, 2), time: formatDuration(next.duration_ms ?? 0) })
+}
+
 /** What a statistic changed by, as the parts make it: nothing for a change too small to see. */
 function delta(stat: CarStatKey): number {
   const value = (car.value?.stats[stat] ?? 0) - (car.value?.base_stats[stat] ?? 0)
@@ -162,7 +176,7 @@ function failureText(failure: unknown): string {
       : t('common.error')
 }
 
-async function act(kind: JobKind, part: OwnedPart, other?: OwnedPart['id']): Promise<void> {
+async function act(kind: JobKind, part: OwnedPart | null, other?: OwnedPart['id']): Promise<void> {
   if (busy.value) {
     return
   }
@@ -172,7 +186,7 @@ async function act(kind: JobKind, part: OwnedPart, other?: OwnedPart['id']): Pro
   clearCancelled()
 
   try {
-    await store.queue(kind, part.id, other)
+    await store.queue(kind, part?.id ?? null, other)
     merging.value = null
     now.value = store.serverNow()
     // The server moves the tutorial when it is asked, and a job in the queue is what a step waits for.
@@ -196,7 +210,7 @@ function dependents(job: WorkshopJob): WorkshopJob[] {
 
   const later = jobs.value.slice(jobs.value.findIndex((other) => other.id === job.id) + 1)
 
-  return later.filter((other) => other.kind === 'mount' && other.part.slot === job.part.slot)
+  return later.filter((other) => other.kind === 'mount' && other.part?.slot === job.part?.slot)
 }
 
 async function cancel(jobId: number): Promise<void> {
@@ -212,11 +226,11 @@ async function cancel(jobId: number): Promise<void> {
     const gone = await store.cancelJob(jobId)
     now.value = store.serverNow()
 
-    // The part of a job that went with the one asked for, or the price of an upgrade or of a merge that was given back (one that had not started).
+    // The part of a job that went with the one asked for, or the price of a job that was given back (one that had not started: it was paid when it was queued).
     const [asked, withIt] = gone
-    const refund = asked && (asked.kind === 'upgrade' || asked.kind === 'merge') && asked.status === 'queued' ? asked.cost_cents : 0
+    const refund = asked && asked.status === 'queued' ? asked.cost_cents : 0
     showCancelled(
-      withIt ? t('workshop.cancelledWith', { part: withIt.part.name }) : refund > 0 ? t('workshop.cancelledRefund', { price: money(refund, 2) }) : t('workshop.cancelled'),
+      withIt ? t('workshop.cancelledWith', { part: withIt.part?.name ?? '' }) : refund > 0 ? t('workshop.cancelledRefund', { price: money(refund, 2) }) : t('workshop.cancelled'),
     )
   } catch (failure) {
     if (endSessionIfUnauthorized(failure)) {
@@ -344,6 +358,20 @@ async function cancel(jobId: number): Promise<void> {
           </div>
         </div>
 
+        <!-- The odometer, the service and how often the car breaks down; the service is a job on the car, paid when it is queued. -->
+        <h3 class="kick !mb-0 mt-1">{{ t('workshop.conditionTitle') }}</h3>
+        <div class="card flex flex-col gap-1.5 !p-3" data-test="condition">
+          <p class="text-[13px] text-ink" data-test="mileage">{{ t('workshop.mileage', { km: number(car.mileage_km) }) }}</p>
+          <p class="text-[13px]" :class="car.service.due_in_km < 0 ? 'text-danger' : 'text-ink'" data-test="service-line">{{ serviceLine(car.service) }}</p>
+          <p v-if="breakdownLine(car)" class="sub" data-test="breakdown-line">{{ breakdownLine(car) }}</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" class="btn btn-secondary btn-sm" :disabled="busy || servicing" data-test="service" @click="act('service', null)">
+              {{ t('workshop.serviceButton') }}
+            </button>
+            <span class="sub" data-test="service-info">{{ servicing ? t('workshop.serviceWaits') : t('workshop.serviceCost', { price: money(car.service.cost_cents, 2), time: formatDuration(car.service.duration_ms) }) }}</span>
+          </div>
+        </div>
+
         <h3 class="kick !mb-0 mt-1">{{ t('workshop.slots') }}</h3>
         <ul class="grid grid-cols-2 gap-2">
           <li
@@ -363,6 +391,21 @@ async function cancel(jobId: number): Promise<void> {
                 <RarityMark v-if="slot.part.rarity_rank > 1" :rarity="slot.part.rarity" />
                 <UpgradeMark :level="slot.part.upgrade" />
               </span>
+              <PartCondition :percent="slot.part.condition_percent" />
+              <!-- Putting a worn part right: paid now, and the car stands while the mechanic is at it. A part that is worn out has to be replaced, and says so. -->
+              <template v-if="canRepair(slot.part.repair_next) || slot.part.repair_next.locked?.reason === 'worn_out'">
+                <button
+                  v-if="canRepair(slot.part.repair_next)"
+                  type="button"
+                  class="btn btn-primary btn-sm mt-1.5 !min-h-9 !text-base"
+                  :disabled="busy || busyPartIds.has(slot.part.id)"
+                  :data-test="`repair-${slot.part.id}`"
+                  @click="act('repair', slot.part)"
+                >
+                  {{ t('workshop.repairAction') }}
+                </button>
+                <p class="sub mt-1" :data-test="`repair-info-${slot.part.id}`">{{ repairInfo(slot.part.repair_next) }}</p>
+              </template>
               <!-- The next step of the upgrade: paid now, and the car stands while the mechanic is at it. A part that is as far as it goes says so instead of offering it. -->
               <template v-if="slot.part.upgrade_next.locked?.reason !== 'unavailable'">
                 <button
@@ -411,6 +454,8 @@ async function cancel(jobId: number): Promise<void> {
                 <UpgradeMark :level="part.upgrade" />
               </p>
               <PartStats :part="part" />
+              <PartCondition :percent="part.condition_percent" class="mt-1.5" />
+              <p v-if="part.repair_next?.locked?.reason === 'worn_out'" class="sub mt-1" :data-test="`repair-info-${part.id}`">{{ t('workshop.repairWornOut') }}</p>
             </div>
             <div class="flex shrink-0 flex-col gap-1.5">
               <button
@@ -423,6 +468,18 @@ async function cancel(jobId: number): Promise<void> {
               >
                 {{ t('workshop.putOn') }}
               </button>
+              <!-- A worn part of the inventory is put right without the car: the repair costs and takes what its condition says. -->
+              <button
+                v-if="canRepair(part.repair_next)"
+                type="button"
+                class="btn btn-secondary btn-sm"
+                :disabled="busy || busyPartIds.has(part.id)"
+                :data-test="`repair-${part.id}`"
+                @click="act('repair', part)"
+              >
+                {{ t('workshop.repairAction') }}
+              </button>
+              <p v-if="canRepair(part.repair_next)" class="sub" :data-test="`repair-info-${part.id}`">{{ repairInfo(part.repair_next) }}</p>
               <!-- Merging two parts of one slot, tier and rarity into one of the next rarity: the server says what a part can be merged with. -->
               <button
                 v-if="part.merge"

@@ -126,14 +126,23 @@ export const useGarageStore = defineStore('garage', () => {
     return response.opened
   }
 
-  /** Queues a job of the workshop: puts a part on the car, takes it off, upgrades it, or merges it with a second part of the inventory (`withId`). */
-  async function queue(kind: JobKind, partId: number, withId?: number): Promise<void> {
-    applyGarage(await api<GarageResponse>('/v1/garage/jobs', { method: 'POST', body: JSON.stringify({ kind, part: partId, ...(withId === undefined ? {} : { with: withId }) }) }))
+  /**
+   * Queues a job of the workshop: puts a part on the car, takes it off, upgrades it, repairs it, or merges it with a second part of the inventory (`withId`).
+   * A service is a job on the car, so it has no part (`partId` is null).
+   */
+  async function queue(kind: JobKind, partId: number | null, withId?: number): Promise<void> {
+    applyGarage(
+      await api<GarageResponse>('/v1/garage/jobs', {
+        method: 'POST',
+        body: JSON.stringify({ kind, ...(partId === null ? {} : { part: partId }), ...(withId === undefined ? {} : { with: withId }) }),
+      }),
+    )
     syncRun()
   }
 
   /**
-   * Cancels a job of the workshop, one that waits or one that the mechanic is at. Nothing is paid or given back. A job that goes
+   * Cancels a job of the workshop, one that waits or one that the mechanic is at. Nothing is given back, except for the price of an upgrade, a merge, a repair or
+   * a service that has not started. A job that goes
    * only with it (the putting on of the part that was to replace the one taken off) is cancelled too. Returns the jobs that were
    * cancelled, the asked one first, as they stood in the queue.
    */

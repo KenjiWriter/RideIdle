@@ -224,7 +224,7 @@ describe('garage store', () => {
 
       const gone = await store.cancelJob(1)
 
-      expect(gone.map((job) => job.part.name)).toEqual([takeOff.part.name, 'Street tires T2'])
+      expect(gone.map((job) => job.part?.name)).toEqual([takeOff.part?.name, 'Street tires T2'])
       expect(store.garage?.workshop.jobs).toEqual([])
     })
 

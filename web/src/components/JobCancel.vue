@@ -23,17 +23,19 @@ const asking = ref(false)
 const loses = computed(() => props.job.status === 'working')
 const needsAnswer = computed(() => loses.value || props.dependents.length > 0)
 
-/** What is lost with a job at work: the work, and the price of an upgrade or of a merge (the parts of a merge stay). */
+/** The jobs that are paid when they are queued: what they cost is lost with one at work, and given back for one that has not started. */
+const LOSES_THE_PRICE: Record<string, string> = {
+  upgrade: 'workshop.cancelLosesUpgrade',
+  merge: 'workshop.cancelLosesMerge',
+  repair: 'workshop.cancelLosesRepair',
+  service: 'workshop.cancelLosesService',
+}
+
+/** What is lost with a job at work: the work, and the price of an upgrade, a merge, a repair or a service (the parts stay as they were). */
 const lostText = computed(() => {
-  if (props.job.cost_cents > 0 && props.job.kind === 'upgrade') {
-    return t('workshop.cancelLosesUpgrade', { price: money(props.job.cost_cents, 2) })
-  }
+  const key = LOSES_THE_PRICE[props.job.kind]
 
-  if (props.job.cost_cents > 0 && props.job.kind === 'merge') {
-    return t('workshop.cancelLosesMerge', { price: money(props.job.cost_cents, 2) })
-  }
-
-  return t('workshop.cancelLoses')
+  return props.job.cost_cents > 0 && key !== undefined ? t(key, { price: money(props.job.cost_cents, 2) }) : t('workshop.cancelLoses')
 })
 
 function cancel(): void {
@@ -53,11 +55,11 @@ function ask(): void {
 <template>
   <div v-if="asking" class="flex w-full basis-full flex-col gap-1.5 border-t border-line pt-2" role="alert" :data-test="`cancel-sure-${job.id}`">
     <p class="text-[13px] font-semibold text-ink">{{ t('workshop.cancelSure') }}</p>
-    <!-- The price of an upgrade or of a merge is paid back only while the mechanic has not started on it, so for one at work it is lost with the work. -->
+    <!-- The price of an upgrade, a merge, a repair or a service is paid back only while the mechanic has not started on it, so for one at work it is lost with the work. -->
     <p v-if="loses" class="sub">
       {{ lostText }}
     </p>
-    <p v-for="other in dependents" :key="other.id" class="sub">{{ t('workshop.cancelAlso', { part: other.part.name }) }}</p>
+    <p v-for="other in dependents" :key="other.id" class="sub">{{ t('workshop.cancelAlso', { part: other.part?.name ?? '' }) }}</p>
     <div class="flex gap-2">
       <button type="button" class="btn btn-danger btn-sm" :disabled="disabled" :data-test="`cancel-confirm-${job.id}`" @click="cancel">
         {{ t('workshop.cancelConfirm') }}

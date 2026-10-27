@@ -313,6 +313,11 @@ body {
     background: linear-gradient(#8fe9ff, #19a8cc);
   }
 
+  /** A bar of what is wrong: the condition of a part that is unserviceable. */
+  .bar-bad > i {
+    background: linear-gradient(#ff8a80, #c0392b);
+  }
+
   .bar::after {
     content: '';
     position: absolute;
