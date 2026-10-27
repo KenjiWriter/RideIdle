@@ -59,6 +59,23 @@ describe('the condition of a part', function () {
             ->assertJsonPath('data.car.slots.0.part.repair_next', ['cost_cents' => REPAIR_HALF_CENTS, 'duration_ms' => REPAIR_HALF_MS, 'locked' => null]);
     });
 
+    it('says how much less a worn part gives and how good the car is as a whole, the mean of the parts that are on it', function () {
+        [$driver, $car] = repairDriver();
+        Part::factory()->state(['part_slug' => 'sport-suspension-t1', 'slot' => 'suspension'])->mountedOn($car)->create(['wear_ppb' => 100_000_000]);
+
+        // Tires at 50% give 0.6 + 0.4 x 0.5 = 80% of what they should (20% less), the suspension at 90% gives 96% (4% less): the car is at 70%.
+        repairGarage($driver)->assertOk()
+            ->assertJsonPath('data.car.slots.0.part.condition_loss_percent', 20)
+            ->assertJsonPath('data.car.slots.1.part.condition_loss_percent', 4)
+            ->assertJsonPath('data.car.parts_condition_percent', 70);
+    });
+
+    it('says a car with no part on it is as good as new', function () {
+        [$driver] = driverWithRun(['seed' => str_repeat('0', 32)]);
+
+        repairGarage($driver)->assertOk()->assertJsonPath('data.car.parts_condition_percent', 100);
+    });
+
     it('says why a part cannot be put right: it is not worn, or it is worn out and has to be replaced', function () {
         [$driver, , $tires] = repairDriver(0);
 

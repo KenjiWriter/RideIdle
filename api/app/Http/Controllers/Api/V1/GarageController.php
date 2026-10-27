@@ -178,6 +178,8 @@ final class GarageController extends Controller
             ],
             'stats' => $this->rounded($this->inputs->stats($car->vehicle_slug, $slugs, $plan->servicePenaltyPpm())->stats),
             'mileage_km' => intdiv((int) $car->mileage_m, 1000),
+            // The condition of the car as a whole, for the screen of its technical state: the mean of the parts that are on it (a car with none is as good as new).
+            'parts_condition_percent' => $mounted->isEmpty() ? 100 : (int) round($mounted->avg(static fn (Part $part): int => $part->conditionPpm()) / 10_000),
             'service' => $this->serviceData($car, $plan, $gear),
             // How often it breaks down: the chance after a lap, with the condition of the car, the wear of its parts and the service counted.
             'breakdown' => ['chance_ppm' => $this->rules->breakChancePerLapPpmFor($car->conditionPpm(), $plan->meanWearPpm(), $plan->overdueSharePpm(), $plan->unserviceableParts($this->rules->unserviceablePpm()))],
