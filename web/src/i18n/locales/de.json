@@ -437,6 +437,8 @@
     "service": "Wartung des Autos",
     "repairAction": "Reparieren",
     "repairCost": "{price} · {time}",
+    "jobFee": "Reifenhändler {price} · {time}",
+    "jobTime": "Dauer: {time}",
     "repairWornOut": "Völlig verschlissen: muss ersetzt werden",
     "conditionTitle": "Technischer Zustand",
     "mileage": "Laufleistung: {km} km",

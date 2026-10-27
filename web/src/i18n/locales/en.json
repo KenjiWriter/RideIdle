@@ -437,6 +437,8 @@
     "service": "Servicing the car",
     "repairAction": "Repair",
     "repairCost": "{price} · {time}",
+    "jobFee": "Vulcanizer {price} · {time}",
+    "jobTime": "Time: {time}",
     "repairWornOut": "Worn out: it has to be replaced",
     "conditionTitle": "Technical condition",
     "mileage": "Mileage: {km} km",

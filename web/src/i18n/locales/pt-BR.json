@@ -437,6 +437,8 @@
     "service": "Revisão do carro",
     "repairAction": "Consertar",
     "repairCost": "{price} · {time}",
+    "jobFee": "Borracheiro {price} · {time}",
+    "jobTime": "Tempo: {time}",
     "repairWornOut": "Totalmente gasta: é preciso trocar",
     "conditionTitle": "Estado técnico",
     "mileage": "Quilometragem: {km} km",

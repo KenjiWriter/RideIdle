@@ -302,6 +302,12 @@ export interface RepairNext {
   locked: { reason: 'fine' | 'worn_out' | 'unavailable' } | null
 }
 
+/** What a job of putting a part on or taking it off costs and takes in this workshop (`cost_cents` is the fee of the vulcanizer for tires, where there is no tire machine). */
+export interface SlotJobNext {
+  cost_cents: number
+  duration_ms: number
+}
+
 /** A part of the driver, in the inventory or on the car. */
 export interface OwnedPart extends PartInfo {
   id: number
@@ -313,6 +319,8 @@ export interface OwnedPart extends PartInfo {
   repair_next?: RepairNext
   /** What merging it would do: null when it cannot be merged now (it is legendary, or waits in a job). Only the parts of the inventory of the garage have it. */
   merge?: MergeOffer | null
+  /** What putting it on would cost and take, with the taking off of the part that sits in its slot: the parts of the inventory of the garage have it. */
+  mount_next?: SlotJobNext | null
 }
 
 /** A part for sale, with what the car of the driver says about it. */
@@ -413,6 +421,8 @@ export interface UpgradeNext {
 export interface MountedPart extends OwnedPart {
   upgrade_next: UpgradeNext
   repair_next: RepairNext
+  /** What taking it off would cost and take. */
+  unmount_next?: SlotJobNext | null
 }
 
 /**

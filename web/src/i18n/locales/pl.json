@@ -437,6 +437,8 @@
     "service": "Serwis auta",
     "repairAction": "Napraw",
     "repairCost": "{price} · {time}",
+    "jobFee": "Wulkanizator {price} · {time}",
+    "jobTime": "Czas: {time}",
     "repairWornOut": "Zużyta do końca: trzeba wymienić",
     "conditionTitle": "Stan techniczny",
     "mileage": "Przebieg: {km} km",

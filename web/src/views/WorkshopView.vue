@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
-import type { CarStatKey, EquipmentItem, EquipmentKey, JobKind, MergeResult, OwnedPart, RepairNext, UpgradeNext, WorkshopJob } from '@/api/types'
+import type { CarStatKey, EquipmentItem, EquipmentKey, JobKind, MergeResult, OwnedPart, RepairNext, SlotJobNext, UpgradeNext, WorkshopJob } from '@/api/types'
 import GameShell from '@/components/GameShell.vue'
 import JobCancel from '@/components/JobCancel.vue'
 import PartCondition from '@/components/PartCondition.vue'
@@ -164,6 +164,13 @@ function upgradeInfo(next: UpgradeNext): string {
 /** Whether a worn part can be put right: the server says what it costs, or why not (it is worn out, which is said in words; it is not worn, or has no price: nothing is offered). */
 function canRepair(next: RepairNext | undefined): next is RepairNext & { cost_cents: number; duration_ms: number } {
   return next !== undefined && next.locked === null && next.cost_cents !== null && next.duration_ms !== null
+}
+
+/** What putting a part on or taking it off costs and takes: the fee of the vulcanizer where there is one, and the time. */
+function slotJobInfo(next: SlotJobNext): string {
+  const time = formatDuration(next.duration_ms)
+
+  return next.cost_cents > 0 ? t('workshop.jobFee', { price: money(next.cost_cents, 2), time }) : t('workshop.jobTime', { time })
 }
 
 function repairInfo(next: RepairNext): string {
@@ -582,6 +589,7 @@ async function cancel(jobId: number): Promise<void> {
               >
                 {{ t('workshop.takeOff') }}
               </button>
+              <p v-if="slot.part.unmount_next" class="sub mt-1" :data-test="`take-off-info-${slot.part.id}`">{{ slotJobInfo(slot.part.unmount_next) }}</p>
             </template>
             <span v-else-if="slot.built_in" class="nm">{{ car.vehicle.engine ?? t('workshop.builtIn') }}</span>
             <span v-else class="nm text-faint">{{ t('workshop.empty') }}</span>
@@ -621,6 +629,7 @@ async function cancel(jobId: number): Promise<void> {
               >
                 {{ t('workshop.putOn') }}
               </button>
+              <p v-if="part.mount_next" class="sub" :data-test="`put-on-info-${part.id}`">{{ slotJobInfo(part.mount_next) }}</p>
               <!-- A worn part of the inventory is put right without the car: the repair costs and takes what its condition says. -->
               <button
                 v-if="canRepair(part.repair_next)"

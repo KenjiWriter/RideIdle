@@ -1280,4 +1280,43 @@ describe('WorkshopView', () => {
       expect(wrapper.get('[data-test="cancel-sure-4"]').text()).toContain('$30.00 paid at the vulcanizer are lost')
     })
   })
+
+  describe('what putting on and taking off cost and take', () => {
+    it('shows the fee of the vulcanizer and the time at the button of a part that goes on, and only the time where there is no fee', async () => {
+      const exhaustStock = aPart({ id: 22, slug: 'sport-exhaust-t2', name: 'Sport exhaust', slot: 'exhaust', tier: 2 })
+      serve({
+        'GET /api/v1/garage': () =>
+          respond(200, aGarage({ car: aCar(), inventory: [{ ...tires, mount_next: { cost_cents: 3_000, duration_ms: 235_200 } }, { ...exhaustStock, mount_next: { cost_cents: 0, duration_ms: 235_200 } }] })),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="put-on-info-21"]').text()).toBe('Vulcanizer $30.00 · 3 min 55 s')
+      expect(wrapper.get('[data-test="put-on-info-22"]').text()).toBe('Time: 3 min 55 s')
+    })
+
+    it('shows the same at the button of a part that comes off', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust: aMountedPart({ ...exhaust, unmount_next: { cost_cents: 3_000, duration_ms: 70_560 } }) }) })),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="take-off-info-11"]').text()).toBe('Vulcanizer $30.00 · 1 min 10 s')
+    })
+
+    it('says nothing when the server gave no quote', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust }), inventory: [tires] })), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="put-on-info-21"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="take-off-info-11"]').exists()).toBe(false)
+    })
+  })
 })

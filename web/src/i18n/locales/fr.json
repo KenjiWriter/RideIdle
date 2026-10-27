@@ -437,6 +437,8 @@
     "service": "Entretien de la voiture",
     "repairAction": "Réparer",
     "repairCost": "{price} · {time}",
+    "jobFee": "Vulcanisateur {price} · {time}",
+    "jobTime": "Durée : {time}",
     "repairWornOut": "Complètement usée : à remplacer",
     "conditionTitle": "État technique",
     "mileage": "Kilométrage : {km} km",
