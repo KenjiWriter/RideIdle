@@ -329,6 +329,34 @@ describe('economy:simulate', function () {
             ->and($output)->toContain('5 6 7 17 27 35 47 68');
     });
 
+    it('says what merging two parts takes for each rarity, with the protection from bad luck, and sets it against the crates, as a report', function () {
+        Artisan::call('economy:simulate', ['--player' => ['A']]);
+        $output = Artisan::output();
+
+        expect($output)->toContain('Merging two parts (Systemy I, point 3)')
+            ->and($output)->toMatch('/\| uncommon\s+\| 81%\s+\| 1\.22\s+\| 1\.23\s+\| 2\.4\s+\| 2\.5\s+\|/')
+            ->and($output)->toMatch('/\| legendary\s+\| 26%\s+\| 3\.18\s+\| 3\.85\s+\| 224\.1\s+\| 303\.8\s+\|/')
+            ->and($output)->toContain('To a legendary part merging alone takes 224 common parts (304 without the protection from bad luck')
+            ->and($output)->toContain('so merging is cheaper.')
+            ->and($output)->toContain('so merging is dearer.');
+    });
+
+    it('keeps the exit code as it was when merging is added: it is a report with no gate', function () {
+        expect(Artisan::call('economy:simulate', ['--strict' => true, '--strict-game' => true]))->toBe(0);
+    });
+
+    it('prints merging in the JSON report: the steps, the cost of each rarity and the crates it is set against', function () {
+        Artisan::call('economy:simulate', ['--json' => true, '--player' => ['B']]);
+        $merge = json_decode(Artisan::output(), true, 512, JSON_THROW_ON_ERROR)['merge'];
+
+        expect($merge['convention'])->toContain('price of one part of the model')
+            ->and(array_column($merge['steps'], 'rarity'))->toBe(['uncommon', 'rare', 'epic', 'legendary'])
+            ->and($merge['steps'][0])->toHaveKeys(['chance', 'attempts', 'attempts_no_pity', 'commons', 'commons_no_pity', 'fees', 'scrap', 'cost', 'crates', 'crate_cost', 'ratio', 'merging_cheaper'])
+            ->and(array_column($merge['steps'], 'commons'))->toEqualWithDelta([2.45, 7.82, 35.24, 224.07], 0.01)
+            ->and(array_column($merge['steps'], 'commons_no_pity'))->toEqualWithDelta([2.47, 8.1, 39.49, 303.77], 0.01)
+            ->and(array_column($merge['steps'], 'merging_cheaper'))->toBe([true, false, false, false]);
+    });
+
     it('prints the extras in the JSON report, for the kinds of players that were asked for', function () {
         Artisan::call('economy:simulate', ['--json' => true, '--player' => ['B']]);
         $extras = json_decode(Artisan::output(), true, 512, JSON_THROW_ON_ERROR)['extras'];

@@ -10,6 +10,7 @@ use App\Content\GameIncome;
 use App\Content\GameUnits;
 use App\Content\Rules;
 use App\Content\TutorialSteps;
+use App\Domain\Economy\CrateEconomy;
 use App\Domain\Economy\EconomyRules;
 use App\Domain\Economy\ExtrasResult;
 use App\Domain\Economy\ExtrasStudy;
@@ -18,11 +19,13 @@ use App\Domain\Economy\GameLadder;
 use App\Domain\Economy\GateReport;
 use App\Domain\Economy\GateRow;
 use App\Domain\Economy\LadderRow;
+use App\Domain\Economy\MergeEconomy;
 use App\Domain\Economy\PaceGate;
 use App\Domain\Economy\PlayerRun;
 use App\Domain\Economy\Purchase;
 use App\Domain\Economy\RulesConsistency;
 use App\Domain\Economy\Simulator;
+use App\Domain\Run\Rarity;
 use Illuminate\Console\Command;
 use InvalidArgumentException;
 use JsonException;
@@ -43,6 +46,10 @@ use Opis\JsonSchema\Validator;
  *
  * Crates of parts and storage units are played on top of that scenario at the shares of the income that the ruleset names, and the sale of a
  * car for a share of what was paid: what they do to the days of the ladder, what a crate pays back against a car, and what a unit returns.
+ *
+ * Merging two parts is worked out exactly from the rules of the game (the chances with the protection from bad luck, the fee and the scrap) and set
+ * against the crates: how many common parts and how much cash a part of each rarity takes by merging, and what the same rarity costs from crates.
+ * It is a report only, with no gate of its own: the design says merging cannot be the only way to the rare parts.
  */
 final class SimulateEconomy extends Command
 {
@@ -88,14 +95,18 @@ final class SimulateEconomy extends Command
         $rows = $ladder->check($economy, $incomeByLevel);
         $unreachable = $ladder->unreachableRungs($economy, $incomeByLevel, $economy->consistencyTolerance());
 
+        // Before `$game` stops being the rules of the game: merging is read from them.
+        $crateEconomy = $crates->economy();
+        $merge = $this->merge($game, $crateEconomy);
+
         $game = ['runs' => $fleetRuns, 'report' => $fleetReport, 'rows' => $rows, 'unreachable' => $unreachable];
-        $extras = $study->run($economy, $crates->economy(), $units->economy(), array_map('strval', array_keys($runs)));
+        $extras = $study->run($economy, $crateEconomy, $units->economy(), array_map('strval', array_keys($runs)));
         $gameOk = $fleetReport->passed() && $unreachable === [] && array_filter($rows, static fn (LadderRow $row): bool => ! $row->ok || ! $row->xpOk) === [] && $extras->passed();
 
         if ($this->option('json')) {
-            $this->line((string) json_encode($this->asArray($economy, $runs, $report, $findings, $game, $extras), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
+            $this->line((string) json_encode($this->asArray($economy, $runs, $report, $findings, $game, $extras, $merge), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         } else {
-            $this->print($economy, $runs, $report, $findings, $game, $extras);
+            $this->print($economy, $runs, $report, $findings, $game, $extras, $merge);
         }
 
         $strict = (bool) $this->option('strict');
@@ -198,11 +209,30 @@ final class SimulateEconomy extends Command
     }
 
     /**
+     * What merging costs a part of each rarity, set against the crates: the rules of the game give the chances, the fee and the scrap, and the crates
+     * give how many of them it takes to get the same rarity (a crate costs the price of a part of the model times the price factor of the slot crate).
+     *
+     * @return list<array<string, float|string|bool>>
+     */
+    private function merge(Rules $game, CrateEconomy $crates): array
+    {
+        $merge = new MergeEconomy(
+            static fn (string $rarity, int $failures): int => $game->mergeChancePpm(Rarity::fromKey($rarity), $failures),
+            // The rules count both as a share of the price of the model, so the share is what they make of a million.
+            $game->mergeCostCents(1_000_000),
+            $game->mergeScrapCents(1_000_000),
+        );
+
+        return $merge->againstCrates($crates->meansToFirst(), $crates->priceFactorPpm / 1_000_000);
+    }
+
+    /**
      * @param  array<string, PlayerRun>  $runs
      * @param  list<Finding>  $findings
      * @param  array{runs: array<string, PlayerRun>, report: GateReport, rows: list<LadderRow>, unreachable: array<int, string>}  $game
+     * @param  list<array<string, float|string|bool>>  $merge
      */
-    private function print(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game, ExtrasResult $extras): void
+    private function print(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game, ExtrasResult $extras, array $merge): void
     {
         $this->line("Economy ruleset {$economy->version()}");
         $this->newLine();
@@ -243,6 +273,7 @@ final class SimulateEconomy extends Command
 
         $this->printGame($economy, $game);
         $this->printExtras($economy, $extras);
+        $this->printMerge($merge);
 
         $this->newLine();
         $this->line('The rules of the game against the anchors (tolerance '.sprintf('%.0f%%', $economy->consistencyTolerance() * 100).'):');
@@ -451,12 +482,63 @@ final class SimulateEconomy extends Command
     }
 
     /**
+     * Merging two parts against the crates: a report only, so it has no gate and does not touch the exit code.
+     *
+     * @param  list<array<string, float|string|bool>>  $merge
+     */
+    private function printMerge(array $merge): void
+    {
+        $this->newLine();
+        $this->line('Merging two parts (Systemy I, point 3): two parts of one slot, tier and rarity make one of the next rarity, or fail and are lost (the scrap comes back). Every failure raises the chance of the next attempt (the protection from bad luck).');
+        $this->line('What a part of a rarity takes when it is made all the way from common parts, in units of p, the price of one part of the model, against what the crates ask for the same rarity (a crate costs p times the price factor, and gives parts of other rarities too, which are left aside):');
+        $this->table(
+            ['rarity', 'chance', 'attempts', 'no pity', 'commons', 'no pity', 'cost p', 'crates', 'crates p', 'merge/crates', ''],
+            array_map(fn (array $row): array => [
+                $row['rarity'],
+                sprintf('%.0f%%', $row['chance'] * 100),
+                number_format($row['attempts'], 2),
+                number_format($row['attempts_no_pity'], 2),
+                number_format($row['commons'], 1),
+                number_format($row['commons_no_pity'], 1),
+                number_format($row['cost'], 1),
+                number_format($row['crates'], 1),
+                number_format($row['crate_cost'], 1),
+                number_format($row['ratio'], 2),
+                $row['cheaper'] ? 'merging cheaper' : 'merging dearer',
+            ], $merge),
+        );
+
+        foreach ($merge as $row) {
+            $this->line(sprintf(
+                '%s %s part by merging: %s common parts and %s p (%s attempts at the last step); by crates: %s crates and %s p, so merging is %s.',
+                in_array($row['rarity'][0], ['a', 'e', 'i', 'o', 'u'], true) ? 'An' : 'A',
+                $row['rarity'],
+                number_format($row['commons'], 1),
+                number_format($row['cost'], 1),
+                number_format($row['attempts'], 2),
+                number_format($row['crates'], 1),
+                number_format($row['crate_cost'], 1),
+                $row['cheaper'] ? 'cheaper' : 'dearer',
+            ));
+        }
+
+        $legendary = end($merge);
+        $this->line(sprintf(
+            'To a legendary part merging alone takes %s common parts (%s without the protection from bad luck; the design counts about 333 without the bonus of the workshop either), so it is a way next to the crates, not instead of them.',
+            number_format($legendary['commons'], 0),
+            number_format($legendary['commons_no_pity'], 0),
+        ));
+        $this->line('Convention: a common part costs p, an attempt costs the fee and uses two parts of the rarity below, valued at what they cost to make, and a failed attempt gives the scrap back.');
+    }
+
+    /**
      * @param  array<string, PlayerRun>  $runs
      * @param  list<Finding>  $findings
      * @param  array{runs: array<string, PlayerRun>, report: GateReport, rows: list<LadderRow>, unreachable: array<int, string>}  $game
+     * @param  list<array<string, float|string|bool>>  $merge
      * @return array<string, mixed>
      */
-    private function asArray(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game, ExtrasResult $extras): array
+    private function asArray(EconomyRules $economy, array $runs, GateReport $report, array $findings, array $game, ExtrasResult $extras, array $merge): array
     {
         return [
             'ruleset' => $economy->version(),
@@ -484,6 +566,24 @@ final class SimulateEconomy extends Command
                     'returns' => $extras->unitReturns,
                 ],
                 'sales' => array_map(static fn (PlayerRun $run): array => ['days' => array_map(static fn (Purchase $purchase): int => $purchase->day, $run->purchases)], $extras->sales),
+            ],
+            'merge' => [
+                'convention' => 'Units of p, the price of one part of the model. A common part costs p; an attempt costs the fee and uses two parts of the rarity below, valued at what they cost to make; a failed attempt gives the scrap back. A crate costs p times the price factor, and gives parts of other rarities too.',
+                'steps' => array_map(static fn (array $row): array => [
+                    'rarity' => $row['rarity'],
+                    'chance' => round($row['chance'], 4),
+                    'attempts' => round($row['attempts'], 3),
+                    'attempts_no_pity' => round($row['attempts_no_pity'], 3),
+                    'commons' => round($row['commons'], 2),
+                    'commons_no_pity' => round($row['commons_no_pity'], 2),
+                    'fees' => round($row['fees'], 3),
+                    'scrap' => round($row['scrap'], 3),
+                    'cost' => round($row['cost'], 3),
+                    'crates' => round($row['crates'], 3),
+                    'crate_cost' => round($row['crate_cost'], 3),
+                    'ratio' => round($row['ratio'], 4),
+                    'merging_cheaper' => $row['cheaper'],
+                ], $merge),
             ],
             'game_fleet' => [
                 'gate' => $this->gateAsArray($game['report']),

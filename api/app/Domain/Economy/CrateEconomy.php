@@ -133,6 +133,61 @@ final readonly class CrateEconomy
     }
 
     /**
+     * How many crates it takes on average to get the first part of a rarity or a better one, by the name of the rarity (uncommon to legendary): the
+     * mean of the same exact chain as the medians. The guarantee of a legendary part every `legendaryEvery` crates ends the chain, so the sum is finite.
+     *
+     * @return array<string, float>
+     */
+    public function meansToFirst(): array
+    {
+        $means = [];
+
+        foreach (array_slice(self::RARITIES, 1) as $place => $rarity) {
+            $means[$rarity] = $this->meanTo($place + 1);
+        }
+
+        return $means;
+    }
+
+    /**
+     * @param  int  $target  the place of the rarity in `RARITIES`: the first part of it or a better one is what the count waits for
+     */
+    private function meanTo(int $target): float
+    {
+        $floor = (int) array_search($this->floorRarity, self::RARITIES, true);
+        $weights = array_values($this->odds);
+        $states = ['0,0' => 1.0];
+        $mean = 0.0;
+
+        for ($crate = 1; $crate <= $this->legendaryEvery + 1; $crate++) {
+            // The mass that has not got one before this crate is the chance that this crate is needed: the mean is the sum of those.
+            $mean += array_sum($states);
+            $next = [];
+
+            foreach ($states as $key => $mass) {
+                [$sinceFloor, $sinceLegendary] = array_map('intval', explode(',', $key));
+
+                foreach ($this->chances($weights, $floor, $sinceFloor, $sinceLegendary) as $rarity => $chance) {
+                    if ($chance <= 0.0 || $rarity >= $target) {
+                        continue;
+                    }
+
+                    $after = ($rarity >= $floor ? 0 : $sinceFloor + 1).','.($rarity === 4 ? 0 : $sinceLegendary + 1);
+                    $next[$after] = ($next[$after] ?? 0.0) + $mass * $chance;
+                }
+            }
+
+            if ($next === []) {
+                return $mean;
+            }
+
+            $states = $next;
+        }
+
+        throw new InvalidArgumentException('The crates never give a part of that rarity.');
+    }
+
+    /**
      * @param  int  $target  the place of the rarity in `RARITIES`: the first part of it or a better one is what the count waits for
      */
     private function medianTo(int $target): int
