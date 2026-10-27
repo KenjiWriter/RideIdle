@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
+use App\Domain\Run\WearPlan;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\PartResource;
 use App\Http\Resources\WorkshopJobResource;
@@ -53,20 +54,21 @@ final class GarageController extends Controller
     /**
      * Queues a job: `kind` is mount, unmount or upgrade, `part` the id of a part of the driver. Putting a part in a slot that has one takes
      * the old one off first, which is a job of its own; an upgrade is a job on a part that sits on the car and is paid when it is queued; a merge
-     * (`with` is the second part, which is used up) is one on two parts of the inventory, paid when it is queued, and the car does not stand for it. The
+     * (`with` is the second part, which is used up) is one on two parts of the inventory, paid when it is queued, and the car does not stand for it; a repair
+     * puts a worn part right, a service is a job on the car and takes no `part`. The
      * jobs are done one after the other by the one mechanic, and the car stands in the workshop while one of them is being done.
      */
     public function queueJob(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'kind' => ['required', 'string', Rule::in([WorkshopJob::KIND_MOUNT, WorkshopJob::KIND_UNMOUNT, WorkshopJob::KIND_UPGRADE, WorkshopJob::KIND_MERGE])],
-            'part' => ['required', 'integer', 'min:1'],
+            'kind' => ['required', 'string', Rule::in([WorkshopJob::KIND_MOUNT, WorkshopJob::KIND_UNMOUNT, WorkshopJob::KIND_UPGRADE, WorkshopJob::KIND_MERGE, WorkshopJob::KIND_REPAIR, WorkshopJob::KIND_SERVICE])],
+            'part' => ['required_unless:kind,'.WorkshopJob::KIND_SERVICE, 'nullable', 'integer', 'min:1'],
             'with' => ['required_if:kind,'.WorkshopJob::KIND_MERGE, 'nullable', 'integer', 'min:1'],
         ]);
 
         $userId = (int) $request->user()->getAuthIdentifier();
         $this->workshop->advance($userId);
-        $this->workshop->queue($userId, $data['kind'], $data['part'], withPartId: $data['with'] ?? null);
+        $this->workshop->queue($userId, $data['kind'], $data['part'] ?? null, withPartId: $data['with'] ?? null);
 
         return $this->respond($userId, 201);
     }
@@ -101,7 +103,7 @@ final class GarageController extends Controller
             'data' => [
                 'car' => $car === null ? null : $this->carData($car, $run),
                 // What is in the inventory, and for each part what merging it would do (null when it cannot be merged now).
-                'inventory' => $inventory->map(fn (Part $part): array => [...PartResource::make($part)->resolve(), 'merge' => $quotes[$part->id] ?? null])->all(),
+                'inventory' => $inventory->map(fn (Part $part): array => [...PartResource::make($part)->resolve(), 'merge' => $quotes[$part->id] ?? null, 'repair_next' => $this->workshop->repairQuote($part)])->all(),
                 // The last results of merging: they are drawn when the mechanic is done, so the driver may be told of them later.
                 'merges' => $this->merges->recent($userId),
                 'workshop' => [
@@ -121,7 +123,9 @@ final class GarageController extends Controller
     {
         $vehicle = $this->catalog->vehicle($car->vehicle_slug);
         $mounted = $car->parts()->whereNotNull('mounted_slot')->get()->keyBy('mounted_slot');
-        $slugs = $mounted->map(static fn (Part $part): array => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity, 'upgrade' => (int) $part->upgrade_level])->all();
+        $slugs = $mounted->map(static fn (Part $part): array => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity, 'upgrade' => (int) $part->upgrade_level, 'wear' => (int) $part->wear_ppb])->all();
+        // The wear of its parts and the service of the car: what the odometer says, how far the service is, what the overdue takes off, how often it breaks down.
+        $plan = $this->inputs->wearPlan($car->vehicle_slug, $run?->track_slug ?? $this->rules->tracksOf($this->rules->homeRegion())[0], $slugs, $car->odometer());
 
         return [
             'id' => $car->id,
@@ -141,7 +145,11 @@ final class GarageController extends Controller
                 'power_kw' => $vehicle['power_kw'] ?? null,
                 'drivetrain' => $vehicle['drivetrain'] ?? null,
             ],
-            'stats' => $this->rounded($this->inputs->stats($car->vehicle_slug, $slugs)->stats),
+            'stats' => $this->rounded($this->inputs->stats($car->vehicle_slug, $slugs, $plan->servicePenaltyPpm())->stats),
+            'mileage_km' => intdiv((int) $car->mileage_m, 1000),
+            'service' => $this->serviceData($car, $plan),
+            // How often it breaks down: the chance after a lap, with the condition of the car, the wear of its parts and the service counted.
+            'breakdown' => ['chance_ppm' => $this->rules->breakChancePerLapPpmFor($car->conditionPpm(), $plan->meanWearPpm(), $plan->overdueSharePpm(), $plan->unserviceableParts($this->rules->unserviceablePpm()))],
             'base_stats' => $this->rounded($this->inputs->stats($car->vehicle_slug)->stats),
             // The bar of a statistic is full at its ceiling: what the best car of the whole game reaches, the same on every track.
             'ceilings' => $this->rules->statCeilings(),
@@ -152,11 +160,36 @@ final class GarageController extends Controller
                     ...PartResource::make($part)->resolve(),
                     // The next step of the upgrade of this part on this car: its price, its time and what stops it, so the garage can offer it.
                     'upgrade_next' => $this->workshop->upgradeQuote($part, $car),
+                    // What putting the part right would cost and take, or why it cannot be (it is not worn, or it is worn out).
+                    'repair_next' => $this->workshop->repairQuote($part),
                 ],
                 'built_in' => $slot === 'engine',
             ], self::SLOTS),
             'lap_ms' => $run?->config['lap_ms'] ?? null,
             'run' => $run === null ? null : ['id' => $run->id, 'status' => $run->status, 'stop_reason' => $run->stop_reason],
+        ];
+    }
+
+    /**
+     * The service of the car: how often it is due, how far it has driven since the last, how far it is from the next (less than nothing when it is
+     * overdue), what the overdue takes off its performance, and what a service costs and takes.
+     *
+     * @return array<string, int>
+     */
+    private function serviceData(Car $car, WearPlan $plan): array
+    {
+        $quote = $this->workshop->serviceQuote($car);
+        $everyKm = intdiv($plan->serviceEveryM, 1000);
+        $sinceKm = intdiv($plan->sinceServiceM(), 1000);
+
+        return [
+            'every_km' => $everyKm,
+            'since_km' => $sinceKm,
+            'due_in_km' => $everyKm - $sinceKm,
+            'overdue_km' => max(0, $sinceKm - $everyKm),
+            'penalty_percent' => (int) round($plan->servicePenaltyPpm() / 10_000),
+            'cost_cents' => $quote['cost_cents'],
+            'duration_ms' => $quote['duration_ms'],
         ];
     }
 

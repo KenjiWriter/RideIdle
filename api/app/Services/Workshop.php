@@ -74,12 +74,15 @@ final class Workshop
      * A merge is a job on two parts of the inventory (`$withPartId` is the second one, which is used up): it is paid when it is queued, waits for the
      * mechanic like the rest, and the car does not stand for it, because the parts are not on it. Both parts are reserved by the job.
      *
-     * @param  string  $kind  WorkshopJob::KIND_MOUNT, KIND_UNMOUNT, KIND_UPGRADE or KIND_MERGE
+     * A repair puts a worn part right (the price and the time follow from its condition): a part on the car makes the car stand, a part of the inventory does
+     * not. A service is a job on the car and no part (`$partId` is null): the car stands, and the interval of its service starts again.
+     *
+     * @param  string  $kind  WorkshopJob::KIND_MOUNT, KIND_UNMOUNT, KIND_UPGRADE, KIND_MERGE, KIND_REPAIR or KIND_SERVICE
      * @return list<WorkshopJob>
      *
      * @throws RuleRefusedException
      */
-    public function queue(int $userId, string $kind, int $partId, ?int $nowMs = null, ?int $withPartId = null): array
+    public function queue(int $userId, string $kind, ?int $partId, ?int $nowMs = null, ?int $withPartId = null): array
     {
         return $this->locked($userId, $nowMs, function (Collection $runs, int $now) use ($userId, $kind, $partId, $withPartId): array {
             // What is due comes first, so the parts and the cars are as they are now.
@@ -93,14 +96,15 @@ final class Workshop
             }
 
             $city = $run === null ? $this->rules->homeRegion() : $this->garage->cityOf($run);
-            $part = Part::query()->where('user_id', $userId)->lockForUpdate()->find($partId) ?? throw new RuleRefusedException('part_not_found');
+            // The service is a job on the car, and no part.
+            $part = $kind === WorkshopJob::KIND_SERVICE ? null : Part::query()->where('user_id', $userId)->lockForUpdate()->find($partId ?? 0) ?? throw new RuleRefusedException('part_not_found');
 
             $pending = WorkshopJob::query()->where('user_id', $userId)->where('status', '!=', WorkshopJob::STATUS_DONE)->orderBy('finish_ms')->get();
 
             $partner = null;
 
             if ($kind === WorkshopJob::KIND_MERGE) {
-                $partner = $withPartId === null || $withPartId === $part->id
+                $partner = $withPartId === null || $withPartId === $part?->id
                     ? throw new RuleRefusedException('merge_parts_differ')
                     : Part::query()->where('user_id', $userId)->lockForUpdate()->find($withPartId) ?? throw new RuleRefusedException('part_not_found');
             }
@@ -108,7 +112,7 @@ final class Workshop
             // A part that is in a job is spoken for: so is the one that a merge is to use up.
             $busy = $pending->flatMap(static fn (WorkshopJob $job): array => [$job->part_id, $job->merge_part_id])->filter()->all();
 
-            if (in_array($part->id, $busy, true) || ($partner !== null && in_array($partner->id, $busy, true))) {
+            if (($part !== null && in_array($part->id, $busy, true)) || ($partner !== null && in_array($partner->id, $busy, true))) {
                 throw new RuleRefusedException('part_busy');
             }
 
@@ -118,6 +122,8 @@ final class Workshop
                 WorkshopJob::KIND_MOUNT => $this->planMount($car, $part, $pending->where('car_id', $car->id)),
                 WorkshopJob::KIND_UPGRADE => $this->planUpgrade($car, $part),
                 WorkshopJob::KIND_MERGE => $this->planMerge($part, $partner),
+                WorkshopJob::KIND_REPAIR => $this->planRepair($car, $part),
+                WorkshopJob::KIND_SERVICE => [[WorkshopJob::KIND_SERVICE, null]],
                 default => $this->planUnmount($car, $part),
             };
 
@@ -131,10 +137,12 @@ final class Workshop
             $firstMountMs = $kind === WorkshopJob::KIND_MOUNT ? $this->script->firstMountMs($userId) : null;
 
             foreach ($plan as [$jobKind, $jobPart]) {
-                $definition = $this->catalog->part($jobPart->part_slug);
+                $definition = $jobPart === null ? null : $this->catalog->part($jobPart->part_slug);
                 $quote = match ($jobKind) {
                     WorkshopJob::KIND_UPGRADE => $this->upgradeQuote($jobPart, $car),
                     WorkshopJob::KIND_MERGE => ['cost_cents' => $this->rules->mergeCostCents($definition['price_cents']), 'duration_ms' => $this->rules->mergeJobMs($jobPart->slot, $definition['tier'])],
+                    WorkshopJob::KIND_REPAIR => $this->repairQuote($jobPart),
+                    WorkshopJob::KIND_SERVICE => $this->serviceQuote($car),
                     default => null,
                 };
                 $duration = $quote['duration_ms'] ?? $this->rules->workshopJobMs($jobPart->slot, $definition['tier'], removal: $jobKind === WorkshopJob::KIND_UNMOUNT);
@@ -145,10 +153,11 @@ final class Workshop
 
                 $job = WorkshopJob::query()->create([
                     'user_id' => $userId,
-                    // The parts of a merge are not on the car, so it is not in the job: it does not stand while the mechanic is at it.
-                    'car_id' => $jobKind === WorkshopJob::KIND_MERGE ? null : $car->id,
+                    // The parts of a merge are not on the car, nor is a part of the inventory that is repaired, so the car is not in the job: it does not stand
+                    // while the mechanic is at it.
+                    'car_id' => $jobKind === WorkshopJob::KIND_MERGE || ($jobKind === WorkshopJob::KIND_REPAIR && ! $jobPart->isMounted()) ? null : $car->id,
                     'city' => $city,
-                    'part_id' => $jobPart->id,
+                    'part_id' => $jobPart?->id,
                     'merge_part_id' => $jobKind === WorkshopJob::KIND_MERGE ? $partner?->id : null,
                     'kind' => $jobKind,
                     'cost_cents' => $quote['cost_cents'] ?? 0,
@@ -306,6 +315,71 @@ final class Workshop
     }
 
     /**
+     * The repair of a part that is worn: on the car the workshop works on, or in the inventory.
+     *
+     * @return list<array{0: string, 1: Part}>
+     *
+     * @throws RuleRefusedException
+     */
+    private function planRepair(Car $car, Part $part): array
+    {
+        if ($part->isMounted() && $part->car_id !== $car->id) {
+            throw new RuleRefusedException('part_not_mounted');
+        }
+
+        $locked = $this->repairQuote($part)['locked'];
+
+        if ($locked !== null) {
+            throw new RuleRefusedException(match ($locked['reason']) {
+                'fine' => 'part_not_worn',
+                'worn_out' => 'part_worn_out',
+                default => 'repair_unavailable',
+            });
+        }
+
+        return [[WorkshopJob::KIND_REPAIR, $part]];
+    }
+
+    /**
+     * What putting a worn part right costs and takes, and what stops it: the part is not worn, it is worn out (a part at 0% has to be replaced), or it
+     * has no price.
+     *
+     * @return array{cost_cents: int|null, duration_ms: int|null, locked: array{reason: string}|null}
+     */
+    public function repairQuote(Part $part): array
+    {
+        $definition = $this->catalog->part($part->part_slug);
+
+        if (($definition['price_cents'] ?? null) === null) {
+            return ['cost_cents' => null, 'duration_ms' => null, 'locked' => ['reason' => 'unavailable']];
+        }
+
+        if ((int) $part->wear_ppb <= 0) {
+            return ['cost_cents' => null, 'duration_ms' => null, 'locked' => ['reason' => 'fine']];
+        }
+
+        if ($part->conditionPpm() <= 0) {
+            return ['cost_cents' => null, 'duration_ms' => null, 'locked' => ['reason' => 'worn_out']];
+        }
+
+        return [
+            'cost_cents' => $this->rules->partRepairCostCents($definition['price_cents'], $part->conditionPpm()),
+            'duration_ms' => $this->rules->partRepairMs($part->slot, $definition['tier'], $part->conditionPpm()),
+            'locked' => null,
+        ];
+    }
+
+    /**
+     * What a service of the car costs and takes: a share of its value, and a quarter of an hour of the mechanic.
+     *
+     * @return array{cost_cents: int, duration_ms: int}
+     */
+    public function serviceQuote(Car $car): array
+    {
+        return ['cost_cents' => $this->rules->serviceCostCents((int) $car->value_cents), 'duration_ms' => $this->rules->serviceJobMs()];
+    }
+
+    /**
      * Two parts of the inventory that are made into one: the same slot, tier and rarity, neither on a car, and not the highest rarity.
      *
      * @return list<array{0: string, 1: Part}>
@@ -443,7 +517,7 @@ final class Workshop
 
         $car = Car::query()->findOrFail($carId);
 
-        $this->runs->leaveWorkshop($run, $this->inputs->make($run->car_slug, $run->track_slug, $car->mountedParts(), $car->conditionPpm()), $now);
+        $this->runs->leaveWorkshop($run, $this->inputs->makeForCar($car, $run->track_slug), $now);
     }
 
     private function hasPendingJobs(int $userId): bool
@@ -502,14 +576,14 @@ final class Workshop
 
                 $this->runs->leaveWorkshop(
                     $run,
-                    $this->inputs->make($run->car_slug, $run->track_slug, $car->mountedParts(), $car->conditionPpm()),
+                    $this->inputs->makeForCar($car, $run->track_slug),
                     $job->finish_ms,
                 );
             }
         }
     }
 
-    /** The part goes onto the car, or comes off it, or has its next level of upgrade, or the draw of the merge is made. */
+    /** The part goes onto the car, or comes off it, or has its next level of upgrade, or the draw of the merge is made, or the part or the car is put right. */
     private function apply(WorkshopJob $job): void
     {
         if ($job->kind === WorkshopJob::KIND_MERGE) {
@@ -518,7 +592,20 @@ final class Workshop
             return;
         }
 
+        // The interval of the service starts again from where the car is.
+        if ($job->kind === WorkshopJob::KIND_SERVICE) {
+            Car::query()->whereKey($job->car_id)->update(['serviced_at_m' => DB::raw('mileage_m')]);
+
+            return;
+        }
+
         $part = Part::query()->lockForUpdate()->findOrFail($job->part_id);
+
+        if ($job->kind === WorkshopJob::KIND_REPAIR) {
+            $part->forceFill(['wear_ppb' => 0])->save();
+
+            return;
+        }
 
         if ($job->kind === WorkshopJob::KIND_UPGRADE) {
             $part->forceFill(['upgrade_level' => $job->upgrade_to])->save();

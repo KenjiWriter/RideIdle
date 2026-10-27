@@ -30,7 +30,8 @@ final class WorkshopJobResource extends JsonResource
             // A merge says which part is used up with the one that stays (`part`), and the rarity it aims at.
             'merge_with' => $this->resource->merge_part_id === null ? null : PartResource::make($this->resource->mergePart)->resolve(),
             'merge_to' => $this->resource->kind === WorkshopJob::KIND_MERGE ? Rarity::from($this->resource->part->rarity + 1)->key() : null,
-            'part' => PartResource::make($this->resource->part)->resolve(),
+            // A service is a job on the car, and has no part.
+            'part' => $this->resource->part === null ? null : PartResource::make($this->resource->part)->resolve(),
             'start_ms' => $this->resource->start_ms,
             'finish_ms' => $this->resource->finish_ms,
         ];

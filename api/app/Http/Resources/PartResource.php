@@ -27,7 +27,9 @@ final class PartResource extends JsonResource
 
         return [
             'id' => $this->resource->id,
-            ...self::describe($definition ?? ['slug' => $this->resource->part_slug, 'slot' => $this->resource->slot], Rarity::tryFrom((int) $this->resource->rarity) ?? Rarity::Common, (int) $this->resource->upgrade_level),
+            ...self::describe($definition ?? ['slug' => $this->resource->part_slug, 'slot' => $this->resource->slot], Rarity::tryFrom((int) $this->resource->rarity) ?? Rarity::Common, (int) $this->resource->upgrade_level, $this->resource->conditionPpm()),
+            // How much of its life the part has left, in percent: the statistics above already count it.
+            'condition_percent' => (int) round($this->resource->conditionPpm() / 10_000),
             'mounted' => $this->resource->isMounted(),
             'car_id' => $this->resource->car_id,
         ];
@@ -40,7 +42,7 @@ final class PartResource extends JsonResource
      * @param  array<string, mixed>  $definition
      * @return array<string, mixed>
      */
-    public static function describe(array $definition, Rarity $rarity = Rarity::Common, int $upgrade = 0): array
+    public static function describe(array $definition, Rarity $rarity = Rarity::Common, int $upgrade = 0, int $conditionPpm = 1_000_000): array
     {
         return [
             'slug' => $definition['slug'],
@@ -54,7 +56,7 @@ final class PartResource extends JsonResource
             // The upgrade of the part (+N), the most its rarity allows, and the statistics it gives with both.
             'upgrade' => $upgrade,
             'upgrade_max' => app(Rules::class)->upgradeMax($rarity),
-            'stats' => app(Rules::class)->scaledStats($definition['stats'] ?? [], $rarity, $upgrade),
+            'stats' => app(Rules::class)->scaledStats($definition['stats'] ?? [], $rarity, $upgrade, $conditionPpm),
             // Tires only: how they grip on every surface, which is what tells one kind from another.
             'surfaces' => isset($definition['tire_kind']) ? app(Rules::class)->tireSurfaces($definition['tire_kind']) : null,
         ];
