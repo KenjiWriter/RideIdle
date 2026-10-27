@@ -3,11 +3,12 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
-import type { CarStatKey, JobKind, OwnedPart, WorkshopJob } from '@/api/types'
+import type { CarStatKey, JobKind, OwnedPart, UpgradeNext, WorkshopJob } from '@/api/types'
 import GameShell from '@/components/GameShell.vue'
 import JobCancel from '@/components/JobCancel.vue'
 import PartStats from '@/components/PartStats.vue'
 import RarityMark from '@/components/RarityMark.vue'
+import UpgradeMark from '@/components/UpgradeMark.vue'
 import { statFill } from '@/features/car/statFill'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -26,7 +27,7 @@ const MIN_ASK_MS = 3_000
 const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking', 'clearance']
 
 const { t } = useI18n()
-const { number } = useFormat()
+const { number, money } = useFormat()
 const store = useGarageStore()
 const tutorial = useTutorialStore()
 
@@ -105,6 +106,24 @@ function progress(job: WorkshopJob): number {
   return total > 0 ? Math.min(100, Math.max(0, Math.round(((now.value - job.start_ms) / total) * 100))) : 100
 }
 
+/** What a job is doing, in words: putting a part on, taking it off, or upgrading it (and to what level). */
+function jobText(job: WorkshopJob): string {
+  return t(`workshop.${job.kind}`, { part: job.part.name, to: job.upgrade_to ?? 0 })
+}
+
+/** What the next step of an upgrade says under its button: what it costs and how long it takes, or what stops it. */
+function upgradeInfo(next: UpgradeNext): string {
+  if (next.locked?.reason === 'max') {
+    return t('workshop.upgradeMax')
+  }
+
+  if (next.locked?.reason === 'car_level') {
+    return t('workshop.upgradeCarLevel', { required: next.locked.required, current: next.locked.current })
+  }
+
+  return t('workshop.upgradeCost', { price: money(next.cost_cents ?? 0, 2), time: formatDuration(next.duration_ms ?? 0) })
+}
+
 /** What a statistic changed by, as the parts make it: nothing for a change too small to see. */
 function delta(stat: CarStatKey): number {
   const value = (car.value?.stats[stat] ?? 0) - (car.value?.base_stats[stat] ?? 0)
@@ -170,9 +189,12 @@ async function cancel(jobId: number): Promise<void> {
     const gone = await store.cancelJob(jobId)
     now.value = store.serverNow()
 
-    // The part of a job that went with the one asked for.
-    const [, withIt] = gone
-    showCancelled(withIt ? t('workshop.cancelledWith', { part: withIt.part.name }) : t('workshop.cancelled'))
+    // The part of a job that went with the one asked for, or the price of an upgrade that was given back (one that had not started).
+    const [asked, withIt] = gone
+    const refund = asked && asked.kind === 'upgrade' && asked.status === 'queued' ? asked.cost_cents : 0
+    showCancelled(
+      withIt ? t('workshop.cancelledWith', { part: withIt.part.name }) : refund > 0 ? t('workshop.cancelledRefund', { price: money(refund, 2) }) : t('workshop.cancelled'),
+    )
   } catch (failure) {
     if (endSessionIfUnauthorized(failure)) {
       return
@@ -225,7 +247,7 @@ async function cancel(jobId: number): Promise<void> {
         </div>
 
         <template v-if="working">
-          <p class="text-[13px] text-ink" :data-test="`job-${working.id}`">{{ t(`workshop.${working.kind}`, { part: working.part.name }) }}</p>
+          <p class="text-[13px] text-ink" :data-test="`job-${working.id}`">{{ jobText(working) }}</p>
           <div class="bar bar-cy" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="progress(working)" data-test="job-bar">
             <i :style="{ width: `${progress(working)}%` }" />
           </div>
@@ -251,7 +273,7 @@ async function cancel(jobId: number): Promise<void> {
             :data-test="`job-${job.id}`"
           >
             <div class="min-w-0">
-              <p class="text-[13px] text-ink">{{ t(`workshop.${job.kind}`, { part: job.part.name }) }}</p>
+              <p class="text-[13px] text-ink">{{ jobText(job) }}</p>
               <p class="sub" :data-test="`job-${job.id}-state`">{{ t('workshop.waiting') }}</p>
             </div>
             <span class="chip">{{ t('workshop.eta', { time: clock(job.finish_ms - now) }) }}</span>
@@ -292,7 +314,24 @@ async function cancel(jobId: number): Promise<void> {
                 {{ slot.part.name }}
                 <span class="mono ml-1 text-[10px] text-faint">{{ t('part.tier', { tier: slot.part.tier ?? 0 }) }}</span>
               </span>
-              <RarityMark v-if="slot.part.rarity_rank > 1" :rarity="slot.part.rarity" />
+              <span v-if="slot.part.rarity_rank > 1 || slot.part.upgrade > 0" class="flex flex-wrap items-center gap-1.5">
+                <RarityMark v-if="slot.part.rarity_rank > 1" :rarity="slot.part.rarity" />
+                <UpgradeMark :level="slot.part.upgrade" />
+              </span>
+              <!-- The next step of the upgrade: paid now, and the car stands while the mechanic is at it. A part that is as far as it goes says so instead of offering it. -->
+              <template v-if="slot.part.upgrade_next.locked?.reason !== 'unavailable'">
+                <button
+                  v-if="slot.part.upgrade_next.to !== null"
+                  type="button"
+                  class="btn btn-primary btn-sm mt-1.5 !min-h-9 !text-base"
+                  :disabled="busy || busyPartIds.has(slot.part.id) || slot.part.upgrade_next.locked !== null"
+                  :data-test="`upgrade-${slot.part.id}`"
+                  @click="act('upgrade', slot.part)"
+                >
+                  {{ t('workshop.upgradeTo', { to: slot.part.upgrade_next.to }) }}
+                </button>
+                <p class="sub mt-1" :data-test="`upgrade-info-${slot.part.id}`">{{ upgradeInfo(slot.part.upgrade_next) }}</p>
+              </template>
               <button
                 type="button"
                 class="btn btn-secondary btn-sm mt-1.5 !min-h-9 !text-base"
@@ -322,7 +361,10 @@ async function cancel(jobId: number): Promise<void> {
                 <span class="tag">{{ t('part.tier', { tier: part.tier ?? 0 }) }}</span>
               </p>
               <p class="sub">{{ t(`slot.${part.slot}`) }}</p>
-              <RarityMark :rarity="part.rarity" class="my-1" />
+              <p class="my-1 flex flex-wrap items-center gap-2">
+                <RarityMark :rarity="part.rarity" />
+                <UpgradeMark :level="part.upgrade" />
+              </p>
               <PartStats :part="part" />
             </div>
             <button

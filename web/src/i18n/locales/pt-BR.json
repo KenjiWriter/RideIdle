@@ -310,6 +310,7 @@
   },
   "part": {
     "tier": "T{tier}",
+    "upgrade": "Aprimoramento +{level}",
     "stat": {
       "grip": "Aderência {value}",
       "handling": "Dirigibilidade {value}",
@@ -404,7 +405,14 @@
     "cancelKeep": "Manter",
     "cancelled": "Serviço cancelado.",
     "cancelledWith": "Serviço cancelado, e a montagem de {part} junto.",
-    "city": "Oficina em {city}"
+    "city": "Oficina em {city}",
+    "upgrade": "Aprimorando para +{to}: {part}",
+    "upgradeTo": "Aprimorar para +{to}",
+    "upgradeCost": "{price} · {time}",
+    "upgradeMax": "Aprimoramento máximo",
+    "upgradeCarLevel": "Requer nível do carro {required} (você tem {current})",
+    "cancelLosesUpgrade": "O trabalho já feito e os {price} pagos pelo aprimoramento se perdem, e a peça fica como estava.",
+    "cancelledRefund": "Serviço cancelado. {price} voltaram para a sua carteira."
   },
   "hud": {
     "level": "LV",

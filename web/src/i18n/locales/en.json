@@ -310,6 +310,7 @@
   },
   "part": {
     "tier": "T{tier}",
+    "upgrade": "Upgrade +{level}",
     "stat": {
       "grip": "Grip {value}",
       "handling": "Handling {value}",
@@ -404,7 +405,14 @@
     "cancelKeep": "Keep it",
     "cancelled": "Job cancelled.",
     "cancelledWith": "Job cancelled, and putting on {part} with it.",
-    "city": "Workshop in {city}"
+    "city": "Workshop in {city}",
+    "upgrade": "Upgrading to +{to}: {part}",
+    "upgradeTo": "Upgrade to +{to}",
+    "upgradeCost": "{price} · {time}",
+    "upgradeMax": "Fully upgraded",
+    "upgradeCarLevel": "Needs car level {required} (you have {current})",
+    "cancelLosesUpgrade": "The work already done and the {price} paid for the upgrade are lost, and the part stays as it was.",
+    "cancelledRefund": "Job cancelled. {price} is back in your wallet."
   },
   "hud": {
     "level": "LV",

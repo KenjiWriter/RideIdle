@@ -7,7 +7,7 @@ import { POLL_MS } from '@/features/run/useRunPolling'
 import { readSeen, storeSeen } from '@/features/run/seen'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
-import { aCar, aGarage, aPart } from '@/test/garageFixtures'
+import { aCar, aGarage, aMountedPart, aPart } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
 import { aStep, aTutorial } from '@/test/tutorialFixtures'
 
@@ -858,6 +858,18 @@ describe('GarageView', () => {
 
       expect(wrapper.get('[data-test="tutorial-reward"]').text()).toBe('K. added 100 XP to your car.')
     })
+  })
+
+  it('marks the tile of an upgraded part with its level, and leaves one that is not upgraded as it is', async () => {
+    const upgraded = aMountedPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, upgrade: 3 })
+    const plain = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes' })
+    serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: upgraded, brakes: plain }) })) })
+
+    const { wrapper } = await show()
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="slot-tires"] [data-test="upgrade-mark"]').text()).toBe('+3')
+    expect(wrapper.find('[data-test="slot-brakes"] [data-test="upgrade-mark"]').exists()).toBe(false)
   })
 
   it('marks the tile of a rarer part with the color and the name of its rarity, and leaves a common one as it is', async () => {

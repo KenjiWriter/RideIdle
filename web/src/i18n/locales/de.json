@@ -310,6 +310,7 @@
   },
   "part": {
     "tier": "T{tier}",
+    "upgrade": "Upgrade +{level}",
     "stat": {
       "grip": "Haftung {value}",
       "handling": "Fahrverhalten {value}",
@@ -404,7 +405,14 @@
     "cancelKeep": "Behalten",
     "cancelled": "Auftrag abgebrochen.",
     "cancelledWith": "Auftrag abgebrochen, und der Einbau von {part} entfällt damit.",
-    "city": "Werkstatt in {city}"
+    "city": "Werkstatt in {city}",
+    "upgrade": "Upgrade auf +{to}: {part}",
+    "upgradeTo": "Auf +{to} verbessern",
+    "upgradeCost": "{price} · {time}",
+    "upgradeMax": "Voll verbessert",
+    "upgradeCarLevel": "Erfordert Autostufe {required} (du hast {current})",
+    "cancelLosesUpgrade": "Die bereits geleistete Arbeit und die {price} für das Upgrade gehen verloren, und das Teil bleibt, wie es war.",
+    "cancelledRefund": "Auftrag abgebrochen. {price} sind wieder in deinem Geldbeutel."
   },
   "hud": {
     "level": "LV",

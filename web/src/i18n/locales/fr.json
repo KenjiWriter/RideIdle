@@ -310,11 +310,12 @@
   },
   "part": {
     "tier": "T{tier}",
+    "upgrade": "Amélioration +{level}",
     "stat": {
       "grip": "Adhérence {value}",
       "handling": "Tenue de route {value}",
       "braking": "Freinage {value}",
-      "power_mult": "Puissance +{value} \u0001",
+      "power_mult": "Puissance +{value} %",
       "fade_resistance": "Résistance à la surchauffe {value}",
       "cooling": "Refroidissement {value}",
       "capacity_l": "{value} l",
@@ -334,7 +335,7 @@
   "shop": {
     "title": "Boutique",
     "intro": "Des pièces pour votre voiture. Achetez-les ici, puis montez-les à l’atelier.",
-    "cash": "Argent \u0001 {money}",
+    "cash": "Argent : {money}",
     "buy": "Acheter pour {price}",
     "buying": "Achat en cours…",
     "needsLevel": "Nécessite une voiture de niveau {level}",
@@ -372,11 +373,11 @@
   },
   "workshop": {
     "title": "Atelier",
-    "mechanic": "Mécanicien de niveau {level} \u0001 les travaux durent {cut} \u0001 de moins.",
+    "mechanic": "Mécanicien de niveau {level} : les travaux durent {cut} % de moins.",
     "queue": "File {count} sur {max}",
     "queueEmpty": "Rien n’attend le mécanicien.",
-    "mount": "Montage \u0001 {part}",
-    "unmount": "Démontage \u0001 {part}",
+    "mount": "Montage : {part}",
+    "unmount": "Démontage : {part}",
     "working": "En cours",
     "waiting": "En attente",
     "left": "Encore {time}",
@@ -404,7 +405,14 @@
     "cancelKeep": "Garder",
     "cancelled": "Travail annulé.",
     "cancelledWith": "Travail annulé, et le montage de {part} avec lui.",
-    "city": "Atelier de {city}"
+    "city": "Atelier de {city}",
+    "upgrade": "Amélioration à +{to} : {part}",
+    "upgradeTo": "Améliorer à +{to}",
+    "upgradeCost": "{price} · {time}",
+    "upgradeMax": "Amélioration maximale",
+    "upgradeCarLevel": "Niveau de voiture {required} requis (vous avez {current})",
+    "cancelLosesUpgrade": "Le travail déjà fait et les {price} payés pour l’amélioration sont perdus, et la pièce reste comme elle était.",
+    "cancelledRefund": "Travail annulé. {price} sont de retour dans votre portefeuille."
   },
   "hud": {
     "level": "LV",

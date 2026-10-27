@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
-import { NOW, aCar, aGarage, aJob, aPart } from '@/test/garageFixtures'
+import { NOW, aCar, aGarage, aJob, aMountedPart, aPart, anUpgradeStep } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
 import { aTutorial } from '@/test/tutorialFixtures'
 
@@ -404,6 +404,160 @@ describe('WorkshopView', () => {
     expect(wrapper.get('[data-test="mechanic"]').text()).toBe('Mechanik poziomu 1: zlecenia trwają o 2% krócej.')
     expect(wrapper.get('[data-test="slot-tires"]').text()).toContain('Fabryczne')
     expect(wrapper.get('[data-test="put-on-21"]').text()).toBe('Załóż')
+  })
+
+  describe('upgrading a part', () => {
+    const mountedTires = (overrides: Parameters<typeof aMountedPart>[0] = {}) =>
+      aMountedPart({ id: 21, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, stats: { grip: 100, handling: 98, braking: 100 }, ...overrides })
+    const queueOf = (jobs: ReturnType<typeof aJob>[], car = aCar({ run: { id: 7, status: 'stopped', stop_reason: 'workshop' } }, { tires: mountedTires() })) =>
+      aGarage({ car, workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs } })
+    const upgradeJob = (overrides: Parameters<typeof aJob>[0] = {}) =>
+      aJob({ id: 4, kind: 'upgrade', cost_cents: 19_950, upgrade_to: 1, part: mountedTires(), finish_ms: NOW + 294_000, ...overrides })
+
+    it('offers the next step of a part on the car with its price and time, and queues it when asked', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: mountedTires() }) })),
+        'POST /api/v1/garage/jobs': () => respond(201, queueOf([upgradeJob()])),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="upgrade-21"]').text()).toBe('Upgrade to +1')
+      expect(wrapper.get('[data-test="upgrade-21"]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.get('[data-test="upgrade-info-21"]').text()).toBe('$199.50 · 4 min 54 s')
+      // A part in the inventory is not upgraded: it has to be on the car first.
+      expect(wrapper.find('[data-test="upgrade-mark"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="upgrade-21"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ kind: 'upgrade', part: 21 })
+      expect(wrapper.get('[data-test="job-4"]').text()).toContain('Upgrading to +1: Street tires T2')
+      expect(wrapper.get('[data-test="job-4-state"]').text()).toContain('In progress: 4 min 54 s left')
+      // The part that is in the workshop cannot be queued again, or taken off.
+      expect(wrapper.get('[data-test="upgrade-21"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-test="take-off-21"]').attributes('disabled')).toBeDefined()
+    })
+
+    it('shows the level of an upgraded part on its tile and in the inventory, and says nothing for a part that is not upgraded', async () => {
+      const spare = aPart({ id: 22, slug: 'street-tires-t2', name: 'Spare tires', slot: 'tires', tier: 2, upgrade: 2, upgrade_max: 3, stats: { grip: 106 } })
+      const brakes = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', upgrade: 0 })
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: mountedTires({ upgrade: 1 }), brakes }), inventory: [spare] })) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="slot-tires"] [data-test="upgrade-mark"]').text()).toBe('+1')
+      expect(wrapper.get('[data-test="slot-tires"] [data-test="upgrade-mark"]').attributes('aria-label')).toBe('Upgrade +1')
+      expect(wrapper.get('[data-test="part-22"] [data-test="upgrade-mark"]').text()).toBe('+2')
+      expect(wrapper.find('[data-test="slot-brakes"] [data-test="upgrade-mark"]').exists()).toBe(false)
+    })
+
+    it('says why a step is locked and offers no button that works: the level of the car, or a part that is as far as it goes', async () => {
+      const tires = mountedTires({ upgrade: 2, upgrade_next: anUpgradeStep({ to: 3, cost_cents: 41_946, duration_ms: 576_240, locked: { reason: 'car_level', required: 4, current: 3 } }) })
+      const brakes = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', upgrade: 3, upgrade_next: anUpgradeStep({ to: null, cost_cents: null, duration_ms: null, locked: { reason: 'max' } }) })
+      const exhaust = aMountedPart({ id: 11, upgrade_next: anUpgradeStep({ to: null, cost_cents: null, duration_ms: null, locked: { reason: 'unavailable' } }) })
+      const calls = serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires, brakes, exhaust }) })) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      // The level 3 of the car allows +2: the step to +3 waits for the level 4, and the button is there but cannot be pressed.
+      expect(wrapper.get('[data-test="upgrade-21"]').text()).toBe('Upgrade to +3')
+      expect(wrapper.get('[data-test="upgrade-21"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-test="upgrade-info-21"]').text()).toBe('Needs car level 4 (you have 3)')
+
+      expect(wrapper.find('[data-test="upgrade-12"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="upgrade-info-12"]').text()).toBe('Fully upgraded')
+
+      // A part with nothing to upgrade by says nothing and offers nothing.
+      expect(wrapper.find('[data-test="upgrade-11"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="upgrade-info-11"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="upgrade-21"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.some((call) => call.method === 'POST')).toBe(false)
+    })
+
+    it('shows what the server says when it refuses an upgrade', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: mountedTires() }) })),
+        'POST /api/v1/garage/jobs': () => respond(422, { message: 'Not enough cash.', code: 'insufficient_funds' }),
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="upgrade-21"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="error"]').text()).toBe('Not enough cash.')
+      expect(wrapper.find('[data-test="job-4"]').exists()).toBe(false)
+    })
+
+    it('asks first about an upgrade that the mechanic is at, and says that its price is lost with the work', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, queueOf([upgradeJob()])),
+        'DELETE /api/v1/garage/jobs/4': () => respond(200, { ...queueOf([], aCar({}, { tires: mountedTires() })), cancelled: [4] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="cancel-4"]').trigger('click')
+
+      expect(wrapper.get('[data-test="cancel-sure-4"]').text()).toContain('The work already done and the $199.50 paid for the upgrade are lost, and the part stays as it was.')
+      expect(calls.some((call) => call.method === 'DELETE')).toBe(false)
+
+      await wrapper.get('[data-test="cancel-confirm-4"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.filter((call) => call.method === 'DELETE')).toHaveLength(1)
+      // Nothing is given back for it.
+      expect(wrapper.get('[data-test="cancelled"]').text()).toBe('Job cancelled.')
+    })
+
+    it('cancels an upgrade that waits at once, and says that its price is back', async () => {
+      const brakesJob = aJob({ id: 3, kind: 'upgrade', cost_cents: 12_000, upgrade_to: 1, part: aMountedPart({ id: 12, name: 'Disc brakes', slot: 'brakes' }), finish_ms: NOW + 100_000 })
+      const waiting = upgradeJob({ status: 'queued', start_ms: NOW + 100_000, finish_ms: NOW + 394_000 })
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, queueOf([brakesJob, waiting])),
+        'DELETE /api/v1/garage/jobs/4': () => respond(200, { ...queueOf([brakesJob]), cancelled: [4] }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="job-4"]').text()).toContain('Upgrading to +1: Street tires T2')
+
+      await wrapper.get('[data-test="cancel-4"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="cancel-sure-4"]').exists()).toBe(false)
+      expect(calls.some((call) => call.method === 'DELETE' && call.url === '/api/v1/garage/jobs/4')).toBe(true)
+      expect(wrapper.find('[data-test="job-4"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="cancelled"]').text()).toBe('Job cancelled. $199.50 is back in your wallet.')
+    })
+
+    it('speaks the language of the driver', async () => {
+      await setLocale('pl')
+      const tires = mountedTires({ upgrade: 2, upgrade_next: anUpgradeStep({ to: 3, locked: { reason: 'car_level', required: 4, current: 3 } }) })
+      const brakes = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', upgrade: 3, upgrade_next: anUpgradeStep({ to: null, cost_cents: null, duration_ms: null, locked: { reason: 'max' } }) })
+      const exhaust = aMountedPart({ id: 11 })
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires, brakes, exhaust }), workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, jobs: [upgradeJob({ part: exhaust, status: 'queued' })] } })) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="upgrade-21"]').text()).toBe('Ulepsz do +3')
+      expect(wrapper.get('[data-test="upgrade-info-21"]').text()).toBe('Wymaga poziomu auta 4 (masz 3)')
+      expect(wrapper.get('[data-test="upgrade-info-12"]').text()).toBe('Pełne ulepszenie')
+      expect(wrapper.get('[data-test="upgrade-info-11"]').text()).toBe('199,50 $ · 4 min 54 s')
+      expect(wrapper.get('[data-test="job-4"]').text()).toContain('Ulepszanie do +1: Sport exhaust')
+    })
   })
 
   it('names the rarity of the parts in the inventory, and on the tiles of the parts that are rarer than common', async () => {

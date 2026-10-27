@@ -1,4 +1,4 @@
-import type { GarageCar, GarageResponse, OpenedCrate, OwnedPart, ShopCrates, ShopOffer, WorkshopJob } from '@/api/types'
+import type { GarageCar, GarageResponse, MountedPart, OpenedCrate, OwnedPart, ShopCrates, ShopOffer, UpgradeNext, WorkshopJob } from '@/api/types'
 
 /** The time of the server in the fixtures. */
 export const NOW = 1_792_692_000_000
@@ -14,19 +14,31 @@ export function aPart(overrides: Partial<OwnedPart> = {}): OwnedPart {
     stats: { power_mult: 1.02 },
     rarity: 'common',
     rarity_rank: 1,
+    upgrade: 0,
+    upgrade_max: 3,
     mounted: false,
     car_id: null,
     ...overrides,
   }
 }
 
+/** What the next step of an upgrade is on a car of level 3: +1 for $199.50 and 4 min 54 s (the street tires of tier 2, as the server prices them). */
+export function anUpgradeStep(overrides: Partial<UpgradeNext> = {}): UpgradeNext {
+  return { to: 1, cost_cents: 19_950, duration_ms: 294_000, locked: null, ...overrides }
+}
+
+/** A part that sits on the car, with the next step of its upgrade. */
+export function aMountedPart(overrides: Partial<MountedPart> = {}): MountedPart {
+  return { ...aPart({ mounted: true, car_id: 5 }), upgrade_next: anUpgradeStep(), ...overrides }
+}
+
 export function anOffer(overrides: Partial<ShopOffer> = {}): ShopOffer {
-  return { slug: 'sport-exhaust-t2', name: 'Sport exhaust', slot: 'exhaust', tier: 2, price_cents: 47_500, stats: { power_mult: 1.02 }, rarity: 'common', rarity_rank: 1, required_car_level: 3, mountable: true, ...overrides }
+  return { slug: 'sport-exhaust-t2', name: 'Sport exhaust', slot: 'exhaust', tier: 2, price_cents: 47_500, stats: { power_mult: 1.02 }, rarity: 'common', rarity_rank: 1, upgrade: 0, upgrade_max: 3, required_car_level: 3, mountable: true, ...overrides }
 }
 
 const SLOTS = ['tires', 'suspension', 'brakes', 'engine', 'boost', 'gearbox', 'exhaust', 'cooling', 'tank']
 
-export function aCar(overrides: Partial<GarageCar> = {}, mounted: Record<string, OwnedPart> = {}): GarageCar {
+export function aCar(overrides: Partial<GarageCar> = {}, mounted: Record<string, OwnedPart | MountedPart> = {}): GarageCar {
   return {
     id: 5,
     level: 3,
@@ -38,7 +50,8 @@ export function aCar(overrides: Partial<GarageCar> = {}, mounted: Record<string,
     base_stats: { accel: 97, top_speed: 175, grip: 90, handling: 88, braking: 90, clearance: 20 },
     ceilings: { accel: 400, top_speed: 450, grip: 250, handling: 250, braking: 250, clearance: 200 },
     tank_ml: 45_000,
-    slots: SLOTS.map((slot) => ({ slot, part: mounted[slot] ?? null, built_in: slot === 'engine' })),
+    // A part that sits on the car comes with the next step of its upgrade, as the server sends it.
+    slots: SLOTS.map((slot) => ({ slot, part: mounted[slot] ? { upgrade_next: anUpgradeStep(), ...mounted[slot] } : null, built_in: slot === 'engine' })),
     lap_ms: { dry: 75_000 },
     run: { id: 7, status: 'running', stop_reason: null },
     ...overrides,
@@ -46,7 +59,7 @@ export function aCar(overrides: Partial<GarageCar> = {}, mounted: Record<string,
 }
 
 export function aJob(overrides: Partial<WorkshopJob> = {}): WorkshopJob {
-  return { id: 1, kind: 'mount', status: 'working', part: aPart(), start_ms: NOW - 60_000, finish_ms: NOW + 175_000, ...overrides }
+  return { id: 1, kind: 'mount', cost_cents: 0, upgrade_to: null, status: 'working', part: aPart(), start_ms: NOW - 60_000, finish_ms: NOW + 175_000, ...overrides }
 }
 
 export function aGarage(data: Partial<GarageResponse['data']> = {}, nowMs = NOW): GarageResponse {

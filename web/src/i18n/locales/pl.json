@@ -310,6 +310,7 @@
   },
   "part": {
     "tier": "T{tier}",
+    "upgrade": "Ulepszenie +{level}",
     "stat": {
       "grip": "Przyczepność {value}",
       "handling": "Prowadzenie {value}",
@@ -404,7 +405,14 @@
     "cancelKeep": "Zostaw",
     "cancelled": "Zlecenie anulowane.",
     "cancelledWith": "Zlecenie anulowane. Odpadło też zakładanie części: {part}.",
-    "city": "Warsztat w mieście {city}"
+    "city": "Warsztat w mieście {city}",
+    "upgrade": "Ulepszanie do +{to}: {part}",
+    "upgradeTo": "Ulepsz do +{to}",
+    "upgradeCost": "{price} · {time}",
+    "upgradeMax": "Pełne ulepszenie",
+    "upgradeCarLevel": "Wymaga poziomu auta {required} (masz {current})",
+    "cancelLosesUpgrade": "Praca, która już trwa, i {price} zapłacone za ulepszenie przepadną, a część zostaje taka, jak była.",
+    "cancelledRefund": "Zlecenie anulowane. {price} wraca do Twojego portfela."
   },
   "hud": {
     "level": "LV",

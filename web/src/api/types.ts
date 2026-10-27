@@ -271,6 +271,10 @@ export interface PartInfo {
   rarity: PartRarity
   /** 1 (common) to 5 (legendary): the number of the filled squares. */
   rarity_rank: number
+  /** The upgrade of the part (+N): a level of 3% on top of the rarity, which stays with the part. */
+  upgrade: number
+  /** How far a part of this rarity can be upgraded at the most. */
+  upgrade_max: number
   /** Tires only: how well they grip on each surface, 1 being the grip of the tires on dry asphalt. */
   surfaces?: Record<SurfaceKey, number> | null
 }
@@ -365,9 +369,25 @@ export interface PurchaseResponse {
 
 export type CarStatKey = 'accel' | 'top_speed' | 'grip' | 'handling' | 'braking' | 'clearance'
 
+/** What stops the next step of an upgrade: the part is as far as its rarity goes, the car is not of the level the step needs, or the part has no price to upgrade by. */
+export type UpgradeLock = { reason: 'max' | 'unavailable' } | { reason: 'car_level'; required: number; current: number }
+
+/** The next step of the upgrade of a part that sits on the car: the level it takes it to, its price and its time, and what stops it (`to` and the rest are null when nothing can be done). */
+export interface UpgradeNext {
+  to: number | null
+  cost_cents: number | null
+  duration_ms: number | null
+  locked: UpgradeLock | null
+}
+
+/** A part that sits on the car, which says what the next step of its upgrade is. */
+export interface MountedPart extends OwnedPart {
+  upgrade_next: UpgradeNext
+}
+
 export interface GarageSlot {
   slot: string
-  part: OwnedPart | null
+  part: MountedPart | null
   /** The slot holds a part of the body, which cannot be taken off (the engine for now). */
   built_in: boolean
 }
@@ -391,12 +411,16 @@ export interface GarageCar {
   run: { id: number; status: RunStatus; stop_reason: StopReason | null } | null
 }
 
-export type JobKind = 'mount' | 'unmount'
+export type JobKind = 'mount' | 'unmount' | 'upgrade'
 
 /** A job of the workshop. The times are ms of the clock of the server. */
 export interface WorkshopJob {
   id: number
   kind: JobKind
+  /** What an upgrade cost, paid when it was queued (0 for the other jobs). */
+  cost_cents: number
+  /** The level an upgrade takes the part to (null for the other jobs). */
+  upgrade_to: number | null
   /** Waiting for the mechanic, or being done (the car stands in the workshop). */
   status: 'queued' | 'working'
   part: OwnedPart
