@@ -140,9 +140,10 @@ describe('the gates of the track simulator', function () {
         $wins = trackReportJson()['wins'];
 
         expect(trackReportJson()['gates']['no_car_wins_more_than_two'])->toBeTrue()
-            // With the cars of the dealer and the exchange the wins are spread over four cars: the lightest Rdzak takes the track in the snow, and the Bizon V8,
-            // which asks level 12 like the Autodrom does, the circuit.
-            ->and(array_map('count', $wins))->toBe(['bizon-m-2' => 2, 'kuna-4x4' => 1, 'rdzak-gt-2' => 1, 'bizon-v8' => 1]);
+            // With the cars of the dealer and the exchange the wins are spread over four cars: the lightest Rdzak takes the track in the snow, and the Kornet R6,
+            // which asks level 12 like the Autodrom does, the circuit (by a fraction of a per cent over the Bizon V8: its rear wheel drive is what the two
+            // differ in).
+            ->and(array_map('count', $wins))->toBe(['bizon-m-2' => 2, 'kuna-4x4' => 1, 'rdzak-gt-2' => 1, 'kornet-r6' => 1]);
 
         $this->artisan('tracks:simulate', ['--strict' => true])->assertSuccessful();
     });

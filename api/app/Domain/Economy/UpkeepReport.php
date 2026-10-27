@@ -38,14 +38,14 @@ final class UpkeepReport
     /**
      * What an hour of driving costs a car at each level, and what share of its income that is.
      *
-     * @param  list<array{level: int, car: string, track: string, net: float, lap_ms: int, lap_length_m: int, lap_cash_cents: int, parts: list<array{slot: string, model: string, price_cents: int, ppb_per_km: int}>}>  $levels  the best pair of car and track of each level, as the ladder of the game has it
+     * @param  list<array{level: int, car: string, track: string, net: float, lap_ms: int, lap_length_m: int, lap_cash_cents: int, service_ppm?: int, parts: list<array{slot: string, model: string, price_cents: int, ppb_per_km: int}>}>  $levels  the best pair of car and track of each level, as the ladder of the game has it; `service_ppm` is what the drive of the car does to the price of a service (1 000 000 when it is not there)
      * @return list<array{level: int, car: string, track: string, net: float, km_per_hour: float, service: float, parts: float, upkeep: float, share: float, set_price: float, set: list<array{slot: string, model: string, price: float, per_hour: float}>}>
      */
     public function rows(array $levels): array
     {
         return array_map(function (array $level): array {
             $kmPerHour = (float) (self::HOUR_MS / $level['lap_ms'] * $level['lap_length_m'] / 1000);
-            $service = ($this->serviceCostCents)($level['lap_cash_cents'], $level['lap_length_m']) / 100 / $this->serviceEveryKm * $kmPerHour;
+            $service = ($this->serviceCostCents)($level['lap_cash_cents'], $level['lap_length_m']) * ($level['service_ppm'] ?? 1_000_000) / 1_000_000 / 100 / $this->serviceEveryKm * $kmPerHour;
 
             $set = array_map(fn (array $part): array => [
                 'slot' => $part['slot'],

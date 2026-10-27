@@ -203,17 +203,18 @@ describe('economy:simulate', function () {
         $output = Artisan::output();
 
         expect($output)->toContain('The ladder of the game')
-            // A lap pays by the tier of the car, so the best car of a level pays about what its rung asks: the Bizon V8 at the fifth, the Orzeł V12 at the last.
-            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$1 078\s+\|/')
-            ->and($output)->toContain('bizon-v8 on autodrom-circuit')
-            ->and($output)->toMatch('/\| 27\s+\| L8\s+\| \$1 835\s+\| \$1 834\s+\|/')
+            // A lap pays by the tier of the car, so the best car of a level pays about what its rung asks: the Kornet R6 at the fifth (its rear wheel drive puts it
+            // ahead of the Bizon V8 on the Autodrom), the Orzeł V12 at the last.
+            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$1 170\s+\|/')
+            ->and($output)->toContain('kornet-r6 on autodrom-circuit')
+            ->and($output)->toMatch('/\| 27\s+\| L8\s+\| \$1 835\s+\| \$1 858\s+\|/')
             ->and($output)->toContain('orzel-v12 on autodrom-circuit')
             ->and($output)->toContain('Ladder of the game: every level is within the anchors.')
             ->and($output)->not->toContain('reach L')
             // The experience an hour of the best pair against the 900 of the model: a lap of a fast car pays the share of the base lap it takes, so the
-            // Bizon V8 gets 918 and the Orzeł V12 895 instead of the 1 000 and more that a flat 20 XP a lap would give them.
-            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$1 078\s+\| \+3%\s+\| 918\s+\| \+2%\s+\|/')
-            ->and($output)->toMatch('/\| 27\s+\| L8\s+\| \$1 835\s+\| \$1 834\s+\| -0%\s+\| 895\s+\| -1%\s+\|/')
+            // Kornet R6 gets 891 and the Orzeł V12 920 instead of the 1 000 and more that a flat 20 XP a lap would give them.
+            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$1 170\s+\| \+12%\s+\| 891\s+\| -1%\s+\|/')
+            ->and($output)->toMatch('/\| 27\s+\| L8\s+\| \$1 835\s+\| \$1 858\s+\| \+1%\s+\| 920\s+\| \+2%\s+\|/')
             ->and($output)->toContain('Experience an hour of the game: every level is within the model.');
     });
 
@@ -287,7 +288,7 @@ describe('economy:simulate', function () {
             ->and($report['game_ladder']['rows'][0])->toMatchArray(['level' => 1, 'rung' => 'L0', 'car' => 'rdzak-gt-4', 'track' => 'zlomowo-street', 'ok' => true, 'xp_ok' => true])
             ->and($report['game_ladder']['rows'][0]['xp_game'])->toEqualWithDelta(960.0, 0.5)
             ->and($report['game_ladder']['rows'][0]['xp_model'])->toEqualWithDelta(900.0, 0.5)
-            ->and($report['game_ladder']['rows'][11]['xp_game'])->toEqualWithDelta(895.0, 3.0);
+            ->and($report['game_ladder']['rows'][11]['xp_game'])->toEqualWithDelta(920.4, 3.0);
     });
 
     it('plays the crates of parts at the shares of the ruleset, and says that the shift of the days is within the tolerance', function () {

@@ -193,12 +193,14 @@ final class Rules
      *
      * @param  int  $lapCashCents  what a lap of the car pays, in cents
      * @param  int  $lapLengthM  how long a lap of the track it drives is, in metres
+     * @param  string|null  $drivetrain  the drive of the car, whose service costs more or less (a four wheel drive has more to look after); null is the reference drive
      */
-    public function serviceCostCents(int $lapCashCents, int $lapLengthM): int
+    public function serviceCostCents(int $lapCashCents, int $lapLengthM, ?string $drivetrain = null): int
     {
         $service = $this->data['wear']['service'];
+        $cost = max($service['min_cost_cents'], Ppm::mul($lapCashCents * $this->serviceIntervalLaps($lapLengthM), $service['cost_ppm_of_income']));
 
-        return max($service['min_cost_cents'], Ppm::mul($lapCashCents * $this->serviceIntervalLaps($lapLengthM), $service['cost_ppm_of_income']));
+        return $drivetrain === null ? $cost : Ppm::mul($cost, $this->drivetrain($drivetrain)['service_ppm']);
     }
 
     /** How long a service takes the mechanic, cut by his level like any job, and by the toolkit of the workshop (it has no part, so no equipment of a slot). */
@@ -547,6 +549,54 @@ final class Rules
     public function engineBay(string $class): ?array
     {
         return $this->data['engines']['bays'][$class] ?? null;
+    }
+
+    /**
+     * What a drive (fwd, rwd or awd) does to a car, relative to the reference drive of the rules: the ratio of its row to the row of the reference, so the car with
+     * the reference drive is multiplied by exactly 1 in everything and the others are better or worse than it by what the numbers of the design say. The factors
+     * of the acceleration and of the handling are `start` and `handling`, the `mass` penalty multiplies both, `fuel` the fuel use, `service_ppm` the price of a
+     * service, and `traction_ppm` the grip, the handling and the braking on each surface.
+     *
+     * @return array{start: float, handling: float, mass: float, fuel: float, service_ppm: int, traction_ppm: array<string, int>}
+     */
+    public function drivetrain(string $kind): array
+    {
+        $row = $this->drivetrainRow($kind);
+        $reference = $this->drivetrainRow($this->data['drivetrain']['reference']);
+        $relative = static fn (int $ppm, int $base): int => intdiv($ppm * Ppm::ONE + intdiv($base, 2), $base);
+        $ratio = static fn (int $ppm, int $base): float => $ppm / $base;
+        $traction = [];
+
+        foreach ($row['traction_ppm'] as $surface => $ppm) {
+            $traction[$surface] = $relative($ppm, $reference['traction_ppm'][$surface]);
+        }
+
+        return [
+            'start' => $ratio($row['start_ppm'], $reference['start_ppm']),
+            'handling' => $ratio($row['handling_ppm'], $reference['handling_ppm']),
+            'mass' => $ratio($row['mass_penalty_ppm'], $reference['mass_penalty_ppm']),
+            'fuel' => $ratio($row['fuel_ppm'], $reference['fuel_ppm']),
+            'service_ppm' => $relative($row['service_ppm'], $reference['service_ppm']),
+            'traction_ppm' => $traction,
+        ];
+    }
+
+    /**
+     * What the limit of a drive takes off the acceleration of a car of this power: nothing up to the power it can put on the road, and above it
+     * (limit / power) ^ exponent. A front wheel drive spins its wheels with a lot of power under the bonnet, a rear wheel drive less so, and a four wheel drive
+     * has no limit.
+     */
+    public function drivetrainPowerFactor(string $kind, float $powerKw): float
+    {
+        $limit = $this->drivetrainRow($kind)['power_limit'] ?? null;
+
+        return $limit === null || $powerKw <= $limit['kw'] ? 1.0 : ($limit['kw'] / $powerKw) ** $limit['exponent'];
+    }
+
+    /** @return array<string, mixed> */
+    private function drivetrainRow(string $kind): array
+    {
+        return $this->data['drivetrain']['types'][$kind] ?? throw new InvalidArgumentException("The rules have no drivetrain {$kind}.");
     }
 
     /** The highest tier of a part that a car of this level can have mounted: 1 + floor(level / levels per tier). */

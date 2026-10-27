@@ -552,8 +552,8 @@ final class Workshop
     }
 
     /**
-     * What a service of the car costs and takes: 4% of what the car earns in the kilometres between two services, and a quarter of an hour of the mechanic
-     * (less with the toolkit of the workshop). A car with no run earns nothing, so a service costs the least it can.
+     * What a service of the car costs and takes: 4% of what the car earns in the kilometres between two services (a four wheel drive pays a fifth more),
+     * and a quarter of an hour of the mechanic (less with the toolkit of the workshop). A car with no run earns nothing, so a service costs the least it can.
      *
      * @return array{cost_cents: int, duration_ms: int}
      */
@@ -564,7 +564,9 @@ final class Workshop
         $lapCash = (int) ($run?->config['lap_cash_cents']['dry'] ?? 0);
         $lengthM = $run === null ? $this->rules->trackLengthM($this->rules->tracksOf($this->rules->homeRegion())[0]) : $this->rules->trackLengthM($run->track_slug);
 
-        return ['cost_cents' => $this->rules->serviceCostCents($lapCash, $lengthM), 'duration_ms' => $this->rules->serviceJobMs($gear)];
+        $drivetrain = $this->catalog->vehicle($car->vehicle_slug)['drivetrain'] ?? null;
+
+        return ['cost_cents' => $this->rules->serviceCostCents($lapCash, $lengthM, $drivetrain), 'duration_ms' => $this->rules->serviceJobMs($gear)];
     }
 
     /**

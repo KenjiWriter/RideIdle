@@ -28,8 +28,10 @@ it('freezes the lap time of every starter wreck in every weather', function (str
         ->and(runInputsFactory()->tankMl($car))->toBe($tankMl);
 })->with([
     'the stock Rdzak GT-4 drives the base lap' => ['rdzak-gt-4', ['dry' => 75_000, 'cloudy' => 75_000, 'rain' => 84_391, 'downpour' => 86_736, 'fog' => 76_049], 1_500, 45_000],
-    'the Bizon M-2 is still faster for all its weight, and thirstier' => ['bizon-m-2', ['dry' => 73_394, 'cloudy' => 73_394, 'rain' => 81_119, 'downpour' => 83_294, 'fog' => 74_547], 2_109, 60_000],
-    'the Kuna 4x4 is slower' => ['kuna-4x4', ['dry' => 91_848, 'cloudy' => 91_848, 'rain' => 103_850, 'downpour' => 107_324, 'fog' => 93_250], 1_500, 70_000],
+    // The Bizon is a rear wheel drive car and the Kuna a four wheel drive one, so they are quicker than the front wheel drive Rdzak of the same power by what
+    // their drives give (the Bizon burns 5% more for it, the Kuna 12% more).
+    'the Bizon M-2 is faster for all its weight, and thirstier' => ['bizon-m-2', ['dry' => 69_004, 'cloudy' => 69_004, 'rain' => 79_094, 'downpour' => 81_103, 'fog' => 70_030], 2_220, 60_000],
+    'the Kuna 4x4 is slower' => ['kuna-4x4', ['dry' => 86_599, 'cloudy' => 86_599, 'rain' => 95_147, 'downpour' => 98_399, 'fog' => 87_854], 1_674, 70_000],
 ]);
 
 it('rounds the reward of wet laps like the settlement vector W5, and the XP of a lap to the whole', function () {
@@ -66,13 +68,13 @@ it('pays the experience of the base lap to a car that laps the track slower, and
         ->and($config['lap_xp']['rain'])->toBe($rain);
 })->with([
     'the starter Rdzak laps the first track in the base time' => ['rdzak-gt-4', 'zlomowo-street', 20, 19],
-    'the Bizon M-2 is 2% faster and rounds back to the whole' => ['bizon-m-2', 'zlomowo-street', 20, 19],
+    'the Bizon M-2 is 8% faster: 18.4' => ['bizon-m-2', 'zlomowo-street', 18, 17],
     'the Kuna 4x4 is slower and gets the whole, not more' => ['kuna-4x4', 'zlomowo-street', 20, 19],
     'the Rdzak is slower than the base lap on the Autodrom and gets the whole' => ['rdzak-gt-4', 'autodrom-circuit', 20, 19],
-    'the Kornet R6 laps the Autodrom in 77 s: 19.2' => ['kornet-r6', 'autodrom-circuit', 19, 18],
-    'the Serwal GT in 71 s: 17.8' => ['serwal-gt', 'autodrom-circuit', 18, 17],
-    'the Serwal V10 in 67 s: 16.8' => ['serwal-v10', 'autodrom-circuit', 17, 16],
-    'the Orzeł V12 in 68 s: 17.1' => ['orzel-v12', 'autodrom-circuit', 17, 16],
+    'the Kornet R6 laps the Autodrom in 72.7 s: 18.2' => ['kornet-r6', 'autodrom-circuit', 18, 17],
+    'the Serwal GT in 67.6 s: 16.9' => ['serwal-gt', 'autodrom-circuit', 17, 16],
+    'the Serwal V10 in 65.2 s: 16.3' => ['serwal-v10', 'autodrom-circuit', 16, 15],
+    'the Orzeł V12 in 66.5 s: 16.6' => ['orzel-v12', 'autodrom-circuit', 17, 16],
 ]);
 
 it('keeps the experience an hour of every car of the pack under the ceiling of every track, give or take the rounding of a lap', function () {
@@ -270,7 +272,7 @@ describe('the tires and the surface', function () {
         $directory = sys_get_temp_dir().'/ride-pack-'.bin2hex(random_bytes(4));
         mkdir("{$directory}/vehicles", 0777, true);
         mkdir("{$directory}/parts", 0777, true);
-        file_put_contents("{$directory}/vehicles/toy.json", json_encode(['slug' => 'toy', 'powertrain' => 'ice', 'power_kw' => 97, 'mass_kg' => 1000, 'top_speed_kmh' => 175, 'clearance' => 20, 'tank_l' => 45, 'sources' => ['start']]));
+        file_put_contents("{$directory}/vehicles/toy.json", json_encode(['slug' => 'toy', 'drivetrain' => 'fwd', 'powertrain' => 'ice', 'power_kw' => 97, 'mass_kg' => 1000, 'top_speed_kmh' => 175, 'clearance' => 20, 'tank_l' => 45, 'sources' => ['start']]));
         file_put_contents("{$directory}/parts/bare-tires.json", json_encode(['slug' => 'bare-tires', 'slot' => 'tires', 'tier' => 1, 'stats' => ['grip' => 90, 'handling' => 88, 'braking' => 90]]));
 
         try {
@@ -290,9 +292,14 @@ describe('the tracks of the world', function () {
         return (new RunFreezer)->freeze(runInputsFactory()->make($car, $track, $mounted), 'seed', 0)->config['lap_ms'];
     }
 
-    // The reference of a track is the stats of the build it is made for, so that build runs the base lap (within the rounding of the numbers).
+    // The reference of a track is the stats of the build it is made for, so that build runs the base lap (within the rounding of the numbers). The references
+    // were made for the cars as they were before the drives, so it is the reference drive that is meant: the Kuna and the Bizon are quicker than the base lap
+    // by what their four wheel drive and rear wheel drive give (DrivetrainTest).
     it('lets the build that a track is made for drive its base lap', function (string $track, string $car, array $mounted, int $baseLapMs) {
-        expect(lapsOn($track, $car, $mounted)['dry'])->toBeBetween((int) ($baseLapMs * 0.985), (int) ($baseLapMs * 1.015));
+        $factory = new RunInputsFactory(app(Catalog::class), Rules::fromArray(rulesWithoutDrives()));
+        $lap = (new RunFreezer)->freeze($factory->make($car, $track, $mounted), 'seed', 0)->config['lap_ms']['dry'];
+
+        expect($lap)->toBeBetween((int) ($baseLapMs * 0.985), (int) ($baseLapMs * 1.015));
     })->with([
         'a 4x4 on off-road tires in the quarry' => ['kruszyn-quarry', 'kuna-4x4', ['tires' => 'offroad-tires-t2'], 95_000],
         'a muscle car on the drag strip' => ['suchy-pas-drag', 'bizon-m-2', [], 45_000],
@@ -339,12 +346,14 @@ describe('the mass of the car', function () {
 
     it('multiplies the handling and the braking of the body by it, after the suspension and the brakes were averaged in', function () {
         $factor = (1000 / 1480) ** 0.6;
+        // The Bizon has a rear wheel drive, which handles 1.05 / 0.97 better than the front wheel drive of the reference, with 0.995 for its own weight.
+        $drive = 1.05 / 0.97 * 0.995;
         $stock = runInputsFactory()->stats('bizon-m-2')->stats;
         $tuned = runInputsFactory()->stats('bizon-m-2', ['suspension' => 'sport-suspension-t1', 'brakes' => 'disc-brakes-t2'])->stats;
 
-        expect($stock['handling'])->toEqualWithDelta(88 * $factor, 1e-9)
+        expect($stock['handling'])->toEqualWithDelta(88 * $factor * $drive, 1e-9)
             ->and($stock['braking'])->toEqualWithDelta(90 * $factor, 1e-9)
-            ->and($tuned['handling'])->toEqualWithDelta(94 * $factor, 1e-9)
+            ->and($tuned['handling'])->toEqualWithDelta(94 * $factor * $drive, 1e-9)
             ->and($tuned['braking'])->toEqualWithDelta(97.5 * $factor, 1e-9)
             // What the mass has nothing to do with is not touched: the grip of the tires, the power per tonne, the clearance.
             ->and($stock['grip'])->toBe(90.0)

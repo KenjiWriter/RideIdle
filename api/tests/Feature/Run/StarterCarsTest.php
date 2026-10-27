@@ -41,15 +41,15 @@ it('shows the numbers the car will drive, the same as when a run starts', functi
 
     // The Bizon is faster and thirstier than the Rdzak, the Kuna slower (computed apart from the code).
     expect($response->json('data.2.slug'))->toBe('bizon-m-2')
-        ->and($response->json('data.2.lap.ms'))->toBe(73_394)
-        ->and($response->json('data.2.lap.fuel_ml'))->toBe(2_109)
-        ->and($response->json('data.1.lap.ms'))->toBe(91_848);
+        ->and($response->json('data.2.lap.ms'))->toBe(69_004)
+        ->and($response->json('data.2.lap.fuel_ml'))->toBe(2_220)
+        ->and($response->json('data.1.lap.ms'))->toBe(86_599);
 
     $driver = User::factory()->guest()->create();
     test()->postJson('/api/v1/runs', ['car' => 'bizon-m-2', 'track' => $response->json('track.slug')], bearerFor($driver))
         ->assertCreated()
-        ->assertJsonPath('data.lap.ms.dry', 73_394)
-        ->assertJsonPath('data.lap.fuel_ml', 2_109);
+        ->assertJsonPath('data.lap.ms.dry', 69_004)
+        ->assertJsonPath('data.lap.fuel_ml', 2_220);
 });
 
 it('is in the language of the request', function (string $locale, string $description) {

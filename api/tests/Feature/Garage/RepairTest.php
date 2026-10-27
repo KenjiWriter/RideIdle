@@ -234,4 +234,15 @@ describe('the service of the car', function () {
         $run->forceFill(['config' => [...$run->config, 'lap_cash_cents' => ['dry' => 1]]])->save();
         repairGarage($driver)->assertOk()->assertJsonPath('data.car.service.cost_cents', 2_000);
     });
+
+    it('costs a fifth more for a car with a four wheel drive, and the same for a rear wheel one', function () {
+        [$driver, $car] = repairDriver(0);
+
+        // The Rdzak RS has all four wheels driven (the run keeps its lap, so the share of the income is the same): 119 288 x 1.2 = 143 145.6.
+        $car->forceFill(['vehicle_slug' => 'rdzak-rs'])->save();
+        repairGarage($driver)->assertOk()->assertJsonPath('data.car.service.cost_cents', 143_146);
+
+        $car->forceFill(['vehicle_slug' => 'bizon-m-2'])->save();
+        repairGarage($driver)->assertOk()->assertJsonPath('data.car.service.cost_cents', SERVICE_CENTS);
+    });
 });

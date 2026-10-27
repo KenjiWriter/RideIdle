@@ -274,6 +274,7 @@ final class SimulateEconomy extends Command
                 'lap_ms' => $frozen['lap_ms']['dry'],
                 'lap_length_m' => $game->trackLengthM($row->track),
                 'lap_cash_cents' => $frozen['lap_cash_cents']['dry'],
+                'service_ppm' => $game->drivetrain($catalog->vehicle($row->car)['drivetrain'])['service_ppm'],
                 'parts' => array_map(static fn (array $part): array => [
                     'slot' => $part['slot'],
                     'model' => $part['model'],

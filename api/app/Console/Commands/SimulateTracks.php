@@ -116,7 +116,7 @@ final class SimulateTracks extends Command
         $this->warn("Gate M3: NOT YET. {$summary}.");
         $this->line('  The tracks do not yet ask for different cars: one car is the best on more than '.$this->most().' of them. That is what the cars of the pack allow,');
         $this->line('  and it is the answer of the gate, not a fault of the numbers: a car that is better in everything that a track weighs wins it, and the cars');
-        $this->line('  that trade power for something else (weight, drivetrain) come with the catalog. This fails the command only with --strict.');
+        $this->line('  that trade power for something else (weight, drivetrain) are what the catalog is for. This fails the command only with --strict.');
     }
 
     private function gate(bool $passed, string $ok, string $failed): void

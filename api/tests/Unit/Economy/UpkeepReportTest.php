@@ -52,6 +52,12 @@ it('charges the service by the kilometre: the cost of a service over the kilomet
     expect($row['service'])->toEqualWithDelta(36.0, 1e-9);
 });
 
+it('charges a fifth more for the service of a car whose drive asks it', function () {
+    $row = anUpkeepReport()->rows([anUpkeepLevel(['service_ppm' => 1_200_000])])[0];
+
+    expect($row['service'])->toEqualWithDelta(36.0 * 1.2, 1e-9);
+});
+
 it('charges the repair of a part by the share of its life that a kilometre uses: half of the price, times the billionths of a kilometre, times the kilometres of an hour', function () {
     $row = anUpkeepReport()->rows([anUpkeepLevel()])[0];
 

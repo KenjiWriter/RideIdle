@@ -64,14 +64,17 @@ final class RunInputsFactory
         }
 
         $tireKind = $this->tireKind($mounted);
+        $tractionPpm = $this->rules->drivetrain($vehicle['drivetrain'])['traction_ppm'];
         $effects = [];
 
         foreach (array_keys($region['weather_ppm']) as $weather) {
             $effect = $this->rules->weather()[$weather];
             $multipliersPpm = $effect['stat_ppm'];
 
-            // The tires on this surface multiply what depends on the grip of the road, on top of what the weather does by itself.
-            $tirePpm = $this->rules->tireGripPpm($tireKind, Surface::of($track['surface'], $effect['ground']));
+            // The tires on this surface and the drive of the car (which puts the power on the road better or worse on it) multiply what depends on the grip of
+            // the road, on top of what the weather does by itself.
+            $surface = Surface::of($track['surface'], $effect['ground']);
+            $tirePpm = Ppm::mul($this->rules->tireGripPpm($tireKind, $surface), $tractionPpm[$surface]);
 
             foreach (self::TRACTION_STATS as $stat) {
                 $multipliersPpm[$stat] = Ppm::mul($tirePpm, $multipliersPpm[$stat] ?? Ppm::ONE);
@@ -325,6 +328,9 @@ final class RunInputsFactory
      * - Grip, handling and braking start from the tires, and the suspension and the brakes are averaged with the handling and
      *   the braking of the tires. A slot without a part adds nothing, so the stock car is the reference of the tracks.
      * - Handling and braking are then multiplied by the factor of the mass of the body (`Rules::massFactor`).
+     * - The drive of the body (`Rules::drivetrain`, relative to the front wheel drive of the starter) multiplies the acceleration (its start, its mass penalty and
+     *   the limit of the power it can put on the road, which counts the booster) and the handling (its handling and its mass penalty), and the fuel use; its
+     *   traction on each surface is multiplied into the grip, the handling and the braking by `make`.
      * - Clearance (Off-road in the garage) starts from the body, and the suspension is averaged with it the same way:
      *   a lowered one costs a 4x4 what it gives a hatchback on asphalt. The tires have their say through the tire matrix.
      * - Fuel use grows with the power of the car without the gain of the booster, and the booster adds its own `fuel_mult` to that (so the gain is paid for
@@ -366,19 +372,25 @@ final class RunInputsFactory
         $fuelPower = $enginePower * $this->powerMultiplier($parts, withBooster: false);
         $fuelMultiplier = array_product(array_map(static fn (array $part): float => (float) ($part['stats']['fuel_mult'] ?? 1.0), $parts));
 
+        // The drive of the car: how it gets off the line and turns (and what its own weight costs it), what it can put on the road at the most (the traction on
+        // each surface is in the weather effects of `make`), and how thirsty it is. The top speed is not the drive's business.
+        $drivetrain = $this->rules->drivetrain($vehicle['drivetrain']);
+        $driveStart = $drivetrain['start'] * $drivetrain['mass'] * $this->rules->drivetrainPowerFactor($vehicle['drivetrain'], $power);
+        $driveHandling = $drivetrain['handling'] * $drivetrain['mass'];
+
         // A car that is overdue for its service performs worse: everything but the clearance, which is about the body, not the engine and the wheels.
         $kept = (Ppm::ONE - max(0, min(Ppm::ONE, $servicePenaltyPpm))) / Ppm::ONE;
 
         return new CarStats(
             stats: [
-                'accel' => $power / ($mass / 1000) * $startFactor * $kept,
+                'accel' => $power / ($mass / 1000) * $startFactor * $driveStart * $kept,
                 'top_speed' => $topSpeed * $kept,
                 'grip' => (float) $tires['stats']['grip'] * $kept,
-                'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null) * $massFactor * $kept,
+                'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null) * $massFactor * $driveHandling * $kept,
                 'braking' => $this->average($tires['stats']['braking'], $parts['brakes']['stats']['braking'] ?? null) * $massFactor * $kept,
                 'clearance' => $this->average($vehicle['clearance'], $parts['suspension']['stats']['clearance'] ?? null),
             ],
-            fuelUseMultiplier: (1.0 + self::FUEL_USE_POWER_SHARE * $fuelPower / $this->rules->fuelReferencePowerKw()) / self::FUEL_USE_BASE * $fuelMultiplier,
+            fuelUseMultiplier: (1.0 + self::FUEL_USE_POWER_SHARE * $fuelPower / $this->rules->fuelReferencePowerKw()) / self::FUEL_USE_BASE * $fuelMultiplier * $drivetrain['fuel'],
         );
     }
 

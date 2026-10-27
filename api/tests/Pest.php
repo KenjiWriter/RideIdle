@@ -136,6 +136,22 @@ function withoutTireFee(): void
     app()->singleton(Rules::class, fn () => Rules::fromArray($data));
 }
 
+/**
+ * The rules with every drive as neutral as the reference one and none with a power limit, which is what the game was before the drives: for the tests that
+ * check the numbers of the tracks and of the economy apart from them. @return array<string, mixed>
+ */
+function rulesWithoutDrives(): array
+{
+    $data = json_decode((string) file_get_contents(config('ride.content_path').'/rules/starter.json'), true, 512, JSON_THROW_ON_ERROR);
+
+    foreach (array_keys($data['drivetrain']['types']) as $kind) {
+        $data['drivetrain']['types'][$kind] = $data['drivetrain']['types']['fwd'];
+        unset($data['drivetrain']['types'][$kind]['power_limit']);
+    }
+
+    return $data;
+}
+
 /** A run with a constant 75 s lap that pays $15.50 and 25 XP, started at T0 with 45 l (30 laps). */
 function driverWithRun(array $attributes = []): array
 {

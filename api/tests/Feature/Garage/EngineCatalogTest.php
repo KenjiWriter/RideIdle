@@ -30,6 +30,12 @@ function catalogDriver(string $vehicle = 'rdzak-gt-4', int $level = 30): array
     return [$driver, $run->car];
 }
 
+/** What the Rdzak, a front wheel drive car, keeps of its acceleration with this much power: all of it up to 130 kW, (130 / power) ^ 0.4 above. */
+function frontDriveLimit(float $powerKw): float
+{
+    return $powerKw <= 130.0 ? 1.0 : (130 / $powerKw) ** 0.4;
+}
+
 function catalogStock(User $driver, string $slug): Part
 {
     return Part::factory()->create(['user_id' => $driver->id, 'part_slug' => $slug, 'slot' => app(Catalog::class)->part($slug)['slot']]);
@@ -127,10 +133,11 @@ describe('the catalog of the engines', function () {
 
 describe('what an engine does to the car', function () {
     it('gives the car its power instead of the one of the factory engine, and its mass instead of the mass of the factory engine', function () {
-        // R4 2.5 of tier 5: 50 x 2.5 x 1.3 = 162.5 kW and 55 + 25 x 2.5 = 117.5 kg, where the factory R4 1.8 weighs 100: the car is 17.5 kg heavier.
+        // R4 2.5 of tier 5: 50 x 2.5 x 1.3 = 162.5 kW and 55 + 25 x 2.5 = 117.5 kg, where the factory R4 1.8 weighs 100: the car is 17.5 kg heavier. The Rdzak
+        // is a front wheel drive car, which cannot put more than 130 kW on the road.
         $stats = catalogStats(['engine' => 'engine-r4-2-5-t5']);
 
-        expect($stats['accel'])->toEqualWithDelta(162.5 / 1.0175, 1e-9)
+        expect($stats['accel'])->toEqualWithDelta(162.5 / 1.0175 * frontDriveLimit(162.5), 1e-9)
             ->and($stats['top_speed'])->toEqualWithDelta(175 * (162.5 / 97) ** (1 / 3), 1e-9);
 
         // The model that is the factory engine of the Rdzak (R4 1.8) changes nothing but the 0.25 kW the factory rounds.
@@ -141,7 +148,7 @@ describe('what an engine does to the car', function () {
         $factory = app(RunInputsFactory::class);
         $mounted = ['engine' => 'engine-r4-2-5-t5', 'boost' => 'turbo-osemka-t2'];
 
-        expect(catalogStats($mounted)['accel'])->toEqualWithDelta(162.5 * 1.25 * 0.97 / 1.0175, 1e-9)
+        expect(catalogStats($mounted)['accel'])->toEqualWithDelta(162.5 * 1.25 * 0.97 / 1.0175 * frontDriveLimit(162.5 * 1.25), 1e-9)
             ->and($factory->power('rdzak-gt-4', $mounted))->toEqualWithDelta(162.5 * 1.25, 1e-9)
             ->and($factory->enginePowerKw('rdzak-gt-4', $mounted))->toEqualWithDelta(162.5, 1e-9)
             ->and($factory->enginePowerKw('rdzak-gt-4'))->toBe(97.0);
@@ -153,9 +160,9 @@ describe('what an engine does to the car', function () {
         // Half of its life is gone: it gives 0.6 + 0.4 x 0.5 = 80% of its power.
         $worn = catalogStats(['engine' => ['slug' => 'engine-r4-2-5-t5', 'rarity' => 1, 'wear' => 500_000_000]]);
 
-        expect($uncommon['accel'])->toEqualWithDelta(162.5 * 1.1 / 1.0175, 1e-6)
-            ->and($upgraded['accel'])->toEqualWithDelta(162.5 * 1.09 / 1.0175, 1e-6)
-            ->and($worn['accel'])->toEqualWithDelta(162.5 * 0.8 / 1.0175, 1e-6);
+        expect($uncommon['accel'])->toEqualWithDelta(162.5 * 1.1 / 1.0175 * frontDriveLimit(162.5 * 1.1), 1e-6)
+            ->and($upgraded['accel'])->toEqualWithDelta(162.5 * 1.09 / 1.0175 * frontDriveLimit(162.5 * 1.09), 1e-6)
+            ->and($worn['accel'])->toEqualWithDelta(162.5 * 0.8 / 1.0175 * frontDriveLimit(162.5 * 0.8), 1e-6);
     });
 
     it('burns what the power of the engine asks, and not the gain of the booster twice', function () {

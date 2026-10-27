@@ -63,8 +63,10 @@ it('starts every starter wreck with its own tank and lap', function (string $car
         ->assertJsonPath('data.lap.fuel_ml', $fuelPerLapMl);
 })->with([
     'rdzak' => ['rdzak-gt-4', 45_000, 75_000, 1_500],
-    'bizon' => ['bizon-m-2', 60_000, 73_394, 2_109],
-    'kuna' => ['kuna-4x4', 70_000, 91_848, 1_500],
+    // The rear wheel drive of the Bizon and the four wheel drive of the Kuna get them round quicker than the front wheel drive of the same power, and burn
+    // 5% and 12% more for it.
+    'bizon' => ['bizon-m-2', 60_000, 69_004, 2_220],
+    'kuna' => ['kuna-4x4', 70_000, 86_599, 1_674],
 ]);
 
 it('names the car and the track in the language of the request', function (string $locale, string $track) {
@@ -150,7 +152,8 @@ describe('the level of the driver and the tracks', function () {
         startRun($enough, ['car' => 'kuna-4x4', 'track' => 'kruszyn-quarry'])
             ->assertCreated()
             ->assertJsonPath('data.track.slug', 'kruszyn-quarry')
-            ->assertJsonPath('data.lap.fuel_ml', 1_900);
+            // 1 900 ml for a front wheel drive car, and the four wheel drive of the Kuna burns 11.6% more.
+            ->assertJsonPath('data.lap.fuel_ml', 2_120);
     });
 });
 
