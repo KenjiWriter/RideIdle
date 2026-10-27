@@ -24,6 +24,7 @@ class Part extends Model
             'user_id' => 'integer',
             'car_id' => 'integer',
             'rarity' => 'integer',
+            'upgrade_level' => 'integer',
         ];
     }
 

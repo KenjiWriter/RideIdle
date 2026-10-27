@@ -41,7 +41,7 @@ final class RunInputsFactory
     }
 
     /**
-     * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot: the slug, or the slug with the rarity of the part
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int}>  $mounted  the parts on the car, by slot: the slug, or the slug with the rarity of the part
      * @param  int  $conditionPpm  the condition of the car (1 000 000 is perfect): a worn car breaks down more
      */
     public function make(string $carSlug, string $trackSlug, array $mounted = [], int $conditionPpm = Ppm::ONE): RunInputs
@@ -134,7 +134,7 @@ final class RunInputsFactory
     /**
      * What the tank of the car holds, in millilitres: the tank mounted on it, or the one of the body.
      *
-     * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int}>  $mounted  the parts on the car, by slot
      */
     public function tankMl(string $carSlug, array $mounted = []): int
     {
@@ -156,7 +156,7 @@ final class RunInputsFactory
     }
 
     /**
-     * The statistics of a car with these parts on it: the pipeline of the design without rarity and upgrades.
+     * The statistics of a car with these parts on it: the pipeline of the design.
      *
      * - Power is the power of the body times the `power_mult` of every part, and acceleration is power per tonne.
      * - Top speed is the one of the body, grown with the cube root of the power gained, and never above the cap of the gearbox.
@@ -169,9 +169,9 @@ final class RunInputsFactory
      *
      * Averaging is a first rule that the economy simulator will check; the numbers are in the definitions of the parts.
      *
-     * The rarity of a part multiplies what it adds (`Rules::scaledStats`), before any of this.
+     * The rarity of a part and its upgrade (+N) multiply what it adds (`Rules::scaledStats`), before any of this.
      *
-     * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int}>  $mounted  the parts on the car, by slot
      */
     public function stats(string $carSlug, array $mounted = []): CarStats
     {
@@ -212,7 +212,7 @@ final class RunInputsFactory
      * The definitions of the mounted parts, by slot. A slug that is not in the pack, or a part in a slot it does not
      * belong to, is a mistake of whoever saved it, not something to drive on.
      *
-     * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int}>  $mounted  the parts on the car, by slot
      * @return array<string, array<string, mixed>>
      */
     private function parts(array $mounted): array
@@ -222,13 +222,14 @@ final class RunInputsFactory
         foreach ($mounted as $slot => $entry) {
             $slug = is_array($entry) ? $entry['slug'] : $entry;
             $rarity = is_array($entry) ? Rarity::from($entry['rarity']) : Rarity::Common;
+            $upgrade = is_array($entry) ? $entry['upgrade'] ?? 0 : 0;
             $part = $this->catalog->part($slug) ?? throw new InvalidArgumentException("Unknown part {$slug}.");
 
             if ($part['slot'] !== $slot) {
                 throw new InvalidArgumentException("The part {$slug} belongs to the slot {$part['slot']}, not to {$slot}.");
             }
 
-            $part['stats'] = $this->rules->scaledStats($part['stats'] ?? [], $rarity);
+            $part['stats'] = $this->rules->scaledStats($part['stats'] ?? [], $rarity, $upgrade);
             $parts[$slot] = $part;
         }
 
@@ -238,7 +239,7 @@ final class RunInputsFactory
     /**
      * The kind of the tires on the car, which picks the column of the tire matrix: the stock tires when none are mounted.
      *
-     * @param  array<string, string|array{slug: string, rarity: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int}>  $mounted  the parts on the car, by slot
      */
     private function tireKind(array $mounted): string
     {

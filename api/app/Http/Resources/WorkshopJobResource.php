@@ -23,6 +23,9 @@ final class WorkshopJobResource extends JsonResource
             'id' => $this->resource->id,
             'kind' => $this->resource->kind,
             'status' => $this->resource->status,
+            // An upgrade says what it cost and the level it takes the part to (0 and null for the other jobs).
+            'cost_cents' => $this->resource->cost_cents,
+            'upgrade_to' => $this->resource->upgrade_to,
             'part' => PartResource::make($this->resource->part)->resolve(),
             'start_ms' => $this->resource->start_ms,
             'finish_ms' => $this->resource->finish_ms,

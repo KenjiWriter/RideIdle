@@ -49,14 +49,14 @@ final class GarageController extends Controller
     }
 
     /**
-     * Queues a job: `kind` is mount or unmount, `part` the id of a part of the driver. Putting a part in a slot that has one takes
-     * the old one off first, which is a job of its own. The jobs are done one after the other by the one mechanic, and the car
-     * stands in the workshop while one of them is being done.
+     * Queues a job: `kind` is mount, unmount or upgrade, `part` the id of a part of the driver. Putting a part in a slot that has one takes
+     * the old one off first, which is a job of its own; an upgrade is a job on a part that sits on the car and is paid when it is queued. The
+     * jobs are done one after the other by the one mechanic, and the car stands in the workshop while one of them is being done.
      */
     public function queueJob(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'kind' => ['required', 'string', Rule::in([WorkshopJob::KIND_MOUNT, WorkshopJob::KIND_UNMOUNT])],
+            'kind' => ['required', 'string', Rule::in([WorkshopJob::KIND_MOUNT, WorkshopJob::KIND_UNMOUNT, WorkshopJob::KIND_UPGRADE])],
             'part' => ['required', 'integer', 'min:1'],
         ]);
 
@@ -70,7 +70,8 @@ final class GarageController extends Controller
     /**
      * Cancels a job: one that waits, or one that the mechanic is at (the work done on it is lost, and its part stays where it
      * was). A job that goes only with it goes too: cancelling the taking off of a part cancels the putting on of the one that was
-     * to take its place. Nothing is paid or given back. `cancelled` lists the jobs that were cancelled, the asked one first.
+     * to take its place. Nothing is paid or given back, except for the price of an upgrade that has not started. `cancelled` lists the jobs
+     * that were cancelled, the asked one first.
      */
     public function cancelJob(Request $request, int $job): JsonResponse
     {
@@ -110,7 +111,7 @@ final class GarageController extends Controller
     {
         $vehicle = $this->catalog->vehicle($car->vehicle_slug);
         $mounted = $car->parts()->whereNotNull('mounted_slot')->get()->keyBy('mounted_slot');
-        $slugs = $mounted->map(static fn (Part $part): array => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity])->all();
+        $slugs = $mounted->map(static fn (Part $part): array => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity, 'upgrade' => (int) $part->upgrade_level])->all();
 
         return [
             'id' => $car->id,
@@ -135,9 +136,13 @@ final class GarageController extends Controller
             // The bar of a statistic is full at its ceiling: what the best car of the whole game reaches, the same on every track.
             'ceilings' => $this->rules->statCeilings(),
             'tank_ml' => $this->inputs->tankMl($car->vehicle_slug, $slugs),
-            'slots' => array_map(static fn (string $slot): array => [
+            'slots' => array_map(fn (string $slot): array => [
                 'slot' => $slot,
-                'part' => ($part = $mounted->get($slot)) === null ? null : PartResource::make($part)->resolve(),
+                'part' => ($part = $mounted->get($slot)) === null ? null : [
+                    ...PartResource::make($part)->resolve(),
+                    // The next step of the upgrade of this part on this car: its price, its time and what stops it, so the garage can offer it.
+                    'upgrade_next' => $this->workshop->upgradeQuote($part, $car),
+                ],
                 'built_in' => $slot === 'engine',
             ], self::SLOTS),
             'lap_ms' => $run?->config['lap_ms'] ?? null,

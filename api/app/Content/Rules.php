@@ -395,15 +395,73 @@ final class Rules
     }
 
     /**
-     * The statistics of a part of a rarity: what the part adds to a car is multiplied (grip, handling, braking, clearance), and of the power only
+     * What a part of a rarity at +N multiplies what it adds by, in ppm: the rarity times 1 + 3% for every level of the upgrade (Systemy II, point 7:
+     * a rare +7 is x1.22 x 1.21 = x1.48 of the model, a common +3 only x1.09).
+     */
+    public function statPpm(Rarity $rarity, int $upgrade = 0): int
+    {
+        $ppm = $this->data['shop']['rarity_stat_ppm'][$rarity->key()];
+
+        return $upgrade === 0 ? $ppm : Ppm::mul($ppm, Ppm::ONE + $this->data['workshop']['upgrade']['stat_ppm_per_level'] * $upgrade);
+    }
+
+    /** How far a part of this rarity can be upgraded at the most, whatever the car. */
+    public function upgradeMax(Rarity $rarity): int
+    {
+        return $this->data['workshop']['upgrade']['max_by_rarity'][$rarity->key()];
+    }
+
+    /** How far a part of this rarity can be upgraded on a car of this level: at most 1 + ⌊level / levels_per_upgrade⌋ (a car of level 3 gets +2, level 6 gets +4). */
+    public function upgradeCap(Rarity $rarity, int $carLevel): int
+    {
+        return min($this->upgradeMax($rarity), 1 + intdiv($carLevel, $this->data['car']['levels_per_upgrade']));
+    }
+
+    /** The lowest level of a car on which a part can be upgraded to +N. */
+    public function requiredCarLevelForUpgrade(int $to): int
+    {
+        return $this->data['car']['levels_per_upgrade'] * ($to - 1);
+    }
+
+    /**
+     * What the step from +n to +n+1 of a part costs: 35% of the price of the model for the first step, and 45% more for every step after it.
+     * Whole cents all the way, so the price never depends on a machine.
+     */
+    public function upgradeCostCents(int $priceCents, int $from): int
+    {
+        $upgrade = $this->data['workshop']['upgrade'];
+        $cost = Ppm::mul($priceCents, $upgrade['cost_ppm_of_price']);
+
+        for ($step = 0; $step < $from; $step++) {
+            $cost = Ppm::mul($cost, $upgrade['cost_growth_ppm']);
+        }
+
+        return $cost;
+    }
+
+    /** How long the step from +n to +n+1 takes the mechanic: 5 minutes for the first, 40% more for every step after it, cut by the level of the mechanic. */
+    public function upgradeJobMs(int $from): int
+    {
+        $upgrade = $this->data['workshop']['upgrade'];
+        $ms = $upgrade['base_time_ms'];
+
+        for ($step = 0; $step < $from; $step++) {
+            $ms = Ppm::mul($ms, $upgrade['time_growth_ppm']);
+        }
+
+        return max(1, Ppm::mul($ms, Ppm::ONE - $this->mechanic()['time_cut_ppm']));
+    }
+
+    /**
+     * The statistics of a part of a rarity at +N: what the part adds to a car is multiplied (grip, handling, braking, clearance), and of the power only
      * the gain is (a multiplier of 1.02 at x1.6 is 1.032). A limit, like the one of a gearbox, is not a gain and stays what it is.
      *
      * @param  array<string, int|float>  $stats  the statistics of the definition of the part
      * @return array<string, int|float>
      */
-    public function scaledStats(array $stats, Rarity $rarity): array
+    public function scaledStats(array $stats, Rarity $rarity, int $upgrade = 0): array
     {
-        $ppm = $this->data['shop']['rarity_stat_ppm'][$rarity->key()];
+        $ppm = $this->statPpm($rarity, $upgrade);
 
         if ($ppm === Ppm::ONE) {
             return $stats;

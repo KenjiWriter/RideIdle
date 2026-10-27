@@ -67,14 +67,15 @@ class Car extends Model
     }
 
     /**
-     * The parts that sit on the car, by slot, with their rarity: what the statistics of the car are made of, since a part of a rarity gives more.
+     * The parts that sit on the car, by slot, with their rarity and upgrade: what the statistics of the car are made of, since a part of a rarity,
+     * or one that is upgraded, gives more.
      *
-     * @return array<string, array{slug: string, rarity: int}>
+     * @return array<string, array{slug: string, rarity: int, upgrade: int}>
      */
     public function mountedParts(): array
     {
         return $this->parts()->whereNotNull('mounted_slot')->orderBy('mounted_slot')->get()
-            ->mapWithKeys(static fn (Part $part): array => [$part->mounted_slot => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity]])
+            ->mapWithKeys(static fn (Part $part): array => [$part->mounted_slot => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity, 'upgrade' => (int) $part->upgrade_level]])
             ->all();
     }
 }

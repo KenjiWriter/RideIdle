@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Content\Catalog;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
+use App\Domain\Run\Rarity;
 use App\Exceptions\RuleRefusedException;
 use App\Models\Car;
 use App\Models\Part;
@@ -16,7 +17,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * The workshops: putting parts on a car and taking them off, by the mechanic of the city, one job after the other. Every city has a
+ * The workshops: putting parts on a car, taking them off and upgrading them (+N), by the mechanic of the city, one job after the other. Every city has a
  * workshop of its own with its own queue, and the car has to be in the city to be worked on.
  *
  * The times of a job are fixed when it is queued: it starts when the job before it in the queue of the city ends (or now, when the mechanic
@@ -66,7 +67,10 @@ final class Workshop
      * part off first, as a job of its own, so that a replacement is two jobs and uses two places of the queue. Returns the jobs that were
      * made, in order.
      *
-     * @param  string  $kind  WorkshopJob::KIND_MOUNT or KIND_UNMOUNT
+     * An upgrade is a job on a part that sits on the car: it is paid when it is queued (the price of the step, see `Rules::upgradeCostCents`),
+     * the car stands while the mechanic is at it, and the part has the next level when it is done.
+     *
+     * @param  string  $kind  WorkshopJob::KIND_MOUNT, KIND_UNMOUNT or KIND_UPGRADE
      * @return list<WorkshopJob>
      *
      * @throws RuleRefusedException
@@ -95,9 +99,11 @@ final class Workshop
 
             $queue = $pending->where('city', $city);
 
-            $plan = $kind === WorkshopJob::KIND_MOUNT
-                ? $this->planMount($car, $part, $pending->where('car_id', $car->id))
-                : $this->planUnmount($car, $part);
+            $plan = match ($kind) {
+                WorkshopJob::KIND_MOUNT => $this->planMount($car, $part, $pending->where('car_id', $car->id)),
+                WorkshopJob::KIND_UPGRADE => $this->planUpgrade($car, $part),
+                default => $this->planUnmount($car, $part),
+            };
 
             if ($queue->count() + count($plan) > $this->rules->workshopMaxQueue()) {
                 throw new RuleRefusedException('queue_full');
@@ -110,22 +116,32 @@ final class Workshop
 
             foreach ($plan as [$jobKind, $jobPart]) {
                 $definition = $this->catalog->part($jobPart->part_slug);
-                $duration = $this->rules->workshopJobMs($jobPart->slot, $definition['tier'], removal: $jobKind === WorkshopJob::KIND_UNMOUNT);
+                $quote = $jobKind === WorkshopJob::KIND_UPGRADE ? $this->upgradeQuote($jobPart, $car) : null;
+                $duration = $quote['duration_ms'] ?? $this->rules->workshopJobMs($jobPart->slot, $definition['tier'], removal: $jobKind === WorkshopJob::KIND_UNMOUNT);
 
                 if ($jobKind === WorkshopJob::KIND_MOUNT && $firstMountMs !== null) {
                     $duration = min($duration, $firstMountMs);
                 }
 
-                $jobs[] = WorkshopJob::query()->create([
+                $job = WorkshopJob::query()->create([
                     'user_id' => $userId,
                     'car_id' => $car->id,
                     'city' => $city,
                     'part_id' => $jobPart->id,
                     'kind' => $jobKind,
+                    'cost_cents' => $quote['cost_cents'] ?? 0,
+                    'upgrade_to' => $quote['to'] ?? null,
                     'status' => WorkshopJob::STATUS_QUEUED,
                     'start_ms' => $cursor,
                     'finish_ms' => $cursor + $duration,
                 ]);
+
+                // Paid when queued, under the lock of the wallet we hold: not enough cash undoes the job with the transaction.
+                if ($job->cost_cents > 0) {
+                    $this->ledger->post($userId, -$job->cost_cents, 'upgrade', "upgrade:{$job->id}");
+                }
+
+                $jobs[] = $job;
 
                 $cursor += $duration;
             }
@@ -139,8 +155,9 @@ final class Workshop
 
     /**
      * Cancels a job that waits for the mechanic or that the mechanic is at, and the jobs that cannot happen without it: the
-     * part that was to take the place of the one whose taking off is cancelled. Nothing is paid and nothing is given back,
-     * because a job costs only time; the work done on the job at work is lost, and its part stays where it was. The jobs that
+     * part that was to take the place of the one whose taking off is cancelled. A job costs only time, so nothing is given back,
+     * except for an upgrade that has not started, which is paid back whole (one at work loses its price and its work);
+     * the work done on the job at work is lost, and its part stays where it was. The jobs that
      * wait in the queue of that city move up, one after the other, from the end of the job still at work, or from now when none is.
      * A car that has no job at work after that drives again from now.
      *
@@ -173,6 +190,11 @@ final class Workshop
 
             $cancelled = $pending->filter(fn (WorkshopJob $other): bool => $other->id === $job->id || $this->cannotHappenWithout($other, $job))->values();
             WorkshopJob::query()->whereIn('id', $cancelled->modelKeys())->delete();
+
+            // What a job of upgrading cost is given back while the mechanic has not started on it; the work and the price of one at work are lost.
+            foreach ($cancelled->where('kind', WorkshopJob::KIND_UPGRADE)->where('status', WorkshopJob::STATUS_QUEUED)->where('cost_cents', '>', 0) as $unpaid) {
+                $this->ledger->post($userId, $unpaid->cost_cents, 'upgrade_refund', "upgrade-refund:{$unpaid->id}");
+            }
 
             $remaining = $pending->reject(fn (WorkshopJob $other): bool => $cancelled->contains('id', $other->id))->values();
             $this->moveUp($remaining, $now);
@@ -259,6 +281,64 @@ final class Workshop
         }
 
         return [[WorkshopJob::KIND_UNMOUNT, $part]];
+    }
+
+    /**
+     * The upgrade of a part that sits on the car: the one step to the next level, which the rarity of the part and the level of the car allow.
+     *
+     * @return list<array{0: string, 1: Part}>
+     *
+     * @throws RuleRefusedException
+     */
+    private function planUpgrade(Car $car, Part $part): array
+    {
+        if (! $part->isMounted() || $part->car_id !== $car->id) {
+            throw new RuleRefusedException('part_not_mounted');
+        }
+
+        $quote = $this->upgradeQuote($part, $car);
+
+        if ($quote['locked'] !== null) {
+            throw match ($quote['locked']['reason']) {
+                'car_level' => new RuleRefusedException('upgrade_car_level', ['to' => $quote['to'], 'required' => $quote['locked']['required'], 'current' => $quote['locked']['current']]),
+                'max' => new RuleRefusedException('upgrade_max'),
+                default => new RuleRefusedException('upgrade_unavailable'),
+            };
+        }
+
+        return [[WorkshopJob::KIND_UPGRADE, $part]];
+    }
+
+    /**
+     * What the next step of the upgrade of a part is on this car: the level it takes the part to, the price, the time, and what stops it (the part is
+     * at the most its rarity allows, or the car is not of the level that the step takes).
+     *
+     * @return array{to: int|null, cost_cents: int|null, duration_ms: int|null, locked: array{reason: string, required?: int, current?: int}|null}
+     */
+    public function upgradeQuote(Part $part, Car $car): array
+    {
+        $rarity = Rarity::tryFrom((int) $part->rarity) ?? Rarity::Common;
+        $level = (int) $part->upgrade_level;
+        $price = $this->catalog->part($part->part_slug)['price_cents'] ?? null;
+
+        if ($price === null) {
+            return ['to' => null, 'cost_cents' => null, 'duration_ms' => null, 'locked' => ['reason' => 'unavailable']];
+        }
+
+        if ($level >= $this->rules->upgradeMax($rarity)) {
+            return ['to' => null, 'cost_cents' => null, 'duration_ms' => null, 'locked' => ['reason' => 'max']];
+        }
+
+        $to = $level + 1;
+
+        return [
+            'to' => $to,
+            'cost_cents' => $this->rules->upgradeCostCents($price, $level),
+            'duration_ms' => $this->rules->upgradeJobMs($level),
+            'locked' => $level >= $this->rules->upgradeCap($rarity, $car->level)
+                ? ['reason' => 'car_level', 'required' => $this->rules->requiredCarLevelForUpgrade($to), 'current' => $car->level]
+                : null,
+        ];
     }
 
     /**
@@ -373,10 +453,16 @@ final class Workshop
         }
     }
 
-    /** The part goes onto the car, or comes off it. */
+    /** The part goes onto the car, or comes off it, or has its next level of upgrade. */
     private function apply(WorkshopJob $job): void
     {
         $part = Part::query()->lockForUpdate()->findOrFail($job->part_id);
+
+        if ($job->kind === WorkshopJob::KIND_UPGRADE) {
+            $part->forceFill(['upgrade_level' => $job->upgrade_to])->save();
+
+            return;
+        }
 
         $part->forceFill($job->kind === WorkshopJob::KIND_MOUNT
             ? ['car_id' => $job->car_id, 'mounted_slot' => $part->slot]

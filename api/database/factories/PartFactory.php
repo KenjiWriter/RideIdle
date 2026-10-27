@@ -26,6 +26,7 @@ class PartFactory extends Factory
             'part_slug' => 'street-tires-t2',
             'slot' => 'tires',
             'rarity' => 1,
+            'upgrade_level' => 0,
             'car_id' => null,
             'mounted_slot' => null,
         ];

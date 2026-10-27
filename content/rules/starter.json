@@ -9,6 +9,7 @@
   "car": {
     "start_level": 3,
     "levels_per_tier": 3,
+    "levels_per_upgrade": 2,
     "xp_per_lap": 10,
     "xp_per_level": 200,
     "reward_ppm_from_tier": { "1": 1000000, "5": 1090000, "6": 1100000, "7": 1350000, "8": 1470000, "10": 1700000 },
@@ -118,6 +119,14 @@
     "time_cut_ppm_per_level": 20000,
     "removal_ppm": 600000,
     "max_queue": 4,
+    "upgrade": {
+      "stat_ppm_per_level": 30000,
+      "max_by_rarity": { "common": 3, "uncommon": 5, "rare": 7, "epic": 9, "legendary": 12 },
+      "cost_ppm_of_price": 350000,
+      "cost_growth_ppm": 1450000,
+      "base_time_ms": 300000,
+      "time_growth_ppm": 1400000
+    },
     "base_time_ms": {
       "tires": 120000,
       "suspension": 170000,

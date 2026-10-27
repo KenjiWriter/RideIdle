@@ -27,7 +27,7 @@ final class PartResource extends JsonResource
 
         return [
             'id' => $this->resource->id,
-            ...self::describe($definition ?? ['slug' => $this->resource->part_slug, 'slot' => $this->resource->slot], Rarity::tryFrom((int) $this->resource->rarity) ?? Rarity::Common),
+            ...self::describe($definition ?? ['slug' => $this->resource->part_slug, 'slot' => $this->resource->slot], Rarity::tryFrom((int) $this->resource->rarity) ?? Rarity::Common, (int) $this->resource->upgrade_level),
             'mounted' => $this->resource->isMounted(),
             'car_id' => $this->resource->car_id,
         ];
@@ -40,7 +40,7 @@ final class PartResource extends JsonResource
      * @param  array<string, mixed>  $definition
      * @return array<string, mixed>
      */
-    public static function describe(array $definition, Rarity $rarity = Rarity::Common): array
+    public static function describe(array $definition, Rarity $rarity = Rarity::Common, int $upgrade = 0): array
     {
         return [
             'slug' => $definition['slug'],
@@ -51,7 +51,10 @@ final class PartResource extends JsonResource
             // The rarity of the part (`common` to `legendary`, and 1 to 5), and the statistics it gives with it.
             'rarity' => $rarity->key(),
             'rarity_rank' => $rarity->value,
-            'stats' => app(Rules::class)->scaledStats($definition['stats'] ?? [], $rarity),
+            // The upgrade of the part (+N), the most its rarity allows, and the statistics it gives with both.
+            'upgrade' => $upgrade,
+            'upgrade_max' => app(Rules::class)->upgradeMax($rarity),
+            'stats' => app(Rules::class)->scaledStats($definition['stats'] ?? [], $rarity, $upgrade),
             // Tires only: how they grip on every surface, which is what tells one kind from another.
             'surfaces' => isset($definition['tire_kind']) ? app(Rules::class)->tireSurfaces($definition['tire_kind']) : null,
         ];

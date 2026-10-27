@@ -104,9 +104,9 @@ describe('what is exported', function () {
             ->and($game['workshop_jobs'][0])->toMatchArray(['kind' => 'mount', 'status' => 'queued']);
     });
 
-    it('has the crates the driver opened, and the rarity of their parts', function () {
+    it('has the crates the driver opened, and the rarity and the upgrade of their parts', function () {
         $user = accountWithHistory();
-        $part = Part::factory()->create(['user_id' => $user->id, 'part_slug' => 'street-tires-t2', 'rarity' => 4]);
+        $part = Part::factory()->create(['user_id' => $user->id, 'part_slug' => 'street-tires-t2', 'rarity' => 4, 'upgrade_level' => 2]);
         CrateOpening::query()->create([
             'user_id' => $user->id, 'kind' => 'slot', 'pity_group' => 'standard', 'opening_index' => 0, 'slot' => 'tires', 'tier' => 2,
             'rarity' => 4, 'part_slug' => 'street-tires-t2', 'price_cents' => 59_500, 'part_id' => $part->id,
@@ -117,7 +117,7 @@ describe('what is exported', function () {
         expect($game['crate_openings'])->toHaveCount(1)
             ->and($game['crate_openings'][0])->toMatchArray(['kind' => 'slot', 'pity_group' => 'standard', 'opening_index' => 0, 'rarity' => 4, 'part_slug' => 'street-tires-t2', 'price_cents' => 59_500])
             ->and($game['crate_openings'][0])->not->toHaveKey('user_id')
-            ->and(collect($game['inventory'])->firstWhere('id', $part->id)['rarity'])->toBe(4);
+            ->and(collect($game['inventory'])->firstWhere('id', $part->id))->toMatchArray(['rarity' => 4, 'upgrade_level' => 2]);
     });
 
     it('has the steps of the tutorial that the driver reached', function () {
