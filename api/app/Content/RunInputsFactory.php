@@ -176,8 +176,9 @@ final class RunInputsFactory
      * `boost_gain` of the intercooler (0.03 makes a gain of 25% one of 25.75%). An intercooler works with a booster only.
      *
      * @param  array<string, array<string, mixed>>  $parts  the definitions of the mounted parts, by slot
+     * @param  bool  $withBooster  false leaves the gain of the booster out (it counts as 1), for what is paid for the engine and not for the boost
      */
-    private function powerMultiplier(array $parts): float
+    private function powerMultiplier(array $parts, bool $withBooster = true): float
     {
         $multiplier = 1.0;
         $intercooler = isset($parts['boost']) ? (float) ($parts['cooling']['stats']['boost_gain'] ?? 0.0) : 0.0;
@@ -185,7 +186,11 @@ final class RunInputsFactory
         foreach ($parts as $slot => $part) {
             $value = (float) ($part['stats']['power_mult'] ?? 1.0);
 
-            $multiplier *= $slot === 'boost' ? 1.0 + ($value - 1.0) * (1.0 + $intercooler) : $value;
+            if ($slot === 'boost') {
+                $multiplier *= $withBooster ? 1.0 + ($value - 1.0) * (1.0 + $intercooler) : 1.0;
+            } else {
+                $multiplier *= $value;
+            }
         }
 
         return $multiplier;
@@ -281,7 +286,8 @@ final class RunInputsFactory
      * - Handling and braking are then multiplied by the factor of the mass of the body (`Rules::massFactor`).
      * - Clearance (Off-road in the garage) starts from the body, and the suspension is averaged with it the same way:
      *   a lowered one costs a 4x4 what it gives a hatchback on asphalt. The tires have their say through the tire matrix.
-     * - Fuel use grows with power, and with the `fuel_mult` of the booster.
+     * - Fuel use grows with the power of the car without the gain of the booster, and the booster adds its own `fuel_mult` to that (so the gain is paid for
+     *   once, not twice).
      *
      * Averaging is a first rule that the economy simulator will check; the numbers are in the definitions of the parts.
      *
@@ -312,6 +318,8 @@ final class RunInputsFactory
         $massFactor = $this->rules->massFactor($mass);
         // What the booster takes off the acceleration for its lag, and the launch of the gearbox adds to it or takes off (in percent).
         $startFactor = $this->rules->lagFactor((float) ($parts['boost']['stats']['lag'] ?? 0.0)) * (1.0 + (float) ($parts['gearbox']['stats']['launch'] ?? 0.0) / 100.0);
+        // The booster burns more through its own `fuel_mult`, so its gain is not counted again in the power that fuel use grows with.
+        $fuelPower = $vehicle['power_kw'] * $this->powerMultiplier($parts, withBooster: false);
         $fuelMultiplier = array_product(array_map(static fn (array $part): float => (float) ($part['stats']['fuel_mult'] ?? 1.0), $parts));
 
         // A car that is overdue for its service performs worse: everything but the clearance, which is about the body, not the engine and the wheels.
@@ -326,7 +334,7 @@ final class RunInputsFactory
                 'braking' => $this->average($tires['stats']['braking'], $parts['brakes']['stats']['braking'] ?? null) * $massFactor * $kept,
                 'clearance' => $this->average($vehicle['clearance'], $parts['suspension']['stats']['clearance'] ?? null),
             ],
-            fuelUseMultiplier: (1.0 + self::FUEL_USE_POWER_SHARE * $power / $this->rules->fuelReferencePowerKw()) / self::FUEL_USE_BASE * $fuelMultiplier,
+            fuelUseMultiplier: (1.0 + self::FUEL_USE_POWER_SHARE * $fuelPower / $this->rules->fuelReferencePowerKw()) / self::FUEL_USE_BASE * $fuelMultiplier,
         );
     }
 

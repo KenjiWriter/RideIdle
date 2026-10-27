@@ -118,13 +118,22 @@ describe('what the parts of the engine group do to the car', function () {
             ->and(engineStats(['boost' => 'centrifugal-t6'])['accel'])->toEqualWithDelta(97 * 1.24 * 0.97, 1e-9);
     });
 
-    it('multiplies the fuel use by the fuel of the booster on top of what the power does', function () {
+    it('burns more for a booster only through its own fuel_mult, and does not count its gain in the power the use grows with', function () {
         $reference = app(Rules::class)->fuelReferencePowerKw();
 
-        // The use grows with the power (0.6 of it) and the booster asks 15% more.
-        expect(engineFuel(['boost' => 'turbo-osemka-t2']))->toEqualWithDelta((1 + 0.6 * 97 * 1.25 / $reference) / 1.6 * 1.15, 1e-9)
-            ->and(engineFuel(['boost' => 'roots-mini-t2']))->toBeLessThan(engineFuel(['boost' => 'turbo-osemka-t2']))
-            ->and(engineFuel())->toEqualWithDelta((1 + 0.6 * 97 / $reference) / 1.6, 1e-9);
+        // The use grows with the power of the car without the gain of the booster (0.6 of it), and the booster asks 15% more on top.
+        expect(engineFuel())->toEqualWithDelta((1 + 0.6 * 97 / $reference) / 1.6, 1e-9)
+            ->and(engineFuel(['boost' => 'turbo-osemka-t2']))->toEqualWithDelta(engineFuel() * 1.15, 1e-9)
+            ->and(engineFuel(['boost' => 'roots-mini-t2']))->toEqualWithDelta(engineFuel() * 1.1, 1e-9)
+            ->and(engineFuel(['boost' => 'roots-mini-t2']))->toBeLessThan(engineFuel(['boost' => 'turbo-osemka-t2']));
+    });
+
+    it('lets the other parts that give power still burn: only the booster is left out', function () {
+        $reference = app(Rules::class)->fuelReferencePowerKw();
+
+        // A sport exhaust gives 2% of power, which the use follows; the turbo on top adds its fuel_mult and not its 25%. The intercooler changes neither.
+        expect(engineFuel(['exhaust' => 'sport-exhaust-t2', 'boost' => 'turbo-osemka-t2']))->toEqualWithDelta((1 + 0.6 * 97 * 1.02 / $reference) / 1.6 * 1.15, 1e-9)
+            ->and(engineFuel(['boost' => 'turbo-osemka-t2', 'cooling' => 'intercooler-front-t4']))->toEqualWithDelta(engineFuel(['boost' => 'turbo-osemka-t2']), 1e-9);
     });
 
     it('grows the gain of a booster with its intercooler, and the intercooler does nothing without one', function () {
