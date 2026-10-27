@@ -46,7 +46,7 @@ describe('the extras of the scenario game, with the rules of the game as they ar
         $result = extrasStudied();
 
         // The first crates are the best a crate does (the gain falls with every crate), and the whole programme to the guarantee of a legendary part is the gate.
-        expect($result->firstCratesSooner())->toBe(['L4', 'L5', 'L6', 'L7'])
+        expect($result->firstCratesSooner())->toBe(['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7'])
             ->and($result->crateValuePassed())->toBeTrue()
             ->and($result->valuedPlayer)->toBe('A');
     });
@@ -54,11 +54,14 @@ describe('the extras of the scenario game, with the rules of the game as they ar
     it('keeps the programme of crates just above the next car at the rung where it is the nearest: the dearest tier costs a little more', function () {
         $rows = collect(extrasStudied()->crateValue)->keyBy('rung');
 
-        // The 150 crates of the tier 8 pay back in 148.8 days against the 145.6 of the car (and in 136.5 at the anchors' price, which would be out).
-        expect($rows['L7']['programme_days'])->toBeBetween(146.0, 151.0)
+        // The 150 crates of the tier 8 pay back in 150.2 days against the 145.6 of the car (and in 82 days at the old prices, which would be out), and the
+        // 150 of the tier 7 in 70.7 against 68.6 (43 at the old ones).
+        expect($rows['L7']['programme_days'])->toBeBetween(146.0, 154.0)
             ->and($rows['L7']['step_days'])->toBeLessThan($rows['L7']['programme_days'])
-            ->and($rows['L7']['price'])->toEqualWithDelta(7_500 * 1.09, 0.01)
-            ->and($rows['L6']['price'])->toEqualWithDelta(3_750.0, 0.01)
+            ->and($rows['L7']['price'])->toEqualWithDelta(7_500 * 1.99, 0.01)
+            ->and($rows['L6']['programme_days'])->toBeBetween(68.6, 74.0)
+            ->and($rows['L6']['price'])->toEqualWithDelta(3_750 * 1.63, 0.01)
+            ->and($rows['L5']['price'])->toEqualWithDelta(2_812.5, 0.01)
             ->and($rows['L8']['step_days'])->toBeNull();
     });
 
@@ -69,7 +72,9 @@ describe('the extras of the scenario game, with the rules of the game as they ar
             ->and($first['crates'][0]['crate_days'])->toBeGreaterThan($first['step_days'])
             ->and($first['crates'][1]['crate_days'])->toBeGreaterThan($first['crates'][0]['crate_days'])
             ->and($first['programme_crates'])->toBe(150)
-            ->and($first['programme_days'])->toBeGreaterThan($first['crates'][2]['crate_days']);
+            // The gain is in the first crates (a car that passes the quickest bot earns a fifth more at once), so the whole programme pays back sooner than the
+            // forty-first crate does on its own.
+            ->and($first['programme_days'])->toBeLessThan($first['crates'][2]['crate_days']);
     });
 
     it('returns less than it costs from every kind of storage unit, so that buying and selling cannot make money', function () {

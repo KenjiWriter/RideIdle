@@ -148,11 +148,12 @@ describe('the game ladder of the pack', function () {
         $ladder = new GameLadder;
         $rows = collect($ladder->check($economy, gameIncome()->byLevel($ladder->levels($economy))))->keyBy('level');
 
-        // The deviations of the game from the anchors at the levels of the rungs: 0, -13, -7, -8, +7, 0, +7, 0 and 0 per cent (and +15 at level 21, where
-        // the Serwal V10 opens a level before its rung does).
+        // The deviations of the game from the anchors at the levels of the rungs: 0, -13, -7, -8, +3, 0, +7, 0 and 0 per cent (and +15 at level 21, where
+        // the Serwal V10 opens a level before its rung does). At the fifth rung the best car is the Bizon V8 now, the quickest car of its tier on the Autodrom:
+        // the Kornet R6, which burns less, is behind it on the track and so behind the bots.
         expect($rows[1]->deviation())->toEqualWithDelta(0.0, 0.01)
             ->and($rows[3]->deviation())->toEqualWithDelta(-0.13, 0.01)
-            ->and($rows[12]->deviation())->toEqualWithDelta(0.067, 0.01)
+            ->and($rows[12]->deviation())->toEqualWithDelta(0.027, 0.01)
             ->and($rows[15]->deviation())->toEqualWithDelta(0.0, 0.01)
             ->and($rows[18]->deviation())->toEqualWithDelta(0.072, 0.01)
             ->and($rows[21]->deviation())->toEqualWithDelta(0.149, 0.01)

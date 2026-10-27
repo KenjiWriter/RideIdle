@@ -203,16 +203,16 @@ describe('economy:simulate', function () {
         $output = Artisan::output();
 
         expect($output)->toContain('The ladder of the game')
-            // A lap pays by the tier of the car, so the best car of a level pays about what its rung asks: the Kornet R6 at the fifth, the Orzeł V12 at the last.
-            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$1 119\s+\|/')
-            ->and($output)->toContain('kornet-r6 on autodrom-circuit')
+            // A lap pays by the tier of the car, so the best car of a level pays about what its rung asks: the Bizon V8 at the fifth, the Orzeł V12 at the last.
+            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$1 078\s+\|/')
+            ->and($output)->toContain('bizon-v8 on autodrom-circuit')
             ->and($output)->toMatch('/\| 27\s+\| L8\s+\| \$1 835\s+\| \$1 834\s+\|/')
             ->and($output)->toContain('orzel-v12 on autodrom-circuit')
             ->and($output)->toContain('Ladder of the game: every level is within the anchors.')
             ->and($output)->not->toContain('reach L')
             // The experience an hour of the best pair against the 900 of the model: a lap of a fast car pays the share of the base lap it takes, so the
-            // Kornet R6 gets 890 and the Orzeł V12 895 instead of the 1 000 and more that a flat 20 XP a lap would give them.
-            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$1 119\s+\| \+7%\s+\| 890\s+\| -1%\s+\|/')
+            // Bizon V8 gets 918 and the Orzeł V12 895 instead of the 1 000 and more that a flat 20 XP a lap would give them.
+            ->and($output)->toMatch('/\| 12\s+\| L4\s+\| \$1 049\s+\| \$1 078\s+\| \+3%\s+\| 918\s+\| \+2%\s+\|/')
             ->and($output)->toMatch('/\| 27\s+\| L8\s+\| \$1 835\s+\| \$1 834\s+\| -0%\s+\| 895\s+\| -1%\s+\|/')
             ->and($output)->toContain('Experience an hour of the game: every level is within the model.');
     });
@@ -295,7 +295,7 @@ describe('economy:simulate', function () {
 
         expect($output)->toContain('Crates of parts, on top of the game scenario')
             ->and($output)->toMatch('/\| none\s+\| 3\s+\| 8\s+\| 9\s+\| 18\s+\| 28\s+\| 36\s+\| 48\s+\| 69\s+\|/')
-            ->and($output)->toMatch('/\| 20%\s+\| 3\s+\| 8\s+\| 9\s+\| 18\s+\| 28\s+\| 36\s+\| 48\s+\| 69\s+\|\s+56\s+\|/')
+            ->and($output)->toMatch('/\| 20%\s+\| 3\s+\| 8\s+\| 9\s+\| 18\s+\| 28\s+\| 36\s+\| 48\s+\| 69\s+\|\s+48\s+\|/')
             ->and($output)->toContain('Crate shift gate: PASSED');
     });
 
@@ -304,9 +304,9 @@ describe('economy:simulate', function () {
         $output = Artisan::output();
 
         expect($output)->toContain('What crates pay back')
-            ->and($output)->toMatch('/\| L0\s+\| 1\s+\| \$563\s+\| 19\.6\s+\|/')
-            ->and($output)->toMatch('/\| L7\s+\| 22\s+\| \$8 175\s+\| 11\.5\s+\| 59\.2\s+\| 147\.8\s+\| 148\.8\s+\| 145\.6\s+\| ok\s+\|/')
-            ->and($output)->toContain('Crate value gate: PASSED. The programme of 150 crates never pays back sooner than a car (the first crates do, at L4, L5, L6, L7).');
+            ->and($output)->toMatch('/\| L0\s+\| 1\s+\| \$563\s+\| 5\.3\s+\|/')
+            ->and($output)->toMatch('/\| L7\s+\| 22\s+\| \$14 925\s+\| 5\.7\s+\| 90\.1\s+\| 224\.9\s+\| 150\.2\s+\| 145\.6\s+\| ok\s+\|/')
+            ->and($output)->toContain('Crate value gate: PASSED. The programme of 150 crates never pays back sooner than a car (the first crates do, at L1, L2, L3, L4, L5, L6, L7).');
     });
 
     it('plays the storage units, and says what each kind returns on average and that none returns more than it costs', function () {

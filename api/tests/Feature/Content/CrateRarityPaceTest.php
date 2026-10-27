@@ -25,8 +25,9 @@ describe('the table of the pace of the rarities', function () {
         expect($table)->toMatchArray(['car' => 'rdzak-gt-4', 'track' => 'zlomowo-street', 'weather' => 'dry', 'group' => 'standard', 'seed_prefix' => 'rarity-pace', 'trials' => 1000])
             ->and($table['cycle'])->toBe(['tires', 'tires', 'suspension', 'brakes'])
             ->and($table['parts'])->toBe(['tires' => 'street-tires-t2', 'suspension' => 'sport-suspension-t1', 'brakes' => 'disc-brakes-t2', 'exhaust' => 'sport-exhaust-t2'])
-            // The lap of the stock car with the common parts of the shop, which the gain is against.
-            ->and($table['base_lap_ms'])->toBe(68_294);
+            // The lap of the stock car with the common parts of the shop, which the gain is against, and the place it holds among the bots with it.
+            ->and($table['base_lap_ms'])->toBe(68_294)
+            ->and($table['base_position'])->toBe(2);
     });
 
     it('has the gain after every number of crates from none to three hundred, starts at none, never falls, and levels off', function () {
@@ -43,12 +44,26 @@ describe('the table of the pace of the rarities', function () {
 
     it('agrees with the first experiment: a tenth of a lap more after ten crates and a third after a hundred and fifty', function (int $crates, float $percent) {
         // 14.6, 19.2, 23.3 and 32.7% of laps an hour from 400 drawn players with other seeds: within a point.
-        expect(committedRarityPace()['gain_by_crates'][$crates] * 100)->toEqualWithDelta($percent, 1.0);
+        expect(committedRarityPace()['lap_gain_by_crates'][$crates] * 100)->toEqualWithDelta($percent, 1.0);
     })->with([
         'ten crates' => [10, 14.6],
         'twenty crates' => [20, 19.2],
         'forty crates' => [40, 23.3],
         'a hundred and fifty crates' => [150, 32.7],
+    ]);
+
+    it('is worth more in income than in laps, because a shorter lap lifts the car in the field of the bots, and levels off at a bit more than the laps do', function (int $crates, float $percent) {
+        $table = committedRarityPace();
+
+        // The same players and draws as the laps: +10.5% of income for one crate (the car passes the quickest bot at once), and +59% after a hundred and fifty
+        // where the laps alone are +33%.
+        expect($table['gain_by_crates'][$crates] * 100)->toEqualWithDelta($percent, 0.2)
+            ->and($table['gain_by_crates'][$crates])->toBeGreaterThan($table['lap_gain_by_crates'][$crates]);
+    })->with([
+        'one crate' => [1, 10.5],
+        'ten crates' => [10, 37.7],
+        'forty crates' => [40, 48.3],
+        'a hundred and fifty crates' => [150, 59.3],
     ]);
 
     it('says what a rarity of one slot is worth: the tires nearly all of it, and the exhaust nothing', function () {

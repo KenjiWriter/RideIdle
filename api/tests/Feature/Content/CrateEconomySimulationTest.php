@@ -41,17 +41,17 @@ describe('the scenario game with the crates of the game', function () {
 
     it('gives the days for a tenth, a fifth and a third of the income spent on crates: the long game does not move, and the early days of the others move by a day or two', function () {
         // What the sweep of the ruleset shows today. The long game is bound by the level (only the car that is played levels the driver), so the
-        // money that the crates take was not going to buy a car sooner: the regular player buys the same cars on the same days, and the occasional
-        // one, whose money binds the first purchases, is a day or two later at a fifth and a third of the income.
+        // money that the crates take was not going to buy a car sooner: the regular and the intensive player buy the same cars on the same days, and the
+        // occasional one, whose money binds the first purchases, is a day or two later at a fifth and a third of the income.
         expect(daysWithCrates(0.1))->toBe(daysWithCrates(0.0))
             ->and(daysWithCrates(0.2))->toBe([
                 'A' => [3, 8, 9, 18, 28, 36, 48, 69],
                 'B' => [7, 25, 28, 62, 98, 122, 149, 186],
-                'C' => [2, 4, 4, 7, 12, 17, 24, 37],
+                'C' => [2, 3, 4, 7, 12, 17, 24, 37],
             ])->and(daysWithCrates(0.3))->toBe([
                 'A' => [3, 8, 9, 18, 28, 36, 48, 69],
                 'B' => [7, 25, 29, 62, 98, 122, 149, 186],
-                'C' => [2, 4, 4, 7, 12, 17, 24, 37],
+                'C' => [2, 3, 4, 7, 12, 17, 24, 37],
             ]);
     });
 
@@ -70,8 +70,9 @@ describe('the scenario game with the crates of the game', function () {
     it('says in the report of the run what the crates were: the share, the number, the money, the gain and the tier', function () {
         $report = gameWithCrates(0.2)['A']->notes['crates'];
 
-        // The player is level-bound, so the money that the crates do not take piles up, and a fifth of the income opens a lot of them.
-        expect($report)->toMatchArray(['share' => 0.2, 'crates' => 56, 'tier' => 10, 'medians' => ['rare' => 5, 'epic' => 18, 'legendary' => 150]])
+        // The player is level-bound, so the money that the crates do not take piles up, and a fifth of the income opens a lot of them (fewer than before the
+        // place among the bots, because the crates of the high tiers cost more).
+        expect($report)->toMatchArray(['share' => 0.2, 'crates' => 48, 'tier' => 10, 'medians' => ['rare' => 5, 'epic' => 18, 'legendary' => 150]])
             ->and($report['spent'])->toBeGreaterThan(100_000)
             // The anchors price the tiers up to the tenth, and the crates of the game are of the first three.
             ->and($report['priced_by'])->toContain('tiers 1 to 10');
@@ -87,17 +88,18 @@ describe('the scenario game with the crates of the game', function () {
             ->and($report['first_legendary_day'])->toBeNull();
     });
 
-    it('is a worse deal than a step of the ladder at the start, and a better one from the fourth rung on', function () {
+    it('is a worse deal than a step of the ladder at the start, and a better one from the second rung on', function () {
         $rules = economyRules();
         $economy = app(GameCrates::class)->economy();
         $payback = new CratePayback;
         $player = $rules->players()['A'];
         $row = fn (int $rung, int $level): array => $payback->compare($rules, $player, $economy, $rung, $level, [0])[0];
 
-        // Days to pay back, for the first crate of the tier at the level where the rung is bought: a crate takes 19.6 days, and the first step 2.4.
-        expect($row(0, 1)['crate_days'])->toBeGreaterThan($row(0, 1)['step_days'] * 5)
-            ->and($row(2, 6)['crate_days'])->toBeGreaterThan($row(2, 6)['step_days'])
+        // Days to pay back, for the first crate of the tier at the level where the rung is bought: a crate takes 5.3 days, and the first step 2.4. The first
+        // crate lifts the car past the quickest bot, which the table of the gain counts (+10.5% of the income), so from the second rung on it pays back sooner.
+        expect($row(0, 1)['crate_days'])->toBeGreaterThan($row(0, 1)['step_days'] * 2)
+            ->and($row(1, 3)['crate_days'])->toBeLessThan($row(1, 3)['step_days'])
             ->and($row(4, 12)['crate_days'])->toBeLessThan($row(4, 12)['step_days'])
-            ->and($row(5, 15)['crate_days'])->toBeLessThan($row(5, 15)['step_days'] / 5);
+            ->and($row(5, 15)['crate_days'])->toBeLessThan($row(5, 15)['step_days'] / 10);
     });
 });
