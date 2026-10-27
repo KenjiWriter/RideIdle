@@ -1,0 +1,15 @@
+{
+  "slug": "engine-r4-2-5-t5",
+  "name": {
+    "en": "R4 2.5 engine",
+    "pl": "Silnik R4 2.5",
+    "fr": "Moteur R4 2.5",
+    "de": "Motor R4 2.5",
+    "pt-BR": "Motor R4 2.5"
+  },
+  "slot": "engine",
+  "tier": 5,
+  "price_cents": 560504,
+  "stats": { "power_kw": 162.5, "engine_mass_kg": 117.5 },
+  "engine": { "layout": "R4", "displacement_l": 2.5 }
+}

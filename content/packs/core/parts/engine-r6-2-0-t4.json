@@ -1,0 +1,15 @@
+{
+  "slug": "engine-r6-2-0-t4",
+  "name": {
+    "en": "R6 2.0 engine",
+    "pl": "Silnik R6 2.0",
+    "fr": "Moteur R6 2.0",
+    "de": "Motor R6 2.0",
+    "pt-BR": "Motor R6 2.0"
+  },
+  "slot": "engine",
+  "tier": 4,
+  "price_cents": 479773,
+  "stats": { "power_kw": 151.9, "engine_mass_kg": 166.0 },
+  "engine": { "layout": "R6", "displacement_l": 2.0 }
+}

@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v6-3-5-t6",
+  "name": {
+    "en": "V6 3.5 engine",
+    "pl": "Silnik V6 3.5",
+    "fr": "Moteur V6 3.5",
+    "de": "Motor V6 3.5",
+    "pt-BR": "Motor V6 3.5"
+  },
+  "slot": "engine",
+  "tier": 6,
+  "price_cents": 1294765,
+  "stats": { "power_kw": 264.69, "engine_mass_kg": 180.0 },
+  "engine": { "layout": "V6", "displacement_l": 3.5 }
+}

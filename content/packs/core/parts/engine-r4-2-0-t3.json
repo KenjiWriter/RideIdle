@@ -1,0 +1,15 @@
+{
+  "slug": "engine-r4-2-0-t3",
+  "name": {
+    "en": "R4 2.0 engine",
+    "pl": "Silnik R4 2.0",
+    "fr": "Moteur R4 2.0",
+    "de": "Motor R4 2.0",
+    "pt-BR": "Motor R4 2.0"
+  },
+  "slot": "engine",
+  "tier": 3,
+  "price_cents": 246038,
+  "stats": { "power_kw": 115.0, "engine_mass_kg": 105.0 },
+  "engine": { "layout": "R4", "displacement_l": 2.0 }
+}

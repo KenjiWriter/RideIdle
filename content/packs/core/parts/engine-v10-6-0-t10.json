@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v10-6-0-t10",
+  "name": {
+    "en": "V10 6.0 engine",
+    "pl": "Silnik V10 6.0",
+    "fr": "Moteur V10 6.0",
+    "de": "Motor V10 6.0",
+    "pt-BR": "Motor V10 6.0"
+  },
+  "slot": "engine",
+  "tier": 10,
+  "price_cents": 16085245,
+  "stats": { "power_kw": 703.5, "engine_mass_kg": 405.0 },
+  "engine": { "layout": "V10", "displacement_l": 6.0 }
+}

@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v6-2-5-t3",
+  "name": {
+    "en": "V6 2.5 engine",
+    "pl": "Silnik V6 2.5",
+    "fr": "Moteur V6 2.5",
+    "de": "Motor V6 2.5",
+    "pt-BR": "Motor V6 2.5"
+  },
+  "slot": "engine",
+  "tier": 3,
+  "price_cents": 375891,
+  "stats": { "power_kw": 158.12, "engine_mass_kg": 150.0 },
+  "engine": { "layout": "V6", "displacement_l": 2.5 }
+}

@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v8-5-0-t7",
+  "name": {
+    "en": "V8 5.0 engine",
+    "pl": "Silnik V8 5.0",
+    "fr": "Moteur V8 5.0",
+    "de": "Motor V8 5.0",
+    "pt-BR": "Motor V8 5.0"
+  },
+  "slot": "engine",
+  "tier": 7,
+  "price_cents": 3405063,
+  "stats": { "power_kw": 413.25, "engine_mass_kg": 320.0 },
+  "engine": { "layout": "V8", "displacement_l": 5.0 }
+}

@@ -22,6 +22,16 @@
       "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
       "additionalProperties": { "type": "number" }
     },
+    "engine": {
+      "description": "Only the parts of the slot engine have it, and every one of them: the layout and the displacement of the model. The power and the mass of the engine are in stats (power_kw and engine_mass_kg) and follow from the rules of the engines, which a test checks; the car takes its power and its engine mass from the part instead of from its own definition.",
+      "type": "object",
+      "properties": {
+        "layout": { "type": "string", "pattern": "^[RV][0-9]{1,2}$" },
+        "displacement_l": { "type": "number", "exclusiveMinimum": 0 }
+      },
+      "required": ["layout", "displacement_l"],
+      "additionalProperties": false
+    },
     "requires": {
       "description": "What the car must have for the part to be put on it: an engine of at least min_cylinders cylinders (the number in the layout of its engine, R4 is 4 and V8 is 8), and, for the parts that only work with a booster (an intercooler), a booster on the car. A job that puts the part on a car that does not meet it is refused.",
       "type": "object",
@@ -51,7 +61,16 @@
   },
   "required": ["slug", "name", "slot", "tier", "price_cents", "stats"],
   "additionalProperties": false,
-  "if": { "properties": { "slot": { "const": "tires" } }, "required": ["slot"] },
-  "then": { "required": ["tire_kind"] },
-  "else": { "not": { "required": ["tire_kind"] } }
+  "allOf": [
+    {
+      "if": { "properties": { "slot": { "const": "tires" } }, "required": ["slot"] },
+      "then": { "required": ["tire_kind"] },
+      "else": { "not": { "required": ["tire_kind"] } }
+    },
+    {
+      "if": { "properties": { "slot": { "const": "engine" } }, "required": ["slot"] },
+      "then": { "required": ["engine"] },
+      "else": { "not": { "required": ["engine"] } }
+    }
+  ]
 }

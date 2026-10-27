@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v6-2-8-t4",
+  "name": {
+    "en": "V6 2.8 engine",
+    "pl": "Silnik V6 2.8",
+    "fr": "Moteur V6 2.8",
+    "de": "Motor V6 2.8",
+    "pt-BR": "Motor V6 2.8"
+  },
+  "slot": "engine",
+  "tier": 4,
+  "price_cents": 568347,
+  "stats": { "power_kw": 188.65, "engine_mass_kg": 159.0 },
+  "engine": { "layout": "V6", "displacement_l": 2.8 }
+}

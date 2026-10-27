@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v8-4-5-t6",
+  "name": {
+    "en": "V8 4.5 engine",
+    "pl": "Silnik V8 4.5",
+    "fr": "Moteur V8 4.5",
+    "de": "Motor V8 4.5",
+    "pt-BR": "Motor V8 4.5"
+  },
+  "slot": "engine",
+  "tier": 6,
+  "price_cents": 2270042,
+  "stats": { "power_kw": 352.69, "engine_mass_kg": 299.0 },
+  "engine": { "layout": "V8", "displacement_l": 4.5 }
+}

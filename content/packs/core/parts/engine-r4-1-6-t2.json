@@ -1,0 +1,15 @@
+{
+  "slug": "engine-r4-1-6-t2",
+  "name": {
+    "en": "R4 1.6 engine",
+    "pl": "Silnik R4 1.6",
+    "fr": "Moteur R4 1.6",
+    "de": "Motor R4 1.6",
+    "pt-BR": "Motor R4 1.6"
+  },
+  "slot": "engine",
+  "tier": 2,
+  "price_cents": 145800,
+  "stats": { "power_kw": 86.0, "engine_mass_kg": 95.0 },
+  "engine": { "layout": "R4", "displacement_l": 1.6 }
+}

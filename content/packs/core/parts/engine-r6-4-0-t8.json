@@ -1,0 +1,15 @@
+{
+  "slug": "engine-r6-4-0-t8",
+  "name": {
+    "en": "R6 4.0 engine",
+    "pl": "Silnik R6 4.0",
+    "fr": "Moteur R6 4.0",
+    "de": "Motor R6 4.0",
+    "pt-BR": "Motor R6 4.0"
+  },
+  "slot": "engine",
+  "tier": 8,
+  "price_cents": 3187139,
+  "stats": { "power_kw": 378.2, "engine_mass_kg": 242.0 },
+  "engine": { "layout": "R6", "displacement_l": 4.0 }
+}

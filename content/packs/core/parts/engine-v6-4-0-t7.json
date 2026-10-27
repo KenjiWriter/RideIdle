@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v6-4-0-t7",
+  "name": {
+    "en": "V6 4.0 engine",
+    "pl": "Silnik V6 4.0",
+    "fr": "Moteur V6 4.0",
+    "de": "Motor V6 4.0",
+    "pt-BR": "Motor V6 4.0"
+  },
+  "slot": "engine",
+  "tier": 7,
+  "price_cents": 1997637,
+  "stats": { "power_kw": 319.0, "engine_mass_kg": 195.0 },
+  "engine": { "layout": "V6", "displacement_l": 4.0 }
+}

@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v12-5-5-t8",
+  "name": {
+    "en": "V12 5.5 engine",
+    "pl": "Silnik V12 5.5",
+    "fr": "Moteur V12 5.5",
+    "de": "Motor V12 5.5",
+    "pt-BR": "Motor V12 5.5"
+  },
+  "slot": "engine",
+  "tier": 8,
+  "price_cents": 10787239,
+  "stats": { "power_kw": 553.57, "engine_mass_kg": 424.0 },
+  "engine": { "layout": "V12", "displacement_l": 5.5 }
+}

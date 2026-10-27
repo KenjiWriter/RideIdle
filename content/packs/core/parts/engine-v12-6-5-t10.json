@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v12-6-5-t10",
+  "name": {
+    "en": "V12 6.5 engine",
+    "pl": "Silnik V12 6.5",
+    "fr": "Moteur V12 6.5",
+    "de": "Motor V12 6.5",
+    "pt-BR": "Motor V12 6.5"
+  },
+  "slot": "engine",
+  "tier": 10,
+  "price_cents": 23234242,
+  "stats": { "power_kw": 718.57, "engine_mass_kg": 472.0 },
+  "engine": { "layout": "V12", "displacement_l": 6.5 }
+}

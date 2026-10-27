@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v10-5-2-t8",
+  "name": {
+    "en": "V10 5.2 engine",
+    "pl": "Silnik V10 5.2",
+    "fr": "Moteur V10 5.2",
+    "de": "Motor V10 5.2",
+    "pt-BR": "Motor V10 5.2"
+  },
+  "slot": "engine",
+  "tier": 8,
+  "price_cents": 7649133,
+  "stats": { "power_kw": 555.1, "engine_mass_kg": 369.0 },
+  "engine": { "layout": "V10", "displacement_l": 5.2 }
+}

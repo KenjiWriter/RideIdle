@@ -1,0 +1,15 @@
+{
+  "slug": "engine-r6-3-5-t7",
+  "name": {
+    "en": "R6 3.5 engine",
+    "pl": "Silnik R6 3.5",
+    "fr": "Moteur R6 3.5",
+    "de": "Motor R6 3.5",
+    "pt-BR": "Motor R6 3.5"
+  },
+  "slot": "engine",
+  "tier": 7,
+  "price_cents": 2065738,
+  "stats": { "power_kw": 314.65, "engine_mass_kg": 223.0 },
+  "engine": { "layout": "R6", "displacement_l": 3.5 }
+}

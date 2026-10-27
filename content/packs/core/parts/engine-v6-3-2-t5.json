@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v6-3-2-t5",
+  "name": {
+    "en": "V6 3.2 engine",
+    "pl": "Silnik V6 3.2",
+    "fr": "Moteur V6 3.2",
+    "de": "Motor V6 3.2",
+    "pt-BR": "Motor V6 3.2"
+  },
+  "slot": "engine",
+  "tier": 5,
+  "price_cents": 876878,
+  "stats": { "power_kw": 228.8, "engine_mass_kg": 171.0 },
+  "engine": { "layout": "V6", "displacement_l": 3.2 }
+}

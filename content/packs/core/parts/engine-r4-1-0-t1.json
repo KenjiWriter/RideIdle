@@ -1,0 +1,15 @@
+{
+  "slug": "engine-r4-1-0-t1",
+  "name": {
+    "en": "R4 1.0 engine",
+    "pl": "Silnik R4 1.0",
+    "fr": "Moteur R4 1.0",
+    "de": "Motor R4 1.0",
+    "pt-BR": "Motor R4 1.0"
+  },
+  "slot": "engine",
+  "tier": 1,
+  "price_cents": 67500,
+  "stats": { "power_kw": 50.0, "engine_mass_kg": 80.0 },
+  "engine": { "layout": "R4", "displacement_l": 1.0 }
+}

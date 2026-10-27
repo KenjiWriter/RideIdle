@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v12-6-0-t9",
+  "name": {
+    "en": "V12 6.0 engine",
+    "pl": "Silnik V12 6.0",
+    "fr": "Moteur V12 6.0",
+    "de": "Motor V12 6.0",
+    "pt-BR": "Motor V12 6.0"
+  },
+  "slot": "engine",
+  "tier": 9,
+  "price_cents": 15886661,
+  "stats": { "power_kw": 633.6, "engine_mass_kg": 448.0 },
+  "engine": { "layout": "V12", "displacement_l": 6.0 }
+}

@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v8-6-5-t9",
+  "name": {
+    "en": "V8 6.5 engine",
+    "pl": "Silnik V8 6.5",
+    "fr": "Moteur V8 6.5",
+    "de": "Motor V8 6.5",
+    "pt-BR": "Motor V8 6.5"
+  },
+  "slot": "engine",
+  "tier": 9,
+  "price_cents": 8067445,
+  "stats": { "power_kw": 592.8, "engine_mass_kg": 383.0 },
+  "engine": { "layout": "V8", "displacement_l": 6.5 }
+}

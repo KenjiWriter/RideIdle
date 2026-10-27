@@ -1,0 +1,15 @@
+{
+  "slug": "engine-r6-2-5-t5",
+  "name": {
+    "en": "R6 2.5 engine",
+    "pl": "Silnik R6 2.5",
+    "fr": "Moteur R6 2.5",
+    "de": "Motor R6 2.5",
+    "pt-BR": "Motor R6 2.5"
+  },
+  "slot": "engine",
+  "tier": 5,
+  "price_cents": 809617,
+  "stats": { "power_kw": 201.5, "engine_mass_kg": 185.0 },
+  "engine": { "layout": "R6", "displacement_l": 2.5 }
+}

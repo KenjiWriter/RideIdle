@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v10-5-0-t7",
+  "name": {
+    "en": "V10 5.0 engine",
+    "pl": "Silnik V10 5.0",
+    "fr": "Moteur V10 5.0",
+    "de": "Motor V10 5.0",
+    "pt-BR": "Motor V10 5.0"
+  },
+  "slot": "engine",
+  "tier": 7,
+  "price_cents": 5448101,
+  "stats": { "power_kw": 507.5, "engine_mass_kg": 360.0 },
+  "engine": { "layout": "V10", "displacement_l": 5.0 }
+}

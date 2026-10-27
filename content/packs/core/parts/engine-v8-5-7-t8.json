@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v8-5-7-t8",
+  "name": {
+    "en": "V8 5.7 engine",
+    "pl": "Silnik V8 5.7",
+    "fr": "Moteur V8 5.7",
+    "de": "Motor V8 5.7",
+    "pt-BR": "Motor V8 5.7"
+  },
+  "slot": "engine",
+  "tier": 8,
+  "price_cents": 5240392,
+  "stats": { "power_kw": 495.47, "engine_mass_kg": 349.4 },
+  "engine": { "layout": "V8", "displacement_l": 5.7 }
+}

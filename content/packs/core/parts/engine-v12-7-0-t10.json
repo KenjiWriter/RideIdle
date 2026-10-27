@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v12-7-0-t10",
+  "name": {
+    "en": "V12 7.0 engine",
+    "pl": "Silnik V12 7.0",
+    "fr": "Moteur V12 7.0",
+    "de": "Motor V12 7.0",
+    "pt-BR": "Motor V12 7.0"
+  },
+  "slot": "engine",
+  "tier": 10,
+  "price_cents": 25021492,
+  "stats": { "power_kw": 773.85, "engine_mass_kg": 496.0 },
+  "engine": { "layout": "V12", "displacement_l": 7.0 }
+}

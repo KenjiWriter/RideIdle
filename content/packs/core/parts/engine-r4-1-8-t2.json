@@ -1,0 +1,15 @@
+{
+  "slug": "engine-r4-1-8-t2",
+  "name": {
+    "en": "R4 1.8 engine",
+    "pl": "Silnik R4 1.8",
+    "fr": "Moteur R4 1.8",
+    "de": "Motor R4 1.8",
+    "pt-BR": "Motor R4 1.8"
+  },
+  "slot": "engine",
+  "tier": 2,
+  "price_cents": 164025,
+  "stats": { "power_kw": 96.75, "engine_mass_kg": 100.0 },
+  "engine": { "layout": "R4", "displacement_l": 1.8 }
+}

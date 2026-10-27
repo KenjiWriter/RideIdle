@@ -1,0 +1,15 @@
+{
+  "slug": "engine-r4-1-3-t1",
+  "name": {
+    "en": "R4 1.3 engine",
+    "pl": "Silnik R4 1.3",
+    "fr": "Moteur R4 1.3",
+    "de": "Motor R4 1.3",
+    "pt-BR": "Motor R4 1.3"
+  },
+  "slot": "engine",
+  "tier": 1,
+  "price_cents": 87750,
+  "stats": { "power_kw": 65.0, "engine_mass_kg": 87.5 },
+  "engine": { "layout": "R4", "displacement_l": 1.3 }
+}

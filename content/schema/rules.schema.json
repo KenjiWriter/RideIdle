@@ -177,6 +177,45 @@
       "required": ["start_level", "levels_per_tier", "levels_per_upgrade", "xp_per_lap", "xp_per_level", "reward_ppm_from_tier", "max_level", "mass", "lag_ppm_per_point", "stat_ceiling"],
       "additionalProperties": false
     },
+    "engines": {
+      "description": "The engines (Systemy II, Katalog części): a model is a layout and a displacement, and what it gives comes from the layout (kW per litre, the mass of the layout and of a litre) and the tier of the model (the efficiency of the tier). The factory engine of a car is the one of its definition; an engine part replaces it. An engine goes into the bay of the body only when the layout is allowed and the displacement is not over what the bay holds.",
+      "type": "object",
+      "properties": {
+        "tier_efficiency_ppm_per_tier": { "description": "The power of a litre is grown by this much for every tier above the first (75000: 1 + 0.075 x (tier - 1)), for the engines of the cars and for the engine parts alike.", "type": "integer", "minimum": 0, "maximum": 500000 },
+        "layouts": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "pattern": "^[RV][0-9]{1,2}$" },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "kw_per_litre": { "type": "number", "exclusiveMinimum": 0 },
+              "base_mass_kg": { "description": "What the layout weighs with no litre in it.", "type": "number", "minimum": 0 },
+              "kg_per_litre": { "type": "number", "minimum": 0 }
+            },
+            "required": ["kw_per_litre", "base_mass_kg", "kg_per_litre"],
+            "additionalProperties": false
+          }
+        },
+        "bays": {
+          "description": "By the class of the body: the layouts it takes and the displacement it holds at the most.",
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "enum": ["hatchback", "hot_hatch", "sedan", "coupe", "muscle", "pickup", "van", "gt", "super", "hyper"] },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "layouts": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^[RV][0-9]{1,2}$" } },
+              "max_displacement_l": { "type": "number", "exclusiveMinimum": 0 }
+            },
+            "required": ["layouts", "max_displacement_l"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["tier_efficiency_ppm_per_tier", "layouts", "bays"],
+      "additionalProperties": false
+    },
     "garage": {
       "description": "The garages of the cities: every one holds a number of cars, which drive on the track of the city by themselves. The first is the one of the home city, and the others are bought. A car without a garage has nowhere to stand.",
       "type": "object",
@@ -652,7 +691,7 @@
       }
     }
   },
-  "required": ["schema", "version", "fuel", "repair", "breakdown", "wear", "tow", "stock_tires", "car", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks", "bots"],
+  "required": ["schema", "version", "fuel", "repair", "breakdown", "wear", "tow", "stock_tires", "car", "engines", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks", "bots"],
   "additionalProperties": false,
   "$defs": {
     "purchase_prices": {

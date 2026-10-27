@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v8-4-0-t5",
+  "name": {
+    "en": "V8 4.0 engine",
+    "pl": "Silnik V8 4.0",
+    "fr": "Moteur V8 4.0",
+    "de": "Motor V8 4.0",
+    "pt-BR": "Motor V8 4.0"
+  },
+  "slot": "engine",
+  "tier": 5,
+  "price_cents": 1494678,
+  "stats": { "power_kw": 296.4, "engine_mass_kg": 278.0 },
+  "engine": { "layout": "V8", "displacement_l": 4.0 }
+}

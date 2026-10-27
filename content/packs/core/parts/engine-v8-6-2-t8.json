@@ -1,0 +1,15 @@
+{
+  "slug": "engine-v8-6-2-t8",
+  "name": {
+    "en": "V8 6.2 engine",
+    "pl": "Silnik V8 6.2",
+    "fr": "Moteur V8 6.2",
+    "de": "Motor V8 6.2",
+    "pt-BR": "Motor V8 6.2"
+  },
+  "slot": "engine",
+  "tier": 8,
+  "price_cents": 5700075,
+  "stats": { "power_kw": 538.94, "engine_mass_kg": 370.4 },
+  "engine": { "layout": "V8", "displacement_l": 6.2 }
+}
