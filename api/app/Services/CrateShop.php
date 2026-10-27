@@ -37,6 +37,7 @@ final class CrateShop
         private readonly Catalog $catalog,
         private readonly Rules $rules,
         private readonly Ledger $ledger,
+        private readonly TutorialScript $script,
     ) {
         $this->crates = new Crates($rules->shopCrates());
     }
@@ -45,12 +46,14 @@ final class CrateShop
      * The crates for the screen: for each group the odds and how far the driver is from the guarantees, and for each kind what it costs, the
      * slots it can give, and the models of each.
      *
-     * @return array{level: int, groups: array<string, array<string, mixed>>, kinds: list<array<string, mixed>>}
+     * @return array{level: int, free_first: bool, groups: array<string, array<string, mixed>>, kinds: list<array<string, mixed>>}
      */
     public function view(int $userId): array
     {
         $level = $this->levelOf($userId);
         $pools = $this->openPools($level);
+        // The first crate that a driver opens in the tutorial costs nothing, and the screen says so with the price.
+        $free = $this->script->freeFirstCrate($userId);
         $groups = [];
 
         foreach (array_keys($this->rules->shopCrates()['odds']) as $group) {
@@ -78,17 +81,17 @@ final class CrateShop
                 'open' => $open,
                 'choose_slot' => $kind['choose_slot'],
                 // A crate of a slot costs by the slot, and a mixed one has one price, whatever slot it gives.
-                'price_cents' => $open && ! $kind['choose_slot'] ? $this->priceCents($kind, $pools) : null,
+                'price_cents' => $open && ! $kind['choose_slot'] ? ($free ? 0 : $this->priceCents($kind, $pools)) : null,
                 'slots' => $open ? array_values(array_map(fn (string $slot, array $pool): array => [
                     'slot' => $slot,
                     'tier' => $pool['tier'],
-                    'price_cents' => $kind['choose_slot'] ? $this->priceCents($kind, [$pool]) : null,
+                    'price_cents' => $kind['choose_slot'] ? ($free ? 0 : $this->priceCents($kind, [$pool])) : null,
                     'models' => array_map(static fn (array $part): array => ['slug' => $part['slug'], 'name' => I18nText::from($part['name'])->for()], $pool['parts']),
                 ], array_keys($pools), $pools)) : [],
             ];
         }
 
-        return ['level' => $level, 'groups' => $groups, 'kinds' => $kinds];
+        return ['level' => $level, 'free_first' => $free, 'groups' => $groups, 'kinds' => $kinds];
     }
 
     /**
@@ -109,7 +112,8 @@ final class CrateShop
 
             $key = "crate:{$userId}:{$requestId}";
 
-            if (LedgerEntry::query()->where('idem_key', $key)->exists()) {
+            // A crate that cost nothing left no posting, so the request that opened it is what says it was opened.
+            if (LedgerEntry::query()->where('idem_key', $key)->exists() || CrateOpening::query()->where('user_id', $userId)->where('request_id', $requestId)->exists()) {
                 return null;
             }
 
@@ -140,7 +144,13 @@ final class CrateShop
                 $price = $this->priceCents($definition, $pools);
             }
 
-            $this->ledger->post($userId, -$price, 'crate', $key);
+            // The first crate of the tutorial is free: no posting, and the request is kept on the opening.
+            $free = $this->script->freeFirstCrate($userId);
+            $price = $free ? 0 : $price;
+
+            if ($price > 0) {
+                $this->ledger->post($userId, -$price, 'crate', $key);
+            }
 
             $since = $this->since($userId, $group);
             $rarity = $this->crates->draw($seed, $group, $since['floor'], $since['legendary']);
@@ -163,6 +173,7 @@ final class CrateShop
                 'rarity' => $rarity->value,
                 'part_slug' => $model['slug'],
                 'price_cents' => $price,
+                'request_id' => $free ? $requestId : null,
                 'part_id' => $part->id,
             ]);
 

@@ -39,6 +39,7 @@ final class Workshop
         private readonly RunInputsFactory $inputs,
         private readonly Garage $garage,
         private readonly Travel $travel,
+        private readonly TutorialScript $script,
     ) {}
 
     /**
@@ -104,10 +105,16 @@ final class Workshop
 
             $cursor = max($now, (int) $queue->max('finish_ms'));
             $jobs = [];
+            // The first mounting of a driver is short while the tutorial teaches it, so that the journey of the step after it does not wait for the mechanic.
+            $firstMountMs = $kind === WorkshopJob::KIND_MOUNT ? $this->script->firstMountMs($userId) : null;
 
             foreach ($plan as [$jobKind, $jobPart]) {
                 $definition = $this->catalog->part($jobPart->part_slug);
                 $duration = $this->rules->workshopJobMs($jobPart->slot, $definition['tier'], removal: $jobKind === WorkshopJob::KIND_UNMOUNT);
+
+                if ($jobKind === WorkshopJob::KIND_MOUNT && $firstMountMs !== null) {
+                    $duration = min($duration, $firstMountMs);
+                }
 
                 $jobs[] = WorkshopJob::query()->create([
                     'user_id' => $userId,

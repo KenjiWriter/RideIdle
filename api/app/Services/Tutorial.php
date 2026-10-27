@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Content\Catalog;
 use App\Content\RunInputsFactory;
 use App\Content\TutorialSteps;
+use App\Domain\Run\Rarity;
+use App\Models\CrateOpening;
+use App\Models\Part;
 use App\Models\RaceRun;
+use App\Models\Travel;
 use App\Models\TutorialProgress;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\WorkshopJob;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -40,6 +46,8 @@ final class Tutorial
         private readonly Ledger $ledger,
         private readonly Garage $garage,
         private readonly CarProgress $progress,
+        private readonly Catalog $catalog,
+        private readonly CityGarages $garages,
     ) {}
 
     /** Brings the tutorial of the driver up to date, which settles the run first, and tells where it stands. */
@@ -122,7 +130,7 @@ final class Tutorial
             }
 
             if ($row === null) {
-                if (! $this->holds($step['trigger'], $run, null)) {
+                if (! $this->holds($step['trigger'], $userId, $run, null)) {
                     break;
                 }
 
@@ -139,7 +147,7 @@ final class Tutorial
                 }
             }
 
-            if (! $this->holds($step['completion'], $run, $row)) {
+            if (! $this->holds($step['completion'], $userId, $run, $row)) {
                 break;
             }
 
@@ -147,10 +155,16 @@ final class Tutorial
 
             $cents = (int) ($step['reward']['cash_cents'] ?? 0);
             $carXp = (int) ($step['reward']['car_xp'] ?? 0);
+            $xp = (int) ($step['reward']['xp'] ?? 0);
 
             if ($cents > 0) {
                 $this->ledger->post($userId, $cents, 'tutorial', "tutorial:{$userId}:{$step['key']}");
             }
+
+            // The experience of the driver goes before the garage and the part, which may ask for a level: the steps are paid in the order of the design.
+            $this->ledger->grantXp($userId, $xp);
+            $part = isset($step['reward']['part']) ? $this->givePart($userId, $step['reward']['part']) : null;
+            $garage = isset($step['reward']['garage']) && $this->garages->grant($userId, $step['reward']['garage']) ? $step['reward']['garage'] : null;
 
             // The experience goes to the car the driver has: with no car there is nothing to give it to.
             if ($carXp > 0) {
@@ -158,8 +172,8 @@ final class Tutorial
                 $carXp = $car === null ? 0 : ($this->progress->award($car->id, $carXp) === null ? 0 : $carXp);
             }
 
-            if ($cents > 0 || $carXp > 0) {
-                $rewarded[] = ['key' => $step['key'], 'cash_cents' => $cents, 'car_xp' => $carXp];
+            if ($cents > 0 || $carXp > 0 || $xp > 0 || $part !== null || $garage !== null) {
+                $rewarded[] = ['key' => $step['key'], 'cash_cents' => $cents, 'car_xp' => $carXp, 'xp' => $xp, 'part' => $part, 'garage' => $garage];
             }
         }
 
@@ -167,7 +181,7 @@ final class Tutorial
     }
 
     /**
-     * @param  list<array{key: string, cash_cents: int, car_xp: int}>  $rewarded
+     * @param  list<array{key: string, cash_cents: int, car_xp: int, xp: int, part: string|null, garage: string|null}>  $rewarded
      */
     private function state(int $userId, array $rewarded): TutorialState
     {
@@ -190,8 +204,22 @@ final class Tutorial
         return new TutorialState($status, $total, $done, $current, $rewarded);
     }
 
+    /** A part of the pack, common, in the inventory of the driver: the slug, or null for a part that the pack does not have. */
+    private function givePart(int $userId, string $slug): ?string
+    {
+        $part = $this->catalog->part($slug);
+
+        if ($part === null) {
+            return null;
+        }
+
+        Part::query()->create(['user_id' => $userId, 'part_slug' => $slug, 'slot' => $part['slot'], 'rarity' => Rarity::Common->value]);
+
+        return $slug;
+    }
+
     /** Whether a fact of the game holds for the driver now. */
-    private function holds(string $condition, ?RaceRun $run, ?TutorialProgress $row): bool
+    private function holds(string $condition, int $userId, ?RaceRun $run, ?TutorialProgress $row): bool
     {
         $broken = $run !== null && $run->status === RaceRun::STATUS_STOPPED && $run->stop_reason === 'breakdown';
 
@@ -205,6 +233,9 @@ final class Tutorial
             'breakdown' => $broken,
             'recovered' => $run !== null && ! $broken,
             'acknowledged' => $row?->acknowledged_at !== null,
+            'job_queued' => WorkshopJob::query()->where('user_id', $userId)->exists(),
+            'crate_opened' => CrateOpening::query()->where('user_id', $userId)->exists(),
+            'travel_started' => Travel::query()->where('user_id', $userId)->exists(),
             default => false,
         };
     }

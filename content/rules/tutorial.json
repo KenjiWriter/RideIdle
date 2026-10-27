@@ -75,7 +75,8 @@
         "pt-BR": "OK, vou esperar"
       },
       "reward": {
-        "cash_cents": 20000
+        "cash_cents": 20000,
+        "xp": 40
       }
     },
     {
@@ -109,7 +110,8 @@
         "pt-BR": "OK, entendi"
       },
       "reward": {
-        "car_xp": 100
+        "car_xp": 100,
+        "xp": 100
       }
     },
     {
@@ -143,7 +145,8 @@
         "pt-BR": "OK, vou encher o tanque"
       },
       "reward": {
-        "cash_cents": 9000
+        "cash_cents": 9000,
+        "xp": 180
       }
     },
     {
@@ -177,8 +180,152 @@
         "pt-BR": "OK, vou consertar"
       },
       "reward": {
-        "cash_cents": 3000
+        "cash_cents": 3000,
+        "part": "street-tires-t2"
+      }
+    },
+    {
+      "key": "mount",
+      "phase": 2,
+      "trigger": "none",
+      "completion": "job_queued",
+      "target": "mount",
+      "sender": "+48 555 010 322",
+      "sms": [
+        {
+          "pl": "Znów ja, znów nowy numer. Coś dla Ciebie wpadło.",
+          "en": "Me again, another new number. Something came in for you.",
+          "fr": "Encore moi, encore un nouveau numéro. Il y a quelque chose pour toi.",
+          "de": "Ich schon wieder, wieder eine neue Nummer. Da ist etwas für dich angekommen.",
+          "pt-BR": "Sou eu de novo, outro número novo. Chegou uma coisa para você."
+        },
+        {
+          "pl": "Dorzuciłem Ci do inwentarza nowe opony. Idź do Warsztatu i załóż je na auto: zobaczysz, co daje tuning. — K.",
+          "en": "I put a new pair of tires in your inventory. Go to the Workshop and fit them on the car, and you’ll see what tuning does. — K.",
+          "fr": "J’ai mis une paire de pneus neufs dans ton inventaire. Va à l’Atelier et monte-les sur la voiture : tu verras ce que donne le tuning. — K.",
+          "de": "Ich habe dir ein neues Paar Reifen ins Inventar gelegt. Geh in die Werkstatt und zieh sie auf das Auto, dann siehst du, was Tuning bringt. — K.",
+          "pt-BR": "Coloquei um par de pneus novos no seu inventário. Vá à Oficina e monte no carro: você vai ver o que o tuning faz. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, montuję",
+        "en": "OK, fitting them",
+        "fr": "OK, je les monte",
+        "de": "OK, ich montiere",
+        "pt-BR": "OK, vou montar"
+      },
+      "reward": {
+        "xp": 360
+      }
+    },
+    {
+      "key": "crate",
+      "phase": 2,
+      "trigger": "none",
+      "completion": "crate_opened",
+      "target": "crate",
+      "sender": "+48 555 010 355",
+      "sms": [
+        {
+          "pl": "To ja. Numer znowu inny, jak zawsze.",
+          "en": "It’s me. The number is different again, as always.",
+          "fr": "C’est moi. Le numéro a encore changé, comme toujours.",
+          "de": "Ich bin’s. Die Nummer ist wieder eine andere, wie immer.",
+          "pt-BR": "Sou eu. O número mudou de novo, como sempre."
+        },
+        {
+          "pl": "W Sklepie czeka skrzynka z częściami, a pierwsza idzie na mój koszt. Otwórz ją i zobacz, co wylosujesz: szanse masz na ekranie, nic nie jest ukryte. — K.",
+          "en": "A crate of parts is waiting in the Shop, and the first one is on me. Open it and see what you draw: the odds are on the screen, nothing is hidden. — K.",
+          "fr": "Une caisse de pièces t’attend à la Boutique, et la première est pour moi. Ouvre-la et vois ce que tu tires : les chances sont à l’écran, rien n’est caché. — K.",
+          "de": "Im Shop wartet eine Teilekiste, und die erste geht auf mich. Öffne sie und sieh, was du ziehst: Die Chancen stehen auf dem Bildschirm, nichts ist versteckt. — K.",
+          "pt-BR": "Uma caixa de peças espera na Loja, e a primeira é por minha conta. Abra e veja o que sai: as chances estão na tela, nada fica escondido. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, otwieram",
+        "en": "OK, opening it",
+        "fr": "OK, je l’ouvre",
+        "de": "OK, ich öffne sie",
+        "pt-BR": "OK, vou abrir"
+      },
+      "reward": {
+        "xp": 760
+      }
+    },
+    {
+      "key": "locked",
+      "phase": 2,
+      "trigger": "none",
+      "completion": "acknowledged",
+      "target": null,
+      "sender": "+48 555 010 388",
+      "sms": [
+        {
+          "pl": "Jeszcze jedno: lepsze części są zablokowane do wyższego poziomu auta. W Garażu, pod statystykami, masz napisane, od którego.",
+          "en": "One more thing: better parts are locked until the car reaches a higher level. In the Garage, under the statistics, it says which one.",
+          "fr": "Encore une chose : les meilleures pièces sont verrouillées jusqu’à un niveau de voiture plus élevé. Au Garage, sous les statistiques, c’est écrit lequel.",
+          "de": "Noch eins: Bessere Teile sind bis zu einem höheren Autolevel gesperrt. In der Garage steht unter den Werten, ab welchem.",
+          "pt-BR": "Mais uma coisa: peças melhores ficam bloqueadas até o carro chegar a um nível mais alto. Na Garagem, sob as estatísticas, está escrito qual."
+        },
+        {
+          "pl": "A żeby auto miało dokąd jechać, wynająłem Ci garaż w Kruszynie. Poziomy auto zdobywa na okrążeniach. — K.",
+          "en": "And so the car has somewhere to go, I rented you a garage in Kruszyn. A car levels up on its laps. — K.",
+          "fr": "Et pour qu’elle ait où aller, je t’ai loué un garage à Kruszyn. La voiture monte en niveau à chaque tour. — K.",
+          "de": "Und damit das Auto ein Ziel hat, habe ich dir eine Garage in Kruszyn gemietet. Das Auto steigt mit seinen Runden auf. — K.",
+          "pt-BR": "E para o carro ter para onde ir, aluguei uma garagem em Kruszyn para você. O carro sobe de nível nas voltas. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, rozumiem",
+        "en": "OK, got it",
+        "fr": "OK, compris",
+        "de": "OK, verstanden",
+        "pt-BR": "OK, entendi"
+      },
+      "reward": {
+        "xp": 1160,
+        "garage": "kruszyn"
+      }
+    },
+    {
+      "key": "travel",
+      "phase": 2,
+      "trigger": "none",
+      "completion": "travel_started",
+      "target": "travel",
+      "sender": "+48 555 010 412",
+      "sms": [
+        {
+          "pl": "Ostatni na dziś. Złomowo to dopiero początek.",
+          "en": "The last one for today. Złomowo is only the beginning.",
+          "fr": "Le dernier pour aujourd’hui. Złomowo n’est que le début.",
+          "de": "Der letzte für heute. Złomowo ist erst der Anfang.",
+          "pt-BR": "O último de hoje. Złomowo é só o começo."
+        },
+        {
+          "pl": "Otwórz Mapę, wybierz Kruszyn i jedź: tam jest żwir i inne opony. Droga zajmie chwilę, auto pojedzie samo. — K.",
+          "en": "Open the Map, pick Kruszyn and go: there is gravel there, and other tires. The trip takes a while, and the car drives on its own. — K.",
+          "fr": "Ouvre la Carte, choisis Kruszyn et pars : il y a du gravier là-bas, et d’autres pneus. Le trajet prend un moment, la voiture roule toute seule. — K.",
+          "de": "Öffne die Karte, wähle Kruszyn und fahr los: Dort gibt es Schotter und andere Reifen. Die Fahrt dauert eine Weile, das Auto fährt von allein. — K.",
+          "pt-BR": "Abra o Mapa, escolha Kruszyn e vá: lá tem cascalho e outros pneus. A viagem leva um tempo, e o carro vai sozinho. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, jadę",
+        "en": "OK, going",
+        "fr": "OK, j’y vais",
+        "de": "OK, ich fahre",
+        "pt-BR": "OK, estou indo"
+      },
+      "reward": {
+        "cash_cents": 30000,
+        "xp": 2100
       }
     }
-  ]
+  ],
+  "script": {
+    "first_run_fuel_ml": 17000,
+    "breakdown_lap": 6,
+    "first_mount_ms": 30000
+  }
 }

@@ -3,12 +3,18 @@
 declare(strict_types=1);
 
 use App\Content\TutorialSteps;
+use App\Models\CityGarage;
+use App\Models\CrateOpening;
 use App\Models\LedgerEntry;
+use App\Models\Part;
 use App\Models\RaceRun;
+use App\Models\Travel;
 use App\Models\TutorialProgress;
 use App\Models\User;
 use App\Models\Wallet;
+use App\Models\WorkshopJob;
 use App\Services\Ledger;
+use App\Services\TutorialScript;
 use Illuminate\Testing\TestResponse;
 
 /** @param  array<string, string>  $headers */
@@ -62,7 +68,7 @@ describe('the tutorial', function () {
         getTutorial($driver)
             ->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')
-            ->assertExactJson(['data' => ['status' => 'in_progress', 'total' => 6, 'done' => 0, 'current' => null, 'rewarded' => []]]);
+            ->assertExactJson(['data' => ['status' => 'in_progress', 'total' => 10, 'done' => 0, 'current' => null, 'rewarded' => []]]);
     });
 
     it('asks the driver to send the car out when the wreck is chosen, with the messages in the language of the driver', function () {
@@ -136,7 +142,7 @@ describe('the tutorial', function () {
             ->assertJsonPath('data.done', 3)
             ->assertJsonPath('data.current.key', 'rewards')
             ->assertJsonPath('data.current.target', 'cash')
-            ->assertJsonPath('data.rewarded', [['key' => 'first-lap', 'cash_cents' => 20_000, 'car_xp' => 0]]);
+            ->assertJsonPath('data.rewarded', [['key' => 'first-lap', 'cash_cents' => 20_000, 'car_xp' => 0, 'xp' => 40, 'part' => null, 'garage' => null]]);
 
         expect(driverCash($driver))->toBe(1_550 + 20_000)
             ->and($run->refresh()->laps_done)->toBe(1);
@@ -179,7 +185,7 @@ describe('the tutorial', function () {
         replyToTutorial($driver)->assertOk()
             ->assertJsonPath('data.done', 4)
             ->assertJsonPath('data.current', null)
-            ->assertJsonPath('data.rewarded', [['key' => 'rewards', 'cash_cents' => 0, 'car_xp' => 100]]);
+            ->assertJsonPath('data.rewarded', [['key' => 'rewards', 'cash_cents' => 0, 'car_xp' => 100, 'xp' => 100, 'part' => null, 'garage' => null]]);
     });
 
     it('gives the experience of the step to the car of the driver, and it can level the car', function () {
@@ -208,13 +214,13 @@ describe('the tutorial', function () {
         expect($run->car->refresh()->xp)->toBe(700);
     });
 
-    it('pays nothing in experience to a driver who has no car, and still ends the step', function () {
+    it('pays nothing in experience of the car to a driver who has no car, and still ends the step and gives the experience of the driver', function () {
         $driver = User::factory()->guest()->create();
         tutorialBefore($driver, 'rewards');
         TutorialProgress::factory()->create(['user_id' => $driver->id, 'step_key' => 'rewards']);
 
         // The step before it needs a run to have been done, which it was by the setup above: here only the answer counts.
-        replyToTutorial($driver)->assertOk()->assertJsonPath('data.rewarded', []);
+        replyToTutorial($driver)->assertOk()->assertJsonPath('data.rewarded', [['key' => 'rewards', 'cash_cents' => 0, 'car_xp' => 0, 'xp' => 100, 'part' => null, 'garage' => null]]);
     });
 
     it('sends a message about the tank when it is under a quarter full, and pays the tank when it is filled again', function () {
@@ -232,7 +238,7 @@ describe('the tutorial', function () {
 
         getTutorial($driver)->assertOk()
             ->assertJsonPath('data.done', 5)
-            ->assertJsonPath('data.rewarded', [['key' => 'refuel', 'cash_cents' => 9_000, 'car_xp' => 0]])
+            ->assertJsonPath('data.rewarded', [['key' => 'refuel', 'cash_cents' => 9_000, 'car_xp' => 0, 'xp' => 180, 'part' => null, 'garage' => null]])
             ->assertJsonPath('data.current', null);
     });
 
@@ -264,14 +270,17 @@ describe('the tutorial', function () {
 
         $this->postJson("/api/v1/runs/{$run->id}/repair", ['request_id' => 'p1'], bearerFor($driver))->assertOk();
 
+        // The step goes on to the pair of tires that the repair gives away, which the next step asks to be fitted.
         getTutorial($driver)->assertOk()
-            ->assertJsonPath('data.status', 'finished')
+            ->assertJsonPath('data.status', 'in_progress')
             ->assertJsonPath('data.done', 6)
-            ->assertJsonPath('data.current', null)
-            ->assertJsonPath('data.rewarded', [['key' => 'repair', 'cash_cents' => 3_000, 'car_xp' => 0]]);
+            ->assertJsonPath('data.current.key', 'mount')
+            ->assertJsonPath('data.current.target', 'mount')
+            ->assertJsonPath('data.rewarded', [['key' => 'repair', 'cash_cents' => 3_000, 'car_xp' => 0, 'xp' => 0, 'part' => 'street-tires-t2', 'garage' => null]]);
 
-        // The repair cost $30 and the step gave it back.
-        expect(driverCash($driver))->toBe(10_000);
+        // The repair cost $30 and the step gave it back, and the tires are in the inventory, common.
+        expect(driverCash($driver))->toBe(10_000)
+            ->and(Part::query()->where('user_id', $driver->id)->where('part_slug', 'street-tires-t2')->where('rarity', 1)->count())->toBe(1);
     });
 
     it('does not start with a breakdown that came before the tank was dealt with', function () {
@@ -296,7 +305,7 @@ describe('the tutorial', function () {
         getTutorial($driver)->assertJsonPath('data.status', 'skipped')->assertJsonPath('data.current', null)->assertJsonPath('data.rewarded', []);
 
         expect(driverCash($driver))->toBe(1_550)
-            ->and(TutorialProgress::query()->where('user_id', $driver->id)->where('state', 'skipped')->count())->toBe(5);
+            ->and(TutorialProgress::query()->where('user_id', $driver->id)->where('state', 'skipped')->count())->toBe(9);
     });
 
     it('keeps what was done when the driver skips, and what it was paid', function () {
@@ -319,5 +328,178 @@ describe('the tutorial', function () {
         skipTutorial($other);
 
         getTutorial($one)->assertJsonPath('data.status', 'in_progress')->assertJsonPath('data.current.key', 'start');
+    });
+});
+
+describe('the guided first minutes', function () {
+    it('has ten steps that add up to the experience of the eighth level less the laps, and the cash of the design', function () {
+        $steps = app(TutorialSteps::class)->all();
+        $xp = array_sum(array_map(fn (array $step): int => $step['reward']['xp'] ?? 0, $steps));
+        $cash = array_sum(array_map(fn (array $step): int => $step['reward']['cash_cents'] ?? 0, array_filter($steps, fn (array $step): bool => $step['key'] !== 'repair')));
+
+        // 4 800 XP make the eighth level; the six laps before the breakdown give about 120 to 140 of them (measured: 138 for seven laps), so the steps give 4 700
+        // and the driver is at the eighth level when the journey starts. The repair gives back what it cost, so it is no gift.
+        expect(array_column($steps, 'key'))->toBe(['wreck', 'start', 'first-lap', 'rewards', 'refuel', 'repair', 'mount', 'crate', 'locked', 'travel'])
+            ->and($xp)->toBe(4_700)
+            ->and($cash)->toBe(59_000);
+    });
+
+    it('asks to fit the tires, and pays the experience of the step when a job is in the queue of the workshop', function () {
+        [$driver, $run] = driverWithRun();
+        tutorialBefore($driver, 'mount');
+        getTutorial($driver)->assertJsonPath('data.current.key', 'mount');
+
+        WorkshopJob::factory()->create(['user_id' => $driver->id, 'car_id' => $run->car_id]);
+
+        getTutorial($driver)->assertOk()
+            ->assertJsonPath('data.done', 7)
+            ->assertJsonPath('data.current.key', 'crate')
+            ->assertJsonPath('data.current.target', 'crate')
+            ->assertJsonPath('data.rewarded', [['key' => 'mount', 'cash_cents' => 0, 'car_xp' => 0, 'xp' => 360, 'part' => null, 'garage' => null]]);
+
+        expect(Wallet::query()->find($driver->id)->xp)->toBe(360);
+    });
+
+    it('makes the first mounting short while the step is on, so that the journey does not wait for the mechanic, and the next jobs last what the rules say', function () {
+        [$driver] = driverWithRun();
+        $tires = Part::factory()->create(['user_id' => $driver->id, 'part_slug' => 'street-tires-t2', 'slot' => 'tires']);
+        $exhaust = Part::factory()->create(['user_id' => $driver->id, 'part_slug' => 'sport-exhaust-t2', 'slot' => 'exhaust']);
+
+        // The repair is not done yet: nothing is arranged, and the job lasts 120 000 x 2 x 0.98.
+        expect(app(TutorialScript::class)->firstMountMs($driver->id))->toBeNull();
+
+        tutorialBefore($driver, 'mount');
+        expect(app(TutorialScript::class)->firstMountMs($driver->id))->toBe(30_000);
+
+        $first = $this->postJson('/api/v1/garage/jobs', ['kind' => 'mount', 'part' => $tires->id], bearerFor($driver))->assertCreated()->json('data.workshop.jobs.0');
+
+        // The first job is short, and it is not queued again behind a longer one.
+        expect($first['finish_ms'] - $first['start_ms'])->toBe(30_000)
+            ->and(app(TutorialScript::class)->firstMountMs($driver->id))->toBeNull();
+
+        $second = $this->postJson('/api/v1/garage/jobs', ['kind' => 'mount', 'part' => $exhaust->id], bearerFor($driver))->assertCreated()->json('data.workshop.jobs.1');
+
+        expect($second['finish_ms'] - $second['start_ms'])->toBe(235_200);
+    });
+
+    it('makes the first crate free, once, with no posting, and the next one costs what it costs', function () {
+        [$driver] = driverWithRun();
+        tutorialBefore($driver, 'crate');
+        giveCash($driver, 100_000);
+
+        $this->getJson('/api/v1/shop', bearerFor($driver))->assertOk()
+            ->assertJsonPath('data.crates.free_first', true)
+            ->assertJsonPath('data.crates.kinds.0.slots.0.price_cents', 0);
+
+        $first = $this->postJson('/api/v1/shop/crates/slot/open', ['slot' => 'tires', 'request_id' => 'c1'], bearerFor($driver))->assertCreated();
+
+        expect($first->json('opened.cost_cents'))->toBe(0)
+            ->and(driverCash($driver))->toBe(100_000)
+            ->and(CrateOpening::query()->where('user_id', $driver->id)->value('request_id'))->toBe('c1');
+
+        // The same request again opens nothing, and the shop says that the first crate is gone.
+        $this->postJson('/api/v1/shop/crates/slot/open', ['slot' => 'tires', 'request_id' => 'c1'], bearerFor($driver))->assertOk()->assertJsonPath('repeated', true);
+        $this->getJson('/api/v1/shop', bearerFor($driver))->assertJsonPath('data.crates.free_first', false);
+
+        $second = $this->postJson('/api/v1/shop/crates/slot/open', ['slot' => 'tires', 'request_id' => 'c2'], bearerFor($driver))->assertCreated();
+
+        expect($second->json('opened.cost_cents'))->toBeGreaterThan(0)
+            ->and(driverCash($driver))->toBeLessThan(100_000)
+            ->and(CrateOpening::query()->where('user_id', $driver->id)->count())->toBe(2);
+    });
+
+    it('does not make a crate free before the tires are fitted, or for a driver who skipped, or after the step of the crate is done', function () {
+        [$driver] = driverWithRun();
+        tutorialBefore($driver, 'mount');
+        expect(app(TutorialScript::class)->freeFirstCrate($driver->id))->toBeFalse();
+
+        TutorialProgress::factory()->create(['user_id' => $driver->id, 'step_key' => 'mount', 'state' => TutorialProgress::STATE_DONE, 'completed_at' => now()]);
+        expect(app(TutorialScript::class)->freeFirstCrate($driver->id))->toBeTrue();
+
+        skipTutorial($driver);
+        expect(app(TutorialScript::class)->freeFirstCrate($driver->id))->toBeFalse();
+    });
+
+    it('is done for the crate when a crate is opened, and the step of the lock is a message that is answered: it pays the experience and gives the garage of Kruszyn', function () {
+        [$driver] = driverWithRun();
+        tutorialBefore($driver, 'crate');
+        CrateOpening::query()->create(['user_id' => $driver->id, 'kind' => 'slot', 'pity_group' => 'standard', 'opening_index' => 0, 'slot' => 'tires', 'tier' => 1, 'rarity' => 1, 'part_slug' => 'street-tires-t1', 'price_cents' => 0]);
+
+        // The step of the crate is shown first, and done on the next look: the crate is opened by then.
+        getTutorial($driver)->assertOk()->assertJsonPath('data.current.key', 'crate');
+
+        getTutorial($driver)->assertOk()
+            ->assertJsonPath('data.done', 8)
+            ->assertJsonPath('data.current.key', 'locked')
+            ->assertJsonPath('data.current.target', null);
+
+        replyToTutorial($driver)->assertOk()
+            ->assertJsonPath('data.done', 9)
+            ->assertJsonPath('data.current.key', 'travel')
+            ->assertJsonPath('data.rewarded', [['key' => 'locked', 'cash_cents' => 0, 'car_xp' => 0, 'xp' => 1_160, 'part' => null, 'garage' => 'kruszyn']]);
+
+        expect(CityGarage::query()->where('user_id', $driver->id)->where('region', 'kruszyn')->count())->toBe(1);
+
+        // Looking again gives nothing more.
+        getTutorial($driver)->assertJsonPath('data.rewarded', []);
+        expect(CityGarage::query()->where('user_id', $driver->id)->where('region', 'kruszyn')->count())->toBe(1)
+            // 760 for the crate and 1 160 for the lock.
+            ->and(Wallet::query()->find($driver->id)->xp)->toBe(760 + 1_160);
+    });
+
+    it('finishes with the journey: the experience that makes the eighth level, and the cash of the last step', function () {
+        [$driver, $run] = driverWithRun();
+        tutorialBefore($driver, 'travel');
+        getTutorial($driver)->assertJsonPath('data.current.key', 'travel')->assertJsonPath('data.current.target', 'travel');
+
+        Travel::factory()->create(['user_id' => $driver->id, 'race_run_id' => $run->id]);
+
+        getTutorial($driver)->assertOk()
+            ->assertJsonPath('data.status', 'finished')
+            ->assertJsonPath('data.done', 10)
+            ->assertJsonPath('data.rewarded', [['key' => 'travel', 'cash_cents' => 30_000, 'car_xp' => 0, 'xp' => 2_100, 'part' => null, 'garage' => null]]);
+
+        expect(driverCash($driver))->toBe(30_000);
+    });
+
+    it('starts the first run of a driver with a tank that is low in a few minutes, and no other run', function () {
+        $driver = User::factory()->guest()->create();
+
+        $first = $this->postJson('/api/v1/runs', ['car' => 'rdzak-gt-4', 'track' => 'zlomowo-street'], bearerFor($driver))->assertCreated();
+
+        // 17 l of 45 l: under a quarter (11.25 l) after four laps of 1.5 l, which is where the message about the tank comes.
+        expect($first->json('data.fuel_ml'))->toBe(17_000)
+            ->and($first->json('data.tank_ml'))->toBe(45_000)
+            ->and(app(TutorialScript::class)->firstRunFuelMl($driver->id))->toBeNull();
+    });
+
+    it('plans the breakdown of the first car after six laps, until the repair is done, and for no other car', function () {
+        $driver = User::factory()->guest()->create();
+        $script = app(TutorialScript::class);
+
+        // Before a run exists the run that is about to be made is the first.
+        expect($script->breakdownLap($driver->id, null, 0))->toBe(6);
+
+        $run = RaceRun::factory()->create(['user_id' => $driver->id]);
+        $other = RaceRun::factory()->create(['user_id' => $driver->id]);
+
+        expect($script->breakdownLap($driver->id, $run->id, 0))->toBe(6)
+            ->and($script->breakdownLap($driver->id, $run->id, 5))->toBe(6)
+            // The lap is behind it, or the run is not the first, or a run is about to be made when one exists.
+            ->and($script->breakdownLap($driver->id, $run->id, 6))->toBeNull()
+            ->and($script->breakdownLap($driver->id, $other->id, 0))->toBeNull()
+            ->and($script->breakdownLap($driver->id, null, 0))->toBeNull();
+
+        TutorialProgress::factory()->create(['user_id' => $driver->id, 'step_key' => 'repair', 'state' => TutorialProgress::STATE_DONE, 'completed_at' => now()]);
+
+        expect($script->breakdownLap($driver->id, $run->id, 0))->toBeNull();
+    });
+
+    it('freezes the first run with the breakdown at lap six', function () {
+        $driver = User::factory()->guest()->create();
+
+        $this->postJson('/api/v1/runs', ['car' => 'rdzak-gt-4', 'track' => 'zlomowo-street'], bearerFor($driver))->assertCreated();
+
+        expect(RaceRun::query()->where('user_id', $driver->id)->value('break_after_laps'))->toBe(6);
     });
 });

@@ -6,6 +6,17 @@
   "type": "object",
   "properties": {
     "schema": { "const": 0 },
+    "script": {
+      "description": "What the server arranges in the first run of a driver so that the steps come in the first minutes and cannot fail: the tank starts with this much fuel (the step of the fuel comes when it is under a quarter), and the car breaks down after this many laps (the step of the repair), until the repair is done; the first job of mounting that the driver queues takes at most this many ms, so that the journey that waits behind it is not held up by the mechanic for minutes.",
+      "type": "object",
+      "properties": {
+        "first_run_fuel_ml": { "type": "integer", "minimum": 1 },
+        "breakdown_lap": { "type": "integer", "minimum": 1 },
+        "first_mount_ms": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["first_run_fuel_ml", "breakdown_lap", "first_mount_ms"],
+      "additionalProperties": false
+    },
     "version": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$" },
     "steps": {
       "description": "In the order the driver meets them. A step starts when the one before it is done and its trigger holds, and ends when its completion holds.",
@@ -15,12 +26,12 @@
         "type": "object",
         "properties": {
           "key": { "$ref": "common.schema.json#/$defs/slug" },
-          "phase": { "description": "The phase of the design: 1 the first five minutes, 2 the first hour, 3 the first day, 4 the first week.", "type": "integer", "minimum": 1, "maximum": 4 },
+          "phase": { "description": "The phase of the design: 1 the first five minutes, 2 the first hour (the guided first fifteen minutes end with it), 3 the first day, 4 the first week.", "type": "integer", "minimum": 1, "maximum": 4 },
           "trigger": { "$ref": "#/$defs/condition" },
           "completion": { "$ref": "#/$defs/condition" },
           "target": {
-            "description": "What the screen highlights while the step waits for the driver, or null for a step that needs no screen of its own. start is the button that sends the car out, and where the driver is not on its screen yet, the Tournament tab that leads there.",
-            "enum": ["start", "laps", "cash", "refuel", "repair", null]
+            "description": "What the screen highlights while the step waits for the driver, or null for a step that needs no screen of its own. start is the button that sends the car out, and where the driver is not on its screen yet, the Tournament tab that leads there (so mount leads to the Workshop, crate to the Shop and travel to the Map).",
+            "enum": ["start", "laps", "cash", "refuel", "repair", "mount", "crate", "travel", null]
           },
           "sender": { "description": "The made-up number the mentor writes from. It changes with every step, because the mentor is in hiding.", "type": "string", "pattern": "^\\+48 555 010 [0-9]{3}$" },
           "sms": {
@@ -34,7 +45,10 @@
             "type": "object",
             "properties": {
               "cash_cents": { "type": "integer", "minimum": 1 },
-              "car_xp": { "description": "Experience for the car of the driver, which can level it.", "type": "integer", "minimum": 1 }
+              "car_xp": { "description": "Experience for the car of the driver, which can level it.", "type": "integer", "minimum": 1 },
+              "xp": { "description": "Experience for the driver, which levels the driver: the steps of the guided first fifteen minutes add up to the 4 800 XP of the eighth level, less what the laps give.", "type": "integer", "minimum": 1 },
+              "part": { "description": "A part of the pack that is put in the inventory of the driver, common, as a gift.", "$ref": "common.schema.json#/$defs/slug" },
+              "garage": { "description": "The city whose garage is given to the driver for nothing (the tutorial costs no cash, and the first garage of another city costs a fortune at that level).", "$ref": "common.schema.json#/$defs/slug" }
             },
             "additionalProperties": false
           }
@@ -44,12 +58,12 @@
       }
     }
   },
-  "required": ["schema", "version", "steps"],
+  "required": ["schema", "version", "steps", "script"],
   "additionalProperties": false,
   "$defs": {
     "condition": {
-      "description": "A fact about the driver that the server can read: none always holds; run_started the driver has a run; driving the car has been sent out and is not waiting in the garage any more; lap_completed it has finished a lap; fuel_low the tank holds less than a quarter; fuel_restored it holds at least four fifths; breakdown the car stands broken down; recovered it does not; acknowledged the driver has answered the messages of the step.",
-      "enum": ["none", "run_started", "driving", "lap_completed", "fuel_low", "fuel_restored", "breakdown", "recovered", "acknowledged"]
+      "description": "A fact about the driver that the server can read: none always holds; run_started the driver has a run; driving the car has been sent out and is not waiting in the garage any more; lap_completed it has finished a lap; fuel_low the tank holds less than a quarter; fuel_restored it holds at least four fifths; breakdown the car stands broken down; recovered it does not; acknowledged the driver has answered the messages of the step; job_queued the driver has put a job in the queue of the workshop; crate_opened the driver has opened a crate; travel_started the driver has sent a car on a journey.",
+      "enum": ["none", "run_started", "driving", "lap_completed", "fuel_low", "fuel_restored", "breakdown", "recovered", "acknowledged", "job_queued", "crate_opened", "travel_started"]
     }
   }
 }

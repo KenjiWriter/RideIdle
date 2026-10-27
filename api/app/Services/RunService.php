@@ -43,6 +43,7 @@ final class RunService
         private readonly RunFreezer $freezer = new RunFreezer,
         private readonly ?Rules $rules = null,
         private readonly ?CarProgress $progress = null,
+        private readonly ?TutorialScript $script = null,
     ) {}
 
     /** Milliseconds since the Unix epoch from the (testable) application clock. */
@@ -61,6 +62,10 @@ final class RunService
         $frozen = $this->freezer->freeze($inputs, $seed, 0);
 
         $rules = $this->rules ?? Rules::fromConfig();
+
+        // The first run of a driver is arranged for the tutorial: a small tank, which is low in a few minutes, and a breakdown a few laps in.
+        $breakAfter = $this->script?->breakdownLap($userId, null, 0) ?? $frozen->breakAfterLaps;
+        $fuelMl = min($fuelMl, $this->script?->firstRunFuelMl($userId) ?? $fuelMl);
 
         $car ??= Car::query()->create([
             'user_id' => $userId,
@@ -81,7 +86,7 @@ final class RunService
             'cursor_ms' => $nowMs ?? self::nowMs(),
             'laps_done' => 0,
             'fuel_ml' => $fuelMl,
-            'break_after_laps' => $frozen->breakAfterLaps,
+            'break_after_laps' => $breakAfter,
             'seed' => $seed,
             'config' => $frozen->config,
             'ruleset_version' => $this->rulesetVersion(),
@@ -169,7 +174,7 @@ final class RunService
             $run->forceFill([
                 'track_slug' => $trackSlug ?? $run->track_slug,
                 'config' => $frozen->config,
-                'break_after_laps' => $frozen->breakAfterLaps,
+                'break_after_laps' => $this->script?->breakdownLap($run->user_id, $run->id, $run->laps_done) ?? $frozen->breakAfterLaps,
                 'ruleset_version' => $this->rulesetVersion(),
                 'cursor_ms' => $run->status === RaceRun::STATUS_RUNNING ? max($run->cursor_ms, $now) : $run->cursor_ms,
                 'state_version' => $run->state_version + 1,

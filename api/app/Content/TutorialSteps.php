@@ -37,6 +37,16 @@ final class TutorialSteps
         return array_values($this->data['steps']);
     }
 
+    /**
+     * What the server arranges in the first run of a driver, so that the steps come in the first minutes.
+     *
+     * @return array{first_run_fuel_ml: int, breakdown_lap: int, first_mount_ms: int}
+     */
+    public function script(): array
+    {
+        return $this->data['script'];
+    }
+
     public function count(): int
     {
         return count($this->data['steps']);

@@ -17,7 +17,7 @@ it('requires a token', function () {
     $this->postJson('/api/v1/runs', ['car' => 'rdzak-gt-4', 'track' => 'zlomowo-street'])->assertUnauthorized();
 });
 
-it('starts the run of a driver with a full tank', function () {
+it('starts the run of a driver with the small tank that the tutorial arranges for the first run', function () {
     $driver = User::factory()->guest()->create();
 
     startRun($driver)
@@ -30,7 +30,8 @@ it('starts the run of a driver with a full tank', function () {
         ->assertJsonPath('data.status', 'stopped')
         ->assertJsonPath('data.stop_reason', 'parked')
         ->assertJsonPath('data.laps_done', 0)
-        ->assertJsonPath('data.fuel_ml', 45_000)
+        // 17 l in a tank of 45: it is low in four laps, which is where the tutorial teaches the tank.
+        ->assertJsonPath('data.fuel_ml', 17_000)
         ->assertJsonPath('data.tank_ml', 45_000)
         ->assertJsonPath('data.state_version', 0)
         ->assertJsonPath('data.lap.ms.dry', 75_000)
@@ -46,7 +47,8 @@ it('starts the run of a driver with a full tank', function () {
     expect($run->seed)->toMatch('/^[a-f0-9]{32}$/')
         ->and($run->cursor_ms)->toBeGreaterThan(1_700_000_000_000)
         ->and($run->config['lap_ms']['dry'])->toBe(75_000)
-        ->and($run->break_after_laps)->toBeInt()->toBeGreaterThan(0);
+        // The first car breaks down after six laps, so that the tutorial can teach the repair.
+        ->and($run->break_after_laps)->toBe(6);
 });
 
 it('starts every starter wreck with its own tank and lap', function (string $car, int $tankMl, int $dryLapMs, int $fuelPerLapMl) {
@@ -54,7 +56,8 @@ it('starts every starter wreck with its own tank and lap', function (string $car
 
     startRun($driver, ['car' => $car, 'track' => 'zlomowo-street'])
         ->assertCreated()
-        ->assertJsonPath('data.fuel_ml', $tankMl)
+        // The tank of the first run starts at 17 l, whichever wreck it is, and is as big as the wreck's.
+        ->assertJsonPath('data.fuel_ml', 17_000)
         ->assertJsonPath('data.tank_ml', $tankMl)
         ->assertJsonPath('data.lap.ms.dry', $dryLapMs)
         ->assertJsonPath('data.lap.fuel_ml', $fuelPerLapMl);
@@ -216,9 +219,9 @@ describe('sending the car out', function () {
     it('does not let fuel or the tow send out a car that waits: only the Start does', function () {
         $driver = User::factory()->guest()->create();
         $run = RaceRun::query()->findOrFail(startRun($driver)->json('data.id'));
-        (new Ledger)->post($driver->id, 5_000, 'gift', 'money');
+        (new Ledger)->post($driver->id, 10_000, 'gift', 'money');
 
-        // The tank is full, so there is nothing to buy, and a tow is not offered to a car that has not left the garage.
+        // The first tank is small and the driver tops it up (28 l at $2): a tow is not offered to a car that has not left the garage.
         test()->postJson("/api/v1/runs/{$run->id}/refuel", ['request_id' => 'r1'], bearerFor($driver))->assertOk();
         test()->postJson("/api/v1/runs/{$run->id}/tow", [], bearerFor($driver))->assertOk()->assertJsonPath('towed', false);
 

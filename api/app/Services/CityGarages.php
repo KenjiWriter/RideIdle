@@ -129,6 +129,29 @@ final class CityGarages
     }
 
     /**
+     * Gives the driver the garage of a city for nothing, which the tutorial does for the first garage of another city (it costs a fortune at the level the
+     * city opens, and nothing in the tutorial costs cash). The level of the city is not asked for. A driver who has the garage gets nothing more.
+     *
+     * @return bool whether a garage was given
+     *
+     * @throws RuleRefusedException the city does not exist
+     */
+    public function grant(int $userId, string $region): bool
+    {
+        if (! isset($this->rules->regions()[$region])) {
+            throw new RuleRefusedException('city_not_found');
+        }
+
+        if ($this->of($userId)->contains('region', $region)) {
+            return false;
+        }
+
+        CityGarage::query()->create(['user_id' => $userId, 'region' => $region, 'capacity' => $this->rules->garageCapacity()]);
+
+        return true;
+    }
+
+    /**
      * Buys a wreck from the yard into the garage of a city: the car, with the run that drives it on the track of the city, with a full tank.
      * `$requestId` makes a repeated request harmless: a request that was paid already buys nothing again and answers null.
      *

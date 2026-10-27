@@ -18,7 +18,7 @@ final readonly class TutorialState
 
     /**
      * @param  array<string, mixed>|null  $current  the definition of the step to show, with `acknowledged`
-     * @param  list<array{key: string, cash_cents: int, car_xp: int}>  $rewarded
+     * @param  list<array{key: string, cash_cents: int, car_xp: int, xp: int, part: string|null, garage: string|null}>  $rewarded
      */
     public function __construct(
         public string $status,
