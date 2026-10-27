@@ -298,18 +298,35 @@ Auto awansuje na okrążeniach, które przejechało (projekt: „Okrążeń tym 
 
 Samouczek prowadzi pierwsze minuty gry SMS-ami od Kuby (mentora, który się ukrywa i pisze za każdym razem z innego numeru). **Kroki są danymi**: `content/rules/tutorial.json` (schemat `tutorial.schema.json`, teksty w pięciu językach, test `TutorialStepsTest`), więc kolejność, słowa i nagrody zmienia się bez wdrażania kodu. Serwer jest źródłem prawdy, a postęp kierowcy to wiersze tabeli `tutorial_progress` (jeden na krok, który kierowca osiągnął: `active`, `done` albo `skipped`, z czasami; krok bez wiersza nie jest jeszcze osiągnięty).
 
-Każdy krok ma `trigger` (co go rozpoczyna, gdy poprzedni jest skończony) i `completion` (co go kończy). To fakty o grze, które serwer odczytuje ze stanu, a nie zdarzenia, na które nasłuchuje: `none`, `run_started` (jest bieg), `driving` (auto zostało wysłane i nie czeka w garażu), `lap_completed` (ukończone okrążenie), `fuel_low` (w baku poniżej jednej czwartej), `fuel_restored` (co najmniej cztery piąte), `breakdown` (auto stoi po awarii), `recovered` (już nie stoi po awarii), `acknowledged` (kierowca odpowiedział na SMS). Dzięki temu samouczek, tak jak rozliczenie biegu, jest doprowadzany do stanu bieżącego, gdy ktoś na niego patrzy, i niczego nie traci z tego, co się stało pod nieobecność kierowcy.
+Każdy krok ma `trigger` (co go rozpoczyna, gdy poprzedni jest skończony) i `completion` (co go kończy). To fakty o grze, które serwer odczytuje ze stanu, a nie zdarzenia, na które nasłuchuje: `none`, `run_started` (jest bieg), `driving` (auto zostało wysłane i nie czeka w garażu), `lap_completed` (ukończone okrążenie), `fuel_low` (w baku poniżej jednej czwartej), `fuel_restored` (co najmniej cztery piąte), `breakdown` (auto stoi po awarii), `recovered` (już nie stoi po awarii), `job_queued` (w warsztacie jest zlecenie kierowcy), `crate_opened` (kierowca otworzył skrzynkę), `travel_started` (auto wyjechało w podróż), `acknowledged` (kierowca odpowiedział na SMS). Dzięki temu samouczek, tak jak rozliczenie biegu, jest doprowadzany do stanu bieżącego, gdy ktoś na niego patrzy, i niczego nie traci z tego, co się stało pod nieobecność kierowcy.
 
 | Krok | Rozpoczyna | Kończy | Podświetla | Nagroda |
 |---|---|---|---|---|
 | 1 `wreck` | od razu | wybór wraku (jest bieg) | nic (bez SMS-a) | brak |
 | 2 `start` | jest bieg | auto wysłane (`driving`) | przycisk Start w Turnieju, a gdy kierowcy tam nie ma, zakładka Turniej | brak |
-| 3 `first-lap` | jest bieg | pierwsze okrążenie | okrążenia | 200 $ |
-| 4 `rewards` | pierwsze okrążenie | odpowiedź kierowcy | gotówka w HUD | 100 XP auta |
-| 5 `refuel` | bak poniżej 25% | bak od 80% | przycisk tankowania | 90 $ (tankowanie na koszt Kuby) |
-| 6 `repair` | awaria | auto znów jedzie | przycisk naprawy | 30 $ (naprawa na koszt Kuby) |
+| 3 `first-lap` | jest bieg | pierwsze okrążenie | okrążenia | 200 $ i 40 XP |
+| 4 `rewards` | pierwsze okrążenie | odpowiedź kierowcy | gotówka w HUD | 100 XP auta i 100 XP |
+| 5 `refuel` | bak poniżej 25% | bak od 80% | przycisk tankowania | 90 $ (tankowanie na koszt Kuby) i 180 XP |
+| 6 `repair` | awaria | auto znów jedzie | przycisk naprawy | 30 $ (naprawa na koszt Kuby) i część: opony `street-tires-t2` |
+| 7 `mount` | naprawa | w warsztacie jest zlecenie (`job_queued`) | przycisk „Załóż” przy oponach w Warsztacie | 360 XP |
+| 8 `crate` | zlecenie w warsztacie | otwarta skrzynka (`crate_opened`) | skrzynka w sklepie (pierwsza jest za darmo) | 760 XP |
+| 9 `locked` | skrzynka | odpowiedź kierowcy | nic (sam SMS) | 1 160 XP i **garaż w Kruszynie** |
+| 10 `travel` | garaż w Kruszynie | auto wyjechało (`travel_started`) | przycisk „Jedź tutaj” na Mapie | 300 $ i 2 100 XP |
 
-Kroki 1–6 to pierwsze pięć z planszy Samouczek (jej krok 2, „dotyka Start na torze”, jest tu podzielony na `start` i `first-lap`), dopasowane do tego, co w grze jest. Jedno odstępstwo: krok 5 w projekcie to naprawa hamulców i „stan techniczny” części, którego nie ma, więc tu jest awaria i naprawa, a ten krok czeka na pierwszą awarię (szansa 0,3% na okrążenie, więc może długo). Kroki 6–20 (skrzynki, sloty, mapa, miasta…) dojdą z mechanikami, których dotyczą. Nagrody to gotówka z kluczem idempotencji `tutorial:{kierowca}:{krok}`, księgowana w tej samej transakcji, która oznacza krok jako zrobiony, więc nie da się ich wypłacić dwa razy. Nic w samouczku nie kosztuje kierowcy gotówki: tankowanie i naprawa są mu zwracane.
+Kroki 1–6 to pierwsze pięć z planszy Samouczek (jej krok 2, „dotyka Start na torze”, jest tu podzielony na `start` i `first-lap`), dopasowane do tego, co w grze jest. Jedno odstępstwo: krok 5 w projekcie to naprawa hamulców i „stan techniczny” części, którego nie ma, więc tu jest awaria i naprawa. Kroki 7–10 to **pierwsze piętnaście minut**: celem jest ósmy poziom kierowcy (4 800 XP) po kwadransie, bez wysiłku i bez ślepego zaułka. Nagrody dają razem **4 700 XP** (sześć okrążeń do awarii daje około 120–140, pomiar: 138 XP za siedem okrążeń, więc kierowca kończy na 4 800–4 840 XP, czyli na poziomie 8), **590 $** (200 + 90 + 300; 30 $ z naprawy to tylko zwrot tego, co naprawa kosztowała) i **darmowy garaż w drugim mieście**, bo tester nie miał jak wysłać auta do Kruszyna (garaż kosztuje 5 000 $ i tak zostaje). Krok 7 z projektu („porównaj statystyki”) jest pominięty, bo statystyki części są widoczne na karcie części. Krok 9 jest tylko komunikatem: mówi o zablokowanym aucie i daje garaż. Krok 10 kończy się **wyjazdem**, a nie przyjazdem (podróż trwa ponad 25 minut), więc pierwsze piętnaście minut kończy się chwilę po starcie auta.
+
+Nagrody to gotówka, XP, część albo garaż. Gotówka jest księgowana z kluczem idempotencji `tutorial:{kierowca}:{krok}`, a XP, część i garaż są dopisywane w tej samej transakcji, która oznacza krok jako zrobiony, więc nie da się ich wypłacić dwa razy. XP kierowcy trafia do portfela jak XP z okrążeń; część to zwykła (common) część w inwentarzu. Garaż w Kruszynie jest dopisywany bez sprawdzania poziomu (`CityGarages::grant`), a gdy kierowca już go ma, nic się nie zmienia. Nic w samouczku nie kosztuje kierowcy gotówki: tankowanie i naprawa są mu zwracane.
+
+### Skrypt pierwszych minut
+
+Żeby kroki przychodziły w pierwszych minutach i nie mogły się nie udać, serwer układa pierwsze minuty kierowcy (`TutorialScript`, liczby w `script` pliku `tutorial.json`). Skrypt tylko czyta (bieg, wiersze samouczka, otwarte skrzynki), więc nie zmienia niczego u kierowcy, który pominął samouczek albo zrobił krok, do którego służył:
+
+- **Pierwszy bieg zaczyna się z 17 l w baku 45-litrowym** (`first_run_fuel_ml`): bak spada poniżej jednej czwartej po czterech okrążeniach, więc krok tankowania przychodzi sam. Biegi po pierwszym mają pełny bak.
+- **Pierwsze auto psuje się po 6. okrążeniu** (`breakdown_lap`), dopóki naprawa nie jest zrobiona, więc krok naprawy przychodzi sam, a nie z szansą 0,3% na okrążenie. Po naprawie wraca zwykłe losowanie.
+- **Pierwszy montaż w warsztacie trwa 30 s** (`first_mount_ms`), gdy samouczek jest przy kroku montażu (naprawa zrobiona, montaż nie) i kierowca nie ma jeszcze żadnego zlecenia. Zwykłe 4 minuty opon T2 zatrzymałyby auto w warsztacie akurat wtedy, gdy krok 10 każe mu jechać (pomiar: „Wyjechać może tylko auto, które jedzie”).
+- **Pierwsza skrzynka jest za darmo**: po montażu, dopóki krok skrzynki nie jest zrobiony i żadna skrzynka nie została otwarta, `GET /shop` mówi `crates.free_first: true` i cenę 0, a otwarcie nie księguje nic w portfelu. Idempotencję daje `request_id` zapisany w `crate_openings` (kolumna dodana migracją `add_request_id_to_crate_openings_table`, unikalna razem z kierowcą): to samo żądanie drugi raz niczego nie otwiera.
+
+Wartości są wstępne, jak reszta reguł. Skrypt wymaga, żeby pierwszy bieg był pierwszym biegiem kierowcy (też sprzedanym), a kierowca, który pominął samouczek (`skip`), dostaje zwykłą grę: pełny bak, awarie losowe, skrzynkę za cenę i warsztat na zwykłe czasy.
 
 ### `GET /tutorial`, `POST /tutorial/reply`, `POST /tutorial/skip`
 
@@ -317,8 +334,8 @@ Kroki 1–6 to pierwsze pięć z planszy Samouczek (jej krok 2, „dotyka Start 
 
 - `status`: `in_progress`, `finished` albo `skipped`;
 - `total` i `done`: liczba kroków i skończonych;
-- `current`: krok, który czeka, z `key`, `number` (od 1), `sender` (numer, z którego pisze Kuba), `sms` (jedna do dwóch wiadomości w języku kierowcy), `reply` (napis przycisku odpowiedzi), `target` (`start`, `laps`, `cash`, `refuel`, `repair`: co ekran podświetla; `start` to przycisk Start, a gdzie go nie ma, zakładka Turniej) i `acknowledged` (kierowca już odpowiedział), albo `null`;
-- `rewarded`: co wypłaciły kroki skończone tym wywołaniem (`key`, `cash_cents` i `car_xp`, oba zawsze są), żeby klient mógł to powiedzieć i odświeżyć gotówkę i garaż. XP auta trafia do auta kierowcy w tej samej transakcji, która kończy krok; kierowca bez auta dostaje 0.
+- `current`: krok, który czeka, z `key`, `number` (od 1), `sender` (numer, z którego pisze Kuba), `sms` (jedna do dwóch wiadomości w języku kierowcy), `reply` (napis przycisku odpowiedzi), `target` (`start`, `laps`, `cash`, `refuel`, `repair`, `mount`, `crate`, `travel`: co ekran podświetla; `start` to przycisk Start, a gdzie go nie ma, zakładka Turniej; `mount`, `crate` i `travel` to przyciski w Warsztacie, sklepie i na Mapie, a gdy kierowcy nie ma na tym ekranie, zakładka, która do niego prowadzi; `null` przy kroku, który nic nie podświetla) i `acknowledged` (kierowca już odpowiedział), albo `null`;
+- `rewarded`: co wypłaciły kroki skończone tym wywołaniem (`key`, `cash_cents`, `car_xp`, `xp`, `part` i `garage`; pierwsze cztery zawsze są liczbami, `part` to slug części albo `null`, `garage` to region albo `null`), żeby klient mógł to powiedzieć i odświeżyć gotówkę, XP i garaż. XP auta trafia do auta kierowcy w tej samej transakcji, która kończy krok; kierowca bez auta dostaje 0.
 
 `POST /tutorial/reply` odpowiada na SMS-y kroku, który czeka (telefon znika, a krok kończący się odpowiedzią jest skończony); dwa razy to jedna odpowiedź. `POST /tutorial/skip` zostawia bez wykonania kroki, które nie są skończone, **razem z ich nagrodami**; to, co zrobione i wypłacone, zostaje. Po `skip` samouczek już nie wraca. Obie odpowiedzi mają ten sam kształt co `GET`, a żadna nie jest buforowana. Postęp wchodzi do kopii danych konta (`game.tutorial`) i do usunięcia konta (rodzaj `tutorial steps`).
 
