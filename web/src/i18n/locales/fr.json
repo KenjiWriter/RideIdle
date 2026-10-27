@@ -330,7 +330,9 @@
       "engine_load": "Charge moteur {value}",
       "boost_gain": "Gain de suralimentation +{value} %",
       "mass_kg": "Masse {value} kg",
-      "launch": "Démarrage {value} %"
+      "launch": "Démarrage {value} %",
+      "power_kw": "Puissance {value} kW",
+      "engine_mass_kg": "Masse du moteur {value} kg"
     },
     "surface": {
       "asphalt_dry": "Sec",
@@ -345,7 +347,10 @@
     },
     "lock": {
       "cylinders": "Cylindres de cette voiture : {current}, la pièce en demande : {required}",
-      "booster": "Monte d’abord une suralimentation sur la voiture"
+      "booster": "Monte d’abord une suralimentation sur la voiture",
+      "bayLayout": "Le compartiment moteur de cette voiture n’accepte pas un moteur {layout} (il accepte : {allowed})",
+      "baySize": "Moteur trop grand : {displacement} l, le compartiment en accepte au plus {max} l",
+      "boosterCylinders": "La suralimentation de la voiture demande un moteur d’au moins {required} cylindres (celui-ci en a {current})"
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "État : {percent} %",

@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import type { PartInfo, SurfaceKey } from '@/api/types'
 import { useFormat } from '@/i18n/useFormat'
 
-const props = defineProps<{ part: Pick<PartInfo, 'stats' | 'surfaces' | 'requires'> }>()
+const props = defineProps<{ part: Pick<PartInfo, 'stats' | 'surfaces' | 'requires' | 'engine'> }>()
 
 const { t, te } = useI18n()
 const { fixed } = useFormat()
@@ -26,15 +26,17 @@ function signed(value: number): string {
   return shown > 0 ? `+${shown}` : shown < 0 ? `\u2212${Math.abs(shown)}` : '0'
 }
 
-/** What the part does, in words: "Power +2%", "Grip 100". A statistic the messages do not know is shown as it is. */
-const lines = computed(() =>
-  Object.entries(props.part.stats)
+/** What the part does, in words: "Power +2%", "Grip 100". A statistic the messages do not know is shown as it is. An engine says what it is first: "R6 3.0". */
+const lines = computed(() => [
+  ...(props.part.engine ? [`${props.part.engine.layout} ${props.part.engine.displacement_l.toFixed(1)}`] : []),
+  ...Object.entries(props.part.stats)
     .filter(([key, value]) => !(QUIET_AT_ZERO.has(key) && value === 0))
     .map(([key, value]) => {
       // A rarity multiplies the statistics, so 98 can be 135.24 and a power gain of 2% can be 2.4%: shown to a tenth.
       // The factors (power of a booster is a gain, its fuel a multiplier) and the gain of an intercooler (a fraction) are shown the way the design writes them.
       const shown =
         key === 'power_mult' ? Math.round((value - 1) * 1000) / 10
+        : key === 'power_kw' ? Math.round(value)
         : key === 'boost_gain' ? Math.round(value * 1000) / 10
         : key === 'fuel_mult' ? fixed(value, 2)
         : SIGNED.has(key) ? signed(value)
@@ -42,7 +44,7 @@ const lines = computed(() =>
 
       return te(`part.stat.${key}`) ? t(`part.stat.${key}`, { value: shown }) : `${key} ${shown}`
     }),
-)
+])
 
 /** What the car must have for the part, in words, or null when it needs nothing. */
 const requires = computed(() => {

@@ -592,13 +592,15 @@ async function cancel(jobId: number): Promise<void> {
               <button
                 type="button"
                 class="btn btn-secondary btn-sm mt-1.5 !min-h-9 !text-base"
-                :disabled="busy || busyPartIds.has(slot.part.id)"
+                :disabled="busy || busyPartIds.has(slot.part.id) || !!slot.part.unmount_next?.locked"
                 :data-test="`take-off-${slot.part.id}`"
                 @click="act('unmount', slot.part)"
               >
                 {{ t('workshop.takeOff') }}
               </button>
-              <p v-if="slot.part.unmount_next" class="sub mt-1" :data-test="`take-off-info-${slot.part.id}`">{{ slotJobInfo(slot.part.unmount_next) }}</p>
+              <!-- An engine that the booster on the car needs cannot come out: the factory engine has too few cylinders for it. -->
+              <p v-if="slot.part.unmount_next?.locked" class="sub mt-1 text-danger" :data-test="`take-off-lock-${slot.part.id}`">{{ lockText(t, slot.part.unmount_next.locked, fixed) }}</p>
+              <p v-else-if="slot.part.unmount_next" class="sub mt-1" :data-test="`take-off-info-${slot.part.id}`">{{ slotJobInfo(slot.part.unmount_next) }}</p>
             </template>
             <span v-else-if="slot.built_in" class="nm">{{ car.vehicle.engine ?? t('workshop.builtIn') }}</span>
             <span v-else class="nm text-faint">{{ t('workshop.empty') }}</span>
@@ -627,7 +629,8 @@ async function cancel(jobId: number): Promise<void> {
               <PartCondition :percent="part.condition_percent" class="mt-1.5" />
               <p v-if="part.repair_next?.locked?.reason === 'worn_out'" class="sub mt-1" :data-test="`repair-info-${part.id}`">{{ t('workshop.repairWornOut') }}</p>
             </div>
-            <div class="flex shrink-0 flex-col gap-1.5">
+            <!-- A long reason (the engine bay says what it does not take) wraps inside the card instead of pushing it out of the screen. -->
+            <div class="flex max-w-full shrink-0 flex-col gap-1.5">
               <button
                 type="button"
                 class="btn btn-primary btn-sm"
@@ -639,7 +642,7 @@ async function cancel(jobId: number): Promise<void> {
                 {{ t('workshop.putOn') }}
               </button>
               <!-- A part the car cannot take (too few cylinders, no booster for an intercooler) says why instead of the price: the job would be refused. -->
-              <p v-if="part.mount_next?.locked" class="sub text-danger" :data-test="`put-on-lock-${part.id}`">{{ lockText(t, part.mount_next.locked) }}</p>
+              <p v-if="part.mount_next?.locked" class="sub text-danger" :data-test="`put-on-lock-${part.id}`">{{ lockText(t, part.mount_next.locked, fixed) }}</p>
               <p v-else-if="part.mount_next" class="sub" :data-test="`put-on-info-${part.id}`">{{ slotJobInfo(part.mount_next) }}</p>
               <!-- A worn part of the inventory is put right without the car: the repair costs and takes what its condition says. -->
               <button

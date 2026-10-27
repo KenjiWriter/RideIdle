@@ -531,6 +531,64 @@ describe('ShopView', () => {
       expect(wrapper.get('[data-test="offer-turbo-grande-t6"] [data-test="part-requires"]').text()).toBe('Needs an engine with at least 6 cylinders')
     })
 
+    it('groups the engines under their own slot and says what the bay of the body does not take', async () => {
+      const fits = anOffer({ slug: 'engine-r4-2-5-t5', name: 'R4 2.5 engine', slot: 'engine', tier: 5, price_cents: 560_504, stats: { power_kw: 162.5, engine_mass_kg: 117.5 }, engine: { layout: 'R4', displacement_l: 2.5 }, required_car_level: 12, mountable: true, blocked_by: null })
+      const wrongLayout = anOffer({
+        slug: 'engine-v8-4-0-t5',
+        name: 'V8 4.0 engine',
+        slot: 'engine',
+        tier: 5,
+        price_cents: 1_494_678,
+        stats: { power_kw: 296.4, engine_mass_kg: 278 },
+        engine: { layout: 'V8', displacement_l: 4 },
+        required_car_level: 12,
+        mountable: false,
+        blocked_by: { reason: 'bay_layout', layout: 'V8', allowed: ['R4', 'V6'] },
+      })
+      const tooBig = anOffer({
+        slug: 'engine-v6-3-2-t5',
+        name: 'V6 3.2 engine',
+        slot: 'engine',
+        tier: 5,
+        price_cents: 876_878,
+        stats: { power_kw: 228.8, engine_mass_kg: 171 },
+        engine: { layout: 'V6', displacement_l: 3.2 },
+        required_car_level: 12,
+        mountable: false,
+        blocked_by: { reason: 'bay_size', displacement_l: 3.2, max_displacement_l: 3 },
+      })
+      serve({ 'GET /api/v1/shop': () => respond(200, { data: { crates: aCrates(), parts: [tires, fits, wrongLayout, tooBig], car: { id: 5, level: 12 } }, wallet: { cash_cents: 10_000_000, xp: 0 } }) })
+
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+
+      expect(wrapper.findAll('[data-test="group-title"]').map((title) => title.text())).toEqual(['Tires', 'Engine'])
+      expect(wrapper.findAll('[data-test="offer-engine-r4-2-5-t5"] [data-test="part-stats"] li').map((line) => line.text())).toEqual(['R4 2.5', 'Power 163 kW', 'Engine mass 117.5 kg'])
+      expect(wrapper.find('[data-test="offer-engine-r4-2-5-t5"] [data-test="blocked"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="offer-engine-v8-4-0-t5"] [data-test="blocked"]').text()).toBe('The engine bay of this car does not take a V8 engine (it takes R4, V6)')
+      expect(wrapper.get('[data-test="offer-engine-v6-3-2-t5"] [data-test="blocked"]').text()).toBe('Engine too big: 3.2 l, the bay holds up to 3 l')
+      // Like the other reasons, it does not stop the driver from buying the part.
+      expect(wrapper.get('[data-test="buy-engine-v8-4-0-t5"]').attributes('disabled')).toBeUndefined()
+    })
+
+    it('keeps the layout of the screen with all the 71 parts of a car of the highest level, and narrows them to the 31 engines', async () => {
+      const engines = Array.from({ length: 31 }, (_, index) =>
+        anOffer({ slug: `engine-r4-1-0-t${index}`, name: `Engine ${index}`, slot: 'engine', tier: 1 + (index % 10), price_cents: 67_500, stats: { power_kw: 50, engine_mass_kg: 80 }, engine: { layout: 'R4', displacement_l: 1 }, required_car_level: 3, mountable: true, blocked_by: null }),
+      )
+      const others = Array.from({ length: 40 }, (_, index) => anOffer({ slug: `part-${index}`, name: `Part ${index}`, slot: ['tires', 'suspension', 'brakes', 'exhaust'][index % 4]!, tier: 1, price_cents: 10_000, stats: { grip: 90 }, required_car_level: 3, mountable: true }))
+      serve({ 'GET /api/v1/shop': () => respond(200, { data: { crates: aCrates(), parts: [...others, ...engines], car: { id: 5, level: 30 } }, wallet: { cash_cents: 10_000_000, xp: 0 } }) })
+
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+
+      expect(wrapper.findAll('[data-test^="offer-"]')).toHaveLength(71)
+
+      await wrapper.get('[data-test="filter-engine"]').trigger('click')
+
+      expect(wrapper.findAll('[data-test^="offer-"]')).toHaveLength(31)
+      expect(wrapper.findAll('[data-test="group-title"]').map((title) => title.text())).toEqual(['Engine'])
+    })
+
     it('says both when the level and the engine are what the car lacks', async () => {
       serve({ 'GET /api/v1/shop': () => engineShop(3) })
 

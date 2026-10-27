@@ -80,6 +80,21 @@ describe('PartStats', () => {
       expect(lines({ stats: { power_mult: 1.25, lag: 3, fuel_mult: 1.15, engine_load: 8 } })).toEqual(['Moc +25%', 'Opóźnienie 3/10', 'Spalanie ×1,15', 'Obciążenie silnika +8'])
     })
 
+    it('says what an engine is first, with the litres to a decimal, then its power and its mass', () => {
+      expect(lines({ engine: { layout: 'R6', displacement_l: 3 }, stats: { power_kw: 255.75, engine_mass_kg: 204 } })).toEqual(['R6 3.0', 'Power 256 kW', 'Engine mass 204 kg'])
+      expect(lines({ engine: { layout: 'R4', displacement_l: 2.5 }, stats: { power_kw: 162.5, engine_mass_kg: 117.5 } })).toEqual(['R4 2.5', 'Power 163 kW', 'Engine mass 117.5 kg'])
+    })
+
+    it('writes an engine in the language of the interface', async () => {
+      await setLocale('pl')
+
+      expect(lines({ engine: { layout: 'V8', displacement_l: 4.5 }, stats: { power_kw: 352.69, engine_mass_kg: 299 } })).toEqual(['V8 4.5', 'Moc 353 kW', 'Masa silnika 299 kg'])
+    })
+
+    it('says nothing of an engine for a part that is none', () => {
+      expect(lines({ engine: null, stats: { power_mult: 1.12 } })).toEqual(['Power +12%'])
+    })
+
     it('says what the car must have for the part, and nothing for a part that needs nothing', () => {
       expect(show({ stats: { power_mult: 1.4 }, requires: { min_cylinders: 6 } }).get('[data-test="part-requires"]').text()).toBe('Needs an engine with at least 6 cylinders')
       expect(show({ stats: { boost_gain: 0.02 }, requires: { booster: true } }).get('[data-test="part-requires"]').text()).toBe('Works only with a booster')

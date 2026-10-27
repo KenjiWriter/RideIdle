@@ -330,7 +330,9 @@
       "engine_load": "Carga do motor {value}",
       "boost_gain": "Ganho de sobrealimentação +{value}%",
       "mass_kg": "Massa {value} kg",
-      "launch": "Largada {value}%"
+      "launch": "Largada {value}%",
+      "power_kw": "Potência {value} kW",
+      "engine_mass_kg": "Massa do motor {value} kg"
     },
     "surface": {
       "asphalt_dry": "Seco",
@@ -345,7 +347,10 @@
     },
     "lock": {
       "cylinders": "Cilindros deste carro: {current}, a peça exige: {required}",
-      "booster": "Coloque antes uma sobrealimentação no carro"
+      "booster": "Coloque antes uma sobrealimentação no carro",
+      "bayLayout": "O compartimento do motor deste carro não aceita um motor {layout} (aceita: {allowed})",
+      "baySize": "Motor grande demais: {displacement} l, o compartimento comporta até {max} l",
+      "boosterCylinders": "A sobrealimentação do carro exige um motor com pelo menos {required} cilindros (este tem {current})"
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Estado: {percent}%",

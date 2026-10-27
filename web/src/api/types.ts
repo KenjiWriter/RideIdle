@@ -267,8 +267,17 @@ export interface PartRequires {
   booster?: true
 }
 
-/** What a car lacks for a part, besides its level: the cylinders (`required` and the `current` number), or a booster. */
-export type PartLock = { reason: 'cylinders'; required: number; current: number } | { reason: 'booster' }
+/**
+ * What a car lacks for a part, besides its level: the cylinders (`required` and the `current` number), a booster, or what the engine bay of the body says of an
+ * engine: it does not take the `layout` (it takes the `allowed` ones), it holds no more than `max_displacement_l` litres, or the booster on the car needs
+ * `required` cylinders and the engine has `current`.
+ */
+export type PartLock =
+  | { reason: 'cylinders'; required: number; current: number }
+  | { reason: 'booster' }
+  | { reason: 'bay_layout'; layout: string; allowed: string[] }
+  | { reason: 'bay_size'; displacement_l: number; max_displacement_l: number }
+  | { reason: 'booster_cylinders'; required: number; current: number }
 
 export interface PartInfo {
   slug: string
@@ -280,6 +289,8 @@ export interface PartInfo {
   stats: Record<string, number>
   /** What the car needs for the part: null when it needs nothing. */
   requires?: PartRequires | null
+  /** An engine says what it is: its layout and its displacement in litres (its power and mass are in `stats`: `power_kw`, `engine_mass_kg`). Null for the other parts. */
+  engine?: { layout: string; displacement_l: number } | null
   rarity: PartRarity
   /** 1 (common) to 5 (legendary): the number of the filled squares. */
   rarity_rank: number
@@ -460,7 +471,7 @@ export interface ServiceState {
 export interface GarageSlot {
   slot: string
   part: MountedPart | null
-  /** The slot holds a part of the body, which cannot be taken off (the engine for now). */
+  /** The slot holds a part of the body when it is empty (the factory engine): with an engine part on it, that part is in `part`. */
   built_in: boolean
 }
 

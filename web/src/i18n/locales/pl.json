@@ -330,7 +330,9 @@
       "engine_load": "Obciążenie silnika {value}",
       "boost_gain": "Moc doładowania +{value}%",
       "mass_kg": "Masa {value} kg",
-      "launch": "Start {value}%"
+      "launch": "Start {value}%",
+      "power_kw": "Moc {value} kW",
+      "engine_mass_kg": "Masa silnika {value} kg"
     },
     "surface": {
       "asphalt_dry": "Sucho",
@@ -345,7 +347,10 @@
     },
     "lock": {
       "cylinders": "Cylindry w tym aucie: {current}, część wymaga: {required}",
-      "booster": "Najpierw załóż w aucie doładowanie"
+      "booster": "Najpierw załóż w aucie doładowanie",
+      "bayLayout": "Zatoka tego auta nie przyjmie silnika {layout} (przyjmuje: {allowed})",
+      "baySize": "Silnik za duży: {displacement} l, zatoka mieści do {max} l",
+      "boosterCylinders": "Doładowanie na aucie wymaga silnika z co najmniej {required} cylindrami (ten ma {current})"
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Stan: {percent}%",

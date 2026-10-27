@@ -330,7 +330,9 @@
       "engine_load": "Engine load {value}",
       "boost_gain": "Boost gain +{value}%",
       "mass_kg": "Mass {value} kg",
-      "launch": "Launch {value}%"
+      "launch": "Launch {value}%",
+      "power_kw": "Power {value} kW",
+      "engine_mass_kg": "Engine mass {value} kg"
     },
     "surface": {
       "asphalt_dry": "Dry",
@@ -345,7 +347,10 @@
     },
     "lock": {
       "cylinders": "This car has {current} cylinders, the part needs {required}",
-      "booster": "Put a booster on the car first"
+      "booster": "Put a booster on the car first",
+      "bayLayout": "The engine bay of this car does not take a {layout} engine (it takes {allowed})",
+      "baySize": "Engine too big: {displacement} l, the bay holds up to {max} l",
+      "boosterCylinders": "The booster on the car needs an engine with at least {required} cylinders (this one has {current})"
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Condition: {percent}%",

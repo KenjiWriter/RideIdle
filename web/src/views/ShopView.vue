@@ -19,7 +19,7 @@ import { useGarageStore } from '@/stores/garage'
 import { useTutorialStore } from '@/stores/tutorial'
 
 const { t } = useI18n()
-const { money, percent } = useFormat()
+const { money, percent, fixed } = useFormat()
 const store = useGarageStore()
 const tutorial = useTutorialStore()
 
@@ -347,7 +347,7 @@ async function openCrate(kind: CrateOffer): Promise<void> {
               {{ t('shop.needsLevel', { level: offer.required_car_level }) }} {{ t('shop.yourLevel', { level: store.shopCar.level }) }} {{ t('shop.getXp') }}
             </p>
             <!-- What the car lacks besides its level: the cylinders of its engine, or a booster. It can be bought, but it cannot be put on yet. -->
-            <p v-if="store.shopCar && offer.blocked_by" class="text-sm text-danger" data-test="blocked">{{ lockText(t, offer.blocked_by) }}</p>
+            <p v-if="store.shopCar && offer.blocked_by" class="text-sm text-danger" data-test="blocked">{{ lockText(t, offer.blocked_by, fixed) }}</p>
           </li>
         </ul>
       </section>

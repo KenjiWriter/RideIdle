@@ -330,7 +330,9 @@
       "engine_load": "Motorlast {value}",
       "boost_gain": "Ladeleistung +{value} %",
       "mass_kg": "Masse {value} kg",
-      "launch": "Anfahren {value} %"
+      "launch": "Anfahren {value} %",
+      "power_kw": "Leistung {value} kW",
+      "engine_mass_kg": "Motormasse {value} kg"
     },
     "surface": {
       "asphalt_dry": "Trocken",
@@ -345,7 +347,10 @@
     },
     "lock": {
       "cylinders": "Zylinder dieses Autos: {current}, das Teil braucht: {required}",
-      "booster": "Baue zuerst eine Aufladung ein"
+      "booster": "Baue zuerst eine Aufladung ein",
+      "bayLayout": "Der Motorraum dieses Autos nimmt keinen {layout}-Motor auf (er nimmt: {allowed})",
+      "baySize": "Motor zu groß: {displacement} l, der Motorraum fasst bis zu {max} l",
+      "boosterCylinders": "Die Aufladung am Auto braucht einen Motor mit mindestens {required} Zylindern (dieser hat {current})"
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Zustand: {percent} %",

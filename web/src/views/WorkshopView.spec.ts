@@ -1345,6 +1345,71 @@ describe('WorkshopView', () => {
       expect(wrapper.get('[data-test="part-31"] [data-test="part-requires"]').text()).toBe('Needs an engine with at least 6 cylinders')
     })
 
+    it('says why an engine does not fit the bay of the body where the price was, and keeps the button of one that does', async () => {
+      const v8 = aPart({ id: 41, slug: 'engine-v8-4-0-t5', name: 'V8 4.0 engine', slot: 'engine', tier: 5, stats: { power_kw: 296.4, engine_mass_kg: 278 }, engine: { layout: 'V8', displacement_l: 4 } })
+      const v6 = aPart({ id: 42, slug: 'engine-v6-3-2-t5', name: 'V6 3.2 engine', slot: 'engine', tier: 5, stats: { power_kw: 228.8, engine_mass_kg: 171 }, engine: { layout: 'V6', displacement_l: 3.2 } })
+      const r4 = aPart({ id: 43, slug: 'engine-r4-2-5-t5', name: 'R4 2.5 engine', slot: 'engine', tier: 5, stats: { power_kw: 162.5, engine_mass_kg: 117.5 }, engine: { layout: 'R4', displacement_l: 2.5 } })
+      serve({
+        'GET /api/v1/garage': () =>
+          respond(
+            200,
+            aGarage({
+              car: aCar(),
+              inventory: [
+                { ...v8, mount_next: { cost_cents: 0, duration_ms: 600_000, locked: { reason: 'bay_layout', layout: 'V8', allowed: ['R4', 'V6'] } } },
+                { ...v6, mount_next: { cost_cents: 0, duration_ms: 600_000, locked: { reason: 'bay_size', displacement_l: 3.2, max_displacement_l: 3 } } },
+                { ...r4, mount_next: { cost_cents: 0, duration_ms: 600_000, locked: null } },
+              ],
+            }),
+          ),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="put-on-41"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-test="put-on-lock-41"]').text()).toBe('The engine bay of this car does not take a V8 engine (it takes R4, V6)')
+      expect(wrapper.get('[data-test="put-on-lock-42"]').text()).toBe('Engine too big: 3.2 l, the bay holds up to 3 l')
+      expect(wrapper.get('[data-test="put-on-43"]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.find('[data-test="put-on-lock-43"]').exists()).toBe(false)
+      expect(wrapper.findAll('[data-test="part-41"] [data-test="part-stats"] li').map((line) => line.text())).toEqual(['V8 4.0', 'Power 296 kW', 'Engine mass 278 kg'])
+    })
+
+    it('shows an engine on the car like any other part, and shuts its take-off when the booster on the car needs its cylinders', async () => {
+      const engine = aMountedPart({
+        id: 44,
+        slug: 'engine-v6-2-5-t3',
+        name: 'V6 2.5 engine',
+        slot: 'engine',
+        tier: 3,
+        stats: { power_kw: 158.1, engine_mass_kg: 150 },
+        engine: { layout: 'V6', displacement_l: 2.5 },
+        condition_percent: 80,
+        unmount_next: { cost_cents: 0, duration_ms: 400_000, locked: { reason: 'booster_cylinders', required: 6, current: 4 } },
+      })
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { engine, exhaust: aMountedPart({ ...exhaust, unmount_next: { cost_cents: 0, duration_ms: 235_200, locked: null } }) }) })),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      const tile = wrapper.get('[data-test="slot-engine"]')
+
+      expect(tile.text()).toContain('V6 2.5 engine')
+      expect(tile.get('[data-test="part-condition-value"]').text()).toBe('Condition: 80%')
+      expect(tile.get('[data-test="take-off-44"]').attributes('disabled')).toBeDefined()
+      expect(tile.get('[data-test="take-off-lock-44"]').text()).toBe('The booster on the car needs an engine with at least 6 cylinders (this one has 4)')
+      expect(tile.find('[data-test="take-off-info-44"]').exists()).toBe(false)
+
+      // A part that can come off still says what it costs and takes.
+      expect(wrapper.get('[data-test="take-off-11"]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.find('[data-test="take-off-lock-11"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="take-off-info-11"]').text()).toBe('Time: 3 min 55 s')
+    })
+
     it('says nothing when the server gave no quote', async () => {
       serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust }), inventory: [tires] })), 'GET /api/v1/runs/current': noRun })
 
