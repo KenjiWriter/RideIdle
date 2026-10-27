@@ -188,6 +188,17 @@ describe('buying', function () {
             ->assertJsonPath('data.workshop.gear.items.3.next.price_cents', 60_000);
     });
 
+    it('tells the driver what they have to spend in every answer of the garage, with what a purchase and a job have just cost taken off', function () {
+        [$driver] = gearDriver(100_000);
+        $tires = gearStock($driver);
+
+        gearGarage($driver)->assertOk()->assertJsonPath('wallet.cash_cents', 100_000)->assertJsonPath('wallet.xp', 0);
+
+        // The fee of the vulcanizer for the tires, and then the price of the machine.
+        gearJob($driver, 'mount', $tires->id)->assertCreated()->assertJsonPath('wallet.cash_cents', 100_000 - GEAR_TIRE_FEE_CENTS);
+        buyGear($driver, 'tire_machine')->assertCreated()->assertJsonPath('wallet.cash_cents', 100_000 - GEAR_TIRE_FEE_CENTS - 40_000);
+    });
+
     it('sells the next level, takes the price and shows the one after it', function () {
         [$driver, $run] = gearDriver(100_000);
 

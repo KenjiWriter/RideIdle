@@ -17,6 +17,7 @@ use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\WorkshopJob;
 use App\Services\Garage;
+use App\Services\Ledger;
 use App\Services\PartMerges;
 use App\Services\RunService;
 use App\Services\Workshop;
@@ -43,6 +44,7 @@ final class GarageController extends Controller
         private readonly RunInputsFactory $inputs,
         private readonly PartMerges $merges,
         private readonly WorkshopEquipment $equipment,
+        private readonly Ledger $ledger,
     ) {}
 
     /** The garage as it is now: what is due in the workshop is carried out first. */
@@ -140,6 +142,8 @@ final class GarageController extends Controller
                     'jobs' => WorkshopJobResource::collection($this->workshop->pendingJobs($userId, $city))->resolve(),
                 ],
             ],
+            // What the driver has to spend, as of this answer (what a job or a purchase has just cost is already taken off).
+            'wallet' => ['cash_cents' => $this->ledger->balance($userId), 'xp' => $this->ledger->xp($userId)],
             'now_ms' => RunService::nowMs(),
             ...$extra,
         ], $status)->header('Cache-Control', 'no-store');
