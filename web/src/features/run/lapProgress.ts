@@ -5,6 +5,8 @@ export interface LapProgress {
   remainingMs: number
   /** How much of it is done, from 0 up to but not including 1. */
   fraction: number
+  /** How many whole laps have gone by since the lap of the answer began: the lap in progress is the one after them. */
+  lapsPassed: number
 }
 
 /**
@@ -13,9 +15,10 @@ export interface LapProgress {
  * happened (a new weather, an empty tank): the ring goes round on its own and is put right by the answer.
  */
 export function lapProgress(lap: NonNullable<Run['current_lap']>, nowMs: number): LapProgress {
-  const elapsed = Math.max(0, nowMs - lap.start_ms) % lap.ms
+  const since = Math.max(0, nowMs - lap.start_ms)
+  const elapsed = since % lap.ms
 
-  return { remainingMs: lap.ms - elapsed, fraction: elapsed / lap.ms }
+  return { remainingMs: lap.ms - elapsed, fraction: elapsed / lap.ms, lapsPassed: Math.floor(since / lap.ms) }
 }
 
 /** A time that counts down as "0:41": the seconds are rounded up, so the ring says 0:01 until the lap is done. */

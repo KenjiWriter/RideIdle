@@ -10,7 +10,8 @@
     "workshop": "Warsztat",
     "shop": "Sklep",
     "label": "Nawigacja gry",
-    "race": "Turniej"
+    "race": "Turniej",
+    "lap": "Okr. {lap} · {time}"
   },
   "language": {
     "label": "Język"

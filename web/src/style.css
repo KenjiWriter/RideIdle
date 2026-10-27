@@ -348,7 +348,7 @@ body {
   }
 
   .navb a {
-    @apply flex min-h-[60px] flex-1 flex-col items-center justify-center gap-1 text-[10.5px] font-medium uppercase no-underline;
+    @apply flex min-h-[64px] flex-1 flex-col items-center justify-center gap-1 text-[10.5px] font-medium uppercase leading-[1.2] no-underline;
     color: #8d96a6;
     letter-spacing: 0.06em;
   }
@@ -361,6 +361,14 @@ body {
 
   .navb a.on svg {
     filter: drop-shadow(0 0 6px rgba(255, 178, 36, 0.75));
+  }
+
+  /* The line under the label that tells of the lap in progress: there in every tab, empty in all but the race, so that the icons stand level. */
+  .navb-sub {
+    @apply -mt-0.5 block min-h-[11px] whitespace-nowrap text-[9.5px] normal-case leading-[11px];
+    color: #ffc94a;
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
   }
 
   /* ---------- a row of tabs inside a screen (Auto | Flota, Sklep | Giełda | Dealer): pressed keys in a recess ---------- */

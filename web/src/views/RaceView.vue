@@ -31,9 +31,6 @@ const FORECAST_WINDOW_MS = 4 * 1_350_000
 /** A coming weather that makes the lap this much longer, in percent, is worth a word about the tires. */
 const SLOWER_NOTE_PERCENT = 8
 
-/** The time after the end of a lap at which the server is asked what the lap paid: a moment later, so the lap is surely over there. */
-const LAP_END_GRACE_MS = 400
-
 const { t, te } = useI18n()
 const router = useRouter()
 const run = useRunStore()
@@ -75,7 +72,6 @@ async function open(): Promise<void> {
 /** What time it is for the server, drawn again every moment: the countdowns count with it. */
 const now = ref(run.serverNow())
 let ticker: ReturnType<typeof setInterval> | undefined
-let lapTimer: ReturnType<typeof setTimeout> | undefined
 
 onMounted(() => {
   void open()
@@ -84,7 +80,6 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   clearInterval(ticker)
-  clearTimeout(lapTimer)
 })
 
 /** The server brings the tutorial up to date whenever it settles the run, so a new version of the run may mean a new step. */
@@ -118,18 +113,7 @@ async function start(): Promise<void> {
   }
 }
 
-/** The lap ends, and the server is asked what it paid, so the cash and the laps are right at the moment, not at the next poll. */
-watch(
-  () => run.run?.current_lap?.finish_ms,
-  (finish) => {
-    clearTimeout(lapTimer)
-
-    if (finish !== undefined) {
-      lapTimer = setTimeout(() => void run.refresh().catch(() => undefined), Math.max(0, finish - run.serverNow()) + LAP_END_GRACE_MS)
-    }
-  },
-  { immediate: true },
-)
+// The server is asked what a lap paid as soon as it is over by the navigation (`useLapClock`), on this screen as on any other.
 
 const lap = computed(() => run.run?.current_lap ?? null)
 const progress = computed(() => (lap.value ? lapProgress(lap.value, now.value) : null))

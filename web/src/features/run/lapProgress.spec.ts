@@ -6,19 +6,24 @@ const lap = { start_ms: 1_000_000, finish_ms: 1_075_000, ms: 75_000, weather: 'd
 
 describe('lapProgress', () => {
   it('says how much of the lap is done and how long it still lasts', () => {
-    expect(lapProgress(lap, 1_000_000)).toEqual({ remainingMs: 75_000, fraction: 0 })
-    expect(lapProgress(lap, 1_030_000)).toEqual({ remainingMs: 45_000, fraction: 0.4 })
+    expect(lapProgress(lap, 1_000_000)).toEqual({ remainingMs: 75_000, fraction: 0, lapsPassed: 0 })
+    expect(lapProgress(lap, 1_030_000)).toEqual({ remainingMs: 45_000, fraction: 0.4, lapsPassed: 0 })
   })
 
   it('goes round again when the lap is over, until the server says what happened', () => {
     // A lap and a half later: halfway round the next one.
-    expect(lapProgress(lap, 1_000_000 + 75_000 + 37_500)).toEqual({ remainingMs: 37_500, fraction: 0.5 })
+    expect(lapProgress(lap, 1_000_000 + 75_000 + 37_500)).toEqual({ remainingMs: 37_500, fraction: 0.5, lapsPassed: 1 })
     // Exactly at the end of the lap the next one begins.
-    expect(lapProgress(lap, 1_075_000)).toEqual({ remainingMs: 75_000, fraction: 0 })
+    expect(lapProgress(lap, 1_075_000)).toEqual({ remainingMs: 75_000, fraction: 0, lapsPassed: 1 })
+  })
+
+  it('counts the whole laps that have gone by, so that the lap in progress is the one after them', () => {
+    expect(lapProgress(lap, 1_000_000 + 3 * 75_000 + 1_000).lapsPassed).toBe(3)
+    expect(lapProgress(lap, 1_000_000 + 3 * 75_000 - 1).lapsPassed).toBe(2)
   })
 
   it('does not run backwards when the clock of the device is a little behind', () => {
-    expect(lapProgress(lap, 999_000)).toEqual({ remainingMs: 75_000, fraction: 0 })
+    expect(lapProgress(lap, 999_000)).toEqual({ remainingMs: 75_000, fraction: 0, lapsPassed: 0 })
   })
 })
 

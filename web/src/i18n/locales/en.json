@@ -10,7 +10,8 @@
     "workshop": "Workshop",
     "shop": "Shop",
     "label": "Game navigation",
-    "race": "Tournament"
+    "race": "Tournament",
+    "lap": "Lap {lap} · {time}"
   },
   "language": {
     "label": "Language"

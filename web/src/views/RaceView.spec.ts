@@ -300,7 +300,7 @@ describe('RaceView', () => {
   it('has the entry of the race in the navigation, marked', async () => {
     const { wrapper } = await show()
 
-    expect(wrapper.get('[data-test="nav-race"]').text()).toBe('Tournament')
+    expect(wrapper.get('[data-test="nav-race"]').text()).toContain('Tournament')
     expect(wrapper.get('[data-test="nav-race"]').classes()).toContain('on')
     expect(wrapper.get('[data-test="nav-garage"]').classes()).not.toContain('on')
   })
@@ -311,7 +311,7 @@ describe('RaceView', () => {
 
     expect(wrapper.get('[data-test="status"]').text()).toBe('NA ŻYWO')
     expect(wrapper.get('[data-test="sub"]').text()).toBe('Okrążenie 4 · Rdzak GT-4 · sucho')
-    expect(wrapper.get('[data-test="nav-race"]').text()).toBe('Turniej')
+    expect(wrapper.get('[data-test="nav-race"]').text()).toContain('Turniej')
 
     await setLocale('en')
   })

@@ -2,8 +2,14 @@
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
 
+import { useLapClock } from '@/features/run/useLapClock'
+import { useFormat } from '@/i18n/useFormat'
+
 const { t } = useI18n()
+const { number } = useFormat()
 const route = useRoute()
+// The lap in progress is told of under the race, on every screen of the game.
+const lap = useLapClock()
 
 /** The icons are the ones of the design canvas (24 x 24, drawn with a line). */
 const links = [
@@ -30,6 +36,8 @@ const lit = (link: (typeof links)[number]): boolean => 'also' in link && (link.a
         <path :d="link.icon" />
       </svg>
       {{ t(link.label) }}
+      <!-- A line of its own in every tab, empty in all but the race, so that the icons and the labels stand at the same height. -->
+      <span class="navb-sub" :data-test="link.name === 'race' ? 'nav-lap' : undefined" aria-hidden="true">{{ link.name === 'race' && lap ? t('nav.lap', { lap: number(lap.number), time: lap.time }) : '' }}</span>
     </RouterLink>
   </nav>
 </template>
