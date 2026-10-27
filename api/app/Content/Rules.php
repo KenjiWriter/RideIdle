@@ -453,6 +453,37 @@ final class Rules
     }
 
     /**
+     * The chance that an attempt of merging makes the part of the rarity `$to`, in ppm: the base of that rarity, 1 percentage point for every level of
+     * the mechanic (the level of the workshop), and 3 for every failure since the last success at that slot and rarity (the protection from bad luck),
+     * but never more than 90%.
+     */
+    public function mergeChancePpm(Rarity $to, int $failures): int
+    {
+        $merge = $this->data['workshop']['merge'];
+        $chance = $merge['base_ppm'][$to->key()] + $merge['level_ppm'] * $this->data['workshop']['mechanic_level'] + $merge['pity_ppm'] * $failures;
+
+        return max(0, min($merge['max_ppm'], $chance));
+    }
+
+    /** What an attempt of merging costs: a tenth of the price of the model. */
+    public function mergeCostCents(int $priceCents): int
+    {
+        return Ppm::mul($priceCents, $this->data['workshop']['merge']['cost_ppm_of_price']);
+    }
+
+    /** How long an attempt of merging takes the mechanic: twice what putting the part on takes, in ms. */
+    public function mergeJobMs(string $slot, int $tier): int
+    {
+        return max(1, Ppm::mul($this->workshopJobMs($slot, $tier), $this->data['workshop']['merge']['time_ppm_of_mount']));
+    }
+
+    /** The scrap that a failed attempt gives back: a quarter of the price of the model. */
+    public function mergeScrapCents(int $priceCents): int
+    {
+        return Ppm::mul($priceCents, $this->data['workshop']['merge']['scrap_ppm_of_price']);
+    }
+
+    /**
      * The statistics of a part of a rarity at +N: what the part adds to a car is multiplied (grip, handling, braking, clearance), and of the power only
      * the gain is (a multiplier of 1.02 at x1.6 is 1.032). A limit, like the one of a gearbox, is not a gain and stays what it is.
      *

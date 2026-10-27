@@ -10,6 +10,7 @@ use App\Models\Car;
 use App\Models\CityGarage;
 use App\Models\CrateOpening;
 use App\Models\LedgerEntry;
+use App\Models\MergeAttempt;
 use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\Settlement;
@@ -60,6 +61,7 @@ final class AccountErasure
             'cars' => Car::query()->withoutGlobalScopes()->where('user_id', $user->id)->count(),
             'storage openings' => StorageOpening::query()->where('user_id', $user->id)->count(),
             'crate openings' => CrateOpening::query()->where('user_id', $user->id)->count(),
+            'merge attempts' => MergeAttempt::query()->where('user_id', $user->id)->count(),
             'parts' => Part::query()->where('user_id', $user->id)->count(),
             'garages' => CityGarage::query()->where('user_id', $user->id)->count(),
             'workshop jobs' => WorkshopJob::query()->where('user_id', $user->id)->count(),
@@ -105,6 +107,7 @@ final class AccountErasure
             Car::query()->withoutGlobalScopes()->where('user_id', $user->id)->delete();
             StorageOpening::query()->where('user_id', $user->id)->delete();
             CrateOpening::query()->where('user_id', $user->id)->delete();
+            MergeAttempt::query()->where('user_id', $user->id)->delete();
             Wallet::query()->where('user_id', $user->id)->delete();
             AccountToken::query()->where('user_id', $user->id)->delete();
             AccountIdentity::query()->where('user_id', $user->id)->delete();

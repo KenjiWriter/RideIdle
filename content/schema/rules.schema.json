@@ -403,6 +403,31 @@
           "required": ["stat_ppm_per_level", "max_by_rarity", "cost_ppm_of_price", "cost_growth_ppm", "base_time_ms", "time_growth_ppm"],
           "additionalProperties": false
         },
+        "merge": {
+          "description": "Merging two parts (Systemy I, point 3): two parts of one slot, tier and rarity that are not on a car make one part of the next rarity, or fail and are lost. The chance of the attempt that makes the rarity r is base_ppm[r] + level_ppm for every level of the mechanic (the level of the workshop) + pity_ppm for every failure since the last success at that slot and rarity, and at most max_ppm. An attempt costs cost_ppm_of_price of the price of the model, takes time_ppm_of_mount of the time of putting that part on (cut by the mechanic), and when it fails the driver gets scrap_ppm_of_price of the price of the model back.",
+          "type": "object",
+          "properties": {
+            "base_ppm": {
+              "type": "object",
+              "properties": {
+                "uncommon": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+                "rare": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+                "epic": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+                "legendary": { "type": "integer", "minimum": 1, "maximum": 1000000 }
+              },
+              "required": ["uncommon", "rare", "epic", "legendary"],
+              "additionalProperties": false
+            },
+            "level_ppm": { "type": "integer", "minimum": 0, "maximum": 100000 },
+            "pity_ppm": { "type": "integer", "minimum": 0, "maximum": 200000 },
+            "max_ppm": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+            "cost_ppm_of_price": { "type": "integer", "minimum": 0 },
+            "time_ppm_of_mount": { "type": "integer", "minimum": 1 },
+            "scrap_ppm_of_price": { "type": "integer", "minimum": 0, "maximum": 1000000 }
+          },
+          "required": ["base_ppm", "level_ppm", "pity_ppm", "max_ppm", "cost_ppm_of_price", "time_ppm_of_mount", "scrap_ppm_of_price"],
+          "additionalProperties": false
+        },
         "base_time_ms": {
           "description": "Time of putting on a part of tier 1, per slot. A part of tier T takes T times as long.",
           "type": "object",
@@ -411,7 +436,7 @@
           "minProperties": 1
         }
       },
-      "required": ["mechanic_level", "time_cut_ppm_per_level", "removal_ppm", "max_queue", "upgrade", "base_time_ms"],
+      "required": ["mechanic_level", "time_cut_ppm_per_level", "removal_ppm", "max_queue", "upgrade", "merge", "base_time_ms"],
       "additionalProperties": false
     },
     "tire_matrix": {

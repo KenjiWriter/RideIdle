@@ -127,6 +127,15 @@
       "base_time_ms": 300000,
       "time_growth_ppm": 1400000
     },
+    "merge": {
+      "base_ppm": { "uncommon": 800000, "rare": 600000, "epic": 400000, "legendary": 250000 },
+      "level_ppm": 10000,
+      "pity_ppm": 30000,
+      "max_ppm": 900000,
+      "cost_ppm_of_price": 100000,
+      "time_ppm_of_mount": 2000000,
+      "scrap_ppm_of_price": 250000
+    },
     "base_time_ms": {
       "tires": 120000,
       "suspension": 170000,

@@ -15,6 +15,7 @@ use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\WorkshopJob;
 use App\Services\Garage;
+use App\Services\PartMerges;
 use App\Services\RunService;
 use App\Services\Workshop;
 use App\Support\I18nText;
@@ -37,6 +38,7 @@ final class GarageController extends Controller
         private readonly Catalog $catalog,
         private readonly Rules $rules,
         private readonly RunInputsFactory $inputs,
+        private readonly PartMerges $merges,
     ) {}
 
     /** The garage as it is now: what is due in the workshop is carried out first. */
@@ -50,19 +52,21 @@ final class GarageController extends Controller
 
     /**
      * Queues a job: `kind` is mount, unmount or upgrade, `part` the id of a part of the driver. Putting a part in a slot that has one takes
-     * the old one off first, which is a job of its own; an upgrade is a job on a part that sits on the car and is paid when it is queued. The
+     * the old one off first, which is a job of its own; an upgrade is a job on a part that sits on the car and is paid when it is queued; a merge
+     * (`with` is the second part, which is used up) is one on two parts of the inventory, paid when it is queued, and the car does not stand for it. The
      * jobs are done one after the other by the one mechanic, and the car stands in the workshop while one of them is being done.
      */
     public function queueJob(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'kind' => ['required', 'string', Rule::in([WorkshopJob::KIND_MOUNT, WorkshopJob::KIND_UNMOUNT, WorkshopJob::KIND_UPGRADE])],
+            'kind' => ['required', 'string', Rule::in([WorkshopJob::KIND_MOUNT, WorkshopJob::KIND_UNMOUNT, WorkshopJob::KIND_UPGRADE, WorkshopJob::KIND_MERGE])],
             'part' => ['required', 'integer', 'min:1'],
+            'with' => ['required_if:kind,'.WorkshopJob::KIND_MERGE, 'nullable', 'integer', 'min:1'],
         ]);
 
         $userId = (int) $request->user()->getAuthIdentifier();
         $this->workshop->advance($userId);
-        $this->workshop->queue($userId, $data['kind'], $data['part']);
+        $this->workshop->queue($userId, $data['kind'], $data['part'], withPartId: $data['with'] ?? null);
 
         return $this->respond($userId, 201);
     }
@@ -70,7 +74,7 @@ final class GarageController extends Controller
     /**
      * Cancels a job: one that waits, or one that the mechanic is at (the work done on it is lost, and its part stays where it
      * was). A job that goes only with it goes too: cancelling the taking off of a part cancels the putting on of the one that was
-     * to take its place. Nothing is paid or given back, except for the price of an upgrade that has not started. `cancelled` lists the jobs
+     * to take its place. Nothing is paid or given back, except for the price of an upgrade or a merge that has not started. `cancelled` lists the jobs
      * that were cancelled, the asked one first.
      */
     public function cancelJob(Request $request, int $job): JsonResponse
@@ -88,12 +92,18 @@ final class GarageController extends Controller
         $run = $car === null ? null : $this->garage->runOf($car);
         $city = $run === null ? $this->rules->homeRegion() : $this->garage->cityOf($run);
 
+        $inventory = Part::query()->where('user_id', $userId)->whereNull('car_id')->orderBy('id')->get();
+        $pending = $this->workshop->pendingJobs($userId);
+        $busy = collect($pending)->flatMap(static fn (WorkshopJob $job): array => [$job->part_id, $job->merge_part_id])->filter()->values()->all();
+        $quotes = $this->merges->quotes($userId, $inventory, $busy);
+
         return response()->json([
             'data' => [
                 'car' => $car === null ? null : $this->carData($car, $run),
-                'inventory' => PartResource::collection(
-                    Part::query()->where('user_id', $userId)->whereNull('car_id')->orderBy('id')->get(),
-                )->resolve(),
+                // What is in the inventory, and for each part what merging it would do (null when it cannot be merged now).
+                'inventory' => $inventory->map(fn (Part $part): array => [...PartResource::make($part)->resolve(), 'merge' => $quotes[$part->id] ?? null])->all(),
+                // The last results of merging: they are drawn when the mechanic is done, so the driver may be told of them later.
+                'merges' => $this->merges->recent($userId),
                 'workshop' => [
                     'queue_max' => $this->rules->workshopMaxQueue(),
                     'mechanic' => $this->rules->mechanic(),

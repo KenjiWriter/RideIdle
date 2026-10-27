@@ -17,7 +17,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * The workshops: putting parts on a car, taking them off and upgrading them (+N), by the mechanic of the city, one job after the other. Every city has a
+ * The workshops: putting parts on a car, taking them off, upgrading them (+N) and merging them, by the mechanic of the city, one job after the other. Every city has a
  * workshop of its own with its own queue, and the car has to be in the city to be worked on.
  *
  * The times of a job are fixed when it is queued: it starts when the job before it in the queue of the city ends (or now, when the mechanic
@@ -41,6 +41,7 @@ final class Workshop
         private readonly Garage $garage,
         private readonly Travel $travel,
         private readonly TutorialScript $script,
+        private readonly PartMerges $merges,
     ) {}
 
     /**
@@ -70,14 +71,17 @@ final class Workshop
      * An upgrade is a job on a part that sits on the car: it is paid when it is queued (the price of the step, see `Rules::upgradeCostCents`),
      * the car stands while the mechanic is at it, and the part has the next level when it is done.
      *
-     * @param  string  $kind  WorkshopJob::KIND_MOUNT, KIND_UNMOUNT or KIND_UPGRADE
+     * A merge is a job on two parts of the inventory (`$withPartId` is the second one, which is used up): it is paid when it is queued, waits for the
+     * mechanic like the rest, and the car does not stand for it, because the parts are not on it. Both parts are reserved by the job.
+     *
+     * @param  string  $kind  WorkshopJob::KIND_MOUNT, KIND_UNMOUNT, KIND_UPGRADE or KIND_MERGE
      * @return list<WorkshopJob>
      *
      * @throws RuleRefusedException
      */
-    public function queue(int $userId, string $kind, int $partId, ?int $nowMs = null): array
+    public function queue(int $userId, string $kind, int $partId, ?int $nowMs = null, ?int $withPartId = null): array
     {
-        return $this->locked($userId, $nowMs, function (Collection $runs, int $now) use ($userId, $kind, $partId): array {
+        return $this->locked($userId, $nowMs, function (Collection $runs, int $now) use ($userId, $kind, $partId, $withPartId): array {
             // What is due comes first, so the parts and the cars are as they are now.
             $this->advanceLocked($userId, $runs, $now);
 
@@ -93,7 +97,18 @@ final class Workshop
 
             $pending = WorkshopJob::query()->where('user_id', $userId)->where('status', '!=', WorkshopJob::STATUS_DONE)->orderBy('finish_ms')->get();
 
-            if ($pending->contains('part_id', $part->id)) {
+            $partner = null;
+
+            if ($kind === WorkshopJob::KIND_MERGE) {
+                $partner = $withPartId === null || $withPartId === $part->id
+                    ? throw new RuleRefusedException('merge_parts_differ')
+                    : Part::query()->where('user_id', $userId)->lockForUpdate()->find($withPartId) ?? throw new RuleRefusedException('part_not_found');
+            }
+
+            // A part that is in a job is spoken for: so is the one that a merge is to use up.
+            $busy = $pending->flatMap(static fn (WorkshopJob $job): array => [$job->part_id, $job->merge_part_id])->filter()->all();
+
+            if (in_array($part->id, $busy, true) || ($partner !== null && in_array($partner->id, $busy, true))) {
                 throw new RuleRefusedException('part_busy');
             }
 
@@ -102,6 +117,7 @@ final class Workshop
             $plan = match ($kind) {
                 WorkshopJob::KIND_MOUNT => $this->planMount($car, $part, $pending->where('car_id', $car->id)),
                 WorkshopJob::KIND_UPGRADE => $this->planUpgrade($car, $part),
+                WorkshopJob::KIND_MERGE => $this->planMerge($part, $partner),
                 default => $this->planUnmount($car, $part),
             };
 
@@ -116,7 +132,11 @@ final class Workshop
 
             foreach ($plan as [$jobKind, $jobPart]) {
                 $definition = $this->catalog->part($jobPart->part_slug);
-                $quote = $jobKind === WorkshopJob::KIND_UPGRADE ? $this->upgradeQuote($jobPart, $car) : null;
+                $quote = match ($jobKind) {
+                    WorkshopJob::KIND_UPGRADE => $this->upgradeQuote($jobPart, $car),
+                    WorkshopJob::KIND_MERGE => ['cost_cents' => $this->rules->mergeCostCents($definition['price_cents']), 'duration_ms' => $this->rules->mergeJobMs($jobPart->slot, $definition['tier'])],
+                    default => null,
+                };
                 $duration = $quote['duration_ms'] ?? $this->rules->workshopJobMs($jobPart->slot, $definition['tier'], removal: $jobKind === WorkshopJob::KIND_UNMOUNT);
 
                 if ($jobKind === WorkshopJob::KIND_MOUNT && $firstMountMs !== null) {
@@ -125,9 +145,11 @@ final class Workshop
 
                 $job = WorkshopJob::query()->create([
                     'user_id' => $userId,
-                    'car_id' => $car->id,
+                    // The parts of a merge are not on the car, so it is not in the job: it does not stand while the mechanic is at it.
+                    'car_id' => $jobKind === WorkshopJob::KIND_MERGE ? null : $car->id,
                     'city' => $city,
                     'part_id' => $jobPart->id,
+                    'merge_part_id' => $jobKind === WorkshopJob::KIND_MERGE ? $partner?->id : null,
                     'kind' => $jobKind,
                     'cost_cents' => $quote['cost_cents'] ?? 0,
                     'upgrade_to' => $quote['to'] ?? null,
@@ -138,7 +160,7 @@ final class Workshop
 
                 // Paid when queued, under the lock of the wallet we hold: not enough cash undoes the job with the transaction.
                 if ($job->cost_cents > 0) {
-                    $this->ledger->post($userId, -$job->cost_cents, 'upgrade', "upgrade:{$job->id}");
+                    $this->ledger->post($userId, -$job->cost_cents, $jobKind, "{$jobKind}:{$job->id}");
                 }
 
                 $jobs[] = $job;
@@ -156,7 +178,7 @@ final class Workshop
     /**
      * Cancels a job that waits for the mechanic or that the mechanic is at, and the jobs that cannot happen without it: the
      * part that was to take the place of the one whose taking off is cancelled. A job costs only time, so nothing is given back,
-     * except for an upgrade that has not started, which is paid back whole (one at work loses its price and its work);
+     * except for an upgrade or a merge that has not started, which is paid back whole (one at work loses its price and its work);
      * the work done on the job at work is lost, and its part stays where it was. The jobs that
      * wait in the queue of that city move up, one after the other, from the end of the job still at work, or from now when none is.
      * A car that has no job at work after that drives again from now.
@@ -191,9 +213,9 @@ final class Workshop
             $cancelled = $pending->filter(fn (WorkshopJob $other): bool => $other->id === $job->id || $this->cannotHappenWithout($other, $job))->values();
             WorkshopJob::query()->whereIn('id', $cancelled->modelKeys())->delete();
 
-            // What a job of upgrading cost is given back while the mechanic has not started on it; the work and the price of one at work are lost.
-            foreach ($cancelled->where('kind', WorkshopJob::KIND_UPGRADE)->where('status', WorkshopJob::STATUS_QUEUED)->where('cost_cents', '>', 0) as $unpaid) {
-                $this->ledger->post($userId, $unpaid->cost_cents, 'upgrade_refund', "upgrade-refund:{$unpaid->id}");
+            // What a job of upgrading or merging cost is given back while the mechanic has not started on it; the work and the price of one at work are lost.
+            foreach ($cancelled->where('status', WorkshopJob::STATUS_QUEUED)->where('cost_cents', '>', 0) as $unpaid) {
+                $this->ledger->post($userId, $unpaid->cost_cents, "{$unpaid->kind}_refund", "{$unpaid->kind}-refund:{$unpaid->id}");
             }
 
             $remaining = $pending->reject(fn (WorkshopJob $other): bool => $cancelled->contains('id', $other->id))->values();
@@ -202,7 +224,7 @@ final class Workshop
             // The first of the jobs that wait starts at once when the mechanic has just been freed.
             $this->advanceLocked($userId, $runs, $now);
 
-            foreach ($cancelled->pluck('car_id')->unique() as $carId) {
+            foreach ($cancelled->pluck('car_id')->filter()->unique() as $carId) {
                 $this->leaveIfIdle((int) $carId, $runs->get($carId), $now);
             }
 
@@ -223,7 +245,7 @@ final class Workshop
             ->where('status', '!=', WorkshopJob::STATUS_DONE)
             ->orderBy('start_ms')
             ->orderBy('id')
-            ->with('part')
+            ->with(['part', 'mergePart'])
             ->get()
             ->all();
     }
@@ -281,6 +303,37 @@ final class Workshop
         }
 
         return [[WorkshopJob::KIND_UNMOUNT, $part]];
+    }
+
+    /**
+     * Two parts of the inventory that are made into one: the same slot, tier and rarity, neither on a car, and not the highest rarity.
+     *
+     * @return list<array{0: string, 1: Part}>
+     *
+     * @throws RuleRefusedException
+     */
+    private function planMerge(Part $part, Part $partner): array
+    {
+        if ($part->isMounted() || $partner->isMounted()) {
+            throw new RuleRefusedException('part_mounted');
+        }
+
+        $definition = $this->catalog->part($part->part_slug);
+        $otherDefinition = $this->catalog->part($partner->part_slug);
+
+        if ($definition === null || $otherDefinition === null || ($definition['price_cents'] ?? null) === null) {
+            throw new RuleRefusedException('merge_unavailable');
+        }
+
+        if ($part->slot !== $partner->slot || $definition['tier'] !== $otherDefinition['tier'] || $part->rarity !== $partner->rarity) {
+            throw new RuleRefusedException('merge_parts_differ');
+        }
+
+        if (Rarity::tryFrom((int) $part->rarity) === Rarity::Legendary) {
+            throw new RuleRefusedException('merge_max');
+        }
+
+        return [[WorkshopJob::KIND_MERGE, $part]];
     }
 
     /**
@@ -415,7 +468,8 @@ final class Workshop
             ->values();
 
         foreach ($jobs as $index => $job) {
-            $run = $runs->get($job->car_id);
+            // A merge has no car: nothing stands for it.
+            $run = $job->car_id === null ? null : $runs->get($job->car_id);
 
             if ($job->status === WorkshopJob::STATUS_QUEUED) {
                 if ($job->start_ms > $now) {
@@ -435,7 +489,9 @@ final class Workshop
             }
 
             $this->apply($job);
-            $job->forceFill(['status' => WorkshopJob::STATUS_DONE])->save();
+            // The parts of a failed merge are gone, and the row of the job with them: it is only marked when it is still there.
+            WorkshopJob::query()->whereKey($job->id)->update(['status' => WorkshopJob::STATUS_DONE]);
+            $job->status = WorkshopJob::STATUS_DONE;
 
             // The car stays while its next job starts at once, and drives when there is a gap or no job.
             $next = $jobs->slice($index + 1)->first(fn (WorkshopJob $other): bool => $other->car_id === $job->car_id);
@@ -453,9 +509,15 @@ final class Workshop
         }
     }
 
-    /** The part goes onto the car, or comes off it, or has its next level of upgrade. */
+    /** The part goes onto the car, or comes off it, or has its next level of upgrade, or the draw of the merge is made. */
     private function apply(WorkshopJob $job): void
     {
+        if ($job->kind === WorkshopJob::KIND_MERGE) {
+            $this->merges->resolve($job);
+
+            return;
+        }
+
         $part = Part::query()->lockForUpdate()->findOrFail($job->part_id);
 
         if ($job->kind === WorkshopJob::KIND_UPGRADE) {

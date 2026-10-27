@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\AccountIdentity;
 use App\Models\CrateOpening;
+use App\Models\MergeAttempt;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
 use App\Models\StorageOpening;
@@ -70,6 +71,19 @@ describe('what is removed', function () {
         expect($removed)->toMatchArray(['crate openings' => 1, 'storage openings' => 1])
             ->and(CrateOpening::query()->pluck('user_id')->all())->toBe([$other->id])
             ->and(StorageOpening::query()->count())->toBe(0);
+    });
+
+    it('removes the attempts of merging of the driver, and says so', function () {
+        $user = accountWithHistory();
+        $other = User::factory()->guest()->create();
+        $attempt = fn (User $driver): array => ['user_id' => $driver->id, 'slot' => 'tires', 'tier' => 2, 'to_rarity' => 2, 'part_slug' => 'street-tires-t2', 'chance_ppm' => 810_000, 'roll_ppm' => 1, 'success' => true, 'seed' => 'seed', 'finished_ms' => 1];
+        MergeAttempt::query()->create($attempt($user));
+        MergeAttempt::query()->create($attempt($other));
+
+        $removed = erasure()->erase($user);
+
+        expect($removed)->toMatchArray(['merge attempts' => 1])
+            ->and(MergeAttempt::query()->pluck('user_id')->all())->toBe([$other->id]);
     });
 
     it('leaves another account and everything of it as it was', function () {
