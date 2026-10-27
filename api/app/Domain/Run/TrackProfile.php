@@ -18,7 +18,7 @@ final readonly class TrackProfile
      * @param  int  $baseLapMs  lap time of a car with perf 1
      * @param  int  $fuelPerLapMl  fuel used per lap by a car with a fuel use multiplier of 1
      * @param  int  $rewardCentsPerLap  reward per lap in dry weather
-     * @param  int  $xpPerLap  XP per lap in dry weather
+     * @param  int  $xpPerLap  XP per lap in dry weather for a lap of the base time: a car that laps faster gets less (see `RunFreezer`)
      */
     public function __construct(
         public array $weights,

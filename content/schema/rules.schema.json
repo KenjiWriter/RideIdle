@@ -461,7 +461,7 @@
           "base_lap_ms": { "description": "Lap time of a car that matches the reference exactly.", "type": "integer", "minimum": 1 },
           "fuel_per_lap_ml": { "type": "integer", "minimum": 1 },
           "reward_cents_per_lap": { "$ref": "common.schema.json#/$defs/cents" },
-          "xp_per_lap": { "type": "integer", "minimum": 0 },
+          "xp_per_lap": { "description": "The XP of a lap of the base time, in dry weather. A car that laps faster gets the share of it that its lap is of the base lap, so that an hour on the track gives every car the same XP: XP is for the time of driving, and a faster car only drives more laps. A car that is slower gets all of it.", "type": "integer", "minimum": 0 },
           "demand": {
             "description": "How much every statistic counts on this track, in percent, adding up to 100.",
             "type": "object",
