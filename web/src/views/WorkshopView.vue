@@ -60,8 +60,16 @@ const car = computed(() => store.garage?.car ?? null)
 const jobs = computed(() => store.garage?.workshop.jobs ?? [])
 /** Every job a mechanic is at: several are done at once when the workshop has bays and mechanics for them. */
 const workingJobs = computed(() => jobs.value.filter((job) => job.status === 'working'))
-/** The cash of the driver as the screens last saw it (null when nothing has told it yet: then the server decides). */
-const cash = computed(() => run.wallet?.cash_cents ?? store.cash?.cash_cents ?? null)
+/**
+ * The cash of the driver as the screens last saw it: the run's wallet (live while the car drives) and the one of the last answer of the garage (current after a
+ * purchase). The larger of the two is used, so that a figure that is a little old never shuts a purchase the driver can make; the server has the last word. Null when
+ * nothing has told it yet.
+ */
+const cash = computed(() => {
+  const seen = [run.wallet?.cash_cents, store.cash?.cash_cents].filter((cents): cents is number => typeof cents === 'number')
+
+  return seen.length === 0 ? null : Math.max(...seen)
+})
 const waiting = computed(() => jobs.value.filter((job) => job.status === 'queued'))
 const inventory = computed(() => store.garage?.inventory ?? [])
 /** The part that the tutorial points at when it asks for the tires to be put on: the first pair of tires in the inventory, or the first part. */

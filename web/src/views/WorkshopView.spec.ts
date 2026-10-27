@@ -1179,10 +1179,10 @@ describe('WorkshopView', () => {
       expect(wrapper.get('[data-test="gear-tire_machine-next"]').text()).toBe('Next: Automatic machine with a balancer · time ×0.35')
     })
 
-    it('disables a purchase the cash does not cover, and says what it needs', async () => {
-      serve({ 'GET /api/v1/garage': () => respond(200, withGear()), 'GET /api/v1/runs/current': noRun })
+    it('disables a purchase the cash does not cover, and says what it needs: the cash comes with the answer of the garage', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, { ...withGear(), wallet: { cash_cents: 39_999, xp: 0 } }), 'GET /api/v1/runs/current': noRun })
 
-      const { wrapper } = await mountView(WorkshopView, '/workshop', { prepare: cashOf(39_999) })
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
       await wrapper.get('[data-test="gear-toggle"]').trigger('click')
 
@@ -1193,14 +1193,16 @@ describe('WorkshopView', () => {
       expect(wrapper.get('[data-test="buy-toolkit"]').attributes('disabled')).toBeDefined()
     })
 
-    it('lets the server decide when it does not know the cash yet', async () => {
-      serve({ 'GET /api/v1/garage': () => respond(200, withGear()), 'GET /api/v1/runs/current': noRun })
+    it('counts the larger of the cash of the run and the cash of the garage, so that an old figure never shuts a purchase the driver can make', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, { ...withGear(), wallet: { cash_cents: 39_999, xp: 0 } }), 'GET /api/v1/runs/current': noRun })
 
-      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      // The car has been earning since the garage was asked: the wallet of the run is the live one.
+      const { wrapper } = await mountView(WorkshopView, '/workshop', { prepare: cashOf(500_000) })
       await flushPromises()
       await wrapper.get('[data-test="gear-toggle"]').trigger('click')
 
       expect(wrapper.get('[data-test="buy-tire_machine"]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.find('[data-test="gear-tire_machine-short"]').exists()).toBe(false)
     })
 
     it('shows the answer of the server in the card when a purchase is refused', async () => {

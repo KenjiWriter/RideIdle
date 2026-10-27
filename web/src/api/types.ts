@@ -558,6 +558,8 @@ export interface GarageResponse {
     /** The workshop of the city the car stands in: its queue, its mechanics (several work at once when it has bays for them) and what it has bought. */
     workshop: { city: { slug: string; name: string }; queue_max: number; mechanic: { level: number; time_cut_ppm: number }; gear: WorkshopGear; jobs: WorkshopJob[] }
   }
+  /** What the driver has to spend as of this answer: what a job or a purchase has just cost is already taken off. */
+  wallet: Wallet
   now_ms: number
 }
 

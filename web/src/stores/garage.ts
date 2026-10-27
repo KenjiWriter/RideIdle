@@ -54,6 +54,7 @@ export const useGarageStore = defineStore('garage', () => {
     }
 
     garage.value = response.data
+    cash.value = response.wallet
     clockOffsetMs.value = response.now_ms - Date.now()
     loaded.value = true
   }

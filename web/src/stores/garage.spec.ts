@@ -40,6 +40,21 @@ describe('garage store', () => {
     expect(store.serverNow()).toBe(NOW + 5_000)
   })
 
+  it('keeps the cash that every answer of the garage brings, the one of a purchase of equipment included', async () => {
+    serveApi(fetchMock, {
+      'GET /api/v1/garage': () => respond(200, { ...aGarage(), wallet: { cash_cents: 120_000, xp: 40 } }),
+      'POST /api/v1/garage/equipment': () => respond(201, { ...aGarage(), wallet: { cash_cents: 80_000, xp: 40 }, repeated: false }),
+      'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }),
+    })
+    const store = useGarageStore()
+
+    await store.loadGarage()
+    expect(store.cash).toEqual({ cash_cents: 120_000, xp: 40 })
+
+    await store.buyEquipment('tire_machine')
+    expect(store.cash).toEqual({ cash_cents: 80_000, xp: 40 })
+  })
+
   describe('the level of the car', () => {
     const atLevel = (level: number, tierUnlock: { tier: number; level: number } | null, total = 0) =>
       aGarage({ car: aCar({ level, xp: { total, level_start: 0, next_level_at: 1 }, tier_unlock: tierUnlock }) })

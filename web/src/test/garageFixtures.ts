@@ -166,6 +166,7 @@ export function aGarage(data: Partial<GarageResponse['data']> = {}, nowMs = NOW)
       workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs: [] },
       ...data,
     },
+    wallet: { cash_cents: 300_000, xp: 0 },
     now_ms: nowMs,
   }
 }
