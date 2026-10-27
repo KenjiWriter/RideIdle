@@ -371,6 +371,10 @@ describe('the guided first minutes', function () {
         tutorialBefore($driver, 'mount');
         expect(app(TutorialScript::class)->firstMountMs($driver->id))->toBe(30_000);
 
+        // The garage says the same before the job is queued: short, and with no fee for the tires.
+        $this->getJson('/api/v1/garage', bearerFor($driver))->assertOk()
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => 0, 'duration_ms' => 30_000]);
+
         $first = $this->postJson('/api/v1/garage/jobs', ['kind' => 'mount', 'part' => $tires->id], bearerFor($driver))->assertCreated()->json('data.workshop.jobs.0');
 
         // The first job is short, and it is not queued again behind a longer one.

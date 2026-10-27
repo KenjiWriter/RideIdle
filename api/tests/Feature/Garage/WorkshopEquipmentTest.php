@@ -381,6 +381,51 @@ describe('the times and the fee of the jobs', function () {
     });
 });
 
+describe('the quotes of putting on and taking off', function () {
+    it('shows what putting a part on costs and takes: the fee of the vulcanizer for tires, nothing for the other slots', function () {
+        [$driver] = gearDriver();
+        gearStock($driver);
+        gearStock($driver, 'sport-exhaust-t2', 'exhaust');
+
+        gearGarage($driver)->assertOk()
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => GEAR_TIRE_FEE_CENTS, 'duration_ms' => GEAR_MOUNT_T2_MS])
+            ->assertJsonPath('data.inventory.1.mount_next', ['cost_cents' => 0, 'duration_ms' => GEAR_MOUNT_T2_MS]);
+
+        buyGear($driver, 'tire_machine')->assertCreated()
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => 0, 'duration_ms' => 117_600]);
+    });
+
+    it('adds the taking off of the part that sits in the slot to putting on a new one, and shows the taking off of a part of the car', function () {
+        [$driver, $run] = gearDriver();
+        Part::factory()->state(['part_slug' => 'street-tires-t1', 'slot' => 'tires'])->mountedOn($run->car)->create();
+        $new = gearStock($driver);
+
+        // The old tires come off in 70.6 s and the new ones go on in 235.2 s, and the vulcanizer asks its fee for each.
+        gearGarage($driver)->assertOk()
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => 2 * GEAR_TIRE_FEE_CENTS, 'duration_ms' => 70_560 + GEAR_MOUNT_T2_MS])
+            ->assertJsonPath('data.car.slots.0.part.unmount_next', ['cost_cents' => GEAR_TIRE_FEE_CENTS, 'duration_ms' => 70_560]);
+
+        buyGear($driver, 'tire_machine')->assertCreated()
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => 0, 'duration_ms' => 35_280 + 117_600])
+            ->assertJsonPath('data.car.slots.0.part.unmount_next', ['cost_cents' => 0, 'duration_ms' => 35_280]);
+
+        // What the quote says is what the jobs are: queue them and the times are the same.
+        $queued = gearJob($driver, 'mount', $new->id)->assertCreated();
+        expect(gearLength($queued, 0) + gearLength($queued, 1))->toBe(35_280 + 117_600);
+    });
+
+    it('leaves the taking off out of the quote when the old part is on its way off already', function () {
+        [$driver, $run] = gearDriver();
+        $old = Part::factory()->state(['part_slug' => 'street-tires-t1', 'slot' => 'tires'])->mountedOn($run->car)->create();
+        gearStock($driver);
+
+        gearJob($driver, 'unmount', $old->id)->assertCreated();
+
+        gearGarage($driver)->assertOk()
+            ->assertJsonPath('data.inventory.0.mount_next', ['cost_cents' => GEAR_TIRE_FEE_CENTS, 'duration_ms' => GEAR_MOUNT_T2_MS]);
+    });
+});
+
 describe('more mechanics', function () {
     it('lets a merge go on beside the putting on of a part when there is a second mechanic at work', function () {
         [$driver] = gearDriver();

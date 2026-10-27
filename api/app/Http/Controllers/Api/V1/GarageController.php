@@ -121,12 +121,14 @@ final class GarageController extends Controller
         $pending = $this->workshop->pendingJobs($userId);
         $busy = collect($pending)->flatMap(static fn (WorkshopJob $job): array => [$job->part_id, $job->merge_part_id])->filter()->values()->all();
         $quotes = $this->merges->quotes($userId, $inventory, $busy, $gear);
+        // What "put on" would cost and take for each part of the inventory (the fee of the vulcanizer, the taking off of the part that sits there), with this workshop.
+        $mounts = $car === null ? [] : $this->workshop->mountQuotes($car, $inventory, collect($pending), $gear);
 
         return response()->json([
             'data' => [
                 'car' => $car === null ? null : $this->carData($car, $run, $gear),
                 // What is in the inventory, and for each part what merging it would do (null when it cannot be merged now).
-                'inventory' => $inventory->map(fn (Part $part): array => [...PartResource::make($part)->resolve(), 'merge' => $quotes[$part->id] ?? null, 'repair_next' => $this->workshop->repairQuote($part, $gear)])->all(),
+                'inventory' => $inventory->map(fn (Part $part): array => [...PartResource::make($part)->resolve(), 'merge' => $quotes[$part->id] ?? null, 'repair_next' => $this->workshop->repairQuote($part, $gear), 'mount_next' => $mounts[$part->id] ?? null])->all(),
                 // The last results of merging: they are drawn when the mechanic is done, so the driver may be told of them later.
                 'merges' => $this->merges->recent($userId),
                 'workshop' => [
@@ -187,6 +189,8 @@ final class GarageController extends Controller
                     'upgrade_next' => $this->workshop->upgradeQuote($part, $car, $gear),
                     // What putting the part right would cost and take, or why it cannot be (it is not worn, or it is worn out).
                     'repair_next' => $this->workshop->repairQuote($part, $gear),
+                    // What taking it off costs and takes (the fee of the vulcanizer for tires, where the workshop has no tire machine).
+                    'unmount_next' => $this->workshop->unmountQuote($part, $gear),
                 ],
                 'built_in' => $slot === 'engine',
             ], self::SLOTS),

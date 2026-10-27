@@ -152,17 +152,9 @@ final class Workshop
                     WorkshopJob::KIND_MERGE => ['cost_cents' => $this->rules->mergeCostCents($definition['price_cents']), 'duration_ms' => $this->rules->mergeJobMs($jobPart->slot, $definition['tier'], $gear)],
                     WorkshopJob::KIND_REPAIR => $this->repairQuote($jobPart, $gear),
                     WorkshopJob::KIND_SERVICE => $this->serviceQuote($car, $gear),
-                    // Putting on and taking off cost nothing but time, and the fee of the vulcanizer where the workshop has no tire machine.
-                    default => [
-                        'cost_cents' => $firstMountMs === null ? $this->rules->gearFeeCents($gear, $jobPart->slot) : 0,
-                        'duration_ms' => $this->rules->workshopJobMs($jobPart->slot, $definition['tier'], removal: $jobKind === WorkshopJob::KIND_UNMOUNT, gear: $gear),
-                    ],
+                    default => $this->slotJobQuote($jobKind, $jobPart, $gear, $firstMountMs),
                 };
                 $duration = $quote['duration_ms'];
-
-                if ($jobKind === WorkshopJob::KIND_MOUNT && $firstMountMs !== null) {
-                    $duration = min($duration, $firstMountMs);
-                }
 
                 // The parts of a merge are not on the car, nor is a part of the inventory that is repaired, so the car is not in the job: it does not stand
                 // while the mechanic is at it.
@@ -330,6 +322,71 @@ final class Workshop
             ->with(['part', 'mergePart'])
             ->get()
             ->all();
+    }
+
+    /**
+     * What a job of putting a part on or taking it off costs and takes: nothing but time, and the fee of the vulcanizer where the workshop has no tire machine.
+     * While the tutorial arranges the first mounting of the driver (`$firstMountMs`, see `TutorialScript`) the putting on is short and the fee is not asked.
+     *
+     * @param  string  $kind  WorkshopJob::KIND_MOUNT or KIND_UNMOUNT
+     * @return array{cost_cents: int, duration_ms: int}
+     */
+    private function slotJobQuote(string $kind, Part $part, WorkshopGear $gear, ?int $firstMountMs): array
+    {
+        $tier = $this->catalog->part($part->part_slug)['tier'];
+        $duration = $this->rules->workshopJobMs($part->slot, $tier, removal: $kind === WorkshopJob::KIND_UNMOUNT, gear: $gear);
+
+        return [
+            'cost_cents' => $firstMountMs === null ? $this->rules->gearFeeCents($gear, $part->slot) : 0,
+            'duration_ms' => $kind === WorkshopJob::KIND_MOUNT && $firstMountMs !== null ? min($duration, $firstMountMs) : $duration,
+        ];
+    }
+
+    /**
+     * What pressing "put on" costs and takes for every part of the inventory, by the id of the part: what the jobs that it queues come to, which is the putting
+     * on and, when the slot has a part that is not on its way off already, the taking off of that one first. Tires of a workshop without a tire machine cost the
+     * fee for each. A part with no definition has no quote.
+     *
+     * @param  Collection<int, Part>  $inventory  the parts of the driver that are on no car
+     * @param  Collection<int, WorkshopJob>  $pending  the jobs of the driver that are not done
+     * @return array<int, array{cost_cents: int, duration_ms: int}|null>
+     */
+    public function mountQuotes(Car $car, Collection $inventory, Collection $pending, WorkshopGear $gear): array
+    {
+        $firstMountMs = $this->script->firstMountMs((int) $car->user_id);
+        $occupants = Part::query()->where('car_id', $car->id)->whereNotNull('mounted_slot')->get()->keyBy('mounted_slot');
+        $leaving = $pending->where('kind', WorkshopJob::KIND_UNMOUNT)->where('car_id', $car->id)->pluck('part_id');
+        $quotes = [];
+
+        foreach ($inventory as $part) {
+            if ($this->catalog->part($part->part_slug) === null) {
+                $quotes[$part->id] = null;
+
+                continue;
+            }
+
+            $quote = $this->slotJobQuote(WorkshopJob::KIND_MOUNT, $part, $gear, $firstMountMs);
+            $occupant = $occupants->get($part->slot);
+
+            if ($occupant !== null && ! $leaving->contains($occupant->id) && $this->catalog->part($occupant->part_slug) !== null) {
+                $removal = $this->slotJobQuote(WorkshopJob::KIND_UNMOUNT, $occupant, $gear, $firstMountMs);
+                $quote = ['cost_cents' => $quote['cost_cents'] + $removal['cost_cents'], 'duration_ms' => $quote['duration_ms'] + $removal['duration_ms']];
+            }
+
+            $quotes[$part->id] = $quote;
+        }
+
+        return $quotes;
+    }
+
+    /**
+     * What taking a part off the car costs and takes.
+     *
+     * @return array{cost_cents: int, duration_ms: int}|null null for a part with no definition
+     */
+    public function unmountQuote(Part $part, WorkshopGear $gear): ?array
+    {
+        return $this->catalog->part($part->part_slug) === null ? null : $this->slotJobQuote(WorkshopJob::KIND_UNMOUNT, $part, $gear, null);
     }
 
     /**
