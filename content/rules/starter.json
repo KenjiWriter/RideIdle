@@ -125,7 +125,7 @@
     "stat_floor_ppm": 600000,
     "unserviceable_ppm": 200000,
     "repair_cost_ppm_of_price": 500000,
-    "service": { "every_km": 5000, "step_km": 500, "penalty_ppm_per_step": 40000, "max_steps": 5, "cost_ppm_of_value": 40000, "min_cost_cents": 2000, "time_ms": 900000 },
+    "service": { "every_km": 5000, "step_km": 500, "penalty_ppm_per_step": 40000, "max_steps": 5, "cost_ppm_of_income": 40000, "min_cost_cents": 2000, "time_ms": 900000 },
     "breakdown": { "wear_factor": 3, "overdue_factor": 2, "unserviceable_factor": 1 }
   },
   "workshop": {

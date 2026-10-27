@@ -8,12 +8,12 @@ use Closure;
 
 /**
  * What the game charges for keeping a car, set against what the model takes off the income for it (`model.upkeep`, a tenth: service, repairs and tires).
- * The game charges two things: a service every `every_km` of the odometer, which costs a share of the value of the car, and the repair of the parts
+ * The game charges two things: a service every `every_km` of the odometer, which costs a share of what the car earns in that stretch, and the repair of the parts
  * that wear, which costs a share of the price of a part for the whole life of it that was used up. Both are per kilometre, so what an hour of driving
  * costs follows from how far the car drives in an hour, which is the laps of an hour times the length of a lap.
  *
  * It knows no pack and no rules: the collector (the command) hands over, for every level of the ladder of the game, the income of the best pair of car and
- * track, how long a lap of it takes and is, what the car is worth and which parts of the shop it would have on it, with what they wear a kilometre.
+ * track, how long a lap of it takes and is and what it pays, and which parts of the shop the car would have on it, with what they wear a kilometre.
  * A report only: the numbers do not touch a gate.
  *
  * Wear is counted in billionths of the life of a part (a billion is worn out), as in `App\Domain\Run\WearPlan`.
@@ -26,7 +26,7 @@ final class UpkeepReport
 
     /**
      * @param  int  $serviceEveryKm  how many kilometres the car drives between two services
-     * @param  Closure(int): int  $serviceCostCents  what a service costs, in cents, for a car worth this many cents
+     * @param  Closure(int, int): int  $serviceCostCents  what a service costs, in cents, for a car whose lap pays this many cents on a track whose lap is this many metres long
      * @param  int  $repairPpmOfPrice  what the repair of a part costs for the whole of its life, as a share of its price in ppm (half of it: 500 000)
      */
     public function __construct(
@@ -38,14 +38,14 @@ final class UpkeepReport
     /**
      * What an hour of driving costs a car at each level, and what share of its income that is.
      *
-     * @param  list<array{level: int, car: string, track: string, net: float, lap_ms: int, lap_length_m: int, car_value_cents: int, parts: list<array{slot: string, model: string, price_cents: int, ppb_per_km: int}>}>  $levels  the best pair of car and track of each level, as the ladder of the game has it
+     * @param  list<array{level: int, car: string, track: string, net: float, lap_ms: int, lap_length_m: int, lap_cash_cents: int, parts: list<array{slot: string, model: string, price_cents: int, ppb_per_km: int}>}>  $levels  the best pair of car and track of each level, as the ladder of the game has it
      * @return list<array{level: int, car: string, track: string, net: float, km_per_hour: float, service: float, parts: float, upkeep: float, share: float, set_price: float, set: list<array{slot: string, model: string, price: float, per_hour: float}>}>
      */
     public function rows(array $levels): array
     {
         return array_map(function (array $level): array {
             $kmPerHour = (float) (self::HOUR_MS / $level['lap_ms'] * $level['lap_length_m'] / 1000);
-            $service = ($this->serviceCostCents)($level['car_value_cents']) / 100 / $this->serviceEveryKm * $kmPerHour;
+            $service = ($this->serviceCostCents)($level['lap_cash_cents'], $level['lap_length_m']) / 100 / $this->serviceEveryKm * $kmPerHour;
 
             $set = array_map(fn (array $part): array => [
                 'slot' => $part['slot'],

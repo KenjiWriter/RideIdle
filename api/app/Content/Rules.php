@@ -175,12 +175,25 @@ final class Rules
         return max(1, Ppm::mul($this->workshopJobMs($slot, $tier), Ppm::ONE - max(0, min(Ppm::ONE, $conditionPpm))));
     }
 
-    /** What a service of a car costs: a share of its value, but not less than the minimum. */
-    public function serviceCostCents(int $valueCents): int
+    /** How many laps of a track it takes to drive the interval of the service (rounded up). */
+    public function serviceIntervalLaps(int $lapLengthM): int
+    {
+        return intdiv($this->data['wear']['service']['every_km'] * 1000 + $lapLengthM - 1, $lapLengthM);
+    }
+
+    /**
+     * What a service of a car costs: 4% of what it earns between two services, but not less than the minimum. The income is the reward of a lap that the
+     * car is frozen with (the place among the bots and the class of the car counted) times the laps of the interval, so a car that earns more pays more
+     * and the service is the same share of the income at every level, whatever the car cost.
+     *
+     * @param  int  $lapCashCents  what a lap of the car pays, in cents
+     * @param  int  $lapLengthM  how long a lap of the track it drives is, in metres
+     */
+    public function serviceCostCents(int $lapCashCents, int $lapLengthM): int
     {
         $service = $this->data['wear']['service'];
 
-        return max($service['min_cost_cents'], Ppm::mul($valueCents, $service['cost_ppm_of_value']));
+        return max($service['min_cost_cents'], Ppm::mul($lapCashCents * $this->serviceIntervalLaps($lapLengthM), $service['cost_ppm_of_income']));
     }
 
     /** How long a service takes the mechanic, cut by his level like any job. */

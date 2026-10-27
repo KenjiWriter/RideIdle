@@ -370,13 +370,18 @@ final class Workshop
     }
 
     /**
-     * What a service of the car costs and takes: a share of its value, and a quarter of an hour of the mechanic.
+     * What a service of the car costs and takes: 4% of what the car earns in the kilometres between two services, and a quarter of an hour of the mechanic.
+     * A car with no run earns nothing, so a service costs the least it can.
      *
      * @return array{cost_cents: int, duration_ms: int}
      */
     public function serviceQuote(Car $car): array
     {
-        return ['cost_cents' => $this->rules->serviceCostCents((int) $car->value_cents), 'duration_ms' => $this->rules->serviceJobMs()];
+        $run = $this->garage->runOf($car);
+        $lapCash = (int) ($run?->config['lap_cash_cents']['dry'] ?? 0);
+        $lengthM = $run === null ? $this->rules->trackLengthM($this->rules->tracksOf($this->rules->homeRegion())[0]) : $this->rules->trackLengthM($run->track_slug);
+
+        return ['cost_cents' => $this->rules->serviceCostCents($lapCash, $lengthM), 'duration_ms' => $this->rules->serviceJobMs()];
     }
 
     /**

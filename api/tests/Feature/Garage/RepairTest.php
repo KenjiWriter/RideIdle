@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Car;
 use App\Models\Part;
+use App\Models\RaceRun;
 use App\Models\User;
 use App\Models\WorkshopJob;
 use App\Services\Ledger;
@@ -11,11 +12,11 @@ use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 
 // Street tires of tier 2 cost $570. Putting them right costs half of that for the whole condition they are short of, and takes the time of putting them on
-// (120 000 x 2 x 0.98 = 235 200 ms) for the same: at 50% $142.50 and 117 600 ms. A service of a car worth $1 140 costs 4% of that ($45.60) and takes 15 minutes
-// less the mechanic: 900 000 x 0.98 = 882 000 ms.
+// (120 000 x 2 x 0.98 = 235 200 ms) for the same: at 50% $142.50 and 117 600 ms. A service costs 4% of what the car earns in the 5 000 km between two: a lap of
+// $15.50 on the track of 2.6 km, 1 924 laps, which is $1 192.88, and it takes 15 minutes less the mechanic: 900 000 x 0.98 = 882 000 ms.
 const REPAIR_HALF_CENTS = 14_250;
 const REPAIR_HALF_MS = 117_600;
-const SERVICE_CENTS = 4_560;
+const SERVICE_CENTS = 119_288;
 const SERVICE_MS = 882_000;
 
 afterEach(fn () => Carbon::setTestNow());
@@ -170,7 +171,7 @@ describe('the service of the car', function () {
     });
 
     it('is paid when it is queued, stops the car, and starts the interval of the service again when the mechanic is done', function () {
-        [$driver, $car] = repairDriver();
+        [$driver, $car] = repairDriver(500_000_000, 500_000);
         $car->forceFill(['mileage_m' => 6_200_000])->save();
 
         serviceJob($driver)->assertCreated()
@@ -180,7 +181,7 @@ describe('the service of the car', function () {
             ->assertJsonPath('data.workshop.jobs.0.finish_ms', RUN_T0 + SERVICE_MS)
             ->assertJsonPath('data.car.run.stop_reason', 'workshop');
 
-        expect((new Ledger)->balance($driver->id))->toBe(100_000 - SERVICE_CENTS);
+        expect((new Ledger)->balance($driver->id))->toBe(500_000 - SERVICE_CENTS);
 
         clockAt(SERVICE_MS + 1_000);
 
@@ -193,15 +194,26 @@ describe('the service of the car', function () {
         expect($car->refresh()->serviced_at_m)->toBe($car->mileage_m);
     });
 
-    it('is refused to a driver who cannot pay, and costs at least the least a service costs', function () {
+    it('is refused to a driver who cannot pay', function () {
         [$poor] = repairDriver(0, SERVICE_CENTS - 1);
 
         serviceJob($poor)->assertStatus(422)->assertJsonPath('code', 'insufficient_funds');
         expect(WorkshopJob::query()->count())->toBe(0);
+    });
 
-        // A car that is worth next to nothing is serviced for the least: $20.
-        [$other, $cheap] = repairDriver(0);
-        $cheap->forceFill(['value_cents' => 1_000])->save();
-        repairGarage($other)->assertOk()->assertJsonPath('data.car.service.cost_cents', 2_000);
+    it('costs a share of what the car earns, whatever the car is worth: twice the reward of a lap is twice the price, and the least is $20', function () {
+        [$driver, $car] = repairDriver(0);
+        $run = RaceRun::query()->where('car_id', $car->id)->first();
+
+        // The value of the car does not come into it.
+        $car->forceFill(['value_cents' => 78_000_000])->save();
+        repairGarage($driver)->assertOk()->assertJsonPath('data.car.service.cost_cents', SERVICE_CENTS);
+
+        $run->forceFill(['config' => [...$run->config, 'lap_cash_cents' => ['dry' => 3_100]]])->save();
+        repairGarage($driver)->assertOk()->assertJsonPath('data.car.service.cost_cents', 2 * SERVICE_CENTS);
+
+        // A car that earns next to nothing is serviced for the least.
+        $run->forceFill(['config' => [...$run->config, 'lap_cash_cents' => ['dry' => 1]]])->save();
+        repairGarage($driver)->assertOk()->assertJsonPath('data.car.service.cost_cents', 2_000);
     });
 });

@@ -65,11 +65,11 @@
             "step_km": { "type": "integer", "minimum": 1 },
             "penalty_ppm_per_step": { "type": "integer", "minimum": 0, "maximum": 1000000 },
             "max_steps": { "type": "integer", "minimum": 1 },
-            "cost_ppm_of_value": { "description": "What a service costs: this share of the value of the car.", "type": "integer", "minimum": 0 },
+            "cost_ppm_of_income": { "description": "What a service costs: this share of what the car earns between two services (the reward of a lap times the laps of every_km), so that it is the same share of the income on every rung of the ladder, whatever the car costs.", "type": "integer", "minimum": 0 },
             "min_cost_cents": { "$ref": "common.schema.json#/$defs/cents" },
             "time_ms": { "description": "How long a service takes the mechanic, before the level of the mechanic cuts it.", "type": "integer", "minimum": 1000 }
           },
-          "required": ["every_km", "step_km", "penalty_ppm_per_step", "max_steps", "cost_ppm_of_value", "min_cost_cents", "time_ms"],
+          "required": ["every_km", "step_km", "penalty_ppm_per_step", "max_steps", "cost_ppm_of_income", "min_cost_cents", "time_ms"],
           "additionalProperties": false
         },
         "breakdown": {

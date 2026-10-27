@@ -36,15 +36,18 @@ it('gives a part what is left of its statistics: 60% when it is worn out, in sta
         ->and($rules->stagedConditionPpm(2_000_000_000))->toBe(0);
 });
 
-it('prices the repair of a part at half of its price for the condition it is short of, and its time as that share of putting it on', function () {
+it('prices the repair of a part at half of its price for the condition it is short of, its time as that share of putting it on, and a service as a share of the income', function () {
     $rules = app(Rules::class);
 
     expect($rules->partRepairCostCents(57_000, 500_000))->toBe(14_250)
         ->and($rules->partRepairCostCents(57_000, 1_000_000))->toBe(0)
         ->and($rules->partRepairCostCents(57_000, 0))->toBe(28_500)
         ->and($rules->partRepairMs('tires', 2, 500_000))->toBe(117_600)
-        ->and($rules->serviceCostCents(114_000))->toBe(4_560)
-        ->and($rules->serviceCostCents(1_000))->toBe(2_000)
+        // 4% of what a lap of $15.50 earns in the 1 924 laps of 5 000 km on a track of 2.6 km, and not less than $20.
+        ->and($rules->serviceIntervalLaps(2_600))->toBe(1_924)
+        ->and($rules->serviceCostCents(1_550, 2_600))->toBe(119_288)
+        ->and($rules->serviceCostCents(3_100, 2_600))->toBe(238_576)
+        ->and($rules->serviceCostCents(1, 2_600))->toBe(2_000)
         ->and($rules->serviceJobMs())->toBe(882_000);
 });
 

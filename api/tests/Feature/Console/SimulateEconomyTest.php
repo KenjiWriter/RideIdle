@@ -362,10 +362,11 @@ describe('economy:simulate', function () {
         $output = Artisan::output();
 
         expect($output)->toContain('Upkeep that the game charges (a service every 5000 km, and the repairs of the shop set of the level), against the 10% that the model takes off:')
-            ->and($output)->toContain('its price new at the dealer')
+            ->and($output)->toContain('what the car earns between two services')
             ->and($output)->toMatch('/\| level \| car\s+\| income \$\/h \| km\/h \| service \$\/h \| parts \$\/h \| upkeep \$\/h \| share \| shop set \$ \|/')
-            ->and($output)->toMatch('/\| 1\s+\| rdzak-gt-4\s+\| 600\s+\| 125\s+\| 21\.47\s+\|/')
-            ->and($output)->toContain('Upkeep: the game charges 1.9% to 58% of the income over the levels of the ladder')
+            ->and($output)->toMatch('/\| 1\s+\| rdzak-gt-4\s+\| 600\s+\| 125\s+\| 29\.77\s+\|/')
+            // The service is the same share of the income at every level, so the game charges about the same share all the way up: 4.8% to 5.9%.
+            ->and($output)->toContain('Upkeep: the game charges 4.8% to 5.9% of the income over the levels of the ladder')
             ->and($output)->toContain('This is a report: it has no gate and does not touch the exit code.')
             // And a line under the table of the consistency report, which is not a number of it.
             ->and($output)->toContain('Upkeep (informational, not a number of the table above): the model takes 10% of the income off');
@@ -384,7 +385,9 @@ describe('economy:simulate', function () {
             ->and($upkeep['game_share_min'])->toBeLessThan($upkeep['game_share_median'])
             ->and($upkeep['game_share_median'])->toBeLessThan($upkeep['game_share_max'])
             ->and($upkeep['levels_below_model'])->toContain(1)
-            ->and($upkeep['levels_above_model'])->toContain(27)
+            // Nowhere does the game charge more than the model takes off: the service follows the income, not the price of the car.
+            ->and($upkeep['levels_above_model'])->toBe([])
+            ->and($upkeep['game_share_max'])->toBeLessThan(0.07)
             ->and(array_column($upkeep['rows'], 'level')[0])->toBe(1)
             ->and($upkeep['rows'][0])->toHaveKeys(['car', 'track', 'net', 'km_per_hour', 'service', 'parts', 'upkeep', 'share', 'set_price', 'set'])
             // The first level has the parts of tier 1 open, which are tires and suspension.

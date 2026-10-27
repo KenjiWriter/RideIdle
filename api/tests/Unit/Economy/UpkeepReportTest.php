@@ -5,16 +5,17 @@ declare(strict_types=1);
 use App\Domain\Economy\UpkeepReport;
 
 /**
- * The upkeep as the game charges it: a service every 5 000 km that costs 4% of the value of the car (at least $20), and the repair of a part that costs
- * half of its price for the whole of its life.
+ * The upkeep as the game charges it: a service every 5 000 km that costs 4% of what the car earns in them (at least $20), and the repair of a part that
+ * costs half of its price for the whole of its life.
  */
 function anUpkeepReport(): UpkeepReport
 {
-    return new UpkeepReport(5_000, static fn (int $valueCents): int => max(2_000, intdiv($valueCents * 40_000, 1_000_000)), 500_000);
+    // The laps of the interval are the 5 000 km over the length of a lap, rounded up.
+    return new UpkeepReport(5_000, static fn (int $lapCashCents, int $lapLengthM): int => max(2_000, intdiv($lapCashCents * intdiv(5_000_000 + $lapLengthM - 1, $lapLengthM) * 40_000, 1_000_000)), 500_000);
 }
 
 /**
- * A level of the ladder: a car worth $21 500 that laps a track of 2.5 km in 72 s, which is 50 laps an hour and 125 km an hour, with the tires of tier 2
+ * A level of the ladder: a car whose lap of 2.5 km, driven in 72 s (50 laps an hour, 125 km an hour), pays $18, with the tires of tier 2
  * ($570, a part of the life of 25 000 billionths a kilometre) and brakes ($760, half of that).
  *
  * @param  array<string, mixed>  $changes
@@ -29,7 +30,7 @@ function anUpkeepLevel(array $changes = []): array
         'net' => 800.0,
         'lap_ms' => 72_000,
         'lap_length_m' => 2_500,
-        'car_value_cents' => 2_150_000,
+        'lap_cash_cents' => 1_800,
         'parts' => [
             ['slot' => 'tires', 'model' => 'street-tires-t2', 'price_cents' => 57_000, 'ppb_per_km' => 25_000],
             ['slot' => 'brakes', 'model' => 'disc-brakes-t2', 'price_cents' => 76_000, 'ppb_per_km' => 12_500],
@@ -47,8 +48,8 @@ it('counts the kilometres of an hour from the laps of an hour and the length of 
 it('charges the service by the kilometre: the cost of a service over the kilometres between two, times the kilometres of an hour', function () {
     $row = anUpkeepReport()->rows([anUpkeepLevel()])[0];
 
-    // 4% of $21 500 is $860 for 5 000 km, which is $0.172 a kilometre, and $21.50 for the 125 km of an hour.
-    expect($row['service'])->toEqualWithDelta(21.5, 1e-9);
+    // 2 000 laps of $18 are $36 000 in 5 000 km, and 4% of that is $1 440, which is $0.288 a kilometre and $36 for the 125 km of an hour.
+    expect($row['service'])->toEqualWithDelta(36.0, 1e-9);
 });
 
 it('charges the repair of a part by the share of its life that a kilometre uses: half of the price, times the billionths of a kilometre, times the kilometres of an hour', function () {
@@ -64,12 +65,12 @@ it('charges the repair of a part by the share of its life that a kilometre uses:
 it('sets what an hour of upkeep costs against the income of the hour', function () {
     $row = anUpkeepReport()->rows([anUpkeepLevel()])[0];
 
-    expect($row['upkeep'])->toEqualWithDelta(21.5 + 0.890625 + 0.59375, 1e-9)
-        ->and($row['share'])->toEqualWithDelta((21.5 + 0.890625 + 0.59375) / 800, 1e-9);
+    expect($row['upkeep'])->toEqualWithDelta(36.0 + 0.890625 + 0.59375, 1e-9)
+        ->and($row['share'])->toEqualWithDelta((36.0 + 0.890625 + 0.59375) / 800, 1e-9);
 });
 
-it('charges the least a service costs for a car that is worth next to nothing, and no repairs for a level that has no part yet', function () {
-    $row = anUpkeepReport()->rows([anUpkeepLevel(['car_value_cents' => 114_000 / 100, 'parts' => []])])[0];
+it('charges the least a service costs for a car that earns next to nothing, and no repairs for a level that has no part yet', function () {
+    $row = anUpkeepReport()->rows([anUpkeepLevel(['lap_cash_cents' => 1, 'parts' => []])])[0];
 
     // $20 for 5 000 km is $0.004 a kilometre, $0.50 an hour.
     expect($row['service'])->toEqualWithDelta(0.5, 1e-9)

@@ -248,13 +248,13 @@ final class SimulateEconomy extends Command
         $crates = new Crates($game->shopCrates());
         $report = new UpkeepReport(
             $game->service()['every_km'],
-            static fn (int $valueCents): int => $game->serviceCostCents($valueCents),
+            static fn (int $lapCashCents, int $lapLengthM): int => $game->serviceCostCents($lapCashCents, $lapLengthM),
             // The repair of a part costs a share of its price for the whole life of it: what the rules ask for a part that is worth a million, worn out.
             $game->partRepairCostCents(1_000_000, 0),
         );
 
         $levels = array_map(function (LadderRow $row) use ($game, $catalog, $factory, $crates): array {
-            $lapMs = (new RunFreezer)->freeze($factory->make($row->car, $row->track), 'game-ladder', 0)->config['lap_ms']['dry'];
+            $frozen = (new RunFreezer)->freeze($factory->make($row->car, $row->track), 'game-ladder', 0)->config;
             $set = $this->shopSet($row->level, $game, $catalog, $crates);
             $power = $factory->power($row->car, array_column($set, 'model', 'slot'));
             $surface = $game->track($row->track)['surface'];
@@ -264,9 +264,9 @@ final class SimulateEconomy extends Command
                 'car' => $row->car,
                 'track' => $row->track,
                 'net' => $row->game,
-                'lap_ms' => $lapMs,
+                'lap_ms' => $frozen['lap_ms']['dry'],
                 'lap_length_m' => $game->trackLengthM($row->track),
-                'car_value_cents' => (int) $catalog->vehicle($row->car)['price_cents'],
+                'lap_cash_cents' => $frozen['lap_cash_cents']['dry'],
                 'parts' => array_map(static fn (array $part): array => [
                     'slot' => $part['slot'],
                     'model' => $part['model'],
@@ -405,7 +405,7 @@ final class SimulateEconomy extends Command
     {
         $this->newLine();
         $this->line("Upkeep that the game charges (a service every {$this->trim((float) $upkeep['every_km'])} km, and the repairs of the shop set of the level), against the {$this->percent($upkeep['model'])} that the model takes off:");
-        $this->line('The car is the best pair of the ladder of the game at the level, with its stock parts (the income of the ladder above). The service costs a share of the value of the car, which here is its price new at the dealer (a wreck or a used car is worth less, so its service costs less). The shop set is, in each of tires, suspension, brakes and exhaust, the cheapest model of the highest tier that the level opens (nothing where no tier is open yet); a part wears by the kilometres, faster with the power of the car, and putting it right costs half of its price for the whole of its life.');
+        $this->line('The car is the best pair of the ladder of the game at the level, with its stock parts (the income of the ladder above). The service costs a share (4%) of what the car earns between two services (the reward of its lap, with the place among the bots counted, times the laps of the interval), so it is about the same share of the income at every level, whatever the car cost. The shop set is, in each of tires, suspension, brakes and exhaust, the cheapest model of the highest tier that the level opens (nothing where no tier is open yet); a part wears by the kilometres, faster with the power of the car, and putting it right costs half of its price for the whole of its life.');
         $this->table(
             ['level', 'car', 'income $/h', 'km/h', 'service $/h', 'parts $/h', 'upkeep $/h', 'share', 'shop set $'],
             array_map(fn (array $row): array => [
@@ -423,7 +423,7 @@ final class SimulateEconomy extends Command
 
         $summary = $upkeep['summary'];
         $this->line(sprintf(
-            'Upkeep: the game charges %s to %s of the income over the levels of the ladder (the middle level %s), against the %s that the model takes off: less than the model at the levels %s, more at the levels %s. This is a report: it has no gate and does not touch the exit code. Where the game charges less, the player has the difference in cash that the model does not count, and the game runs richer than the model; where it charges more (the service is a share of the value of the car, which grows with the rung), the game runs poorer (the pace of the ladder is bound by the level of the player more than by cash).',
+            'Upkeep: the game charges %s to %s of the income over the levels of the ladder (the middle level %s), against the %s that the model takes off: less than the model at the levels %s, more at the levels %s. This is a report: it has no gate and does not touch the exit code. Where the game charges less, the player has the difference in cash that the model does not count, and the game runs richer than the model; where it charges more, the game runs poorer (the pace of the ladder is bound by the level of the player more than by cash).',
             $this->percent($summary['min']),
             $this->percent($summary['max']),
             $this->percent($summary['median']),
@@ -732,7 +732,7 @@ final class SimulateEconomy extends Command
                 ], $merge),
             ],
             'upkeep' => [
-                'convention' => 'The best pair of car and track of each level of the ladder of the game, with its stock parts. The service costs a share of the value of the car (its price new at the dealer) every so many kilometres; the shop set is, in tires, suspension, brakes and exhaust, the cheapest model of the highest tier that the level opens, which wears by the kilometres and is put right for half of its price for the whole of its life. A report: no gate.',
+                'convention' => 'The best pair of car and track of each level of the ladder of the game, with its stock parts. The service costs a share of what the car earns in the kilometres between two services; the shop set is, in tires, suspension, brakes and exhaust, the cheapest model of the highest tier that the level opens, which wears by the kilometres and is put right for half of its price for the whole of its life. A report: no gate.',
                 'model_share' => $upkeep['model'],
                 'service_every_km' => $upkeep['every_km'],
                 'game_share_min' => round($upkeep['summary']['min'], 4),
