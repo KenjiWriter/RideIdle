@@ -13,6 +13,7 @@ import { useFormat } from '@/i18n/useFormat'
 import { useFleetStore } from '@/stores/fleet'
 import { useMapStore } from '@/stores/map'
 import { useRunStore } from '@/stores/run'
+import { useTutorialStore } from '@/stores/tutorial'
 
 /** How often an open map asks the server for the journey, besides asking when one is due. */
 const MAP_POLL_MS = 15_000
@@ -36,6 +37,7 @@ const ICONS = {
 const { t } = useI18n()
 const { fixed, money } = useFormat()
 const map = useMapStore()
+const tutorial = useTutorialStore()
 const fleet = useFleetStore()
 const run = useRunStore()
 const { message: started, show: showStarted, clear: clearStarted } = useFlash()
@@ -224,6 +226,8 @@ async function go(city: MapCity): Promise<void> {
     await map.travel(city.slug)
     now.value = map.serverNow()
     showStarted(t('map.started', { city: city.name }))
+    // The server moves the tutorial when it is asked, and a journey that has begun is what a step waits for.
+    void tutorial.load().catch(() => undefined)
   } catch (failure) {
     if (endSessionIfUnauthorized(failure)) {
       return
@@ -348,7 +352,7 @@ async function go(city: MapCity): Promise<void> {
           </button>
         </div>
 
-        <button v-if="!selected.here" type="button" class="btn btn-primary" :disabled="!canGo" data-test="go" @click="go(selected)">{{ t('map.go') }}</button>
+        <button v-if="!selected.here" type="button" class="btn btn-primary" :disabled="!canGo" data-tutorial="travel" data-test="go" @click="go(selected)">{{ t('map.go') }}</button>
         <p v-if="blocked" class="text-sm text-muted" data-test="reason">{{ blocked }}</p>
       </section>
     </template>

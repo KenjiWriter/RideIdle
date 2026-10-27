@@ -11,8 +11,8 @@ import { useRunStore } from '@/stores/run'
  */
 export const useTutorialStore = defineStore('tutorial', () => {
   const tutorial = ref<TutorialResponse['data'] | null>(null)
-  /** What the last answer paid, in cents of cash and in experience of the car, until the screen has said it. */
-  const reward = ref<{ cashCents: number; carXp: number } | null>(null)
+  /** What the last answer paid, until the screen has said it: cents of cash, experience of the car and of the driver, the parts given and the garages given (by slug). */
+  const reward = ref<{ cashCents: number; carXp: number; xp: number; parts: string[]; garages: string[] } | null>(null)
   /** The server was asked at least once, whatever it answered: a screen that waits for the phone waits for this. */
   const asked = ref(false)
 
@@ -30,9 +30,12 @@ export const useTutorialStore = defineStore('tutorial', () => {
       reward.value = {
         cashCents: response.data.rewarded.reduce((sum, paid) => sum + paid.cash_cents, 0),
         carXp: response.data.rewarded.reduce((sum, paid) => sum + paid.car_xp, 0),
+        xp: response.data.rewarded.reduce((sum, paid) => sum + (paid.xp ?? 0), 0),
+        parts: response.data.rewarded.flatMap((paid) => (paid.part ? [paid.part] : [])),
+        garages: response.data.rewarded.flatMap((paid) => (paid.garage ? [paid.garage] : [])),
       }
 
-      // The cash is in the HUD: ask for it again.
+      // The cash and the experience of the driver are in the HUD: ask for them again.
       useRunStore()
         .refresh()
         .catch(() => undefined)

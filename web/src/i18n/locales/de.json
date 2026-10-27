@@ -366,7 +366,8 @@
       "odds": "{name} {percent} %",
       "guarantee": "Garantie ({rarity} oder besser): noch {count}",
       "legendary": "Garantie (Legendär): noch {count}",
-      "last": "Letzte Kiste"
+      "last": "Letzte Kiste",
+      "free": "Gratis"
     }
   },
   "workshop": {
@@ -429,7 +430,10 @@
     "skipConfirm": "Tutorial überspringen",
     "from": "Nachricht von {sender}",
     "reward": "K. hat dir {cash} geschickt.",
-    "rewardCarXp": "K. hat deinem Auto {xp} XP draufgelegt."
+    "rewardCarXp": "K. hat deinem Auto {xp} XP draufgelegt.",
+    "rewardXp": "K. hat dir {xp} XP gegeben.",
+    "rewardPart": "K. hat dir ein Teil ins Lager gelegt: Du kannst es in der Werkstatt montieren.",
+    "rewardGarage": "K. hat dir eine Garage in {city} besorgt."
   },
   "story": {
     "scene1": "„Hör zu, ich muss für eine Weile verschwinden.“",

@@ -29,8 +29,20 @@ const keepButton = ref<HTMLButtonElement | null>(null)
 const step = computed(() => store.current)
 const clock = computed(() => new Intl.DateTimeFormat(currentLocale(), { hour: '2-digit', minute: '2-digit' }).format(new Date()))
 
-/** What a step points at, in the order it is looked for: the Start is on the tournament screen, and before the driver is there it is the tab that leads to it. */
-const TARGETS: Record<string, string[]> = { start: ['start', 'race'] }
+/**
+ * What a step points at, in the order it is looked for: the thing itself on the screen the driver is on, and where it is not there, the tab of the navigation
+ * that leads to the screen where it is (the Start is on the tournament screen, the tires are put on in the workshop, the crate is opened in the shop, the journey
+ * begins on the map).
+ */
+const TARGETS: Record<string, string[]> = {
+  start: ['start', 'race'],
+  laps: ['laps', 'garage'],
+  refuel: ['refuel', 'garage'],
+  repair: ['repair', 'garage'],
+  mount: ['mount', 'workshop'],
+  crate: ['crate', 'shop'],
+  travel: ['travel', 'map'],
+}
 
 function targetElement(): HTMLElement | null {
   for (const name of step.value?.target ? (TARGETS[step.value.target] ?? [step.value.target]) : []) {

@@ -15,6 +15,7 @@ import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useGarageStore } from '@/stores/garage'
+import { useTutorialStore } from '@/stores/tutorial'
 
 /** How often an open workshop asks the server for the state of the jobs, besides asking when one is due. */
 const WORKSHOP_POLL_MS = 15_000
@@ -27,6 +28,7 @@ const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking'
 const { t } = useI18n()
 const { number } = useFormat()
 const store = useGarageStore()
+const tutorial = useTutorialStore()
 
 useLeaveOnSignOut()
 
@@ -46,6 +48,8 @@ const jobs = computed(() => store.garage?.workshop.jobs ?? [])
 const working = computed(() => jobs.value.find((job) => job.status === 'working') ?? null)
 const waiting = computed(() => jobs.value.filter((job) => job.status === 'queued'))
 const inventory = computed(() => store.garage?.inventory ?? [])
+/** The part that the tutorial points at when it asks for the tires to be put on: the first pair of tires in the inventory, or the first part. */
+const mountTarget = computed(() => (inventory.value.find((part) => part.slot === 'tires') ?? inventory.value[0])?.id ?? null)
 const standing = computed(() => car.value?.run?.stop_reason === 'workshop')
 const busyPartIds = computed(() => new Set(jobs.value.map((job) => job.part.id)))
 const cut = computed(() => Math.round((store.garage?.workshop.mechanic.time_cut_ppm ?? 0) / 10_000))
@@ -129,6 +133,8 @@ async function act(kind: JobKind, part: OwnedPart): Promise<void> {
   try {
     await store.queue(kind, part.id)
     now.value = store.serverNow()
+    // The server moves the tutorial when it is asked, and a job in the queue is what a step waits for.
+    void tutorial.load().catch(() => undefined)
   } catch (failure) {
     if (endSessionIfUnauthorized(failure)) {
       return
@@ -323,6 +329,7 @@ async function cancel(jobId: number): Promise<void> {
               type="button"
               class="btn btn-primary btn-sm shrink-0"
               :disabled="busy || busyPartIds.has(part.id)"
+              :data-tutorial="part.id === mountTarget ? 'mount' : undefined"
               :data-test="`put-on-${part.id}`"
               @click="act('mount', part)"
             >

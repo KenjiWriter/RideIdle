@@ -6,6 +6,7 @@ import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { aCrates, anOpenedCrate, aPart, anOffer } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
+import { aTutorial } from '@/test/tutorialFixtures'
 
 import ShopView from './ShopView.vue'
 
@@ -276,6 +277,43 @@ describe('ShopView', () => {
       expect(wrapper.get('[data-test="crate-slot-suspension"]').attributes('aria-checked')).toBe('true')
       expect(wrapper.get('[data-test="crate-slot-tires"]').attributes('aria-checked')).toBe('false')
       expect(wrapper.get('[data-test="crate-slot"] [data-test="crate-open"]').text()).toBe('Buy · $950.00')
+    })
+
+    it('says that the first crate is free while the tutorial gives it, and points the tutorial at the first crate that can be opened', async () => {
+      const base = aCrates()
+      const crates = {
+        ...base,
+        free_first: true,
+        kinds: base.kinds.map((kind) => ({ ...kind, price_cents: kind.price_cents === null ? null : 0, slots: kind.slots.map((slot) => ({ ...slot, price_cents: slot.price_cents === null ? null : 0 })) })),
+      }
+      serve({ 'GET /api/v1/shop': () => shop(0, 3, crates), 'GET /api/v1/tutorial': () => respond(200, aTutorial(null)), 'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }) })
+
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="crate-slot"] [data-test="crate-open"]').text()).toBe('Free')
+      expect(wrapper.get('[data-test="crate-slot"] [data-test="crate-open"]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.findAll('[data-tutorial="crate"]')).toHaveLength(1)
+      expect(wrapper.get('[data-tutorial="crate"]').element.closest('[data-test="crate-slot"]')).not.toBeNull()
+    })
+
+    it('asks the tutorial again when a crate was opened, because a step waits for it', async () => {
+      const calls = serve({
+        'GET /api/v1/shop': () => shop(500_000),
+        'POST /api/v1/shop/crates/slot/open': () => respond(201, { data: { parts: [], car: { id: 5, level: 3 }, crates: aCrates() }, wallet: { cash_cents: 440_500, xp: 0 }, repeated: false, opened: anOpenedCrate() }),
+        'GET /api/v1/tutorial': () => respond(200, aTutorial(null)),
+        'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }),
+      })
+      const asked = () => calls.filter((call) => call.method === 'GET' && call.url === '/api/v1/tutorial').length
+
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+      expect(asked()).toBe(1)
+
+      await wrapper.get('[data-test="crate-slot"] [data-test="crate-open"]').trigger('click')
+      await flushPromises()
+
+      expect(asked()).toBe(2)
     })
 
     it('opens a crate with one request id and the slot that was chosen, and shows what was in it', async () => {

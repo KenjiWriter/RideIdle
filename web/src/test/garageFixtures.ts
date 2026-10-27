@@ -80,6 +80,7 @@ export function aCrates(overrides: Partial<ShopCrates> = {}): ShopCrates {
       { key: 'mixed', group: 'standard', min_player_level: 3, open: true, choose_slot: false, price_cents: 104_300, slots: [{ ...tires, price_cents: null }, { ...suspension, price_cents: null }] },
       { key: 'premium', group: 'premium', min_player_level: 6, open: false, choose_slot: true, price_cents: null, slots: [] },
     ],
+    free_first: false,
     ...overrides,
   }
 }

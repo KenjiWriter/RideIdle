@@ -12,6 +12,7 @@ import TutorialOverlay from './TutorialOverlay.vue'
 
 const fetchMock = vi.fn()
 const targets: HTMLElement[] = []
+const mounted: { unmount: () => void }[] = []
 
 /** Something on the page for the step to point at: jsdom has no layout, so the place is given. */
 function putOnPage(target: string, box = { top: 300, left: 20, width: 340, height: 56 }): HTMLElement {
@@ -25,10 +26,11 @@ function putOnPage(target: string, box = { top: 300, left: 20, width: 340, heigh
 }
 
 async function show(answer = aTutorial()) {
-  const mounted = await mountView(TutorialOverlay, '/garage', { prepare: () => (useTutorialStore().tutorial = answer.data) })
+  const view = await mountView(TutorialOverlay, '/garage', { prepare: () => (useTutorialStore().tutorial = answer.data) })
+  mounted.push(view.wrapper)
   await flushPromises()
 
-  return mounted
+  return view
 }
 
 describe('TutorialOverlay', () => {
@@ -41,6 +43,8 @@ describe('TutorialOverlay', () => {
   })
 
   afterEach(() => {
+    // An overlay that stays mounted keeps measuring the page, and would find the things that a later test puts on it.
+    mounted.splice(0).forEach((view) => view.unmount())
     vi.unstubAllGlobals()
     targets.splice(0).forEach((element) => element.remove())
   })
@@ -105,6 +109,40 @@ describe('TutorialOverlay', () => {
 
     // On the tournament screen the button is the one that is ringed.
     expect(second.wrapper.get('[data-test="tutorial-ring"]').attributes('style')).toContain('top: 394px')
+  })
+
+  it.each([
+    ['mount', 'workshop', 7],
+    ['crate', 'shop', 8],
+    ['travel', 'map', 10],
+  ] as const)('points the step %s at the thing itself when the screen has it, and at the tab %s that leads to the screen when it does not', async (target, tab, number) => {
+    const step = aStep({ key: target, number, target })
+    putOnPage(tab, { top: 700, left: 190, width: 60, height: 56 })
+    const first = await show(aTutorial(step))
+
+    // The thing is on another screen: the tab that leads to it is ringed.
+    expect(first.wrapper.get('[data-test="tutorial-ring"]').attributes('style')).toContain('top: 694px')
+
+    putOnPage(target, { top: 400, left: 20, width: 340, height: 120 })
+    const second = await show(aTutorial(step))
+
+    // On its own screen the thing is the one that is ringed.
+    expect(second.wrapper.get('[data-test="tutorial-ring"]').attributes('style')).toContain('top: 394px')
+  })
+
+  it('points the old steps at the tab of the garage when the driver is on another screen, where the thing is not', async () => {
+    putOnPage('garage', { top: 700, left: 80, width: 60, height: 56 })
+    const { wrapper } = await show(aTutorial(aStep({ key: 'refuel', target: 'refuel' })))
+
+    expect(wrapper.get('[data-test="tutorial-ring"]').attributes('style')).toContain('top: 694px')
+  })
+
+  it('rings nothing for the step that has no screen of its own, the one that explains the locked parts, and still takes the phone out', async () => {
+    putOnPage('workshop')
+    const { wrapper } = await show(aTutorial(aStep({ key: 'locked', number: 9, target: null })))
+
+    expect(wrapper.find('[data-test="tutorial-ring"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="tutorial-phone"]').exists()).toBe(true)
   })
 
   it('brings the thing into view when the page has it, once, even if the page was still loading when the step came', async () => {

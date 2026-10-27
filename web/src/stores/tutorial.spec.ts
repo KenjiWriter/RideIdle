@@ -59,14 +59,14 @@ describe('the tutorial store', () => {
 
   it('keeps what the steps paid until it is said, and asks the run for the cash that arrived', async () => {
     serveApi(fetchMock, {
-      'GET /api/v1/tutorial': () => respond(200, aTutorial(aStep(), { rewarded: [{ key: 'first-lap', cash_cents: 20_000, car_xp: 0 }, { key: 'refuel', cash_cents: 9_000, car_xp: 0 }] })),
+      'GET /api/v1/tutorial': () => respond(200, aTutorial(aStep(), { rewarded: [{ key: 'first-lap', cash_cents: 20_000, car_xp: 0, xp: 0, part: null, garage: null }, { key: 'refuel', cash_cents: 9_000, car_xp: 0, xp: 0, part: null, garage: null }] })),
     })
     const store = useTutorialStore()
     const refresh = vi.spyOn(useRunStore(), 'refresh').mockResolvedValue()
 
     await store.load()
 
-    expect(store.reward).toEqual({ cashCents: 29_000, carXp: 0 })
+    expect(store.reward).toEqual({ cashCents: 29_000, carXp: 0, xp: 0, parts: [], garages: [] })
     expect(refresh).toHaveBeenCalledTimes(1)
 
     store.acknowledgeReward()
@@ -74,13 +74,35 @@ describe('the tutorial store', () => {
   })
 
   it('keeps the experience the steps gave the car as well as the cash', async () => {
-    serveApi(fetchMock, { 'POST /api/v1/tutorial/reply': () => respond(200, aTutorial(null, { rewarded: [{ key: 'rewards', cash_cents: 0, car_xp: 100 }] })) })
+    serveApi(fetchMock, { 'POST /api/v1/tutorial/reply': () => respond(200, aTutorial(null, { rewarded: [{ key: 'rewards', cash_cents: 0, car_xp: 100, xp: 0, part: null, garage: null }] })) })
     vi.spyOn(useRunStore(), 'refresh').mockResolvedValue()
     const store = useTutorialStore()
 
     await store.reply()
 
-    expect(store.reward).toEqual({ cashCents: 0, carXp: 100 })
+    expect(store.reward).toEqual({ cashCents: 0, carXp: 100, xp: 0, parts: [], garages: [] })
+  })
+
+  it('keeps the experience of the driver, the parts and the garages that the steps gave, and asks the run for the experience', async () => {
+    serveApi(fetchMock, {
+      'POST /api/v1/tutorial/reply': () =>
+        respond(
+          200,
+          aTutorial(null, {
+            rewarded: [
+              { key: 'repair', cash_cents: 3_000, car_xp: 0, xp: 0, part: 'street-tires-t2', garage: null },
+              { key: 'locked', cash_cents: 0, car_xp: 0, xp: 1_160, part: null, garage: 'kruszyn' },
+            ],
+          }),
+        ),
+    })
+    const refresh = vi.spyOn(useRunStore(), 'refresh').mockResolvedValue()
+    const store = useTutorialStore()
+
+    await store.reply()
+
+    expect(store.reward).toEqual({ cashCents: 3_000, carXp: 0, xp: 1_160, parts: ['street-tires-t2'], garages: ['kruszyn'] })
+    expect(refresh).toHaveBeenCalledTimes(1)
   })
 
   it('does not ask the run for anything when nothing was paid', async () => {

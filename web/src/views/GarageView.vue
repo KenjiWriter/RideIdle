@@ -15,12 +15,10 @@ import LinkedAccounts from '@/components/LinkedAccounts.vue'
 import RarityMark from '@/components/RarityMark.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RunAlerts from '@/components/RunAlerts.vue'
-import TutorialOverlay from '@/components/TutorialOverlay.vue'
 import { carPicture } from '@/features/art'
 import { statFill } from '@/features/car/statFill'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { useFlash } from '@/features/run/useFlash'
-import { useTutorialReward } from '@/features/run/useTutorialReward'
 import { useRunStatus } from '@/features/run/useRunStatus'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -75,9 +73,6 @@ async function open(): Promise<void> {
 }
 
 onMounted(open)
-
-/** What the mentor paid for a step is said once: the experience went to the car, which the bar shows, so the garage is asked for again. */
-const { rewardMessage } = useTutorialReward(() => void garage.loadGarage().catch(() => undefined))
 
 /** A rise of the car is said once, with the tier of parts it opened. */
 const { message: levelUpMessage, show: showLevelUp } = useFlash()
@@ -156,14 +151,13 @@ async function useCode(): Promise<void> {
 </script>
 
 <template>
-  <GameShell :load-run="false">
+  <GameShell :load-run="false" :load-tutorial="false">
     <p class="sub" data-test="welcome">
       {{ session.me ? t('garage.welcome', { name: session.me.name }) : t('common.loading') }}
     </p>
 
     <GarageTabs />
 
-    <p v-if="rewardMessage" class="card card-hi text-sm" role="status" data-test="tutorial-reward">{{ rewardMessage }}</p>
     <p v-if="levelUpMessage" class="card card-hi text-sm" role="status" data-test="level-up">{{ levelUpMessage }}</p>
 
     <LinkAccountBanner v-if="offerLinking && session.linkPromptDismissed && !linkOpen" @open="linkOpen = true" />
@@ -273,8 +267,6 @@ async function useCode(): Promise<void> {
     <AccountData />
 
     <LinkAccountDialog v-if="linkOpen && offerLinking" @later="later" @recovery="useCode" />
-
-    <TutorialOverlay />
 
     <div>
       <button type="button" class="btn btn-secondary" data-test="sign-out" @click="session.signOut()">

@@ -366,7 +366,8 @@
       "odds": "{name} {percent}%",
       "guarantee": "Garantia ({rarity} ou melhor): faltam {count}",
       "legendary": "Garantia (Lendária): faltam {count}",
-      "last": "Última caixa"
+      "last": "Última caixa",
+      "free": "Grátis"
     }
   },
   "workshop": {
@@ -429,7 +430,10 @@
     "skipConfirm": "Pular o tutorial",
     "from": "Mensagem de {sender}",
     "reward": "K. enviou {cash} para você.",
-    "rewardCarXp": "K. deu {xp} XP ao seu carro."
+    "rewardCarXp": "K. deu {xp} XP ao seu carro.",
+    "rewardXp": "K. deu {xp} XP a você.",
+    "rewardPart": "K. deixou uma peça no seu inventário: você pode montá-la na Oficina.",
+    "rewardGarage": "K. conseguiu uma garagem em {city} para você."
   },
   "story": {
     "scene1": "“Escute, preciso sumir por um tempo.”",

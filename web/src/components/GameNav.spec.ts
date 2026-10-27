@@ -129,6 +129,12 @@ describe('GameNav', () => {
     expect(tabs.filter((tab) => tab.get('.navb-sub').text() !== '')).toHaveLength(1)
   })
 
+  it('has a tab for every screen that the tutorial points at, named by the screen', async () => {
+    const { wrapper } = await show()
+
+    expect(wrapper.findAll('a').map((tab) => tab.attributes('data-tutorial'))).toEqual(['map', 'garage', 'race', 'workshop', 'shop'])
+  })
+
   it('speaks the language of the driver', async () => {
     await setLocale('pl')
     const { wrapper } = await show()

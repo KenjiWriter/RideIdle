@@ -7,6 +7,7 @@ import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { mountView } from '@/test/mountView'
 import { liveFields } from '@/test/runFixtures'
+import { aTutorial } from '@/test/tutorialFixtures'
 
 import MapView from './MapView.vue'
 
@@ -202,6 +203,29 @@ describe('MapView', () => {
 
     expect(wrapper.get('[data-test="reason"]').text()).toBe('Requires player level 12 (you are level 3). You get XP by driving.')
     expect(wrapper.get('[data-test="go"]').attributes('disabled')).toBeDefined()
+  })
+
+  it('points the tutorial at the button that sends the car, and asks it again when the journey has begun', async () => {
+    const calls = serve({
+      'GET /api/v1/map': () => respond(200, aMap()),
+      'POST /api/v1/travel': () => respond(201, aMap({ travel: { from: 'zlomowo', to: 'kruszyn', distance_km: 38, start_ms: NOW, arrive_ms: NOW + 1_563_429 } })),
+      'GET /api/v1/tutorial': () => respond(200, aTutorial(null)),
+      'GET /api/v1/runs/current': noRun,
+    })
+    const asked = () => calls.filter((call) => call.method === 'GET' && call.url === '/api/v1/tutorial').length
+
+    const { wrapper } = await mountView(MapView, '/map')
+    await flushPromises()
+    await wrapper.get('[data-test="city-kruszyn"]').trigger('click')
+
+    expect(wrapper.get('[data-tutorial="travel"]').attributes('data-test')).toBe('go')
+    expect(asked()).toBe(1)
+
+    await wrapper.get('[data-test="go"]').trigger('click')
+    await flushPromises()
+
+    // A journey that has begun is what a step of the tutorial waits for, and the server moves it only when it is asked.
+    expect(asked()).toBe(2)
   })
 
   it('sends the car, shows the journey and says so', async () => {

@@ -366,7 +366,8 @@
       "odds": "{name} {percent}%",
       "guarantee": "Guarantee ({rarity} or better): {count} to go",
       "legendary": "Guarantee (Legendary): {count} to go",
-      "last": "Last crate"
+      "last": "Last crate",
+      "free": "Free"
     }
   },
   "workshop": {
@@ -429,7 +430,10 @@
     "skipConfirm": "Skip the tutorial",
     "from": "Message from {sender}",
     "reward": "K. sent you {cash}.",
-    "rewardCarXp": "K. added {xp} XP to your car."
+    "rewardCarXp": "K. added {xp} XP to your car.",
+    "rewardXp": "K. gave you {xp} XP.",
+    "rewardPart": "K. left a part in your inventory: you can put it on in the Workshop.",
+    "rewardGarage": "K. got you a garage in {city}."
   },
   "story": {
     "scene1": "“Listen, I have to disappear for a while.”",

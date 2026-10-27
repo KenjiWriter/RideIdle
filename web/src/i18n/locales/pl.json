@@ -366,7 +366,8 @@
       "odds": "{name} {percent}%",
       "guarantee": "Gwarancja ({rarity} lub lepsza): jeszcze {count}",
       "legendary": "Gwarancja (Legendarna): jeszcze {count}",
-      "last": "Ostatnia skrzynka"
+      "last": "Ostatnia skrzynka",
+      "free": "Za darmo"
     }
   },
   "workshop": {
@@ -429,7 +430,10 @@
     "skipConfirm": "Pomiń samouczek",
     "from": "Wiadomość od {sender}",
     "reward": "K. przesłał Ci {cash}.",
-    "rewardCarXp": "K. dorzucił Twojemu autu {xp} XP."
+    "rewardCarXp": "K. dorzucił Twojemu autu {xp} XP.",
+    "rewardXp": "K. dorzucił Ci {xp} XP.",
+    "rewardPart": "K. zostawił Ci część w inwentarzu: zamontujesz ją w Warsztacie.",
+    "rewardGarage": "K. załatwił Ci garaż w mieście {city}."
   },
   "story": {
     "scene1": "„Słuchaj, muszę zniknąć na jakiś czas.”",

@@ -724,7 +724,7 @@ describe('GarageView', () => {
     })
 
     it('says what the mentor paid, for a while', async () => {
-      const paid = aTutorial(aStep({ key: 'rewards', number: 3, target: 'cash' }), { rewarded: [{ key: 'first-lap', cash_cents: 20_000, car_xp: 0 }] })
+      const paid = aTutorial(aStep({ key: 'rewards', number: 3, target: 'cash' }), { rewarded: [{ key: 'first-lap', cash_cents: 20_000, car_xp: 0, xp: 0, part: null, garage: null }] })
       const { mounted } = openWithTutorial(() => respond(200, paid))
       const { wrapper } = await mounted
       await flushPromises()
@@ -833,7 +833,7 @@ describe('GarageView', () => {
     })
 
     it('shows the experience the mentor gave the car in the bar, which is asked for again because the run has not moved', async () => {
-      const paid = aTutorial(null, { rewarded: [{ key: 'rewards', cash_cents: 0, car_xp: 100 }] })
+      const paid = aTutorial(null, { rewarded: [{ key: 'rewards', cash_cents: 0, car_xp: 100, xp: 0, part: null, garage: null }] })
       let total = 1_010
       const calls = serve(() => respond(200, runAnswer(aRun())), undefined, {
         'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ xp: { total, level_start: 600, next_level_at: 1_200 } }) })),
@@ -851,7 +851,7 @@ describe('GarageView', () => {
     })
 
     it('says what the mentor gave the car, with the cash when there is some', async () => {
-      const paid = aTutorial(null, { rewarded: [{ key: 'rewards', cash_cents: 0, car_xp: 100 }] })
+      const paid = aTutorial(null, { rewarded: [{ key: 'rewards', cash_cents: 0, car_xp: 100, xp: 0, part: null, garage: null }] })
       serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/tutorial': () => respond(200, paid) })
       const { wrapper } = await show()
       await flushPromises()

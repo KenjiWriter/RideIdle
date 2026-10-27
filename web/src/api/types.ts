@@ -330,6 +330,8 @@ export interface ShopCrates {
   level: number
   groups: Record<CrateGroup, CrateGuarantee>
   kinds: CrateOffer[]
+  /** The driver may open their first crate for nothing (the tutorial gives it): every price of a crate is 0 while it is so. */
+  free_first: boolean
 }
 
 /** GET /api/v1/shop */
@@ -420,8 +422,8 @@ export interface CancelJobResponse extends GarageResponse {
 
 export type TutorialStatus = 'in_progress' | 'finished' | 'skipped'
 
-/** The thing on the garage screen that a step of the tutorial points at. */
-export type TutorialTarget = 'start' | 'laps' | 'cash' | 'refuel' | 'repair'
+/** The thing on a screen of the game that a step of the tutorial points at; a step that has no screen of its own (the locked parts) has none. */
+export type TutorialTarget = 'start' | 'laps' | 'cash' | 'refuel' | 'repair' | 'mount' | 'crate' | 'travel'
 
 /** The step that waits: the messages of the mentor, in the language of the driver, and what to highlight. */
 export interface TutorialStep {
@@ -444,8 +446,11 @@ export interface TutorialResponse {
     total: number
     done: number
     current: TutorialStep | null
-    /** What the steps completed by this very call paid. */
-    rewarded: { key: string; cash_cents: number; car_xp: number }[]
+    /**
+     * What the steps completed by this very call paid: cash, experience of the car and of the driver, a part that was put in the inventory (its slug), and
+     * the city whose garage was given (its slug).
+     */
+    rewarded: { key: string; cash_cents: number; car_xp: number; xp: number; part: string | null; garage: string | null }[]
   }
 }
 

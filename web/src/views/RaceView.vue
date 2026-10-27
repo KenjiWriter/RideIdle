@@ -7,13 +7,11 @@ import FuelGauge from '@/components/FuelGauge.vue'
 import GameShell from '@/components/GameShell.vue'
 import LapRing from '@/components/LapRing.vue'
 import RunAlerts from '@/components/RunAlerts.vue'
-import TutorialOverlay from '@/components/TutorialOverlay.vue'
 import { gameTime, untilNight } from '@/features/clock/gameClock'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { formatCountdown, lapProgress } from '@/features/run/lapProgress'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useRunStatus } from '@/features/run/useRunStatus'
-import { useTutorialReward } from '@/features/run/useTutorialReward'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatDuration, formatLapTime } from '@/i18n/format'
@@ -40,8 +38,6 @@ const { statusKey, chipClass, towing } = useRunStatus()
 
 useLeaveOnSignOut()
 useRunPolling()
-
-const { rewardMessage } = useTutorialReward()
 
 const loadError = ref(false)
 const starting = ref(false)
@@ -192,7 +188,7 @@ const ring = computed(() => {
 </script>
 
 <template>
-  <GameShell :load-run="false">
+  <GameShell :load-run="false" :load-tutorial="false">
     <div v-if="loadError" class="flex flex-col items-start gap-3" data-test="load-error">
       <p class="text-danger" role="alert">{{ t('run.loadError') }}</p>
       <button type="button" class="btn btn-secondary" data-test="retry" @click="open">{{ t('common.retry') }}</button>
@@ -201,7 +197,6 @@ const ring = computed(() => {
     <p v-else-if="!run.run" class="text-muted" data-test="loading">{{ t('common.loading') }}</p>
 
     <template v-else>
-      <p v-if="rewardMessage" class="card card-hi text-sm" role="status" data-test="tutorial-reward">{{ rewardMessage }}</p>
 
       <section class="flex flex-col gap-2.5" aria-labelledby="race-title" data-test="race">
         <div class="flex items-start justify-between gap-2.5">
@@ -301,6 +296,5 @@ const ring = computed(() => {
       </section>
     </template>
 
-    <TutorialOverlay />
   </GameShell>
 </template>

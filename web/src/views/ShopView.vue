@@ -15,10 +15,12 @@ import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { useFormat } from '@/i18n/useFormat'
 import { useGarageStore } from '@/stores/garage'
+import { useTutorialStore } from '@/stores/tutorial'
 
 const { t } = useI18n()
 const { money, percent } = useFormat()
 const store = useGarageStore()
+const tutorial = useTutorialStore()
 
 useLeaveOnSignOut()
 
@@ -35,6 +37,8 @@ const found = ref<OpenedCrate | null>(null)
 const foundCard = ref<HTMLElement | null>(null)
 
 const kinds = computed(() => store.crates?.kinds ?? [])
+/** The crate that the tutorial points at when it asks for one to be opened: the first the driver can open. */
+const crateTarget = computed(() => kinds.value.find((kind) => kind.open)?.key ?? null)
 /** The groups of crates the driver can open, with their odds and the count to the guarantee. */
 const groups = computed(() => (Object.keys(store.crates?.groups ?? {}) as CrateGroup[]).filter((group) => kinds.value.some((kind) => kind.group === group && kind.open)))
 
@@ -123,6 +127,8 @@ async function openCrate(kind: CrateOffer): Promise<void> {
 
   try {
     const opened = await store.openCrate(kind.key, kind.choose_slot ? (slotOf(kind)?.slot ?? null) : null)
+    // The server moves the tutorial when it is asked, and a crate that was opened is what a step waits for.
+    void tutorial.load().catch(() => undefined)
 
     if (opened) {
       found.value = opened
@@ -211,10 +217,11 @@ async function openCrate(kind: CrateOffer): Promise<void> {
               type="button"
               class="btn btn-primary btn-sm shrink-0"
               :disabled="buying !== null || !crateAffordable(kind)"
+              :data-tutorial="kind.key === crateTarget ? 'crate' : undefined"
               data-test="crate-open"
               @click="openCrate(kind)"
             >
-              {{ buying === `crate-${kind.key}` ? t('shop.buying') : t('shop.crates.buy', { price: money(priceOf(kind), 2) }) }}
+              {{ buying === `crate-${kind.key}` ? t('shop.buying') : store.crates?.free_first ? t('shop.crates.free') : t('shop.crates.buy', { price: money(priceOf(kind), 2) }) }}
             </button>
             <button v-else type="button" class="btn btn-secondary btn-sm shrink-0" disabled data-test="crate-locked">{{ t('shop.crates.locked', { level: kind.min_player_level }) }}</button>
           </div>

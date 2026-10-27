@@ -6,6 +6,7 @@ import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { NOW, aCar, aGarage, aJob, aPart } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
+import { aTutorial } from '@/test/tutorialFixtures'
 
 import WorkshopView from './WorkshopView.vue'
 
@@ -67,6 +68,31 @@ describe('WorkshopView', () => {
 
     expect(wrapper.get('[data-test="part-21"]').text()).toContain('Street tires T2')
     expect(wrapper.findAll('[data-test="part-21"] [data-test="part-stats"] li').map((line) => line.text())).toEqual(['Grip 100', 'Handling 98', 'Braking 100'])
+  })
+
+  it('points the tutorial at the tires that wait in the inventory, not at the first part, and asks it again when a job is queued', async () => {
+    const suspension = aPart({ id: 30, slug: 'sport-suspension-t1', name: 'Sport suspension', slot: 'suspension', tier: 1 })
+    const calls = serve({
+      'GET /api/v1/garage': () => respond(200, aGarage({ inventory: [suspension, tires] })),
+      'POST /api/v1/garage/jobs': () => respond(201, aGarage({ inventory: [suspension, tires] })),
+      'GET /api/v1/tutorial': () => respond(200, aTutorial(null)),
+      'GET /api/v1/runs/current': noRun,
+    })
+    const asked = () => calls.filter((call) => call.method === 'GET' && call.url === '/api/v1/tutorial').length
+
+    const { wrapper } = await mountView(WorkshopView, '/workshop')
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-tutorial="mount"]')).toHaveLength(1)
+    expect(wrapper.get('[data-tutorial="mount"]').attributes('data-test')).toBe('put-on-21')
+    // The shell asked for the tutorial when the screen opened.
+    expect(asked()).toBe(1)
+
+    await wrapper.get('[data-test="put-on-21"]').trigger('click')
+    await flushPromises()
+
+    // A job in the queue is what a step of the tutorial waits for, and the server moves it only when it is asked.
+    expect(asked()).toBe(2)
   })
 
   it('puts a part on the car and shows the job', async () => {
