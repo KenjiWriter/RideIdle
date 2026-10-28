@@ -11,6 +11,10 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [vue(), tailwindcss()],
+    build: {
+      // The list of the files of the build, which the service worker fetches when it is installed so that the app starts without the network (public/sw.js).
+      manifest: 'assets-manifest.json',
+    },
     resolve: {
       alias: {
         '@': fileURLToPath(new URL('./src', import.meta.url)),

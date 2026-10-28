@@ -4,6 +4,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { i18n, initLocale } from './i18n'
 import { loadVocabulary } from './i18n/vocabulary'
+import { registerServiceWorker } from './pwa'
 import { router } from './router'
 import './style.css'
 
@@ -17,3 +18,4 @@ async function bootstrap(): Promise<void> {
 }
 
 void bootstrap()
+registerServiceWorker()
