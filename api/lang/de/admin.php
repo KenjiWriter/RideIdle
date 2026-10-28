@@ -198,6 +198,13 @@ return [
         'reference_tires' => 'Reifen des Referenzautos',
         'reference_tires_hint' => 'Nur wenn die Serienreifen nicht das sind, was die Strecke verlangt (Schotter).',
         'min_player_level' => 'Stufe des Fahrers',
+        'kind' => 'Art',
+        'kind_hint' => 'Ein Sprint ist eine Runde von 10 bis 15 Sekunden, die pro Stunde wenig verbraucht, eine Langstrecke eine Runde von Minuten, die einen Tank in etwa zwanzig leert. Das Gate zählt die Strecken einer Art für sich.',
+        'kinds' => [
+            'sprint' => 'Sprint',
+            'standard' => 'Standard',
+            'endurance' => 'Langstrecke',
+        ],
         'lit' => 'Nachts beleuchtet',
         'length_m' => 'Rundenlänge (m)',
         'base_lap_ms' => 'Referenzrunde (ms)',

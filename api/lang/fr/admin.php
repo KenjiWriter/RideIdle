@@ -198,6 +198,13 @@ return [
         'reference_tires' => 'Pneus de la voiture de référence',
         'reference_tires_hint' => 'Seulement quand les pneus d’origine ne sont pas ce que demande le circuit (gravier).',
         'min_player_level' => 'Niveau du pilote',
+        'kind' => 'Genre',
+        'kind_hint' => 'Un sprint est un tour de 10 à 15 secondes qui consomme peu à l’heure, une endurance un tour de plusieurs minutes qui vide un réservoir en une vingtaine. La barrière compte les circuits d’un genre entre eux.',
+        'kinds' => [
+            'sprint' => 'Sprint',
+            'standard' => 'Standard',
+            'endurance' => 'Endurance',
+        ],
         'lit' => 'Éclairé la nuit',
         'length_m' => 'Longueur du tour (m)',
         'base_lap_ms' => 'Tour de référence (ms)',

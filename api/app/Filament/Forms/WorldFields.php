@@ -115,10 +115,11 @@ final class WorldFields
                 ->addActionLabel(__('admin.world.track_add'))
                 ->itemLabel(fn (array $state): ?string => self::itemLabel($state))
                 ->schema([
-                    Grid::make(3)->schema([
+                    Grid::make(4)->schema([
                         TextInput::make('slug')->label(__('admin.definitions.slug'))->required()->maxLength(64)->regex(self::SLUG)->distinct(),
                         Select::make('region')->label(__('admin.world.city'))->options(fn (Get $get): array => ContentOptions::cities($get('../../regions')))->required(),
                         Select::make('surface')->label(__('admin.world.surface'))->options(['asphalt' => 'asphalt', 'gravel' => 'gravel'])->required(),
+                        Select::make('kind')->label(__('admin.world.kind'))->helperText(__('admin.world.kind_hint'))->options(array_combine(['sprint', 'standard', 'endurance'], array_map(fn (string $kind): string => __("admin.world.kinds.{$kind}"), ['sprint', 'standard', 'endurance'])))->placeholder(__('admin.world.kinds.standard')),
                     ]),
                     DefinitionFields::texts('name', __('admin.definitions.name')),
                     Grid::make(3)->schema([

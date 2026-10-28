@@ -198,6 +198,13 @@ return [
         'reference_tires' => 'Tires of the reference car',
         'reference_tires_hint' => 'Only when the stock tires are not what the track asks for (gravel).',
         'min_player_level' => 'Level of the driver',
+        'kind' => 'Kind',
+        'kind_hint' => 'A sprint is a lap of 10 to 15 seconds that burns little fuel an hour, an endurance track a lap of minutes that burns a tank in about twenty. The gate counts the tracks of a kind among themselves.',
+        'kinds' => [
+            'sprint' => 'Sprint',
+            'standard' => 'Standard',
+            'endurance' => 'Endurance',
+        ],
         'lit' => 'Lit at night',
         'length_m' => 'Lap length (m)',
         'base_lap_ms' => 'Reference lap (ms)',

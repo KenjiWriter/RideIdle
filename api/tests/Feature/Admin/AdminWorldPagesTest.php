@@ -135,6 +135,25 @@ describe('the world', function () {
         expect(theRulesDefinition()->draftDocument()['regions'][$slug]['map'])->toBe(['x' => 200, 'y' => 150]);
     });
 
+    it('says what kind a track is, and leaves a track that says nothing a standard one', function () {
+        signedInAdmin();
+
+        Livewire::test(WorldPage::class)
+            ->fillForm(worldState(function (array $state): array {
+                $sprint = array_search('zlomowo-yard-dash', array_column($state['tracks'], 'slug'), true);
+                $state['tracks'][$sprint]['kind'] = 'endurance';
+
+                return $state;
+            }))
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $tracks = theRulesDefinition()->draftDocument()['tracks'];
+
+        expect($tracks['zlomowo-yard-dash']['kind'])->toBe('endurance')
+            ->and($tracks['zlomowo-street'])->not->toHaveKey('kind');
+    });
+
     it('draws the board of the map with the other cities and the roads between them', function () {
         signedInAdmin();
 

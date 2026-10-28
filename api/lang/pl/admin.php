@@ -198,6 +198,13 @@ return [
         'reference_tires' => 'Opony auta odniesienia',
         'reference_tires_hint' => 'Tylko gdy opony seryjne nie są tym, czego wymaga tor (szuter).',
         'min_player_level' => 'Poziom kierowcy',
+        'kind' => 'Rodzaj',
+        'kind_hint' => 'Sprint to okrążenie 10–15 s, które mało spala na godzinę, dystans to okrążenie na minuty, które spala zbiornik w ok. dwadzieścia. Bramka liczy tory jednego rodzaju osobno.',
+        'kinds' => [
+            'sprint' => 'Sprint',
+            'standard' => 'Standardowy',
+            'endurance' => 'Dystans',
+        ],
         'lit' => 'Oświetlony nocą',
         'length_m' => 'Długość okrążenia (m)',
         'base_lap_ms' => 'Okrążenie wzorcowe (ms)',

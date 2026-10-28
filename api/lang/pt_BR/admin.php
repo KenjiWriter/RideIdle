@@ -198,6 +198,13 @@ return [
         'reference_tires' => 'Pneus do carro de referência',
         'reference_tires_hint' => 'Só quando os pneus originais não são o que a pista pede (cascalho).',
         'min_player_level' => 'Nível do piloto',
+        'kind' => 'Tipo',
+        'kind_hint' => 'Um sprint é uma volta de 10 a 15 segundos que gasta pouco por hora, uma endurance uma volta de minutos que esvazia um tanque em cerca de vinte. A barreira conta as pistas de um tipo entre si.',
+        'kinds' => [
+            'sprint' => 'Sprint',
+            'standard' => 'Padrão',
+            'endurance' => 'Endurance',
+        ],
         'lit' => 'Iluminada à noite',
         'length_m' => 'Extensão da volta (m)',
         'base_lap_ms' => 'Volta de referência (ms)',
