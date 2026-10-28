@@ -194,6 +194,30 @@ Klucze zakładasz u dostawców w swoich kontach i wpisujesz do `.env` (opis zmie
 
 Po zmianie `.env` zastosuj ją poleceniem z kroku 3. **Przepływ z prawdziwymi dostawcami nie był jeszcze sprawdzony** (`docs/konto.md`); pierwsze sprawdzenie to ten moment.
 
+## Panel administracyjny (osobny host, opcjonalnie)
+
+Panel (`/admin`, Filament) służy do patrzenia na paczki treści i ich uruchamiania; z czasem będzie miejscem edycji treści (`docs/api-runs.md`, „Panel administracyjny”). **Ma host osobny od gry** (`admin.raceidle.cerasusdigital.pl`), żeby jego ciasteczka nie mieszały się z grą i żeby dało się go wyłączyć po nazwie. Produkcyjny nginx przepuszcza do PHP tylko `/api/*` i `/up`, więc dopóki nie zrobisz poniższego, panelu nie da się osiągnąć.
+
+1. **DNS:** rekord A `admin.raceidle.cerasusdigital.pl` na adres serwera (jak w kroku 1).
+2. **Na serwerze**, po pierwszym wydaniu (skrypt jest w każdym wydaniu):
+
+   ```bash
+   sudo env ADMIN_DOMAIN=admin.raceidle.cerasusdigital.pl ADMIN_EMAIL=ty@example.com bash /var/www/rideidle/current/deploy/admin-site.sh
+   ```
+
+   Sprawdza DNS, bierze osobny certyfikat dla hosta panelu, kładzie stronę z `nginx/rideidle-admin.conf.template` (jeśli nginx jej nie przyjmie, wycofuje ją i nic innego się nie zmienia), wpisuje `ADMIN_DOMAIN` i `SESSION_SECURE_COOKIE=true` do `.env` i robi `config:cache` oraz `route:cache`. Strony gry nie rusza. Można go uruchomić ponownie.
+3. **Pierwszy administrator** (hasło jest pokazane raz i nigdzie niezapisane; przy pierwszym logowaniu panel wymusi ustawienie aplikacji uwierzytelniającej, a kody odzyskiwania zapisz w bezpiecznym miejscu):
+
+   ```bash
+   cd /var/www/rideidle/current/api && sudo -u www-data php8.4 artisan admin:create ty@example.com --role=publisher
+   ```
+
+4. **Role:** `editor` patrzy na paczki, `publisher` także uruchamia paczkę (też cofa do wcześniejszej) i czyta dziennik. Zmiana roli, wyłączenie, nowe hasło i zdjęcie aplikacji uwierzytelniającej: `artisan admin:update ADRES --role=… | --deactivate | --activate | --reset-password | --reset-mfa`. **Zgubiony telefon:** `admin:update ADRES --reset-mfa` (i `--reset-password`, jeśli ktoś mógł przejąć konto); aplikację ustawia się od nowa przy następnym logowaniu.
+5. **Tylko z wybranych adresów:** odkomentuj w szablonie `allow …; deny all;` i uruchom skrypt ponownie.
+6. **Lokalnie:** `php artisan serve` i `http://localhost:8000/admin` (bez `ADMIN_DOMAIN`). Administratora robi to samo `admin:create`.
+
+Zasoby panelu (style i skrypty) publikuje `composer install` (polecenie `filament:upgrade` w `composer.json`), więc nie ma ich w repozytorium, a wydanie je ma. Każde logowanie, wylogowanie i uruchomienie paczki zostaje w dzienniku (`admin_audit_logs`).
+
 ## Na co dzień
 
 **Nowe wydanie:** `deploy/upload.sh release deploy@raceidle.cerasusdigital.pl`.
@@ -246,7 +270,7 @@ systemctl start rideidle-queue
 
 ## Decyzje i ograniczenia
 
-- **Jedna domena, jeden serwer.** Aplikacja web i API są pod jednym adresem, więc nie ma CORS ani drugiego certyfikatu. Przy większym ruchu bazę lub kolejkę można przenieść osobno.
+- **Jedna domena, jeden serwer.** Aplikacja web i API są pod jednym adresem, więc nie ma CORS ani drugiego certyfikatu. Wyjątek to opcjonalny panel administracyjny: osobny host i osobny certyfikat (`admin-site.sh`). Przy większym ruchu bazę lub kolejkę można przenieść osobno.
 - **Kolejka w bazie, nie w Redisie.** Przez to `accounts:delete` usuwa także maile czekające w kolejce i nieudane, a `queue:prune-failed` je sprząta. Redis trzyma tylko liczniki limitów.
 - **Brak Content-Security-Policy.** Teksty gry są kompilowane w przeglądarce (vue-i18n), co wymaga `unsafe-eval`; polityka z nim chroni niewiele. Pozostałe nagłówki są: HSTS, `nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer` (adres strony może zawierać sekret linku), `Permissions-Policy`. HSTS ma rok i nie ma `includeSubDomains` ani `preload`.
 - **Log dostępu nginx bez zapytania** (`rideidle-global.conf`). Link z maila to `/account/confirm?token=SEKRET`, a kod od Google i Facebooka wraca w adresie powrotu, więc zwykły log trzymałby je tak długo, jak log (Ubuntu rotuje logi nginx przez 14 dni). Format `rideidle` zapisuje adres tylko do znaku `?`. Zostaje jedna luka: **log błędów nginx** zapisuje pełny adres przy błędzie (np. 502 na `/api/v1/auth/google/callback?code=…`); sekret jest wtedy jednorazowy i krótko ważny, ale log czytają `root` i grupa `adm`, do której należy `deploy`.
@@ -263,6 +287,7 @@ Sprawdzone:
 - Konfiguracja nginx przeszła `nginx -t` (nginx 1.27.3) po wyrenderowaniu szablonu; uruchomiony serwer odpowiadał tak, jak trzeba: przekierowanie HTTP → HTTPS, ścieżka sprawdzenia Let's Encrypt, nagłówki na każdej odpowiedzi, `index.html` dla adresów aplikacji, długie cache tylko dla `assets/` (i nie dla błędu 404), brak dostępu do plików z kropką, brak sekretów z adresu w logu dostępu (także przy wejściu przez HTTP). To badanie wykryło i poprawiło dwie wady (404 z `immutable` i sekrety w logu). Nie sprawdzono PHP-FPM ani TLS z prawdziwym certyfikatem.
 - Zapis wartości do `.env` (hasła z `$`, `\`, `"`, `&`, `#`, polskie litery) odczytany parserem `.env` Laravela jest identyczny. Test wykrył błąd bash 5.2, który psuł `&` w wartościach; poprawiony w skrypcie.
 - Wybór wydania do wycofania (po jednym i dwóch wycofaniach, najstarsze, brak).
+- Strona panelu (`rideidle-admin.conf.template`) przeszła `nginx -t` obok strony gry i na uruchomionym nginx odpowiedziała tak, jak trzeba (przekierowanie HTTP, plik panelu, brak uruchamiania innych skryptów PHP, brak plików z kropką, adres panelu do PHP); `admin-site.sh` przechodzi `shellcheck`, a jego zapis do `.env` (zamiana, dopisanie, wartość z `$`, `"` i `\`) sprawdzono osobno. Sam skrypt (certbot, DNS, `sudo` jako `www-data`) wymaga prawdziwego serwera.
 
 **Niesprawdzone, bo wymaga prawdziwego serwera:** całe `provision.sh` i `deploy.sh` na Ubuntu (nazwy pakietów PPA ondrej i NodeSource, certbot, `ufw`, `sudoers`, uprawnienia plików, `systemd`), odtworzenie kopii bazy, wysyłka maili, przepływ z Google/Facebookiem/Apple. Spodziewaj się drobnych poprawek przy pierwszym uruchomieniu: skrypt przerywa się z numerem linii, a ponowne uruchomienie jest bezpieczne.
 
