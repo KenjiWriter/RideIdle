@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Widgets;
 
 use App\Models\ContentActivation;
+use App\Models\ContentDefinition;
 use App\Models\ContentPack;
 use App\Services\ContentPacks;
 use Filament\Widgets\StatsOverviewWidget;
@@ -29,6 +30,7 @@ class LivePackWidget extends StatsOverviewWidget
                 ->description($fromDatabase ? __('admin.widget.database_hint') : __('admin.widget.files_hint'))
                 ->color($fromDatabase ? 'success' : 'warning'),
             Stat::make(__('admin.widget.packs'), (string) ContentPack::query()->count()),
+            Stat::make(__('admin.widget.drafts'), (string) ContentDefinition::query()->whereNotNull('draft')->count())->description(__('admin.widget.drafts_hint')),
         ];
     }
 }

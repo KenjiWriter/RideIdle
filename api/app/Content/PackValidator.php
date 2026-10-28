@@ -145,7 +145,7 @@ final class PackValidator
      */
     public function validateDefinition(string $folder, string $json, ?string $slug = null): PackValidationResult
     {
-        $result = new PackValidationResult();
+        $result = new PackValidationResult;
         $relative = rtrim($folder, 's').($slug === null ? '' : " {$slug}");
         $data = $this->validateJson($json, $relative, self::KINDS[$folder] ?? throw new InvalidArgumentException("There are no definitions in {$folder}."), $result);
 

@@ -31,6 +31,11 @@ class ContentPackResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    public static function getNavigationGroup(): ?string
+    {
+        return __('admin.nav.content');
+    }
+
     public static function getModelLabel(): string
     {
         return __('admin.packs.one');
