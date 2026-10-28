@@ -123,7 +123,11 @@ final class PackValidator
                 continue;
             }
 
-            $this->validateDocument($source, "rules/{$name}", "rules/{$name}.json", $schemaFile, $result);
+            $data = $this->validateDocument($source, "rules/{$name}", "rules/{$name}.json", $schemaFile, $result);
+
+            if ($data !== null) {
+                $this->warnAboutMissingRulesTranslations("rules/{$name}.json", $name, $data, $result);
+            }
         }
 
         foreach ($source->slugs('tables') as $name) {
@@ -163,6 +167,8 @@ final class PackValidator
         $result->count($folder);
 
         if ($folder === 'rules') {
+            $this->warnAboutMissingRulesTranslations($relative, (string) $slug, $data, $result);
+
             return $result;
         }
 
@@ -457,6 +463,47 @@ final class PackValidator
             foreach (Locale::supported() as $locale) {
                 if (! isset($text[$locale])) {
                     $result->addWarning($relative, "/{$field}/{$locale}", 'Missing translation, English is used instead.');
+                }
+            }
+        }
+    }
+
+    /**
+     * The texts of the world (the names of the cities and of the tracks) and of the tutorial (the messages and the button that answers them) that a language of the
+     * game has none of.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function warnAboutMissingRulesTranslations(string $relative, string $name, array $data, PackValidationResult $result): void
+    {
+        $texts = [];
+
+        if ($name === 'starter') {
+            foreach (['regions', 'tracks'] as $section) {
+                foreach ($data[$section] ?? [] as $slug => $item) {
+                    $texts["/{$section}/{$slug}/name"] = $item['name'] ?? null;
+                }
+            }
+        }
+
+        if ($name === 'tutorial') {
+            foreach ($data['steps'] ?? [] as $index => $step) {
+                foreach ($step['sms'] ?? [] as $position => $sms) {
+                    $texts["/steps/{$index}/sms/{$position}"] = $sms;
+                }
+
+                $texts["/steps/{$index}/reply"] = $step['reply'] ?? null;
+            }
+        }
+
+        foreach ($texts as $pointer => $text) {
+            if (! is_array($text)) {
+                continue;
+            }
+
+            foreach (Locale::supported() as $locale) {
+                if (! isset($text[$locale])) {
+                    $result->addWarning($relative, "{$pointer}/{$locale}", 'Missing translation, English is used instead.');
                 }
             }
         }

@@ -289,6 +289,31 @@ describe('the content of a pack', function () {
         expect($result->isValid())->toBeFalse()->and(array_column($result->errors(), 'pointer'))->toContain('/regions/zlomowo/weather_ppm');
     });
 
+    it('is warned about a language that a name of the world or a message of the tutorial has no text in, and accepts it', function () {
+        $rules = rulesDocument();
+        $track = array_key_first($rules['tracks']);
+        unset($rules['tracks'][$track]['name']['de']);
+
+        $tutorial = tutorialDocument();
+        $step = array_key_first(array_filter($tutorial['steps'], fn (array $step): bool => $step['sms'] !== []));
+        unset($tutorial['steps'][$step]['sms'][0]['fr'], $tutorial['steps'][$step]['reply']['pt-BR']);
+
+        $drafts = app(ContentDrafts::class);
+        $world = $drafts->validate('rules', $rules, 'starter');
+        $steps = $drafts->validate('rules', $tutorial, 'tutorial');
+
+        expect($world->isValid())->toBeTrue()->and(array_column($world->warnings(), 'pointer'))->toBe(["/tracks/{$track}/name/de"])
+            ->and($steps->isValid())->toBeTrue()->and(array_column($steps->warnings(), 'pointer'))->toBe(["/steps/{$step}/sms/0/fr", "/steps/{$step}/reply/pt-BR"]);
+
+        $pack = PackValidator::fromConfig()->validateSource(contentWith(['rules/starter' => function (array $rules) use ($track): array {
+            unset($rules['tracks'][$track]['name']['de']);
+
+            return $rules;
+        }]));
+
+        expect($pack->isValid())->toBeTrue()->and(array_column($pack->warnings(), 'pointer'))->toContain("/tracks/{$track}/name/de");
+    });
+
     it('is refused when the tutorial gives away what is not there, or two steps share a key', function () {
         $documents = repositoryDocuments();
         $tutorial = JsonDocument::decode($documents['rules/tutorial']);
