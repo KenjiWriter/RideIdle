@@ -16,11 +16,16 @@ final class BotProfiles
     /** @var array<string, array<int, int>>|null */
     private ?array $tracks = null;
 
-    public function __construct(private readonly string $path) {}
+    public function __construct(private readonly string $path, private readonly ?ContentSource $source = null) {}
 
     public static function fromConfig(): self
     {
-        return new self(rtrim((string) config('ride.content_path'), '/\\').'/tables/bot-profiles.json');
+        return self::fromSource(app(ContentSource::class));
+    }
+
+    public static function fromSource(ContentSource $source): self
+    {
+        return new self('', $source);
     }
 
     /** The dry lap time, in ms, that the bots of a car of this tier on this track drive around, or null when the table has none. */
@@ -36,12 +41,14 @@ final class BotProfiles
             return $this->tracks;
         }
 
-        if (! is_file($this->path)) {
+        $json = $this->source !== null ? $this->source->raw('tables/bot-profiles') : (is_file($this->path) ? (string) file_get_contents($this->path) : null);
+
+        if ($json === null) {
             return $this->tracks = [];
         }
 
         try {
-            $table = json_decode((string) file_get_contents($this->path), true, 512, JSON_THROW_ON_ERROR);
+            $table = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
         } catch (JsonException) {
             return $this->tracks = [];
         }

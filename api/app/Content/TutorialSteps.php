@@ -15,7 +15,12 @@ final class TutorialSteps
 
     public static function fromConfig(): self
     {
-        return self::fromFile(config('ride.content_path').'/rules/tutorial.json');
+        return self::fromSource(app(ContentSource::class));
+    }
+
+    public static function fromSource(ContentSource $source): self
+    {
+        return new self($source->document('rules/tutorial'));
     }
 
     public static function fromFile(string $path): self

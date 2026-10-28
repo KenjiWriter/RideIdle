@@ -68,7 +68,12 @@ return [
 
     'content_path' => env('CONTENT_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'content'),
 
-    // Version of the set of rules (prices, rewards, anchors) that runs are frozen with.
+    // Where the game reads its content from: `files` (the content/ folder, which is what a development machine and the tests use) or `database` (the pack that
+    // was made live with content:activate; a deploy installs the one of the release the first time, with content:check --install).
+    'content_source' => env('CONTENT_SOURCE', 'files'),
+
+    // Version of the set of rules (prices, rewards, anchors) that runs are frozen with when the content is read from files. A pack in the database has its own
+    // number, which the runs are frozen with and compared by: when it changes, every run is frozen again at its next settlement.
     'ruleset_version' => env('RIDE_RULESET_VERSION', 'dev'),
 
     /*

@@ -1,5 +1,7 @@
 <?php
 
+use App\Content\FileContentSource;
+use App\Content\PackContent;
 use App\Content\Rules;
 use App\Domain\Economy\EconomyRules;
 use App\Domain\Run\CarStats;
@@ -19,6 +21,7 @@ use App\Models\TutorialProgress;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\WorkshopJob;
+use App\Services\ContentPacks;
 use App\Services\Ledger;
 use App\Services\RunService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,6 +48,15 @@ use Tests\TestCase;
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
+
+// The suite reads the content from the files of the repository. TEST_CONTENT_SOURCE=database makes it read the same content from a pack in the database, to show
+// that the two are the same game (the tests of the packs themselves, which count packs, are not meant for this).
+pest()->beforeEach(function (): void {
+    if (env('TEST_CONTENT_SOURCE') === 'database') {
+        contentPacks()->import(repositoryContent(), checkTables: false, activate: true);
+        readFromDatabase();
+    }
+})->in('Feature');
 
 // Concurrency tests commit real rows for other processes to see, so no wrapping transaction.
 pest()->extend(TestCase::class)
@@ -431,4 +443,75 @@ function economyRules(array $path = [], mixed $value = null): EconomyRules
     }
 
     return EconomyRules::fromArray($data);
+}
+
+// The content of the game as documents: the repository, a pack, and the packs of the database (ContentSourceTest, ContentPacksTest, ContentCommandsTest).
+
+function repositoryContent(): FileContentSource
+{
+    return new FileContentSource((string) config('ride.content_path'));
+}
+
+/**
+ * The text of every document of the repository by key, the manifest as `pack`: what a pack holds.
+ *
+ * @return array<string, string>
+ */
+function repositoryDocuments(): array
+{
+    $files = repositoryContent();
+    $documents = ['pack' => (string) $files->raw('pack')];
+
+    foreach ($files->keys() as $key) {
+        $documents[$key] = (string) $files->raw($key);
+    }
+
+    return $documents;
+}
+
+/**
+ * The content of the repository with some documents changed: each change is a function from the decoded document to the new one, and a key that is not there
+ * yet is made out of nothing.
+ *
+ * @param  array<string, Closure(array<string, mixed>): array<string, mixed>>  $changes
+ * @param  list<string>  $removed  the keys of the documents to leave out
+ */
+function contentWith(array $changes, array $removed = []): PackContent
+{
+    $documents = array_diff_key(repositoryDocuments(), array_flip($removed));
+
+    foreach ($changes as $key => $change) {
+        $document = isset($documents[$key]) ? contentArray(json_decode($documents[$key])) : [];
+        $documents[$key] = json_encode($change($document), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    }
+
+    return new PackContent('2026.10.0', $documents);
+}
+
+/** A decoded document as arrays, except the empty objects, which stay objects so that they are written back as {} and not as []. */
+function contentArray(mixed $value): mixed
+{
+    if (is_object($value)) {
+        return (array) $value === [] ? $value : array_map('contentArray', (array) $value);
+    }
+
+    return is_array($value) ? array_map('contentArray', $value) : $value;
+}
+
+function contentPacks(): ContentPacks
+{
+    return app(ContentPacks::class);
+}
+
+/** The Rdzak GT-4 with another power: a change that every lap of a run shows. */
+function stronger(int $powerKw = 150): array
+{
+    return ['vehicles/rdzak-gt-4' => fn (array $vehicle): array => [...$vehicle, 'power_kw' => $powerKw]];
+}
+
+/** The game reads from the database from here on, and the container is asked again for what it has read. */
+function readFromDatabase(): void
+{
+    config(['ride.content_source' => 'database']);
+    app()->forgetScopedInstances();
 }

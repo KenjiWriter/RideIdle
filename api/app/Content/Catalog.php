@@ -6,7 +6,8 @@ namespace App\Content;
 
 /**
  * Read access to the definitions of a content pack at run time (vehicles and parts).
- * The files are read once per process and looked up by slug, never by a path that came from a request.
+ * The definitions are read once per process and looked up by slug, never by a path that came from a request. They come from a content source (the files of
+ * the repository or the pack in the database), or from the folder of a pack when one is given.
  */
 final class Catalog
 {
@@ -16,13 +17,16 @@ final class Catalog
     /** @var array<string, array<string, mixed>>|null */
     private ?array $parts = null;
 
-    public function __construct(private readonly string $packPath)
-    {
-    }
+    public function __construct(private readonly string $packPath = '', private readonly ?ContentSource $source = null) {}
 
     public static function fromConfig(): self
     {
-        return new self(config('ride.content_path').'/packs/core');
+        return self::fromSource(app(ContentSource::class));
+    }
+
+    public static function fromSource(ContentSource $source): self
+    {
+        return new self('', $source);
     }
 
     /** @return array<string, mixed>|null */
@@ -62,6 +66,10 @@ final class Catalog
     /** @return array<string, array<string, mixed>> */
     private function load(string $folder): array
     {
+        if ($this->source !== null) {
+            return $this->source->documents($folder);
+        }
+
         $files = glob("{$this->packPath}/{$folder}/*.json") ?: [];
         sort($files);
 

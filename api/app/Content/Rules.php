@@ -25,7 +25,12 @@ final class Rules
 
     public static function fromConfig(): self
     {
-        return self::fromFile(config('ride.content_path').'/rules/starter.json');
+        return self::fromSource(app(ContentSource::class));
+    }
+
+    public static function fromSource(ContentSource $source): self
+    {
+        return new self($source->document('rules/starter'));
     }
 
     public static function fromFile(string $path): self

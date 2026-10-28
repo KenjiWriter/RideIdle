@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Content\BotProfiles;
 use App\Content\Catalog;
+use App\Content\ContentSource;
 use App\Content\Rules;
 use App\Content\TutorialSteps;
 use App\Services\Accounts;
+use App\Services\ContentPacks;
 use App\Services\Ledger;
 use App\Services\RunService;
 use App\Services\TutorialScript;
@@ -25,14 +27,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        // The content is read once per process.
-        $this->app->singleton(Catalog::class, fn () => Catalog::fromConfig());
-        $this->app->singleton(Rules::class, fn () => Rules::fromConfig());
-        $this->app->singleton(BotProfiles::class, fn () => BotProfiles::fromConfig());
+        // The content is read once per request, and again for every job of a queue worker, which lives for hours: the pack that is live can change in between.
+        $this->app->scoped(ContentSource::class, fn ($app) => $app->make(ContentPacks::class)->configured());
+        $this->app->scoped(Catalog::class, fn () => Catalog::fromConfig());
+        $this->app->scoped(Rules::class, fn () => Rules::fromConfig());
+        $this->app->scoped(BotProfiles::class, fn () => BotProfiles::fromConfig());
         // The container does not fill the optional parameters of the run service, so the arrangements of the tutorial are given to the one of the application here:
         // a service that is built by hand (in a test, for a run of its own) leaves them out.
         $this->app->bind(RunService::class, fn ($app) => new RunService(ledger: $app->make(Ledger::class), script: $app->make(TutorialScript::class)));
-        $this->app->singleton(TutorialSteps::class, fn () => TutorialSteps::fromConfig());
+        $this->app->scoped(TutorialSteps::class, fn () => TutorialSteps::fromConfig());
     }
 
     /**

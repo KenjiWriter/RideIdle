@@ -14,7 +14,12 @@
       "type": "string",
       "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$"
     },
-    "description": { "$ref": "common.schema.json#/$defs/i18n" }
+    "description": { "$ref": "common.schema.json#/$defs/i18n" },
+    "checksum": {
+      "description": "Written by content:export: the checksum of the content of the pack (the manifest without its version and this field, and every document). When it is there, content:import checks it, so a pack that was changed after it was exported is not taken for the one that was.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
   },
   "required": ["schema", "name", "version"],
   "additionalProperties": false

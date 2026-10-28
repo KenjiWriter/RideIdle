@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Content\ContentSource;
 use App\Models\Car;
 use App\Models\RaceRun;
 use App\Models\User;
@@ -37,6 +38,8 @@ class RaceRunFactory extends Factory
             'break_after_laps' => null,
             'seed' => bin2hex(random_bytes(16)),
             'config' => self::constantConfig(),
+            // Frozen with the content that is live, as a run started now would be, so that it is not frozen again for a pack that is the one it is on.
+            'ruleset_version' => fn (): string => app(ContentSource::class)->rulesetVersion(),
             'state_version' => 0,
         ];
     }

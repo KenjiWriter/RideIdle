@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Content\ContentSource;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
 use App\Domain\Run\FrozenRun;
@@ -466,7 +467,30 @@ final class RunService
             $settled = self::together($settled, $this->settleOnce($run, $nowMs));
         }
 
+        // A run that was frozen with other content than the one that is live now (a new pack was made live) has been settled up to now with the lap it was
+        // frozen with, which is what it was driving; from now on it drives the new content.
+        if ($run->ruleset_version !== $this->rulesetVersion()) {
+            $this->freezeForNewContent($run);
+        }
+
         return $settled;
+    }
+
+    /**
+     * Freezes a run again for the content that is live now. If the content cannot make the run (the car or the track is not in it any more), the run keeps
+     * the configuration it has, which is all that settling needs, and is marked as seen so that it is not tried at every settlement; the problem is reported.
+     */
+    private function freezeForNewContent(RaceRun $run): void
+    {
+        try {
+            $this->freezeAgain($run);
+        } catch (InvalidArgumentException $problem) {
+            report($problem);
+        }
+
+        if ($run->ruleset_version !== $this->rulesetVersion()) {
+            $run->forceFill(['ruleset_version' => $this->rulesetVersion()])->save();
+        }
     }
 
     /** Whether the run has reached the lap at which its configuration has to be made again. */
@@ -481,15 +505,15 @@ final class RunService
      */
     private function freezeAgain(RaceRun $run): void
     {
-        $car = Car::query()->find($run->car_id);
+        $inputs = $this->inputsToFreeze($run);
 
-        if ($car === null) {
+        if ($inputs === null) {
             $run->forceFill(['recompute_after_laps' => null])->save();
 
             return;
         }
 
-        $frozen = $this->freezer->freeze(app(RunInputsFactory::class)->makeForCar($car, $run->track_slug), $run->seed, $run->laps_done);
+        $frozen = $this->freezer->freeze($inputs, $run->seed, $run->laps_done);
 
         $run->forceFill([
             'config' => $frozen->config,
@@ -498,6 +522,20 @@ final class RunService
             'ruleset_version' => $this->rulesetVersion(),
             'state_version' => $run->state_version + 1,
         ])->save();
+    }
+
+    /** What the run is frozen from now: its car as it is (the parts with their wear, the odometer, the service), or the body of its car when it has none. Null when its car is gone. */
+    private function inputsToFreeze(RaceRun $run): ?RunInputs
+    {
+        $factory = app(RunInputsFactory::class);
+
+        if ($run->car_id === null) {
+            return $factory->make($run->car_slug, $run->track_slug);
+        }
+
+        $car = Car::query()->find($run->car_id);
+
+        return $car === null ? null : $factory->makeForCar($car, $run->track_slug);
     }
 
     /** What two passes of settling one run come to: the laps and the cash added up, the events in order, and the state of the last pass. */
@@ -689,8 +727,9 @@ final class RunService
         }
     }
 
+    /** The version of the content the runs are frozen with: the number of the pack that is live, or the one of the configuration when the content is read from files. */
     private function rulesetVersion(): string
     {
-        return (string) config('ride.ruleset_version');
+        return app(ContentSource::class)->rulesetVersion();
     }
 }
