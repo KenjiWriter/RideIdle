@@ -16,6 +16,15 @@ return [
         'activate_description' => 'Das Spiel liest diesen Inhalt ab jetzt. Läufe werden mit dem abgerechnet, womit sie eingefroren waren, und bei der nächsten Abrechnung für dieses Paket neu eingefroren. Das Paket wird zuerst geprüft und abgelehnt, wenn es nicht zu dieser Version des Spiels passt.',
         'refused' => 'Das Paket wurde nicht aktiviert',
         'activated' => 'Paket :number ist aktiv',
+        'export' => 'Herunterladen',
+        'import' => 'Paket importieren',
+        'import_description' => 'Ein Paket, das aus einer anderen Umgebung heruntergeladen wurde (eine Paketdatei). Es wird wie jedes Paket geprüft und erstellt, aber nur auf Wunsch live geschaltet.',
+        'import_file' => 'Paketdatei',
+        'import_number_hint' => 'Leer lassen, um die Nummer der Datei zu behalten.',
+        'import_activate' => 'Live schalten',
+        'imported' => 'Das Paket :number wurde importiert.',
+        'import_existed' => 'Das Paket :number gab es schon mit diesem Inhalt.',
+        'import_refused' => 'Das Paket wurde nicht importiert',
     ],
     'audit' => [
         'one' => 'Protokolleintrag',
@@ -61,6 +70,7 @@ return [
         'content_publication_queued' => 'Paket angefordert',
         'content_publication_ready' => 'Paket erstellt',
         'content_publication_failed' => 'Paket nicht erstellt',
+        'content_pack_imported' => 'Paket importiert',
     ],
     'nav' => [
         'content' => 'Inhalt',

@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Content\ContentException;
 use App\Content\ContentPackInvalid;
 use App\Content\ContentSource;
 use App\Content\Definitions\JsonDocument;
 use App\Content\PackContent;
 use App\Content\PackValidationResult;
 use App\Content\Publishing\CandidatePack;
+use App\Content\Publishing\ContentBundle;
 use App\Content\Publishing\DerivedTables;
 use App\Content\Publishing\PackGates;
 use App\Content\Publishing\PublicationRefused;
@@ -38,6 +40,7 @@ final class ContentPublisher
         private readonly CandidatePack $candidates,
         private readonly DerivedTables $tables,
         private readonly PackGates $gates,
+        private readonly ContentBundle $bundles,
         private readonly DefinitionUsage $usage,
         private readonly AdminAudit $audit,
     ) {}
@@ -219,6 +222,33 @@ final class ContentPublisher
         }
 
         return $changed;
+    }
+
+    /** The pack as a file that can travel to another environment. */
+    public function export(ContentPack $pack): string
+    {
+        return $this->bundles->export($this->packs->sourceOf($pack), $pack->number);
+    }
+
+    /**
+     * Makes a pack of a bundle that was made in another environment (and, when asked, makes it live). The pack is checked as any pack is, tables included, and the
+     * number that it came with is used unless another is given; a number that is taken by other content is refused.
+     *
+     * @throws ContentException when the file is not a bundle, or the number is taken by other content
+     * @throws ContentPackInvalid when the content does not pass the validation
+     */
+    public function import(Admin $admin, string $bundle, bool $activate = false, ?string $number = null): ContentImport
+    {
+        $content = $this->bundles->read($bundle);
+        $import = $this->packs->import($content, $number === null || trim($number) === '' ? $content->number() : trim($number), 'bundle');
+
+        $this->audit->record('content_pack_imported', $admin, "content_pack:{$import->pack->number}", ['created' => $import->created, 'new_versions' => $import->newVersions]);
+
+        if ($activate) {
+            $this->activate($import->pack, $admin);
+        }
+
+        return $import;
     }
 
     /**

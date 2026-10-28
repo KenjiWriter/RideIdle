@@ -16,6 +16,15 @@ return [
         'activate_description' => 'The game reads this content from now on. Runs are settled with what they were frozen with and frozen again for this pack at their next settlement. The pack is checked first, and refused if it does not fit this version of the game.',
         'refused' => 'The pack was not made live',
         'activated' => 'Pack :number is live',
+        'export' => 'Download',
+        'import' => 'Import a pack',
+        'import_description' => 'A pack that was downloaded from another environment (a file of a bundle). It is checked as any pack is, and made, but it is not live unless you say so.',
+        'import_file' => 'File of the pack',
+        'import_number_hint' => 'Leave empty to keep the one in the file.',
+        'import_activate' => 'Make it live',
+        'imported' => 'Pack :number was imported.',
+        'import_existed' => 'Pack :number was there already with this content.',
+        'import_refused' => 'The pack was not imported',
     ],
     'audit' => [
         'one' => 'trail entry',
@@ -61,6 +70,7 @@ return [
         'content_publication_queued' => 'Pack asked for',
         'content_publication_ready' => 'Pack made',
         'content_publication_failed' => 'Pack not made',
+        'content_pack_imported' => 'Pack imported',
     ],
     'nav' => [
         'content' => 'Content',

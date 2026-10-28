@@ -74,6 +74,13 @@ class ContentPackResource extends Resource
                 TextColumn::make('created_at')->label(__('admin.packs.made'))->dateTime('Y-m-d H:i')->sortable(),
             ])
             ->recordActions([
+                Action::make('export')
+                    ->label(__('admin.packs.export'))
+                    ->icon(Heroicon::OutlinedArrowDownTray)
+                    ->color('gray')
+                    ->action(fn (ContentPack $record) => response()->streamDownload(function () use ($record): void {
+                        echo app(ContentPublisher::class)->export($record);
+                    }, "pack-{$record->number}.json", ['Content-Type' => 'application/json'])),
                 Action::make('activate')
                     ->label(__('admin.packs.activate'))
                     ->icon(Heroicon::OutlinedBolt)

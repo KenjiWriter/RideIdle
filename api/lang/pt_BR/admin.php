@@ -16,6 +16,15 @@ return [
         'activate_description' => 'O jogo passa a ler este conteúdo agora. As corridas são acertadas com o que estavam congeladas e, no próximo acerto, congeladas de novo para este pacote. O pacote é verificado antes e recusado se não servir para esta versão do jogo.',
         'refused' => 'O pacote não foi ativado',
         'activated' => 'O pacote :number está ativo',
+        'export' => 'Baixar',
+        'import' => 'Importar um pacote',
+        'import_description' => 'Um pacote baixado de outro ambiente (um arquivo de pacote). É conferido como qualquer pacote e criado, mas só fica ativo se você pedir.',
+        'import_file' => 'Arquivo do pacote',
+        'import_number_hint' => 'Deixe vazio para manter o do arquivo.',
+        'import_activate' => 'Ativá-lo',
+        'imported' => 'O pacote :number foi importado.',
+        'import_existed' => 'O pacote :number já existia com este conteúdo.',
+        'import_refused' => 'O pacote não foi importado',
     ],
     'audit' => [
         'one' => 'entrada do registro',
@@ -61,6 +70,7 @@ return [
         'content_publication_queued' => 'Pacote solicitado',
         'content_publication_ready' => 'Pacote criado',
         'content_publication_failed' => 'Pacote não criado',
+        'content_pack_imported' => 'Pacote importado',
     ],
     'nav' => [
         'content' => 'Conteúdo',

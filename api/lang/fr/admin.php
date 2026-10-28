@@ -16,6 +16,15 @@ return [
         'activate_description' => 'Le jeu lit ce contenu à partir de maintenant. Les courses sont réglées avec ce avec quoi elles étaient figées, puis figées de nouveau pour ce pack au prochain règlement. Le pack est d’abord vérifié et refusé s’il ne convient pas à cette version du jeu.',
         'refused' => 'Le pack n’a pas été mis en ligne',
         'activated' => 'Le pack :number est en ligne',
+        'export' => 'Télécharger',
+        'import' => 'Importer un pack',
+        'import_description' => 'Un pack téléchargé depuis un autre environnement (un fichier de pack). Il est vérifié comme tout pack et créé, mais n’est pas en ligne sauf si vous le demandez.',
+        'import_file' => 'Fichier du pack',
+        'import_number_hint' => 'Laissez vide pour garder celui du fichier.',
+        'import_activate' => 'La mettre en ligne',
+        'imported' => 'Le pack :number a été importé.',
+        'import_existed' => 'Le pack :number existait déjà avec ce contenu.',
+        'import_refused' => 'Le pack n’a pas été importé',
     ],
     'audit' => [
         'one' => 'entrée du journal',
@@ -61,6 +70,7 @@ return [
         'content_publication_queued' => 'Pack demandé',
         'content_publication_ready' => 'Pack fait',
         'content_publication_failed' => 'Pack non fait',
+        'content_pack_imported' => 'Pack importé',
     ],
     'nav' => [
         'content' => 'Contenu',

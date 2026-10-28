@@ -16,6 +16,15 @@ return [
         'activate_description' => 'Od teraz gra czyta tę treść. Biegi są rozliczane tym, z czym były zamrożone, i przy następnym rozliczeniu zamrażane od nowa dla tej paczki. Paczka jest najpierw sprawdzana i odrzucana, jeśli nie pasuje do tej wersji gry.',
         'refused' => 'Paczka nie została uruchomiona',
         'activated' => 'Paczka :number jest żywa',
+        'export' => 'Pobierz',
+        'import' => 'Zaimportuj paczkę',
+        'import_description' => 'Paczka pobrana z innego środowiska (plik paczki). Jest sprawdzana jak każda paczka i powstaje, ale nie jest żywa, chyba że tak zdecydujesz.',
+        'import_file' => 'Plik paczki',
+        'import_number_hint' => 'Zostaw puste, żeby zachować numer z pliku.',
+        'import_activate' => 'Zrób ją żywą',
+        'imported' => 'Zaimportowano paczkę :number.',
+        'import_existed' => 'Paczka :number już była, z tą treścią.',
+        'import_refused' => 'Paczka nie została zaimportowana',
     ],
     'audit' => [
         'one' => 'wpis dziennika',
@@ -61,6 +70,7 @@ return [
         'content_publication_queued' => 'Zamówiono paczkę',
         'content_publication_ready' => 'Paczka zrobiona',
         'content_publication_failed' => 'Paczki nie zrobiono',
+        'content_pack_imported' => 'Zaimportowano paczkę',
     ],
     'nav' => [
         'content' => 'Treść',
