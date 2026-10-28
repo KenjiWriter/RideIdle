@@ -306,8 +306,8 @@ describe('economy:simulate', function () {
         $output = Artisan::output();
 
         expect($output)->toContain('What crates pay back')
-            ->and($output)->toMatch('/\| L0\s+\| 1\s+\| \$563\s+\| 5\.3\s+\|/')
-            ->and($output)->toMatch('/\| L7\s+\| 22\s+\| \$14 925\s+\| 5\.7\s+\| 90\.1\s+\| 224\.9\s+\| 150\.2\s+\| 145\.6\s+\| ok\s+\|/')
+            ->and($output)->toMatch('/\| L0\s+\| 1\s+\| \$563\s+\| 5\.2\s+\|/')
+            ->and($output)->toMatch('/\| L7\s+\| 22\s+\| \$14 925\s+\| 5\.5\s+\| 83\.5\s+\| 220\.7\s+\| 149\.2\s+\| 145\.6\s+\| ok\s+\|/')
             ->and($output)->toContain('Crate value gate: PASSED. The programme of 150 crates never pays back sooner than a car (the first crates do, at L1, L2, L3, L4, L5, L6, L7).');
     });
 

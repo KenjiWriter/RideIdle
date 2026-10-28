@@ -87,8 +87,9 @@ final class Rules
      * @param  int  $meanWearPpm  the mean wear of the parts on the car, in ppm of their life
      * @param  int  $overdueSharePpm  how far into the overdue of the service the car is, as a share of the longest, in ppm
      * @param  int  $unserviceable  how many parts are unserviceable
+     * @param  int  $reliabilityKeptPpm  what the affixes of reliability of the parts leave of the chance, in ppm (1 000 000 when no part has one)
      */
-    public function breakChancePerLapPpmFor(int $conditionPpm, int $meanWearPpm = 0, int $overdueSharePpm = 0, int $unserviceable = 0): int
+    public function breakChancePerLapPpmFor(int $conditionPpm, int $meanWearPpm = 0, int $overdueSharePpm = 0, int $unserviceable = 0, int $reliabilityKeptPpm = Ppm::ONE): int
     {
         $worn = Ppm::ONE - max(0, min(Ppm::ONE, $conditionPpm));
         $multiplier = Ppm::ONE + $this->data['breakdown']['condition_factor'] * $worn;
@@ -104,7 +105,8 @@ final class Rules
             $chance = min(Ppm::ONE, Ppm::mul($chance, $factor));
         }
 
-        return $chance;
+        // The affixes of reliability of the parts on the car take their share off what is left.
+        return Ppm::mul($chance, $reliabilityKeptPpm);
     }
 
     /** What the odometer of a wreck of this car says, in km: the board of the wrecks (0 for a car that is not a wreck of the yard). */
@@ -742,27 +744,177 @@ final class Rules
      * power of an engine (`power_kw`); of a multiplier of the power only the gain is (1.02 at x1.6 is 1.032). A limit, like the one of a gearbox, and the mass
      * of an engine are not gains and stay what they are.
      *
+     * The affixes of the part that are about a statistic (`effect` stat) multiply it again, by 1 + their amount, which a worn part gives as little of as of the rest:
+     * the power goes to the engine (`power_kw`) of a part that has one and to the multiplier of the power (`power_mult`) of one that has none.
+     *
      * @param  array<string, int|float>  $stats  the statistics of the definition of the part
+     * @param  array<string, int>  $affixes  the affixes of the part, by key, with their amount in ppm
      * @return array<string, int|float>
      */
-    public function scaledStats(array $stats, Rarity $rarity, int $upgrade = 0, int $conditionPpm = Ppm::ONE): array
+    public function scaledStats(array $stats, Rarity $rarity, int $upgrade = 0, int $conditionPpm = Ppm::ONE, array $affixes = []): array
     {
         // A worn part gives less (the design: x (0.6 + 0.4 x condition)), on top of what its rarity and its upgrade give.
-        $ppm = Ppm::mul($this->statPpm($rarity, $upgrade), $this->conditionStatPpm($conditionPpm));
+        $condition = $this->conditionStatPpm($conditionPpm);
+        $ppm = Ppm::mul($this->statPpm($rarity, $upgrade), $condition);
+        $extra = $this->statAffixPpm($affixes, $condition);
 
-        if ($ppm === Ppm::ONE) {
+        if ($ppm === Ppm::ONE && $extra === []) {
             return $stats;
         }
 
+        $powerOn = isset($stats['power_kw']) ? 'power_kw' : 'power_mult';
+
         foreach ($stats as $name => $value) {
+            $boost = Ppm::ONE + ($extra[$name === $powerOn ? 'power' : $name] ?? 0);
+
             if (in_array($name, ['grip', 'handling', 'braking', 'clearance', 'power_kw'], true)) {
-                $stats[$name] = round($value * $ppm / Ppm::ONE, 6);
+                $stats[$name] = round($value * $ppm / Ppm::ONE * $boost / Ppm::ONE, 6);
             } elseif ($name === 'power_mult') {
-                $stats[$name] = round(1 + ($value - 1) * $ppm / Ppm::ONE, 6);
+                $stats[$name] = round((1 + ($value - 1) * $ppm / Ppm::ONE) * $boost / Ppm::ONE, 6);
             }
         }
 
         return $stats;
+    }
+
+    /**
+     * The affixes of the rules: how many a rarity gives, and what each one is. A pack that has none (an older one) has no affixes: the parts have none, and the
+     * ones they got stay without effect.
+     *
+     * @return array{per_rarity: array<string, array{min: int, max: int}>, definitions: array<string, array<string, mixed>>}
+     */
+    public function affixes(): array
+    {
+        return $this->data['affixes'] ?? ['per_rarity' => [], 'definitions' => []];
+    }
+
+    /**
+     * What the affixes that are about a statistic add to it, in ppm, by statistic (`grip`, `handling`, `braking`, `clearance`, `power`), as much as the condition
+     * of the part lets them give. An affix that the rules do not know (a pack that took it out) gives nothing.
+     *
+     * @param  array<string, int>  $affixes  by key, with the amount in ppm
+     * @return array<string, int>
+     */
+    private function statAffixPpm(array $affixes, int $conditionStatPpm): array
+    {
+        $extra = [];
+
+        foreach ($affixes as $key => $amount) {
+            $definition = $this->affixDefinition($key);
+
+            if ($definition !== null && $definition['effect'] === 'stat') {
+                $extra[$definition['stat']] = ($extra[$definition['stat']] ?? 0) + Ppm::mul($amount, $conditionStatPpm);
+            }
+        }
+
+        return $extra;
+    }
+
+    /**
+     * How much the affixes of a part with this effect take off, in ppm: `wear` off how fast the part wears, `fuel` off the fuel that the car burns, `reliability`
+     * off the chance of a breakdown. Affixes of one effect (a pack may have several) take their shares off one after the other.
+     *
+     * @param  array<string, int>  $affixes  by key, with the amount in ppm
+     */
+    public function affixCutPpm(array $affixes, string $effect): int
+    {
+        $kept = Ppm::ONE;
+
+        foreach ($affixes as $key => $amount) {
+            if (($this->affixDefinition($key)['effect'] ?? null) === $effect) {
+                $kept = Ppm::mul($kept, Ppm::ONE - min(Ppm::ONE, $amount));
+            }
+        }
+
+        return Ppm::ONE - $kept;
+    }
+
+    /**
+     * What the affixes of the tires add to their grip on a surface, in ppm: the `surface` affixes that name it, as much as the condition of the tires lets them give.
+     *
+     * @param  array<string, int>  $affixes  by key, with the amount in ppm
+     */
+    public function surfaceAffixPpm(array $affixes, string $surface, int $conditionStatPpm = Ppm::ONE): int
+    {
+        $extra = 0;
+
+        foreach ($affixes as $key => $amount) {
+            $definition = $this->affixDefinition($key);
+
+            if (($definition['effect'] ?? null) === 'surface' && in_array($surface, $definition['surfaces'], true)) {
+                $extra += Ppm::mul($amount, $conditionStatPpm);
+            }
+        }
+
+        return $extra;
+    }
+
+    /**
+     * The effect that a legendary part of a slot has of its own (not drawn: all of them have it), or null when the slot has none.
+     *
+     * @return array{name: array<string, string>, special?: string, ppm?: int, mods?: list<array{effect: string, stat?: string, ppm: int}>}|null
+     */
+    public function uniqueEffect(string $slot): ?array
+    {
+        return $this->data['affixes']['unique'][$slot] ?? null;
+    }
+
+    /** The amount of the special effect of a legendary part of the slot, in ppm, when its unique effect is that one: 0 for any other part and any other effect. */
+    public function uniqueSpecialPpm(string $slot, Rarity $rarity, string $special): int
+    {
+        $unique = $rarity === Rarity::Legendary ? $this->uniqueEffect($slot) : null;
+
+        return $unique !== null && ($unique['special'] ?? null) === $special ? (int) $unique['ppm'] : 0;
+    }
+
+    /**
+     * The affixes of a part for the pipeline: the ones it was drawn with, and, for a legendary part, the modifiers of the unique effect of its slot, which count as
+     * affixes of their own (`unique:{slot}:{n}`).
+     *
+     * @param  array<string, int>  $affixes
+     * @return array<string, int>
+     */
+    public function withUniqueAffixes(array $affixes, Rarity $rarity, string $slot): array
+    {
+        $unique = $rarity === Rarity::Legendary ? $this->uniqueEffect($slot) : null;
+
+        foreach ($unique['mods'] ?? [] as $n => $mod) {
+            $affixes["unique:{$slot}:{$n}"] = $mod['ppm'];
+        }
+
+        return $affixes;
+    }
+
+    /**
+     * The condition that a part gives its statistics by: the one it has, except that the brakes with the unique effect of the legendary ones brake as new down to the
+     * condition it names, and below it as worn as the condition is under that.
+     */
+    public function effectiveConditionPpm(string $slot, Rarity $rarity, int $conditionPpm): int
+    {
+        $floor = $this->uniqueSpecialPpm($slot, $rarity, 'braking_condition');
+
+        if ($floor === 0) {
+            return $conditionPpm;
+        }
+
+        return $conditionPpm >= $floor ? Ppm::ONE : intdiv(max(0, $conditionPpm) * Ppm::ONE, $floor);
+    }
+
+    /**
+     * An affix by its key: one of the rules, or a modifier of a unique effect.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function affixDefinition(string $key): ?array
+    {
+        if (str_starts_with($key, 'unique:')) {
+            [, $slot, $n] = explode(':', $key);
+            $mod = $this->data['affixes']['unique'][$slot]['mods'][(int) $n] ?? null;
+
+            return $mod === null ? null : ['effect' => $mod['effect'], 'stat' => $mod['stat'] ?? null];
+        }
+
+        return $this->affixes()['definitions'][$key] ?? null;
     }
 
     /**

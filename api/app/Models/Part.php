@@ -25,6 +25,7 @@ class Part extends Model
             'user_id' => 'integer',
             'car_id' => 'integer',
             'rarity' => 'integer',
+            'affixes' => 'array',
             'upgrade_level' => 'integer',
             'wear_ppb' => 'integer',
         ];

@@ -38,6 +38,7 @@ final class CrateShop
         private readonly Rules $rules,
         private readonly Ledger $ledger,
         private readonly TutorialScript $script,
+        private readonly PartAffixes $affixes,
     ) {
         $this->crates = new Crates($rules->shopCrates());
     }
@@ -162,6 +163,8 @@ final class CrateShop
                 'slot' => $model['slot'],
                 'rarity' => $rarity->value,
             ]);
+
+            $this->affixes->give($part, $rarity);
 
             $opening = CrateOpening::query()->create([
                 'user_id' => $userId,
