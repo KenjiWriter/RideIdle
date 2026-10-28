@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\V1\ShopController;
 use App\Http\Controllers\Api\V1\SocialAuthController;
 use App\Http\Controllers\Api\V1\StarterCarController;
 use App\Http\Controllers\Api\V1\TutorialController;
+use App\Http\Controllers\Api\V1\VocabularyController;
 use App\Http\Controllers\Api\V1\WorldController;
 use App\Http\Middleware\TouchLastSeen;
 use App\Models\AccountIdentity;
@@ -28,6 +29,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function (): void {
     Route::get('/meta/locales', [LocaleController::class, 'index']);
     Route::get('/meta/legal', [LegalController::class, 'show']);
+    Route::get('/meta/vocabulary', [VocabularyController::class, 'show']);
 
     // The sign-ins with another service that are on, and the way in and out of each of them. The providers are
     // Google, Facebook and Apple; the callback is where the provider sends the person back (Apple with a form post).

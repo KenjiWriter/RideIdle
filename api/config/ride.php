@@ -68,6 +68,11 @@ return [
 
     'content_path' => env('CONTENT_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'content'),
 
+    // The texts that the web app brings (web/src/i18n/locales/<language>.json): what the vocabulary of a pack changes. The panel shows them next to the words that
+    // a pack puts in their place, and the validator checks that a message of the vocabulary is one of them; when the folder is not there (an API on its own),
+    // neither is done.
+    'web_locales_path' => env('WEB_LOCALES_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'web'.DIRECTORY_SEPARATOR.'src'.DIRECTORY_SEPARATOR.'i18n'.DIRECTORY_SEPARATOR.'locales'),
+
     // The admin panel (F4): the host it answers on (admin.example.com; then it is the whole of that host), or nothing, and it is /admin on the host of the
     // application, which is how a development machine has it. The language of the panel is the one of the people who run it.
     'admin_domain' => env('ADMIN_DOMAIN') ?: null,

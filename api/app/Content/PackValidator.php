@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Content;
 
+use App\Content\Vocabulary\WebMessages;
 use App\Support\Locale;
 use InvalidArgumentException;
 use JsonException;
@@ -35,6 +36,7 @@ final class PackValidator
     public const RULES = [
         'starter' => 'rules.schema.json',
         'tutorial' => 'tutorial.schema.json',
+        'vocabulary' => 'vocabulary.schema.json',
     ];
 
     private readonly Validator $validator;
@@ -114,11 +116,14 @@ final class PackValidator
             }
         }
 
-        foreach (['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json', 'economy' => 'economy.schema.json'] as $name => $schemaFile) {
+        foreach (['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json', 'economy' => 'economy.schema.json', 'vocabulary' => 'vocabulary.schema.json'] as $name => $schemaFile) {
             if (! $source->has("rules/{$name}")) {
-                $name === 'economy'
-                    ? $result->addWarning("rules/{$name}.json", '', 'The anchors of the economy are missing: the simulators cannot be run on this content.')
-                    : $result->addError("rules/{$name}.json", '', 'The document is missing.');
+                // A pack with no vocabulary is a pack that does not change the words of the app.
+                match ($name) {
+                    'economy' => $result->addWarning("rules/{$name}.json", '', 'The anchors of the economy are missing: the simulators cannot be run on this content.'),
+                    'vocabulary' => null,
+                    default => $result->addError("rules/{$name}.json", '', 'The document is missing.'),
+                };
 
                 continue;
             }
@@ -127,6 +132,7 @@ final class PackValidator
 
             if ($data !== null) {
                 $this->warnAboutMissingRulesTranslations("rules/{$name}.json", $name, $data, $result);
+                $this->checkVocabulary("rules/{$name}.json", $name, $data, $result);
             }
         }
 
@@ -168,6 +174,7 @@ final class PackValidator
 
         if ($folder === 'rules') {
             $this->warnAboutMissingRulesTranslations($relative, (string) $slug, $data, $result);
+            $this->checkVocabulary($relative, (string) $slug, $data, $result);
 
             return $result;
         }
@@ -558,6 +565,12 @@ final class PackValidator
             }
         }
 
+        if ($name === 'vocabulary') {
+            foreach ($data['messages'] ?? [] as $key => $message) {
+                $texts["/messages/{$key}"] = $message;
+            }
+        }
+
         if ($name === 'tutorial') {
             foreach ($data['steps'] ?? [] as $index => $step) {
                 foreach ($step['sms'] ?? [] as $position => $sms) {
@@ -576,6 +589,49 @@ final class PackValidator
             foreach (Locale::supported() as $locale) {
                 if (! isset($text[$locale])) {
                     $result->addWarning($relative, "{$pointer}/{$locale}", 'Missing translation, English is used instead.');
+                }
+            }
+        }
+    }
+
+    /**
+     * The words of a pack against the app that speaks them: a message of the vocabulary has to be one that the web app has, and its text has to fill in the same
+     * {names} (the app gives the value, a text that leaves one out shows nothing, one that adds one shows an empty place), keep the forms of a plural that the
+     * message has (the number of | in it), and not use the syntax of a link to another message. Without the texts of the app to ask nothing of this is checked.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function checkVocabulary(string $relative, string $name, array $data, PackValidationResult $result): void
+    {
+        $catalog = WebMessages::fromConfig();
+
+        if ($name !== 'vocabulary' || ! $catalog->available()) {
+            return;
+        }
+
+        foreach ($data['messages'] ?? [] as $key => $texts) {
+            $original = $catalog->all()[$key] ?? null;
+
+            if ($original === null) {
+                $result->addError($relative, "/messages/{$key}", "The web app has no message {$key}.");
+
+                continue;
+            }
+
+            $expected = WebMessages::placeholders($original);
+
+            foreach ($texts as $locale => $text) {
+                $pointer = "/messages/{$key}/{$locale}";
+                $left = preg_replace('/\{[A-Za-z0-9_]+\}/', '', $text) ?? $text;
+
+                if (WebMessages::placeholders($text) !== $expected) {
+                    $result->addError($relative, $pointer, 'The text must fill in the same {names} as the message of the app: '.($expected === [] ? 'none' : '{'.implode('}, {', $expected).'}').'.');
+                } elseif (str_contains($left, '{') || str_contains($left, '}')) {
+                    $result->addError($relative, $pointer, 'A brace that is not a {name} cannot be shown: the app reads it as a part of a message.');
+                } elseif (str_contains($text, '@:') || str_contains($text, '@.')) {
+                    $result->addError($relative, $pointer, 'A link to another message (@:key) is not allowed in the vocabulary.');
+                } elseif (substr_count($text, '|') !== substr_count($original, '|')) {
+                    $result->addError($relative, $pointer, 'The message has '.(substr_count($original, '|') + 1).' form(s) of a plural, separated by |: the text must have the same number.');
                 }
             }
         }

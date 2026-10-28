@@ -7,6 +7,7 @@ use App\Content\Catalog;
 use App\Content\ContentSource;
 use App\Content\Rules;
 use App\Content\TutorialSteps;
+use App\Content\Vocabulary\Vocabulary;
 use App\Listeners\AuditAdminSignIn;
 use App\Services\Accounts;
 use App\Services\ContentPacks;
@@ -37,6 +38,7 @@ class AppServiceProvider extends ServiceProvider
         // a service that is built by hand (in a test, for a run of its own) leaves them out.
         $this->app->bind(RunService::class, fn ($app) => new RunService(ledger: $app->make(Ledger::class), script: $app->make(TutorialScript::class)));
         $this->app->scoped(TutorialSteps::class, fn () => TutorialSteps::fromConfig());
+        $this->app->scoped(Vocabulary::class, fn () => Vocabulary::fromConfig());
     }
 
     /**
