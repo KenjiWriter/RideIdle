@@ -35,16 +35,7 @@ final class PackGates
      */
     public function run(PackContent $candidate): array
     {
-        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ride-gates-'.Str::lower(Str::random(12));
-        $before = config('ride');
-
-        try {
-            $this->exporter->write($candidate, $directory, $candidate->number());
-            // The schemas are the ones of the code that runs: the simulators check the rules they are given against them.
-            File::copyDirectory(rtrim((string) $before['content_path'], '/\\').'/schema', "{$directory}/schema");
-            config(['ride.content_source' => 'files', 'ride.content_path' => $directory]);
-            $this->app->forgetScopedInstances();
-
+        return $this->inContentOf($candidate, function (): array {
             $results = [];
 
             foreach (self::GATES as $name => [$command, $options]) {
@@ -61,6 +52,56 @@ final class PackGates
             }
 
             return $results;
+        });
+    }
+
+    /**
+     * What the economy simulator says of the content of a pack, as numbers: the days the three kinds of players buy each car of the ladder on (against the days of the
+     * design), and what each level of the ladder of the game earns an hour (against the anchor). It is what a person who changes a number wants to see change.
+     *
+     * @return array{pace: list<array{player: string, car: string, target_day: int, day: int, deviation: float, passed: bool}>, ladder: list<array{level: int, anchor: int|float, game: int|float, deviation: float, xp_game: int|float|null, xp_ok: bool|null, ok: bool}>}
+     */
+    public function measure(PackContent $content): array
+    {
+        return $this->inContentOf($content, function (): array {
+            Artisan::call('economy:simulate', ['--json' => true]);
+            $report = json_decode(trim(Artisan::output()), true) ?? [];
+
+            return [
+                'pace' => array_map(
+                    static fn (array $row): array => ['player' => (string) $row['player'], 'car' => (string) $row['car'], 'target_day' => (int) $row['target_day'], 'day' => (int) $row['day'], 'deviation' => (float) $row['deviation'], 'passed' => (bool) $row['passed']],
+                    $report['gate']['rows'] ?? [],
+                ),
+                'ladder' => array_map(
+                    static fn (array $row): array => ['level' => (int) $row['level'], 'anchor' => $row['anchor'], 'game' => $row['game'], 'deviation' => (float) $row['deviation'], 'xp_game' => $row['xp_game'] ?? null, 'xp_ok' => $row['xp_ok'] ?? null, 'ok' => (bool) $row['ok']],
+                    $report['game_ladder']['rows'] ?? [],
+                ),
+            ];
+        });
+    }
+
+    /**
+     * Runs `$work` with the game reading the content of a pack: the pack is written as the `content/` tree in a folder of its own, the game is pointed at it for as long
+     * as `$work` runs, and everything is put back after.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $work
+     * @return T
+     */
+    private function inContentOf(PackContent $candidate, callable $work): mixed
+    {
+        $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ride-gates-'.Str::lower(Str::random(12));
+        $before = config('ride');
+
+        try {
+            $this->exporter->write($candidate, $directory, $candidate->number());
+            // The schemas are the ones of the code that runs: the simulators check the rules they are given against them.
+            File::copyDirectory(rtrim((string) $before['content_path'], '/\\').'/schema', "{$directory}/schema");
+            config(['ride.content_source' => 'files', 'ride.content_path' => $directory]);
+            $this->app->forgetScopedInstances();
+
+            return $work();
         } finally {
             config(['ride' => $before]);
             $this->app->forgetScopedInstances();

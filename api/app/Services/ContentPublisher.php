@@ -21,6 +21,7 @@ use App\Models\ContentDefinition;
 use App\Models\ContentPack;
 use App\Models\ContentPublication;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -86,6 +87,37 @@ final class ContentPublisher
         }
 
         return $rows;
+    }
+
+    /**
+     * What the drafts would do to the game, without making a pack: the document of the drafts is judged, the derived tables are made again, the gates are run and the
+     * economy is measured, and the same measure of the pack that is live is beside it, so that a change can be seen as a change. The measure of the live pack is kept
+     * (it is the same until another pack is live), so the first preview is the slow one.
+     *
+     * @return array{errors: list<array{file: string, pointer: string, message: string}>, gates: list<array{name: string, passed: bool, ms: int, excerpt: string}>, now: array<string, mixed>, live: array<string, mixed>|null, changes: int}
+     */
+    public function preview(): array
+    {
+        @set_time_limit(180);
+
+        // The pack has the number that the next publication would have, so that its manifest is judged as a real one is.
+        $candidate = $this->candidates->make($this->nextNumber());
+        $validation = $this->packs->validate($candidate, checkTables: false);
+
+        if (! $validation->isValid()) {
+            return ['errors' => array_slice($validation->errors(), 0, self::ISSUES), 'gates' => [], 'now' => [], 'live' => null, 'changes' => count($this->changes())];
+        }
+
+        $candidate = $candidate->with($this->tables->make($candidate));
+        $live = $this->packs->activeSource();
+
+        return [
+            'errors' => [],
+            'gates' => $this->gates->run($candidate),
+            'now' => $this->gates->measure($candidate),
+            'live' => $live === null ? null : Cache::remember('studio.live-measure.'.$live->number(), 3600, fn (): array => $this->gates->measure($live)),
+            'changes' => count($this->changes()),
+        ];
     }
 
     /**
