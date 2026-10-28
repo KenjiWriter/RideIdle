@@ -74,6 +74,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('/map', [WorldController::class, 'show']);
         Route::post('/travel', [WorldController::class, 'travel']);
         Route::post('/travel/finish', [WorldController::class, 'finishTravel']);
+        Route::post('/travel/police', [WorldController::class, 'police']);
 
         Route::get('/garage', [GarageController::class, 'show']);
         Route::post('/garage/jobs', [GarageController::class, 'queueJob']);

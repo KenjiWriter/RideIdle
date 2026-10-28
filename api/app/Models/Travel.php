@@ -33,6 +33,11 @@ class Travel extends Model
             'fuel_ml' => 'integer',
             'start_ms' => 'integer',
             'arrive_ms' => 'integer',
+            'boosted' => 'boolean',
+            'police_at_ms' => 'integer',
+            'police_fine_cents' => 'integer',
+            'police_paid_cents' => 'integer',
+            'police_resolved_ms' => 'integer',
         ];
     }
 

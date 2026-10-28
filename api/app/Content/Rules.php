@@ -559,6 +559,16 @@ final class Rules
         return $this->data['roads'];
     }
 
+    /**
+     * What a boosted journey is: faster, thirstier and with the police on the road. Null when the rules have no boost.
+     *
+     * @return array{speed_ppm: int, fuel_ppm: int, police_chance_ppm: int, police_from_ppm: int, police_to_ppm: int, decide_ms: int, fine_minutes: int, fine_min_cents: int, stop_ms: int, bribe_ppm: int, bribe_fail_ppm: int, bribe_fail_fine_ppm: int, bribe_fail_stop_ms: int, lawyer_coins: int}|null
+     */
+    public function travelBoost(): ?array
+    {
+        return $this->data['travel']['boost'] ?? null;
+    }
+
     /** The average speed of a journey as a share of the top speed of the car, in ppm. */
     public function travelSpeedSharePpm(): int
     {

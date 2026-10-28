@@ -8,9 +8,11 @@ use App\Http\Controllers\Controller;
 use App\Services\Ledger;
 use App\Services\RunService;
 use App\Services\Travel;
+use App\Services\TravelPolice;
 use App\Services\Workshop;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * The map of the world: the cities with what they ask and cost, the roads between them, and the journey of the car. Travelling
@@ -39,13 +41,29 @@ final class WorldController extends Controller
      */
     public function travel(Request $request): JsonResponse
     {
-        $data = $request->validate(['to' => ['required', 'string', 'max:64'], 'car' => ['nullable', 'integer', 'min:1']]);
+        $data = $request->validate(['to' => ['required', 'string', 'max:64'], 'car' => ['nullable', 'integer', 'min:1'], 'boost' => ['nullable', 'boolean']]);
 
         $userId = (int) $request->user()->getAuthIdentifier();
         $this->workshop->advance($userId);
-        $this->travel->start($userId, $data['to'], $data['car'] ?? null);
+        $this->travel->start($userId, $data['to'], $data['car'] ?? null, boost: (bool) ($data['boost'] ?? false));
 
         return $this->respond($userId, 201);
+    }
+
+    /**
+     * The choice of the driver when the police have stopped the car of a boosted journey: `choice` is `pay` (the fine, and the car stands a little), `bribe` (more, no stop
+     * when it works, and it may not) or `lawyer` (premium coins, no fine and no stop). `car` is the id of the car (the one the driver plays when left out). The same choice
+     * sent again changes nothing (`repeated`). Answers with the map and `police`: what came of it.
+     */
+    public function police(Request $request): JsonResponse
+    {
+        $data = $request->validate(['choice' => ['required', 'string', Rule::in(TravelPolice::CHOICES)], 'car' => ['nullable', 'integer', 'min:1']]);
+
+        $userId = (int) $request->user()->getAuthIdentifier();
+        $this->workshop->advance($userId);
+        $done = $this->travel->decide($userId, $data['car'] ?? null, $data['choice']);
+
+        return $this->respond($userId, 200, ['repeated' => $done['repeated'], 'police' => ['choice' => $done['journey']->police_choice, 'outcome' => $done['journey']->police_outcome, 'paid_cents' => $done['journey']->police_paid_cents]]);
     }
 
     /**

@@ -755,3 +755,27 @@ it('sells packs of premium coins that name the currency and the packs in all fiv
     unset($rules['premium']);
     expect(rulesSchemaErrors($rules))->toBe([]);
 });
+
+it('has a boost of the journey that is faster, thirstier and risky, with the police stopping it somewhere on the way, and it is optional', function () {
+    $boost = starterRules()['travel']['boost'];
+
+    expect($boost['speed_ppm'])->toBeGreaterThan(1_000_000)
+        ->and($boost['fuel_ppm'])->toBeGreaterThan(1_000_000)
+        ->and($boost['police_chance_ppm'])->toBeBetween(1, 999_999)
+        ->and($boost['police_from_ppm'])->toBeLessThanOrEqual($boost['police_to_ppm'])
+        // A bribe costs more than the fine, and a bribe that fails costs more than a bribe that works.
+        ->and($boost['bribe_ppm'])->toBeGreaterThan(1_000_000)
+        ->and($boost['bribe_fail_fine_ppm'])->toBeGreaterThan($boost['bribe_ppm']);
+
+    $rules = starterRules();
+    $rules['travel']['boost']['speed_ppm'] = 900_000;
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    unset($rules['travel']['boost']['lawyer_coins']);
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    unset($rules['travel']['boost']);
+    expect(rulesSchemaErrors($rules))->toBe([]);
+});

@@ -740,6 +740,28 @@
       "description": "What a journey costs a car: it drives a share of its top speed on average, and burns fuel by the kilometre (times the thirst of the car).",
       "type": "object",
       "properties": {
+        "boost": {
+          "description": "A boosted journey (the driver chooses it when the car leaves): the car drives faster and burns more, and the police may stop it. Without this the game has no boost.",
+          "type": "object",
+          "properties": {
+            "speed_ppm": { "description": "The speed of a boosted journey as a multiple of the normal one (1300000 is 30% faster).", "type": "integer", "minimum": 1000000, "maximum": 3000000 },
+            "fuel_ppm": { "description": "The fuel of a boosted journey as a multiple of the normal one.", "type": "integer", "minimum": 1000000, "maximum": 5000000 },
+            "police_chance_ppm": { "description": "The chance that the police stop a boosted journey.", "type": "integer", "minimum": 0, "maximum": 1000000 },
+            "police_from_ppm": { "description": "The earliest place of the stop on the way, as a share of the journey.", "type": "integer", "minimum": 0, "maximum": 1000000 },
+            "police_to_ppm": { "description": "The latest place of the stop on the way, as a share of the journey.", "type": "integer", "minimum": 0, "maximum": 1000000 },
+            "decide_ms": { "description": "How long the driver has to choose; after that the fine is paid for them.", "type": "integer", "minimum": 1000 },
+            "fine_minutes": { "description": "The fine is what the car earns after the fuel in this many minutes.", "type": "integer", "minimum": 1, "maximum": 1440 },
+            "fine_min_cents": { "description": "The least fine, in cents.", "type": "integer", "minimum": 0 },
+            "stop_ms": { "description": "How long the car stands when the fine is paid.", "type": "integer", "minimum": 0 },
+            "bribe_ppm": { "description": "What a bribe costs as a multiple of the fine; the car does not stand when it works.", "type": "integer", "minimum": 1000000, "maximum": 10000000 },
+            "bribe_fail_ppm": { "description": "The chance that a bribe does not work.", "type": "integer", "minimum": 0, "maximum": 1000000 },
+            "bribe_fail_fine_ppm": { "description": "What a bribe that did not work costs as a multiple of the fine (the bribe is lost, and the fine is written).", "type": "integer", "minimum": 1000000, "maximum": 10000000 },
+            "bribe_fail_stop_ms": { "description": "How long the car stands after a bribe that did not work.", "type": "integer", "minimum": 0 },
+            "lawyer_coins": { "description": "What a lawyer costs in premium coins; there is none to hire when the game sells no coins.", "type": "integer", "minimum": 1 }
+          },
+          "required": ["speed_ppm", "fuel_ppm", "police_chance_ppm", "police_from_ppm", "police_to_ppm", "decide_ms", "fine_minutes", "fine_min_cents", "stop_ms", "bribe_ppm", "bribe_fail_ppm", "bribe_fail_fine_ppm", "bribe_fail_stop_ms", "lawyer_coins"],
+          "additionalProperties": false
+        },
         "speed_share_ppm": { "description": "The average speed on the road as a share of the top speed of the car.", "type": "integer", "minimum": 1, "maximum": 1000000 },
         "fuel_ml_per_km": { "description": "The fuel of a kilometre for a car of the thirst of the track fuel use (1.0).", "type": "integer", "minimum": 1 }
       },

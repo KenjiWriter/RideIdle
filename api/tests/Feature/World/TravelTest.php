@@ -67,7 +67,7 @@ describe('the map', function () {
         expect($cities['zlomowo'])->toMatchArray(['name' => 'Złomowo', 'x' => 78, 'y' => 290, 'home' => true, 'here' => true, 'open' => true, 'level_required' => 1, 'route' => null, 'fit_percent' => 100])
             ->and($cities['kruszyn']['open'])->toBeFalse()
             ->and($cities['kruszyn']['level_required'])->toBe(3)
-            ->and($cities['kruszyn']['route'])->toBe(['km' => 38, 'ms' => TO_KRUSZYN_MS, 'fuel_ml' => TO_KRUSZYN_FUEL_ML])
+            ->and($cities['kruszyn']['route'])->toBe(['km' => 38, 'ms' => TO_KRUSZYN_MS, 'fuel_ml' => TO_KRUSZYN_FUEL_ML, 'boost' => ['ms' => 1_202_637, 'fuel_ml' => 3_192, 'police_chance_ppm' => 150_000]])
             ->and($cities['kruszyn']['track'])->toMatchArray(['slug' => 'kruszyn-quarry', 'surface' => 'gravel', 'lit' => false])
             ->and($cities['kruszyn']['track']['demand'])->toBe(['accel' => 5, 'grip' => 25, 'handling' => 25, 'braking' => 10, 'clearance' => 35])
             // A hatchback on street tires suits a gravel quarry badly.
@@ -101,7 +101,7 @@ describe('leaving', function () {
 
         travelTo($driver, 'kruszyn')
             ->assertCreated()
-            ->assertJsonPath('data.travel', ['from' => 'zlomowo', 'to' => 'kruszyn', 'distance_km' => 38, 'start_ms' => RUN_T0 + 150_000, 'arrive_ms' => RUN_T0 + 150_000 + TO_KRUSZYN_MS, 'speedup' => ['coins' => 6, 'remaining_ms' => TO_KRUSZYN_MS]]);
+            ->assertJsonPath('data.travel', ['from' => 'zlomowo', 'to' => 'kruszyn', 'distance_km' => 38, 'start_ms' => RUN_T0 + 150_000, 'arrive_ms' => RUN_T0 + 150_000 + TO_KRUSZYN_MS, 'speedup' => ['coins' => 6, 'remaining_ms' => TO_KRUSZYN_MS], 'boosted' => false, 'police' => null]);
 
         $run->refresh();
 

@@ -9,6 +9,7 @@ use App\Content\RunInputsFactory;
 use App\Domain\Run\CarStats;
 use App\Domain\Run\RoadMap;
 use App\Domain\Run\RunFreezer;
+use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\RuleRefusedException;
 use App\Models\Car;
 use App\Models\LedgerEntry;
@@ -42,6 +43,7 @@ final class Travel
         private readonly CityGarages $garages,
         private readonly TrackChoices $choices,
         private readonly Premium $premium,
+        private readonly TravelPolice $police,
     ) {}
 
     /** Carries out the arrivals that are due, if there are any. Safe to call at any time; a cheap read when nobody is on the road. */
@@ -94,11 +96,69 @@ final class Travel
 
             $this->premium->spend($userId, $coins, 'speedup', $key);
 
-            $journey->forceFill(['arrive_ms' => $now])->save();
+            // A car that is there at once is not stopped on the way any more.
+            $waived = $journey->police_at_ms !== null && $journey->police_choice === null ? ['police_choice' => 'waived', 'police_outcome' => 'waived', 'police_resolved_ms' => $now] : [];
+
+            $journey->forceFill([...$waived, 'arrive_ms' => $now])->save();
             $this->arriveLocked($userId, $runs, $now);
 
             return ['journey' => $journey->refresh(), 'coins' => $coins];
         });
+    }
+
+    /**
+     * The driver's choice at a stop of the police (`pay`, `bribe` or `lawyer`), now. Sent again with the same choice it changes nothing (`repeated`).
+     *
+     * @param  int|null  $carId  the car, or the one the driver plays when left out
+     * @return array{journey: Journey, repeated: bool}
+     *
+     * @throws RuleRefusedException `no_run` or `car_not_found`, `not_travelling`, `no_police_stop` (the police have not stopped the car), `police_resolved` (another choice was made or the time ran out), `police_no_lawyer`, `insufficient_premium`
+     * @throws InsufficientFundsException a bribe that the driver cannot pay
+     */
+    public function decide(int $userId, ?int $carId, string $choice, ?int $nowMs = null): array
+    {
+        return $this->locked($userId, $nowMs, function (Collection $runs, int $now) use ($userId, $carId, $choice): array {
+            $car = $carId === null
+                ? $this->garage->carOf($userId)
+                : Car::query()->where('user_id', $userId)->find($carId);
+
+            $run = $car === null ? null : $runs->get($car->id);
+
+            if ($car === null || $run === null) {
+                throw new RuleRefusedException($carId === null ? 'no_run' : 'car_not_found');
+            }
+
+            // A stop that nobody chose about in time was paid for the driver: that is what they find.
+            $this->arriveLocked($userId, $runs, $now);
+
+            $journey = $this->activeOf($run->id) ?? throw new RuleRefusedException('not_travelling');
+
+            if ($journey->police_at_ms === null || $now < $journey->police_at_ms) {
+                throw new RuleRefusedException('no_police_stop');
+            }
+
+            if ($journey->police_choice !== null) {
+                if ($journey->police_choice === $choice) {
+                    return ['journey' => $journey, 'repeated' => true];
+                }
+
+                throw new RuleRefusedException('police_resolved');
+            }
+
+            return ['journey' => $this->police->resolve($journey, $choice, $userId, $now), 'repeated' => false];
+        });
+    }
+
+    /**
+     * What a boosted journey of `$km` would take and burn, and the risk of it, or null when the rules have no boost.
+     *
+     * @return array{ms: int, fuel_ml: int, police_chance_ppm: int}|null
+     */
+    private function boostRoute(int $km, CarStats $stats): ?array
+    {
+        $boost = $this->rules->travelBoost();
+
+        return $boost === null ? null : [...$this->journeyOf($km, $stats, true), 'police_chance_ppm' => $boost['police_chance_ppm']];
     }
 
     /** @return array{coins: int, remaining_ms: int}|null */
@@ -118,13 +178,15 @@ final class Travel
     /**
      * Sends a car of the driver to another city: the car they play, or the one asked for.
      *
+     * With `$boost` the car drives faster and burns more fuel, and the police may stop it on the way (`TravelPolice`).
+     *
      * @throws RuleRefusedException the car is not the driver's or has no run, cannot leave, is there already or on the road, the city does not
      *                              exist or has no road to it, the level of the driver does not open it, there is no place for the car
-     *                              there, or the fuel does not reach
+     *                              there, the fuel does not reach, or `boost_unavailable` (the rules have no boost)
      */
-    public function start(int $userId, string $to, ?int $carId = null, ?int $nowMs = null): Journey
+    public function start(int $userId, string $to, ?int $carId = null, ?int $nowMs = null, bool $boost = false): Journey
     {
-        return $this->locked($userId, $nowMs, function (Collection $runs, int $now) use ($userId, $to, $carId): Journey {
+        return $this->locked($userId, $nowMs, function (Collection $runs, int $now) use ($userId, $to, $carId, $boost): Journey {
             // What is due comes first: a car that has just arrived somewhere is there, not on the road.
             $this->arriveLocked($userId, $runs, $now);
 
@@ -177,7 +239,11 @@ final class Travel
                 throw new RuleRefusedException('car_cannot_travel');
             }
 
-            ['ms' => $ms, 'fuel_ml' => $fuelMl] = $this->journeyOf($km, $this->statsOf($run));
+            if ($boost && $this->rules->travelBoost() === null) {
+                throw new RuleRefusedException('boost_unavailable');
+            }
+
+            ['ms' => $ms, 'fuel_ml' => $fuelMl] = $this->journeyOf($km, $this->statsOf($run), $boost);
 
             if ($run->fuel_ml < $fuelMl) {
                 throw new RuleRefusedException('travel_no_fuel', [
@@ -188,6 +254,9 @@ final class Travel
 
             $this->runs->depart($run, $fuelMl);
 
+            // Whether the police stop a boosted journey, and when, is drawn now: it does not depend on when the driver looks.
+            $police = $boost ? $this->police->plan($run, $now, $ms) : ['police_at_ms' => null, 'police_fine_cents' => null];
+
             return Journey::query()->create([
                 'user_id' => $userId,
                 'race_run_id' => $run->id,
@@ -197,6 +266,8 @@ final class Travel
                 'fuel_ml' => $fuelMl,
                 'start_ms' => $now,
                 'arrive_ms' => $now + $ms,
+                'boosted' => $boost,
+                ...$police,
                 'status' => Journey::STATUS_TRAVELLING,
             ]);
         });
@@ -250,7 +321,7 @@ final class Travel
                 'tracks' => $this->choices->forCity($slug, $run, $level),
                 // How the car, with the parts it has, runs this track in the dry against the lap of a car that matches its reference.
                 'fit_percent' => $run === null ? null : (int) round(100 * $track['base_lap_ms'] / $freezer->freeze($this->inputs->forRun($run, $trackSlug), 'map', 0)->config['lap_ms']['dry']),
-                'route' => $km === null || $stats === null ? null : ['km' => $km, ...$this->journeyOf($km, $stats)],
+                'route' => $km === null || $stats === null ? null : ['km' => $km, ...$this->journeyOf($km, $stats), 'boost' => $this->boostRoute($km, $stats)],
             ];
         }
 
@@ -267,6 +338,9 @@ final class Travel
                 'arrive_ms' => $journey->arrive_ms,
                 // What finishing the journey at once costs in premium coins, or null when the rules sell nothing.
                 'speedup' => $this->speedupOf($journey->arrive_ms - $nowMs),
+                'boosted' => (bool) $journey->boosted,
+                // The stop of the police, once it has happened (before that the driver cannot know): what each choice costs, or what came of it.
+                'police' => $this->police->view($journey, $nowMs),
             ],
             'now_ms' => $nowMs,
         ];
@@ -282,14 +356,38 @@ final class Travel
      *
      * @return array{ms: int, fuel_ml: int}
      */
-    private function journeyOf(int $km, CarStats $stats): array
+    private function journeyOf(int $km, CarStats $stats, bool $boost = false): array
     {
-        $speedKmh = $stats->get('top_speed') * $this->rules->travelSpeedSharePpm() / 1_000_000;
+        $boosted = $boost ? $this->rules->travelBoost() : null;
+        $speedKmh = $stats->get('top_speed') * $this->rules->travelSpeedSharePpm() / 1_000_000 * ($boosted === null ? 1 : $boosted['speed_ppm'] / 1_000_000);
 
         return [
             'ms' => max(1, (int) round($km / $speedKmh * 3_600_000)),
-            'fuel_ml' => max(1, (int) ceil($km * $this->rules->travelFuelMlPerKm() * $stats->fuelUseMultiplier)),
+            'fuel_ml' => max(1, (int) ceil($km * $this->rules->travelFuelMlPerKm() * $stats->fuelUseMultiplier * ($boosted === null ? 1 : $boosted['fuel_ppm'] / 1_000_000))),
         ];
+    }
+
+    /**
+     * The stops that the driver did not choose about in time, or that the car is about to arrive in: the fine is paid for them (`TravelPolice::resolve`), and the
+     * car stands the time of it, so the arrival moves.
+     */
+    private function policeDue(int $userId, int $now): void
+    {
+        $boost = $this->rules->travelBoost();
+
+        if ($boost === null) {
+            return;
+        }
+
+        $stopped = Journey::query()->where('user_id', $userId)->where('status', Journey::STATUS_TRAVELLING)->whereNotNull('police_at_ms')->whereNull('police_choice')->where('police_at_ms', '<=', $now)->lockForUpdate()->get();
+
+        foreach ($stopped as $journey) {
+            $deadline = $journey->police_at_ms + $boost['decide_ms'];
+
+            if ($now >= $deadline || $now >= $journey->arrive_ms) {
+                $this->police->resolve($journey, 'pay', $userId, min($deadline, $now), byDefault: true);
+            }
+        }
     }
 
     /**
@@ -299,6 +397,8 @@ final class Travel
      */
     private function arriveLocked(int $userId, Collection $runs, int $now): void
     {
+        $this->policeDue($userId, $now);
+
         $due = Journey::query()->where('user_id', $userId)->where('status', Journey::STATUS_TRAVELLING)->where('arrive_ms', '<=', $now)->orderBy('arrive_ms')->lockForUpdate()->get();
 
         foreach ($due as $journey) {
