@@ -41,7 +41,7 @@ class PartResource extends DefinitionResource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->components(PartForm::schema());
+        return $schema->columns(1)->components(PartForm::schema());
     }
 
     protected static function kindColumns(): array

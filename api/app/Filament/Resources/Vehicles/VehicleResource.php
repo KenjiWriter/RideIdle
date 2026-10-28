@@ -41,7 +41,7 @@ class VehicleResource extends DefinitionResource
 
     public static function form(Schema $schema): Schema
     {
-        return $schema->components(VehicleForm::schema());
+        return $schema->columns(1)->components(VehicleForm::schema());
     }
 
     protected static function kindColumns(): array
