@@ -63,6 +63,7 @@ return [
         'job_done' => 'Dieser Auftrag ist bereits erledigt.',
         'no_car' => 'Du hast noch kein Auto.',
         'request_reused' => 'Diese Anfrage wurde bereits für etwas anderes verwendet.',
+        'tutorial_step_required' => 'Dieser Schritt lässt sich nicht auf später verschieben.',
     ],
 
     'fuel' => [

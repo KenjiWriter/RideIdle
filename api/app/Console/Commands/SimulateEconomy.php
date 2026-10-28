@@ -123,6 +123,7 @@ final class SimulateEconomy extends Command
             $this->line((string) json_encode($this->asArray($economy, $runs, $report, $findings, $game, $extras, $merge, $upkeep), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR));
         } else {
             $this->print($economy, $runs, $report, $findings, $game, $extras, $merge, $upkeep);
+            $this->printLaterGifts($tutorial);
         }
 
         $strict = (bool) $this->option('strict');
@@ -209,19 +210,39 @@ final class SimulateEconomy extends Command
     }
 
     /**
-     * What the steps of the tutorial give: the experience, the cash (the repair only gives back what it cost, so it is no gift) and the garages.
+     * What the steps of the guided first quarter of an hour (the first two phases) give: the experience, the cash (the repair only gives back what it cost, so
+     * it is no gift) and the garages. The steps of the first day and week give no experience and no garage, only cash and parts, which `laterGifts` adds up.
      *
      * @return array{xp: int, cash: float, garages: int}
      */
     private function tutorialGifts(TutorialSteps $tutorial): array
     {
-        $steps = $tutorial->all();
+        $steps = array_values(array_filter($tutorial->all(), static fn (array $step): bool => $step['phase'] <= 2));
 
         return [
             'xp' => array_sum(array_map(static fn (array $step): int => (int) ($step['reward']['xp'] ?? 0), $steps)),
             'cash' => array_sum(array_map(static fn (array $step): int => $step['key'] === 'repair' ? 0 : (int) ($step['reward']['cash_cents'] ?? 0), $steps)) / 100,
             'garages' => count(array_filter($steps, static fn (array $step): bool => isset($step['reward']['garage']))),
         ];
+    }
+
+    /**
+     * What the steps of the first day and week give on top of that, in cash and in parts, which the scenario of the game does not count: the player has earned
+     * it by then, and it is small beside what the laps pay. A report only.
+     */
+    private function printLaterGifts(TutorialSteps $tutorial): void
+    {
+        $later = array_values(array_filter($tutorial->all(), static fn (array $step): bool => $step['phase'] > 2));
+
+        if ($later === []) {
+            return;
+        }
+
+        $cash = array_sum(array_map(static fn (array $step): int => (int) ($step['reward']['cash_cents'] ?? 0), $later)) / 100;
+        $parts = array_sum(array_map(static fn (array $step): int => (int) ($step['gift']['count'] ?? (isset($step['gift']) ? 1 : 0)) + (isset($step['reward']['part']) ? 1 : 0), $later));
+
+        $this->newLine();
+        $this->line('The steps of the first day and week ('.count($later).') add $'.$this->trim($cash).' and '.$parts.' parts on top of that, which the scenario does not count: they pay no experience and no garage.');
     }
 
     /**

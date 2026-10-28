@@ -80,6 +80,7 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('/tutorial', [TutorialController::class, 'show']);
         Route::post('/tutorial/reply', [TutorialController::class, 'reply']);
+        Route::post('/tutorial/decline', [TutorialController::class, 'decline']);
         Route::post('/tutorial/skip', [TutorialController::class, 'skip']);
 
         Route::get('/shop', [ShopController::class, 'index']);

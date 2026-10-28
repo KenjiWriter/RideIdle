@@ -32,6 +32,12 @@ final class TutorialController extends Controller
         return $this->respond($this->tutorial->reply($request->user()));
     }
 
+    /** The driver leaves the optional step that waits for later: it pays nothing, and the next one goes on. */
+    public function decline(Request $request): JsonResponse
+    {
+        return $this->respond($this->tutorial->decline($request->user()));
+    }
+
     /** The driver leaves the tutorial. The steps that are not done are left out, and so are their rewards. */
     public function skip(Request $request): JsonResponse
     {

@@ -45,7 +45,7 @@ final class TutorialSteps
     /**
      * What the server arranges in the first run of a driver, so that the steps come in the first minutes.
      *
-     * @return array{first_run_fuel_ml: int, breakdown_lap: int, first_mount_ms: int}
+     * @return array{first_run_fuel_ml: int, breakdown_lap: int, first_mount_ms: int, covers_up_to_cents: int, exchange_listing?: array{vehicle: string, age_years: int, mileage_km: int, condition_ppm: int, price_cents: int}}
      */
     public function script(): array
     {
@@ -67,6 +67,16 @@ final class TutorialSteps
         }
 
         return null;
+    }
+
+    /**
+     * The facts that a trigger or a completion names, one by one: a single fact is a list of one.
+     *
+     * @return list<string>
+     */
+    public static function conditions(mixed $condition): array
+    {
+        return array_values(array_map(strval(...), (array) $condition));
     }
 
     /** The place of a step in the tutorial, counting from 1, or null when there is no such step. */

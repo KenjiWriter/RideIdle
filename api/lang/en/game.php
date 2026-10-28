@@ -63,6 +63,7 @@ return [
         'job_done' => 'That job is already done.',
         'no_car' => 'You have no car yet.',
         'request_reused' => 'This request was already used for something else.',
+        'tutorial_step_required' => 'That step cannot be left for later.',
     ],
 
     'fuel' => [

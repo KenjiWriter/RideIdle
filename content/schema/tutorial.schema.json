@@ -7,14 +7,28 @@
   "properties": {
     "schema": { "const": 0 },
     "script": {
-      "description": "What the server arranges in the first run of a driver so that the steps come in the first minutes and cannot fail: the tank starts with this much fuel (the step of the fuel comes when it is under a quarter), and the car breaks down after this many laps (the step of the repair), until the repair is done; the first job of mounting that the driver queues takes at most this many ms, so that the journey that waits behind it is not held up by the mechanic for minutes.",
+      "description": "What the server arranges so that the steps come when they should and cannot fail: in the first run the tank starts with first_run_fuel_ml (the step of the fuel comes when it is under a quarter), and the car breaks down after breakdown_lap laps (the step of the repair), until the repair is done; the first job of mounting that the driver queues, and every job that the step that waits arranges (see arranges), takes at most first_mount_ms, so that the steps behind it are not held up by the mechanic for minutes; the mentor pays up to covers_up_to_cents of the cost of a job that a step arranges; the exchange shows the listing of the tutorial to the driver who is at the step that asks for a bought car.",
       "type": "object",
       "properties": {
         "first_run_fuel_ml": { "type": "integer", "minimum": 1 },
         "breakdown_lap": { "type": "integer", "minimum": 1 },
-        "first_mount_ms": { "type": "integer", "minimum": 1 }
+        "first_mount_ms": { "type": "integer", "minimum": 1 },
+        "covers_up_to_cents": { "description": "How much of the cost of one job that a step arranges the mentor pays: the job costs the driver the rest.", "type": "integer", "minimum": 0 },
+        "exchange_listing": {
+          "description": "The car that the exchange offers at the step of the tutorial that waits for a bought car, to this driver only, in the city where their car stands: a car of the pack, in a state and at a price that no random listing has.",
+          "type": "object",
+          "properties": {
+            "vehicle": { "$ref": "common.schema.json#/$defs/slug" },
+            "age_years": { "type": "integer", "minimum": 1 },
+            "mileage_km": { "type": "integer", "minimum": 1 },
+            "condition_ppm": { "description": "How good the car really is, in millionths.", "type": "integer", "minimum": 1, "maximum": 1000000 },
+            "price_cents": { "type": "integer", "minimum": 1 }
+          },
+          "required": ["vehicle", "age_years", "mileage_km", "condition_ppm", "price_cents"],
+          "additionalProperties": false
+        }
       },
-      "required": ["first_run_fuel_ml", "breakdown_lap", "first_mount_ms"],
+      "required": ["first_run_fuel_ml", "breakdown_lap", "first_mount_ms", "covers_up_to_cents"],
       "additionalProperties": false
     },
     "version": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$" },
@@ -27,11 +41,11 @@
         "properties": {
           "key": { "$ref": "common.schema.json#/$defs/slug" },
           "phase": { "description": "The phase of the design: 1 the first five minutes, 2 the first hour (the guided first fifteen minutes end with it), 3 the first day, 4 the first week.", "type": "integer", "minimum": 1, "maximum": 4 },
-          "trigger": { "$ref": "#/$defs/condition" },
-          "completion": { "$ref": "#/$defs/condition" },
+          "trigger": { "$ref": "#/$defs/conditions" },
+          "completion": { "$ref": "#/$defs/conditions" },
           "target": {
             "description": "What the screen highlights while the step waits for the driver, or null for a step that needs no screen of its own. start is the button that sends the car out, and where the driver is not on its screen yet, the Tournament tab that leads there (so mount leads to the Workshop, crate to the Shop and travel to the Map).",
-            "enum": ["start", "laps", "cash", "refuel", "repair", "mount", "crate", "travel", null]
+            "enum": ["start", "laps", "cash", "refuel", "repair", "mount", "crate", "travel", "merge", "exchange", "service", "away", "upgrade", "equipment", "profile", "garages", null]
           },
           "sender": { "description": "The made-up number the mentor writes from. It changes with every step, because the mentor is in hiding.", "type": "string", "pattern": "^\\+48 555 010 [0-9]{3}$" },
           "sms": {
@@ -41,12 +55,31 @@
             "items": { "$ref": "common.schema.json#/$defs/i18n" }
           },
           "reply": { "description": "The words of the button that answers the messages.", "$ref": "common.schema.json#/$defs/i18n" },
+          "optional": { "description": "The driver may leave the step for later: the phone has a second button (decline), the step is left out with no reward, and the next one goes on.", "type": "boolean" },
+          "decline": { "description": "The words of the button that leaves an optional step for later.", "$ref": "common.schema.json#/$defs/i18n" },
+          "arranges": {
+            "description": "The kinds of job of the workshop that the server makes short and, up to covers_up_to_cents, free while this step waits (a merge also cannot fail), so that the first time is safe.",
+            "type": "array",
+            "uniqueItems": true,
+            "items": { "enum": ["mount", "unmount", "upgrade", "merge", "service"] }
+          },
+          "gift": {
+            "description": "Parts of the pack that are put in the inventory of the driver when the step starts, so that there is something to do the step with. The gift of the end of a step is the reward.",
+            "type": "object",
+            "properties": {
+              "part": { "$ref": "common.schema.json#/$defs/slug" },
+              "rarity": { "enum": ["common", "uncommon", "rare", "epic", "legendary"] },
+              "count": { "type": "integer", "minimum": 1, "maximum": 4 }
+            },
+            "required": ["part"],
+            "additionalProperties": false
+          },
           "reward": {
             "type": "object",
             "properties": {
               "cash_cents": { "type": "integer", "minimum": 1 },
               "car_xp": { "description": "Experience for the car of the driver, which can level it.", "type": "integer", "minimum": 1 },
-              "xp": { "description": "Experience for the driver, which levels the driver: the steps of the guided first fifteen minutes add up to the 4 800 XP of the eighth level, less what the laps give.", "type": "integer", "minimum": 1 },
+              "xp": { "description": "Experience for the driver, which levels the driver: the steps of the guided first fifteen minutes add up to the 4 800 XP of the eighth level, less what the laps give. The steps of the first day and week pay none, so that the levels are the work of the laps.", "type": "integer", "minimum": 1 },
               "part": { "description": "A part of the pack that is put in the inventory of the driver, common, as a gift.", "$ref": "common.schema.json#/$defs/slug" },
               "garage": { "description": "The city whose garage is given to the driver for nothing (the tutorial costs no cash, and the first garage of another city costs a fortune at that level).", "$ref": "common.schema.json#/$defs/slug" }
             },
@@ -62,8 +95,23 @@
   "additionalProperties": false,
   "$defs": {
     "condition": {
-      "description": "A fact about the driver that the server can read: none always holds; run_started the driver has a run; driving the car has been sent out and is not waiting in the garage any more; lap_completed it has finished a lap; fuel_low the tank holds less than a quarter; fuel_restored it holds at least four fifths; breakdown the car stands broken down; recovered it does not; acknowledged the driver has answered the messages of the step; job_queued the driver has put a job in the queue of the workshop; crate_opened the driver has opened a crate; travel_started the driver has sent a car on a journey.",
-      "enum": ["none", "run_started", "driving", "lap_completed", "fuel_low", "fuel_restored", "breakdown", "recovered", "acknowledged", "job_queued", "crate_opened", "travel_started"]
+      "description": "A fact about the driver that the server can read. Plain ones: none always holds; run_started the driver has a run; driving the car has been sent out and is not waiting in the garage any more; lap_completed it has finished a lap; fuel_low the tank holds less than a quarter; fuel_restored it holds at least four fifths; breakdown the car stands broken down; recovered it does not; acknowledged the driver has answered the messages of the step; job_queued the driver has put a job in the queue of the workshop; crate_opened the driver has opened a crate; travel_started the driver has sent a car on a journey; travel_done the car of the driver has arrived from its journey; rain_forecast the forecast of the track of the car shows rain; merge_done, service_done and upgrade_done a job of that kind was done since the step started; car_bought the driver bought a car from the exchange since the step started; equipment_bought the driver bought something for the workshop since the step started; email_confirmed the e-mail of the driver is confirmed; garage_bought the driver bought a garage since the step started; city_open there is a city with a track the driver may drive on, where they have no garage yet. With a number or a word after a colon: tires_mounted:kind the car has tires of that kind on; car_level:n the car is at level n at least; cash:n the driver holds n dollars at least; returned:n the driver came back after at least n minutes away.",
+      "oneOf": [
+        {
+          "enum": [
+            "none", "run_started", "driving", "lap_completed", "fuel_low", "fuel_restored", "breakdown", "recovered", "acknowledged", "job_queued", "crate_opened", "travel_started",
+            "travel_done", "rain_forecast", "merge_done", "service_done", "upgrade_done", "car_bought", "equipment_bought", "email_confirmed", "garage_bought", "city_open"
+          ]
+        },
+        { "type": "string", "pattern": "^(tires_mounted:[a-z_]+|car_level:[0-9]+|cash:[0-9]+|returned:[0-9]+)$" }
+      ]
+    },
+    "conditions": {
+      "description": "One fact, or a list of them that must all hold.",
+      "oneOf": [
+        { "$ref": "#/$defs/condition" },
+        { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/condition" } }
+      ]
     }
   }
 }

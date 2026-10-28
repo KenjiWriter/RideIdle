@@ -21,6 +21,9 @@ class TutorialProgress extends Model
 
     public const STATE_SKIPPED = 'skipped';
 
+    /** An optional step that the driver left for later: it pays nothing, and the next one goes on. */
+    public const STATE_DECLINED = 'declined';
+
     protected $table = 'tutorial_progress';
 
     protected $guarded = [];

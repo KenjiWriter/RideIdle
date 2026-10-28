@@ -326,6 +326,14 @@
   "script": {
     "first_run_fuel_ml": 17000,
     "breakdown_lap": 6,
-    "first_mount_ms": 30000
+    "first_mount_ms": 30000,
+    "covers_up_to_cents": 30000,
+    "exchange_listing": {
+      "vehicle": "rdzak-gt-2",
+      "age_years": 25,
+      "mileage_km": 280000,
+      "condition_ppm": 300000,
+      "price_cents": 45000
+    }
   }
 }

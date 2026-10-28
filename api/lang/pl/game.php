@@ -63,6 +63,7 @@ return [
         'job_done' => 'To zlecenie jest już wykonane.',
         'no_car' => 'Nie masz jeszcze auta.',
         'request_reused' => 'To żądanie zostało już użyte do czegoś innego.',
+        'tutorial_step_required' => 'Tego kroku nie można odłożyć na później.',
     ],
 
     'fuel' => [

@@ -32,6 +32,8 @@ final class TutorialResource extends JsonResource
                 'sender' => $step['sender'],
                 'sms' => array_map(static fn (array $text): string => I18nText::from($text)->for(), $step['sms']),
                 'reply' => I18nText::from($step['reply'])->for(),
+                'optional' => (bool) ($step['optional'] ?? false),
+                'decline' => isset($step['decline']) ? I18nText::from($step['decline'])->for() : null,
                 'target' => $step['target'],
                 'acknowledged' => $step['acknowledged'],
             ],

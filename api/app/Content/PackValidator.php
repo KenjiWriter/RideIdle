@@ -255,7 +255,7 @@ final class PackValidator
         }
 
         $this->checkWorld($rules, $result);
-        $this->checkTutorial($source, $parts, $regions, $result);
+        $this->checkTutorial($source, $parts, $vehicles, $regions, $result);
         $this->checkWithdrawn($source, $parts, $vehicles, $result);
         $this->checkAffixes($rules, $result);
     }
@@ -376,12 +376,13 @@ final class PackValidator
     }
 
     /**
-     * The steps of the tutorial have keys of their own, and what they give away is in the pack.
+     * The steps of the tutorial have keys of their own, and what they give away is in the pack, as is the car of the listing of the tutorial.
      *
      * @param  list<string>  $parts
+     * @param  list<string>  $vehicles
      * @param  list<string>  $regions
      */
-    private function checkTutorial(ContentSource $source, array $parts, array $regions, PackValidationResult $result): void
+    private function checkTutorial(ContentSource $source, array $parts, array $vehicles, array $regions, PackValidationResult $result): void
     {
         if (! $source->has('rules/tutorial')) {
             return;
@@ -390,7 +391,9 @@ final class PackValidator
         $file = 'rules/tutorial.json';
         $keys = [];
 
-        foreach ($source->document('rules/tutorial')['steps'] ?? [] as $index => $step) {
+        $tutorial = $source->document('rules/tutorial');
+
+        foreach ($tutorial['steps'] ?? [] as $index => $step) {
             $key = (string) ($step['key'] ?? '');
 
             if (isset($keys[$key])) {
@@ -406,6 +409,26 @@ final class PackValidator
             if (isset($step['reward']['garage']) && ! in_array($step['reward']['garage'], $regions, true)) {
                 $result->addError($file, "/steps/{$index}/reward/garage", "The step gives a garage in {$step['reward']['garage']}, which is not a city.");
             }
+
+            if (isset($step['gift']['part']) && ! in_array($step['gift']['part'], $parts, true)) {
+                $result->addError($file, "/steps/{$index}/gift/part", "The step gives away {$step['gift']['part']} when it starts, which is not a part of the pack.");
+            }
+
+            if (($step['optional'] ?? false) && ! isset($step['decline'])) {
+                $result->addError($file, "/steps/{$index}/decline", 'An optional step needs the words of the button that leaves it for later.');
+            }
+
+            foreach (['trigger', 'completion'] as $field) {
+                if (in_array('car_bought', TutorialSteps::conditions($step[$field] ?? []), true) && ! isset($tutorial['script']['exchange_listing'])) {
+                    $result->addError($file, "/steps/{$index}/{$field}", 'The step waits for a car bought from the exchange, and the script has no listing of the tutorial to buy.');
+                }
+            }
+        }
+
+        $listing = $tutorial['script']['exchange_listing']['vehicle'] ?? null;
+
+        if ($listing !== null && ! in_array($listing, $vehicles, true)) {
+            $result->addError($file, '/script/exchange_listing/vehicle', "The listing of the tutorial is {$listing}, which is not a car of the pack.");
         }
     }
 
