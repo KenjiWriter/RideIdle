@@ -75,8 +75,9 @@ final class ContentPacks
      * a draft of the rules names may itself be a draft.
      *
      * @param  array<string, string>  $replace
+     * @param  string  $number  what the content is called (the number of the pack that it is going to be)
      */
-    public function working(array $replace = []): PackContent
+    public function working(array $replace = [], string $number = 'working'): PackContent
     {
         $folders = array_flip(self::KINDS);
         $documents = [];
@@ -89,7 +90,7 @@ final class ContentPacks
             }
         }
 
-        return new PackContent('working', [...$documents, ...$replace]);
+        return new PackContent($number, [...$documents, ...$replace]);
     }
 
     /**
@@ -166,9 +167,38 @@ final class ContentPacks
             }
         }
 
-        ContentActivation::query()->create(['content_pack_id' => $pack->id, 'reason' => $reason === null ? null : Str::limit($reason, 200, '')]);
+        DB::transaction(function () use ($pack, $reason): void {
+            ContentActivation::query()->create(['content_pack_id' => $pack->id, 'reason' => $reason === null ? null : Str::limit($reason, 200, '')]);
+            $this->settle($pack);
+        });
 
         return true;
+    }
+
+    /**
+     * What a pack that goes live does to the definitions it holds: one that was only a draft (it had never been in a pack) is active now, and a draft that says
+     * what the pack says is no draft any more. A draft that was written after the pack was made stays, and so does the status of the definitions that the pack does
+     * not hold: going back to an earlier pack does not undo this.
+     */
+    private function settle(ContentPack $pack): void
+    {
+        $versions = $pack->versions()->get(['content_versions.content_definition_id', 'content_versions.checksum'])->pluck('checksum', 'content_definition_id');
+
+        foreach (ContentDefinition::query()->whereIn('id', $versions->keys())->get() as $definition) {
+            $changes = [];
+
+            if ($definition->status === ContentDefinition::STATUS_DRAFT) {
+                $changes['status'] = ContentDefinition::STATUS_ACTIVE;
+            }
+
+            if ($definition->draft !== null && ContentSource::documentChecksum($definition->draft) === $versions[$definition->id]) {
+                $changes += ['draft' => null, 'draft_admin_id' => null, 'draft_saved_at' => null];
+            }
+
+            if ($changes !== []) {
+                $definition->forceFill($changes)->save();
+            }
+        }
     }
 
     /**

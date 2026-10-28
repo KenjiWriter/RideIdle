@@ -15,6 +15,16 @@ final class PackContent extends ContentSource
         return $this->number;
     }
 
+    /**
+     * The same content with some documents put over it (a table that was made again, say).
+     *
+     * @param  array<string, string>  $documents  the text of the documents by key
+     */
+    public function with(array $documents): self
+    {
+        return new self($this->number, [...$this->documents, ...$documents]);
+    }
+
     public function rulesetVersion(): string
     {
         return $this->number;
