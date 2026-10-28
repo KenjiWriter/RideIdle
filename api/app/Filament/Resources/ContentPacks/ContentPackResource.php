@@ -8,8 +8,8 @@ use App\Content\ContentPackInvalid;
 use App\Filament\Resources\ContentPacks\Pages\ManageContentPacks;
 use App\Models\Admin;
 use App\Models\ContentPack;
-use App\Services\AdminAudit;
 use App\Services\ContentPacks;
+use App\Services\ContentPublisher;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
@@ -111,14 +111,12 @@ class ContentPackResource extends Resource
     {
         abort_unless(self::mayActivate(), 403);
 
-        $packs = app(ContentPacks::class);
-        $previous = $packs->active();
+        /** @var Admin $admin */
+        $admin = Auth::guard('admin')->user();
 
         try {
-            $changed = $packs->activate($pack, 'panel');
+            app(ContentPublisher::class)->activate($pack, $admin);
         } catch (ContentPackInvalid $problem) {
-            app(AdminAudit::class)->record('content_pack_refused', subject: "content_pack:{$pack->number}", context: ['errors' => array_slice(array_map(fn (array $issue): string => "{$issue['file']} {$issue['pointer']}: {$issue['message']}", $problem->result->errors()), 0, 10)]);
-
             Notification::make()
                 ->danger()
                 ->title(__('admin.packs.refused'))
@@ -127,10 +125,6 @@ class ContentPackResource extends Resource
                 ->send();
 
             return;
-        }
-
-        if ($changed) {
-            app(AdminAudit::class)->record('content_pack_activated', subject: "content_pack:{$pack->number}", context: ['previous' => $previous?->number]);
         }
 
         Notification::make()->success()->title(__('admin.packs.activated', ['number' => $pack->number]))->send();
