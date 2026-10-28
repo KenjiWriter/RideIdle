@@ -144,9 +144,10 @@ describe('the gates of the track simulator', function () {
             // which asks level 12 like the Autodrom does, the circuit (by a fraction of a per cent over the Bizon V8: its rear wheel drive is what the two
             // differ in).
             ->and($wins)->toBe(['bizon-m-2' => 2, 'kuna-4x4' => 1, 'rdzak-gt-2' => 1, 'kornet-r6' => 1])
-            // The sprints and the endurance tracks are counted among themselves: the Bizon M-2 wins the one of Złomowo in each, another car the one of the Autodrom.
-            ->and(array_map('count', trackReportJson()['wins_by_kind']['sprint']))->toBe(['bizon-m-2' => 1, 'bizon-v8' => 1])
-            ->and(array_map('count', trackReportJson()['wins_by_kind']['endurance']))->toBe(['bizon-m-2' => 1, 'serwal-gt' => 1]);
+            // The sprints and the endurance tracks are counted among themselves, five of each: the Bizon M-2 wins the ones of Złomowo and Suchy Pas in each, the Kuna 4x4 the
+            // gravel one, the Rdzak GT-2 the one of the pass (the hairpin weighs the handling so that it does, or the Bizon would win a third sprint), another car the one of the Autodrom.
+            ->and(array_map('count', trackReportJson()['wins_by_kind']['sprint']))->toBe(['bizon-m-2' => 2, 'bizon-v8' => 1, 'kuna-4x4' => 1, 'rdzak-gt-2' => 1])
+            ->and(array_map('count', trackReportJson()['wins_by_kind']['endurance']))->toBe(['bizon-m-2' => 2, 'serwal-gt' => 1, 'kuna-4x4' => 1, 'rdzak-gt-2' => 1]);
 
         $this->artisan('tracks:simulate', ['--strict' => true])->assertSuccessful();
     });

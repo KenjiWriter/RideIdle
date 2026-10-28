@@ -59,7 +59,9 @@ describe('the tracks of a city on the map', function () {
             ->and($zlomowo->pluck('current')->all())->toBe([true, false, false])
             // The track that was shown before the list is the first of it, and the kind is said there too.
             ->and($cities['zlomowo']['track'])->toMatchArray(['slug' => 'zlomowo-street', 'kind' => 'standard'])
-            ->and(collect($cities['kruszyn']['tracks'])->pluck('slug')->all())->toBe(['kruszyn-quarry'])
+            ->and(collect($cities['kruszyn']['tracks'])->pluck('slug')->all())->toBe(['kruszyn-quarry', 'kruszyn-gravel-sprint', 'kruszyn-quarry-marathon'])
+            ->and(collect($cities['suchy-pas']['tracks'])->pluck('slug')->all())->toBe(['suchy-pas-drag', 'suchy-pas-short-strip', 'suchy-pas-long-run'])
+            ->and(collect($cities['wilcza-przelecz']['tracks'])->pluck('slug')->all())->toBe(['wilcza-przelecz-switchbacks', 'wilcza-przelecz-hairpin', 'wilcza-przelecz-crossing'])
             ->and(collect($cities['autodrom']['tracks'])->pluck('slug')->all())->toBe(['autodrom-circuit', 'autodrom-short-loop', 'autodrom-endurance']);
     });
 

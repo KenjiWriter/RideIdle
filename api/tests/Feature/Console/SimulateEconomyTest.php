@@ -227,7 +227,7 @@ describe('economy:simulate', function () {
         Artisan::call('economy:simulate', ['--ruleset' => $file]);
         $output = Artisan::output();
 
-        expect($output)->toMatch('/Experience an hour of the game: \d+ of 13 levels are off the model/')
+        expect($output)->toMatch('/Experience an hour of the game: \d+ of 14 levels are off the model/')
             ->and($output)->toMatch('/\| 1\s+\| L0\s+\| \$600\s+\| \$600\s+\| \+0%\s+\| 960\s+\| \+37% OFF\s+\|/');
 
         $this->artisan('economy:simulate', ['--ruleset' => $file, '--strict-game' => true])->assertExitCode(1);
@@ -284,11 +284,11 @@ describe('economy:simulate', function () {
             ->and($report['game_fleet']['gate']['passed'])->toBeTrue()
             ->and(collect($report['game_fleet']['gate']['rows'])->pluck('player')->unique()->all())->toBe(['B'])
             ->and($report['game_ladder']['unreachable_rungs'])->toBe([])
-            ->and($report['game_ladder']['rows'])->toHaveCount(13)
+            ->and($report['game_ladder']['rows'])->toHaveCount(14)
             ->and($report['game_ladder']['rows'][0])->toMatchArray(['level' => 1, 'rung' => 'L0', 'car' => 'rdzak-gt-4', 'track' => 'zlomowo-street', 'ok' => true, 'xp_ok' => true])
             ->and($report['game_ladder']['rows'][0]['xp_game'])->toEqualWithDelta(960.0, 0.5)
             ->and($report['game_ladder']['rows'][0]['xp_model'])->toEqualWithDelta(900.0, 0.5)
-            ->and($report['game_ladder']['rows'][12]['xp_game'])->toEqualWithDelta(920.4, 3.0);
+            ->and($report['game_ladder']['rows'][13]['xp_game'])->toEqualWithDelta(920.4, 3.0);
     });
 
     it('plays the crates of parts at the shares of the ruleset, and says that the shift of the days is within the tolerance', function () {

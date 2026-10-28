@@ -715,6 +715,134 @@
       "xp_per_lap": 81,
       "demand": { "accel": 10, "top_speed": 30, "grip": 20, "handling": 20, "braking": 20 },
       "reference": { "accel": 135, "top_speed": 200, "grip": 100, "handling": 78, "braking": 81 }
+    },
+    "kruszyn-gravel-sprint": {
+      "name": {
+        "en": "Kruszyn Gravel Sprint",
+        "pl": "Żwirowy sprint Kruszyn",
+        "fr": "Sprint de gravier de Kruszyn",
+        "de": "Schotter-Sprint Kruszyn",
+        "pt-BR": "Sprint de cascalho de Kruszyn"
+      },
+      "region": "kruszyn",
+      "surface": "gravel",
+      "kind": "sprint",
+      "reference_tires": "offroad-tires-t2",
+      "lit": false,
+      "min_player_level": 3,
+      "length_m": 380,
+      "base_lap_ms": 15000,
+      "fuel_per_lap_ml": 180,
+      "reward_cents_per_lap": 292,
+      "xp_per_lap": 3,
+      "demand": { "accel": 20, "grip": 30, "handling": 15, "braking": 10, "clearance": 25 },
+      "reference": { "accel": 65, "grip": 92, "handling": 71, "braking": 71, "clearance": 80 }
+    },
+    "kruszyn-quarry-marathon": {
+      "name": {
+        "en": "Kruszyn Quarry Marathon",
+        "pl": "Maraton po kamieniołomie",
+        "fr": "Marathon de la carrière",
+        "de": "Steinbruch-Marathon",
+        "pt-BR": "Maratona da pedreira"
+      },
+      "region": "kruszyn",
+      "surface": "gravel",
+      "kind": "endurance",
+      "reference_tires": "offroad-tires-t2",
+      "lit": false,
+      "min_player_level": 6,
+      "length_m": 8300,
+      "base_lap_ms": 330000,
+      "fuel_per_lap_ml": 10560,
+      "reward_cents_per_lap": 7410,
+      "xp_per_lap": 61,
+      "demand": { "accel": 5, "grip": 20, "handling": 20, "braking": 15, "clearance": 40 },
+      "reference": { "accel": 65, "grip": 92, "handling": 71, "braking": 71, "clearance": 80 }
+    },
+    "suchy-pas-short-strip": {
+      "name": {
+        "en": "Suchy Pas Short Strip",
+        "pl": "Krótki pas Suchy Pas",
+        "fr": "Piste courte de Suchy Pas",
+        "de": "Kurzstrecke Suchy Pas",
+        "pt-BR": "Pista curta de Suchy Pas"
+      },
+      "region": "suchy-pas",
+      "surface": "asphalt",
+      "kind": "sprint",
+      "lit": false,
+      "min_player_level": 5,
+      "length_m": 500,
+      "base_lap_ms": 14000,
+      "fuel_per_lap_ml": 168,
+      "reward_cents_per_lap": 306,
+      "xp_per_lap": 3,
+      "demand": { "accel": 60, "top_speed": 5, "grip": 25, "handling": 5, "braking": 5 },
+      "reference": { "accel": 135, "top_speed": 200, "grip": 90, "handling": 70, "braking": 71 }
+    },
+    "suchy-pas-long-run": {
+      "name": {
+        "en": "Suchy Pas Long Run",
+        "pl": "Długi bieg Suchy Pas",
+        "fr": "Longue course de Suchy Pas",
+        "de": "Langstrecke Suchy Pas",
+        "pt-BR": "Corrida longa de Suchy Pas"
+      },
+      "region": "suchy-pas",
+      "surface": "asphalt",
+      "kind": "endurance",
+      "lit": false,
+      "min_player_level": 8,
+      "length_m": 8500,
+      "base_lap_ms": 240000,
+      "fuel_per_lap_ml": 7680,
+      "reward_cents_per_lap": 6050,
+      "xp_per_lap": 48,
+      "demand": { "accel": 15, "top_speed": 40, "grip": 25, "handling": 5, "braking": 15 },
+      "reference": { "accel": 135, "top_speed": 200, "grip": 90, "handling": 70, "braking": 71 }
+    },
+    "wilcza-przelecz-hairpin": {
+      "name": {
+        "en": "Wilcza Pass Hairpin",
+        "pl": "Agrafka Wilczej Przełęczy",
+        "fr": "Épingle du col de Wilcza",
+        "de": "Kehre am Wilcza-Pass",
+        "pt-BR": "Cotovelo do Passo Wilcza"
+      },
+      "region": "wilcza-przelecz",
+      "surface": "asphalt",
+      "kind": "sprint",
+      "lit": false,
+      "min_player_level": 8,
+      "length_m": 480,
+      "base_lap_ms": 14000,
+      "fuel_per_lap_ml": 168,
+      "reward_cents_per_lap": 350,
+      "xp_per_lap": 3,
+      "demand": { "accel": 15, "grip": 20, "handling": 40, "braking": 25 },
+      "reference": { "accel": 97, "top_speed": 175, "grip": 100, "handling": 99, "braking": 100 }
+    },
+    "wilcza-przelecz-crossing": {
+      "name": {
+        "en": "Wilcza Pass Crossing",
+        "pl": "Przejazd przez Wilczą Przełęcz",
+        "fr": "Traversée du col de Wilcza",
+        "de": "Passüberquerung Wilcza",
+        "pt-BR": "Travessia do Passo Wilcza"
+      },
+      "region": "wilcza-przelecz",
+      "surface": "asphalt",
+      "kind": "endurance",
+      "lit": false,
+      "min_player_level": 11,
+      "length_m": 11600,
+      "base_lap_ms": 340000,
+      "fuel_per_lap_ml": 10880,
+      "reward_cents_per_lap": 9700,
+      "xp_per_lap": 70,
+      "demand": { "accel": 5, "top_speed": 15, "grip": 25, "handling": 30, "braking": 25 },
+      "reference": { "accel": 97, "top_speed": 175, "grip": 100, "handling": 99, "braking": 100 }
     }
   }
 }
