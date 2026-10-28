@@ -18,6 +18,7 @@ return [
         'travel_no_fuel' => 'Zu wenig Kraftstoff für die Fahrt: Es braucht :required l, der Tank hat :available l.',
         'car_travelling' => 'Das Auto ist unterwegs, die Werkstatt kann jetzt nicht daran arbeiten.',
         'track_elsewhere' => 'Diese Strecke liegt in einer anderen Stadt. Fahre zuerst dorthin.',
+        'track_tank_too_small' => 'Hier ist keine Runde möglich: Eine Runde braucht :required l, der Tank fasst :tank l.',
         'car_not_found' => 'Du besitzt dieses Auto nicht.',
         'garage_exists' => 'Du hast in dieser Stadt schon eine Garage.',
         'wreck_not_for_sale' => 'Der Schrottplatz verkauft dieses Auto nicht.',

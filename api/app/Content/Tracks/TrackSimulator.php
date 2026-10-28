@@ -99,7 +99,7 @@ final class TrackSimulator
             throw new RuntimeException("No car of the pack can drive the track {$slug}.");
         }
 
-        return new TrackOutcome($slug, $track['surface'], $track['min_player_level'], $tierCap, $candidates, $winner['build'], $winner['income'], $winner['lap_ms'], $byCar, $fastest);
+        return new TrackOutcome($slug, $track['surface'], $track['min_player_level'], $tierCap, $candidates, $winner['build'], $winner['income'], $winner['lap_ms'], $byCar, $fastest, $this->rules->trackKind($slug));
     }
 
     /** Whether a build earning `$income` is better than the one that is the best so far: more an hour, and for the same, cheaper. */

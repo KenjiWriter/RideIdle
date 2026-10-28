@@ -18,6 +18,7 @@ return [
         'travel_no_fuel' => 'Combustível insuficiente para a viagem: precisa de :required l e o tanque tem :available l.',
         'car_travelling' => 'O carro está na estrada, então a oficina não pode trabalhar nele agora.',
         'track_elsewhere' => 'Essa pista fica em outra cidade. Vá até lá pela estrada primeiro.',
+        'track_tank_too_small' => 'O carro não completa uma volta aqui: uma volta gasta :required l e o tanque comporta :tank l.',
         'car_not_found' => 'Você não tem este carro.',
         'garage_exists' => 'Você já tem uma garagem nessa cidade.',
         'wreck_not_for_sale' => 'O ferro-velho não vende esse carro.',

@@ -190,7 +190,8 @@ describe('a withdrawn car or part', function () {
 describe('what stops a pack', function () {
     it('is a draft that takes out what players use, which the drafts did not know when they were saved', function () {
         draftOf('rules/starter', function (array $rules): array {
-            unset($rules['regions']['autodrom'], $rules['tracks']['autodrom-circuit']);
+            unset($rules['regions']['autodrom']);
+            $rules['tracks'] = array_filter($rules['tracks'], fn (array $track): bool => $track['region'] !== 'autodrom');
             $rules['roads'] = array_values(array_filter($rules['roads'], fn (array $road): bool => ! in_array('autodrom', [$road['from'], $road['to']], true)));
 
             return $rules;

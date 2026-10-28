@@ -41,7 +41,7 @@ describe('the experience an hour of a car on a track', function () {
 describe('what a level has to choose from', function () {
     it('are the wrecks of the yard and the cheapest car for sale at the first level, on the first track', function () {
         expect(gameIncome()->carsAt(1))->toBe(['bizon-m-2', 'kuna-4x4', 'rdzak-gt-2', 'rdzak-gt-4'])
-            ->and(gameIncome()->tracksAt(1))->toBe(['zlomowo-street']);
+            ->and(gameIncome()->tracksAt(1))->toBe(['zlomowo-street', 'zlomowo-yard-dash']);
     });
 
     it('grow with the level: the cars that ask it, and the tracks that open', function () {
@@ -49,8 +49,9 @@ describe('what a level has to choose from', function () {
             ->and(gameIncome()->carsAt(9))->toHaveCount(10)
             // The cars above the fourth tier ask level 12 and more.
             ->and(gameIncome()->carsAt(100))->toHaveCount(23)
-            ->and(gameIncome()->tracksAt(5))->toBe(['zlomowo-street', 'kruszyn-quarry', 'suchy-pas-drag'])
-            ->and(gameIncome()->tracksAt(12))->toHaveCount(5);
+            ->and(gameIncome()->tracksAt(5))->toBe(['zlomowo-street', 'kruszyn-quarry', 'suchy-pas-drag', 'zlomowo-yard-dash', 'zlomowo-ring-road'])
+            // The five standard tracks, the two sprints (the Autodrom one from level 12) and the ring road of Złomowo; the endurance of the Autodrom asks level 15.
+            ->and(gameIncome()->tracksAt(12))->toHaveCount(8);
     });
 
     it('leaves out a car that is not for sale anywhere, and every car that is not a combustion one', function () {
@@ -68,8 +69,8 @@ describe('what a level has to choose from', function () {
 
 describe('the income by level', function () {
     it('is asked for at the levels where a car or a track opens, the first one, and the ones that are named', function () {
-        expect(array_keys(gameIncome()->byLevel()))->toBe([1, 3, 5, 6, 8, 9, 12, 15, 18, 21, 27])
-            ->and(array_keys(gameIncome()->byLevel([22, 15, 1])))->toBe([1, 3, 5, 6, 8, 9, 12, 15, 18, 21, 22, 27]);
+        expect(array_keys(gameIncome()->byLevel()))->toBe([1, 3, 4, 5, 6, 8, 9, 12, 15, 18, 21, 27])
+            ->and(array_keys(gameIncome()->byLevel([22, 15, 1])))->toBe([1, 3, 4, 5, 6, 8, 9, 12, 15, 18, 21, 22, 27]);
     });
 
     it('is a wreck on the first track at the first level, around $600 an hour', function () {

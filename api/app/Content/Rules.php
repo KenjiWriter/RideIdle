@@ -941,6 +941,12 @@ final class Rules
         return $this->data['tracks'][$slug] ?? null;
     }
 
+    /** What a track asks of the driver: `sprint`, `standard` (when the rules do not say) or `endurance`. */
+    public function trackKind(string $slug): string
+    {
+        return (string) ($this->data['tracks'][$slug]['kind'] ?? 'standard');
+    }
+
     /** The track a new run starts on: the first one of the rules. */
     public function startingTrack(): string
     {

@@ -504,6 +504,90 @@
       "xp_per_lap": 20,
       "demand": { "accel": 20, "top_speed": 20, "grip": 20, "handling": 20, "braking": 20 },
       "reference": { "accel": 135, "top_speed": 200, "grip": 100, "handling": 78, "braking": 81 }
+    },
+    "zlomowo-yard-dash": {
+      "name": {
+        "en": "Scrapyard Dash",
+        "pl": "Sprint po złomowisku",
+        "fr": "Sprint de la casse",
+        "de": "Schrottplatz-Sprint",
+        "pt-BR": "Corrida do ferro-velho"
+      },
+      "region": "zlomowo",
+      "surface": "asphalt",
+      "kind": "sprint",
+      "lit": true,
+      "min_player_level": 1,
+      "length_m": 420,
+      "base_lap_ms": 12000,
+      "fuel_per_lap_ml": 144,
+      "reward_cents_per_lap": 200,
+      "xp_per_lap": 3,
+      "demand": { "accel": 40, "top_speed": 5, "grip": 25, "handling": 15, "braking": 15 },
+      "reference": { "accel": 97, "top_speed": 175, "grip": 90, "handling": 88, "braking": 90 }
+    },
+    "zlomowo-ring-road": {
+      "name": {
+        "en": "Złomowo Ring Road",
+        "pl": "Obwodnica Złomowo",
+        "fr": "Périphérique de Złomowo",
+        "de": "Umgehungsstraße Złomowo",
+        "pt-BR": "Anel viário de Złomowo"
+      },
+      "region": "zlomowo",
+      "surface": "asphalt",
+      "kind": "endurance",
+      "lit": true,
+      "min_player_level": 4,
+      "length_m": 10400,
+      "base_lap_ms": 300000,
+      "fuel_per_lap_ml": 9600,
+      "reward_cents_per_lap": 6300,
+      "xp_per_lap": 72,
+      "demand": { "accel": 10, "top_speed": 30, "grip": 20, "handling": 20, "braking": 20 },
+      "reference": { "accel": 97, "top_speed": 175, "grip": 90, "handling": 88, "braking": 90 }
+    },
+    "autodrom-short-loop": {
+      "name": {
+        "en": "Autodrome Short Loop",
+        "pl": "Mała pętla Autodromu",
+        "fr": "Petite boucle de l’Autodrome",
+        "de": "Kleine Schleife Autodrom",
+        "pt-BR": "Laço curto do Autódromo"
+      },
+      "region": "autodrom",
+      "surface": "asphalt",
+      "kind": "sprint",
+      "lit": true,
+      "min_player_level": 12,
+      "length_m": 520,
+      "base_lap_ms": 13000,
+      "fuel_per_lap_ml": 156,
+      "reward_cents_per_lap": 346,
+      "xp_per_lap": 3,
+      "demand": { "accel": 35, "top_speed": 10, "grip": 20, "handling": 15, "braking": 20 },
+      "reference": { "accel": 135, "top_speed": 200, "grip": 100, "handling": 78, "braking": 81 }
+    },
+    "autodrom-endurance": {
+      "name": {
+        "en": "Autodrome Endurance",
+        "pl": "Długi dystans Autodrom",
+        "fr": "Endurance de l’Autodrome",
+        "de": "Langstrecke Autodrom",
+        "pt-BR": "Endurance do Autódromo"
+      },
+      "region": "autodrom",
+      "surface": "asphalt",
+      "kind": "endurance",
+      "lit": true,
+      "min_player_level": 15,
+      "length_m": 14400,
+      "base_lap_ms": 360000,
+      "fuel_per_lap_ml": 11520,
+      "reward_cents_per_lap": 11140,
+      "xp_per_lap": 81,
+      "demand": { "accel": 10, "top_speed": 30, "grip": 20, "handling": 20, "braking": 20 },
+      "reference": { "accel": 135, "top_speed": 200, "grip": 100, "handling": 78, "braking": 81 }
     }
   }
 }

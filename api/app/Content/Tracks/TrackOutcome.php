@@ -15,6 +15,8 @@ final readonly class TrackOutcome
      * @param  array<string, int>  $lapMs  the lap of the winner in every weather of the region
      * @param  array<string, float>  $centsPerHourByCar  what the best build of every car earns an hour: how far the winner is ahead
      * @param  array<string, array{build: Build, lap_ms: int}>  $fastest  the fastest build in the dry and in the rain, when the region has them
+
+     * @param  string  $kind  what the track asks of the driver (`sprint`, `standard`, `endurance`): the gate M3 counts the tracks of a kind among themselves
      */
     public function __construct(
         public string $track,
@@ -27,6 +29,7 @@ final readonly class TrackOutcome
         public array $lapMs,
         public array $centsPerHourByCar,
         public array $fastest,
+        public string $kind = 'standard',
     ) {}
 
     /**

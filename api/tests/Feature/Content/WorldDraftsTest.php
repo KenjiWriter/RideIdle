@@ -247,7 +247,8 @@ describe('what the players are in', function () {
 
         driverWithRun(['track_slug' => 'autodrom-circuit']);
         $noTrack = $rules;
-        unset($noTrack['regions']['autodrom'], $noTrack['tracks']['autodrom-circuit']);
+        unset($noTrack['regions']['autodrom']);
+        $noTrack['tracks'] = array_filter($noTrack['tracks'], fn (array $track): bool => $track['region'] !== 'autodrom');
         $noTrack['roads'] = array_values(array_filter($rules['roads'], fn (array $road): bool => ! in_array('autodrom', [$road['from'], $road['to']], true)));
 
         expect($usage->removedInUse('starter', $rules, $noTrack))->toBe(['track autodrom-circuit (1)']);

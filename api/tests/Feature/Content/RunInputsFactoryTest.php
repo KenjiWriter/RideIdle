@@ -91,8 +91,9 @@ it('keeps the experience an hour of every car of the pack under the ceiling of e
             $perHour = 3_600_000 / $config['lap_ms']['dry'] * $config['lap_xp']['dry'];
             $ceiling = 3_600_000 / $track['base_lap_ms'] * $track['xp_per_lap'];
 
-            // The experience of a lap is a whole number, which lets a car a few per cent over the ceiling: the 10 XP of the drag strip are the coarsest.
-            if ($perHour > $ceiling * 1.06) {
+            // The experience of a lap is a whole number, which lets a car a few per cent over the ceiling: a lap of 2.5 XP is paid 3, so the most is one part in
+            // (XP - 0.5): 5% for the drag strip (10 XP) and a fifth for a sprint (3 XP).
+            if ($perHour > $ceiling * max(1.06, 1 + 0.5 / ($track['xp_per_lap'] - 0.5))) {
                 $problems[] = sprintf('%s on %s: %.0f XP an hour against a ceiling of %.0f', $car, $slug, $perHour, $ceiling);
             }
         }

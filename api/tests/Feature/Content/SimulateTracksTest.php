@@ -130,20 +130,23 @@ describe('the gates of the track simulator', function () {
         });
 
         expect($report->m3Passed())->toBeFalse()
-            ->and(array_keys($report->carsThatWinTooMuch()))->toBe(['bizon-m-2'])
-            ->and($report->carsThatWinTooMuch()['bizon-m-2'])->toBe(['zlomowo-street', 'suchy-pas-drag', 'wilcza-przelecz-switchbacks'])
+            ->and(array_keys($report->carsThatWinTooMuch()))->toBe(['bizon-m-2 (standard)'])
+            ->and($report->carsThatWinTooMuch()['bizon-m-2 (standard)'])->toBe(['zlomowo-street', 'suchy-pas-drag', 'wilcza-przelecz-switchbacks'])
             // The data is coherent all the same: the command fails on this only with --strict.
             ->and($report->passed())->toBeTrue();
     });
 
     it('passes the gate M3 on the shipped rules: the weight of a car is what sends the tracks to different cars', function () {
-        $wins = trackReportJson()['wins'];
+        $wins = array_map('count', trackReportJson()['wins_by_kind']['standard']);
 
         expect(trackReportJson()['gates']['no_car_wins_more_than_two'])->toBeTrue()
             // With the cars of the dealer and the exchange the wins are spread over four cars: the lightest Rdzak takes the track in the snow, and the Kornet R6,
             // which asks level 12 like the Autodrom does, the circuit (by a fraction of a per cent over the Bizon V8: its rear wheel drive is what the two
             // differ in).
-            ->and(array_map('count', $wins))->toBe(['bizon-m-2' => 2, 'kuna-4x4' => 1, 'rdzak-gt-2' => 1, 'kornet-r6' => 1]);
+            ->and($wins)->toBe(['bizon-m-2' => 2, 'kuna-4x4' => 1, 'rdzak-gt-2' => 1, 'kornet-r6' => 1])
+            // The sprints and the endurance tracks are counted among themselves: the Bizon M-2 wins the one of Złomowo in each, another car the one of the Autodrom.
+            ->and(array_map('count', trackReportJson()['wins_by_kind']['sprint']))->toBe(['bizon-m-2' => 1, 'bizon-v8' => 1])
+            ->and(array_map('count', trackReportJson()['wins_by_kind']['endurance']))->toBe(['bizon-m-2' => 1, 'serwal-gt' => 1]);
 
         $this->artisan('tracks:simulate', ['--strict' => true])->assertSuccessful();
     });

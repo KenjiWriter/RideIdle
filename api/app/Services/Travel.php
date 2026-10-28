@@ -39,6 +39,7 @@ final class Travel
         private readonly RunInputsFactory $inputs,
         private readonly Garage $garage,
         private readonly CityGarages $garages,
+        private readonly TrackChoices $choices,
     ) {}
 
     /** Carries out the arrivals that are due, if there are any. Safe to call at any time; a cheap read when nobody is on the road. */
@@ -184,11 +185,14 @@ final class Travel
                 'track' => [
                     'slug' => $trackSlug,
                     'name' => I18nText::from($track['name'])->for(),
+                    'kind' => $this->rules->trackKind($trackSlug),
                     'surface' => $track['surface'],
                     'lit' => $track['lit'],
                     'base_lap_ms' => $track['base_lap_ms'],
                     'demand' => $track['demand'],
                 ],
+                // Every track of the city, with what each is for the car that is played: the driver chooses among them where the car stands.
+                'tracks' => $this->choices->forCity($slug, $run, $level),
                 // How the car, with the parts it has, runs this track in the dry against the lap of a car that matches its reference.
                 'fit_percent' => $run === null ? null : (int) round(100 * $track['base_lap_ms'] / $freezer->freeze($this->inputs->forRun($run, $trackSlug), 'map', 0)->config['lap_ms']['dry']),
                 'route' => $km === null || $stats === null ? null : ['km' => $km, ...$this->journeyOf($km, $stats)],

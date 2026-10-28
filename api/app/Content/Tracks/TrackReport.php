@@ -12,7 +12,7 @@ use App\Domain\Run\Surface;
  * - the tires: the best tires on every surface are the kind the design says, so that no tire is best everywhere (slick on dry
  *   asphalt, rain on wet, off-road on gravel and mud, winter on snow), which makes the rain change the winner;
  * - the terrain: a gravel track is not won by a car that wins an asphalt track, so that off-road is a reason to have another car;
- * - the gate M3, "no car wins more than two tracks": whether the tracks make the drivers want different cars.
+ * - the gate M3, "no car wins more than two tracks of a kind" (a sprint, a standard track, an endurance track): whether the tracks make the drivers want different cars.
  *
  * The first two are about the data being coherent and fail the command. The third is the question of the gate M3, and it fails the
  * command only with --strict: it depends on how many different cars there are, and says so when they are too few.
@@ -28,7 +28,7 @@ final readonly class TrackReport
         Surface::SNOW => 'winter',
     ];
 
-    /** The most tracks one car may win before the tracks stop asking for different cars. */
+    /** The most tracks of one kind that one car may win before the tracks stop asking for different cars. */
     public const MOST_TRACKS_PER_CAR = 2;
 
     /**
@@ -86,13 +86,45 @@ final readonly class TrackReport
     }
 
     /**
-     * The cars that win more tracks than the gate M3 allows.
+     * The tracks each car wins, by the kind of the tracks (a sprint, a standard track, an endurance track): a car that is the best on a sprint and on a
+     * long track is not the best on two tracks of one kind, which is what makes the drivers want different cars.
      *
-     * @return array<string, list<string>>
+     * @return array<string, array<string, list<string>>> the kind, then the car, then its tracks
+     */
+    public function winsByKind(): array
+    {
+        $wins = [];
+
+        foreach ($this->tracks as $track) {
+            $wins[$track->kind][$track->winner->vehicle][] = $track->track;
+        }
+
+        foreach ($wins as $kind => $byCar) {
+            uasort($byCar, static fn (array $a, array $b): int => count($b) <=> count($a));
+            $wins[$kind] = $byCar;
+        }
+
+        return $wins;
+    }
+
+    /**
+     * The cars that win more tracks of one kind than the gate M3 allows.
+     *
+     * @return array<string, list<string>> the tracks, by the car and the kind (`bizon-m-2 (standard)`)
      */
     public function carsThatWinTooMuch(): array
     {
-        return array_filter($this->winsByCar(), static fn (array $tracks): bool => count($tracks) > self::MOST_TRACKS_PER_CAR);
+        $tooMuch = [];
+
+        foreach ($this->winsByKind() as $kind => $byCar) {
+            foreach ($byCar as $car => $tracks) {
+                if (count($tracks) > self::MOST_TRACKS_PER_CAR) {
+                    $tooMuch["{$car} ({$kind})"] = $tracks;
+                }
+            }
+        }
+
+        return $tooMuch;
     }
 
     public function m3Passed(): bool

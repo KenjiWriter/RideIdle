@@ -18,6 +18,7 @@ return [
         'travel_no_fuel' => 'Not enough fuel for the road: it takes :required l and the tank has :available l.',
         'car_travelling' => 'The car is on the road, so the workshop cannot work on it now.',
         'track_elsewhere' => 'That track is in another city. Get there by road first.',
+        'track_tank_too_small' => 'Cannot finish a lap here: a lap takes :required l and the tank holds :tank l.',
         'car_not_found' => 'You do not have this car.',
         'garage_exists' => 'You already have a garage in that city.',
         'wreck_not_for_sale' => 'The yard does not sell that car.',

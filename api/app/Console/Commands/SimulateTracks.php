@@ -104,17 +104,20 @@ final class SimulateTracks extends Command
 
     private function m3(TrackReport $report): void
     {
-        $wins = $report->winsByCar();
-        $summary = implode('; ', array_map(static fn (string $car, array $tracks): string => "{$car} wins ".count($tracks).' ('.implode(', ', $tracks).')', array_keys($wins), $wins));
+        $summary = implode('; ', array_map(
+            static fn (string $kind, array $byCar): string => "{$kind}: ".implode(', ', array_map(static fn (string $car, array $tracks): string => "{$car} wins ".count($tracks).' ('.implode(', ', $tracks).')', array_keys($byCar), $byCar)),
+            array_keys($report->winsByKind()),
+            $report->winsByKind(),
+        ));
 
         if ($report->m3Passed()) {
-            $this->info("Gate M3: PASSED. No car wins more than {$this->most()} tracks. {$summary}.");
+            $this->info("Gate M3: PASSED. No car wins more than {$this->most()} tracks of a kind. {$summary}.");
 
             return;
         }
 
         $this->warn("Gate M3: NOT YET. {$summary}.");
-        $this->line('  The tracks do not yet ask for different cars: one car is the best on more than '.$this->most().' of them. That is what the cars of the pack allow,');
+        $this->line('  The tracks do not yet ask for different cars: one car is the best on more than '.$this->most().' tracks of one kind. That is what the cars of the pack allow,');
         $this->line('  and it is the answer of the gate, not a fault of the numbers: a car that is better in everything that a track weighs wins it, and the cars');
         $this->line('  that trade power for something else (weight, drivetrain) are what the catalog is for. This fails the command only with --strict.');
     }
@@ -182,6 +185,7 @@ final class SimulateTracks extends Command
                 'no_car_wins_more_than_two' => $report->m3Passed(),
             ],
             'wins' => $report->winsByCar(),
+            'wins_by_kind' => $report->winsByKind(),
             'surface_names' => Surface::ALL,
         ];
     }

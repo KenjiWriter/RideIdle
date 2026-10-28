@@ -193,7 +193,8 @@ it('makes waiting for a tow cost more than the repair and the fuel it saves', fu
     foreach ($rules['tracks'] as $slug => $track) {
         // What the car would have earned in the time it waits, against what the driver would have paid instead.
         $lostCents = $rules['tow']['delay_ms'] / $track['base_lap_ms'] * $track['reward_cents_per_lap'];
-        $litersOfFuel = (int) ceil($rules['tow']['fuel_laps'] * $track['fuel_per_lap_ml'] / 1000);
+        // What the driver pays to get going again: the repair, and the fuel of one lap (the tow leaves more, but one lap is all that is needed).
+        $litersOfFuel = (int) ceil($track['fuel_per_lap_ml'] / 1000);
         $savedCents = $rules['repair']['cost_cents'] + $litersOfFuel * $rules['fuel']['price_cents_per_liter'];
 
         if ($lostCents <= $savedCents) {
@@ -471,14 +472,15 @@ it('lets every tire of the pack use a kind that the matrix has, and every weathe
     expect($problems)->toBe([]);
 });
 
-it('opens the starting track at level 1, the others from a level above it, and gives each a surface and a region', function () {
+it('opens the starting track (and the sprint of its city) at level 1, the others from a level above it, and gives each a surface and a region', function () {
     $rules = starterRules();
     $first = array_key_first($rules['tracks']);
 
     expect($rules['tracks'][$first]['min_player_level'])->toBe(1);
 
     foreach ($rules['tracks'] as $slug => $track) {
-        if ($slug !== $first) {
+        // The sprint of the home city is open from the first level as well: a short lap that pays little and burns little is no reason to wait.
+        if ($slug !== $first && ! ($track['region'] === $rules['tracks'][$first]['region'] && ($track['kind'] ?? null) === 'sprint')) {
             expect($track['min_player_level'])->toBeGreaterThan(1, $slug);
         }
 

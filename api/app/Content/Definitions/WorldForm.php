@@ -37,6 +37,7 @@ final class WorldForm
                 'name' => DefinitionForm::texts($track['name'] ?? []),
                 'region' => $track['region'] ?? null,
                 'surface' => $track['surface'] ?? null,
+                'kind' => $track['kind'] ?? null,
                 'reference_tires' => $track['reference_tires'] ?? null,
                 'lit' => (bool) ($track['lit'] ?? false),
                 'min_player_level' => $track['min_player_level'] ?? null,
@@ -93,6 +94,10 @@ final class WorldForm
             }
 
             $track = ['name' => DefinitionForm::i18n($line['name'] ?? []), 'region' => DefinitionForm::text($line['region'] ?? null), 'surface' => DefinitionForm::text($line['surface'] ?? null)];
+
+            if (DefinitionForm::text($line['kind'] ?? null) !== null) {
+                $track['kind'] = DefinitionForm::text($line['kind']);
+            }
 
             if (DefinitionForm::text($line['reference_tires'] ?? null) !== null) {
                 $track['reference_tires'] = DefinitionForm::text($line['reference_tires']);

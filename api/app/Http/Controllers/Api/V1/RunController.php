@@ -19,6 +19,7 @@ use App\Services\Garage;
 use App\Services\Ledger;
 use App\Services\RunService;
 use App\Services\TowTerms;
+use App\Services\TrackChoices;
 use App\Services\Workshop;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,6 +44,7 @@ final class RunController extends Controller
         private readonly Workshop $workshop,
         private readonly Ledger $ledger,
         private readonly Garage $garage,
+        private readonly TrackChoices $choices,
     ) {}
 
     /** Starts the run of the driver: one of the starter wrecks on a track, with a full tank. The car waits in the garage until `start`. */
@@ -138,6 +140,13 @@ final class RunController extends Controller
         // Another city is reached by a journey, which takes time and fuel, not by a change of the track.
         if ($this->rules->track($data['track'])['region'] !== $this->rules->track($found->track_slug)['region']) {
             throw new RuleRefusedException('track_elsewhere');
+        }
+
+        // A car that cannot hold the fuel of one lap would stand on the track for good.
+        $lap = $this->choices->forCar($found, $data['track']);
+
+        if (! $lap['fits_tank']) {
+            throw new RuleRefusedException('track_tank_too_small', ['required' => round($lap['fuel_ml'] / 1000, 1), 'tank' => round($lap['tank_ml'] / 1000, 1)]);
         }
 
         $changed = $this->runs->reconfigure($found->id, $this->inputs->forRun($found, $data['track']), trackSlug: $data['track']);

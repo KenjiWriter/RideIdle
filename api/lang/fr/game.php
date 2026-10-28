@@ -18,6 +18,7 @@ return [
         'travel_no_fuel' => 'Pas assez de carburant pour la route : il faut :required l et le réservoir en contient :available l.',
         'car_travelling' => 'La voiture est sur la route, l’atelier ne peut donc pas travailler dessus maintenant.',
         'track_elsewhere' => 'Cette piste est dans une autre ville. Rendez-vous d’abord sur place par la route.',
+        'track_tank_too_small' => 'Cette voiture ne peut pas finir un tour ici : un tour consomme :required l et le réservoir contient :tank l.',
         'car_not_found' => 'Vous n’avez pas cette voiture.',
         'garage_exists' => 'Vous avez déjà un garage dans cette ville.',
         'wreck_not_for_sale' => 'La casse ne vend pas cette voiture.',

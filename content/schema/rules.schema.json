@@ -682,6 +682,7 @@
           "name": { "$ref": "common.schema.json#/$defs/i18n" },
           "region": { "$ref": "common.schema.json#/$defs/slug" },
           "surface": { "description": "What the track is made of when it is dry. The weather turns it wet or snowy.", "enum": ["asphalt", "gravel"] },
+          "kind": { "description": "What the track asks of the driver: a sprint (a lap of 10 to 15 seconds, a little cash a lap and little fuel an hour, so a tank lasts about an hour), a standard track (the default), or an endurance track (a lap of minutes that burns a tank in about twenty). The gate M3 counts the tracks of a kind among themselves.", "enum": ["sprint", "standard", "endurance"] },
           "reference_tires": { "description": "The tires of the car that the bots of the race are made around, when the stock tires are not what the track asks for: on gravel every stock car is a second slower than a car with the right tires, and a field made around the stock ones would pay a bonus to everyone who buys them. Without it the reference car has the stock tires.", "$ref": "common.schema.json#/$defs/slug" },
           "lit": { "description": "Whether the track has lights: a track that has none takes longer to drive at night.", "type": "boolean" },
           "min_player_level": { "description": "The level of the driver from which the track is open. A car is thought of as the level of the track when the tracks are compared: it can mount the tier that level reaches.", "type": "integer", "minimum": 1 },

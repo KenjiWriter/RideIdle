@@ -48,6 +48,7 @@ final class RunResource extends JsonResource
             'track' => [
                 'slug' => $this->track_slug,
                 'region' => $track['region'] ?? null,
+                'kind' => $track === null ? 'standard' : app(Rules::class)->trackKind($this->track_slug),
                 'name' => $track !== null ? I18nText::from($track['name'])->for() : $this->track_slug,
             ],
             'status' => $this->status,

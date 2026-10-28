@@ -18,6 +18,7 @@ return [
         'travel_no_fuel' => 'Za mało paliwa na drogę: potrzeba :required l, a w baku jest :available l.',
         'car_travelling' => 'Auto jest w drodze, więc warsztat nie może teraz przy nim pracować.',
         'track_elsewhere' => 'Ten tor jest w innym mieście. Najpierw tam dojedź.',
+        'track_tank_too_small' => 'Auto nie ukończy tu okrążenia: okrążenie zużywa :required l, a zbiornik mieści :tank l.',
         'car_not_found' => 'Nie masz tego auta.',
         'garage_exists' => 'Masz już garaż w tym mieście.',
         'wreck_not_for_sale' => 'Złomowisko nie sprzedaje tego auta.',
