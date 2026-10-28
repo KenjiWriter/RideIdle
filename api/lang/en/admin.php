@@ -1,0 +1,55 @@
+<?php
+
+// The admin panel (F4): the words of the pages that were written for it. The panel itself speaks the language of ride.admin_locale.
+
+return [
+    'packs' => [
+        'one' => 'content pack',
+        'many' => 'Content packs',
+        'number' => 'Number',
+        'live' => 'Live',
+        'checksum' => 'Checksum',
+        'documents' => 'Documents',
+        'made' => 'Made',
+        'activate' => 'Make live',
+        'activate_heading' => 'Make pack :number live?',
+        'activate_description' => 'The game reads this content from now on. Runs are settled with what they were frozen with and frozen again for this pack at their next settlement. The pack is checked first, and refused if it does not fit this version of the game.',
+        'refused' => 'The pack was not made live',
+        'activated' => 'Pack :number is live',
+    ],
+    'audit' => [
+        'one' => 'trail entry',
+        'many' => 'Trail',
+        'when' => 'When',
+        'who' => 'Who',
+        'action' => 'Action',
+        'subject' => 'Subject',
+        'context' => 'Details',
+        'ip' => 'Address',
+    ],
+    'widget' => [
+        'live_pack' => 'Live pack',
+        'none' => 'none',
+        'no_pack' => 'No pack has been made live',
+        'since' => 'since :when',
+        'source' => 'The game reads from',
+        'database' => 'the database',
+        'files' => 'files',
+        'database_hint' => 'What is made live here is what players get',
+        'files_hint' => 'CONTENT_SOURCE is files: the live pack is not what the game uses',
+        'packs' => 'Packs in the database',
+    ],
+    'actions' => [
+        'login' => 'Signed in',
+        'login_failed' => 'Sign-in failed',
+        'logout' => 'Signed out',
+        'mfa_enabled' => 'Authenticator app set up',
+        'mfa_disabled' => 'Authenticator app taken off',
+        'mfa_recovery_codes_changed' => 'Recovery codes changed',
+        'password_changed' => 'Password changed',
+        'admin_created' => 'Admin created',
+        'admin_updated' => 'Admin changed',
+        'content_pack_activated' => 'Pack made live',
+        'content_pack_refused' => 'Pack refused',
+    ],
+];

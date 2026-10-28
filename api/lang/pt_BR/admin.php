@@ -1,0 +1,55 @@
+<?php
+
+// The admin panel (F4): the words of the pages that were written for it. The panel itself speaks the language of ride.admin_locale.
+
+return [
+    'packs' => [
+        'one' => 'pacote de conteúdo',
+        'many' => 'Pacotes de conteúdo',
+        'number' => 'Número',
+        'live' => 'Ativo',
+        'checksum' => 'Soma de verificação',
+        'documents' => 'Documentos',
+        'made' => 'Criado',
+        'activate' => 'Ativar',
+        'activate_heading' => 'Ativar o pacote :number?',
+        'activate_description' => 'O jogo passa a ler este conteúdo agora. As corridas são acertadas com o que estavam congeladas e, no próximo acerto, congeladas de novo para este pacote. O pacote é verificado antes e recusado se não servir para esta versão do jogo.',
+        'refused' => 'O pacote não foi ativado',
+        'activated' => 'O pacote :number está ativo',
+    ],
+    'audit' => [
+        'one' => 'entrada do registro',
+        'many' => 'Registro',
+        'when' => 'Quando',
+        'who' => 'Quem',
+        'action' => 'Ação',
+        'subject' => 'Assunto',
+        'context' => 'Detalhes',
+        'ip' => 'Endereço',
+    ],
+    'widget' => [
+        'live_pack' => 'Pacote ativo',
+        'none' => 'nenhum',
+        'no_pack' => 'Nenhum pacote foi ativado',
+        'since' => 'desde :when',
+        'source' => 'O jogo lê de',
+        'database' => 'banco de dados',
+        'files' => 'arquivos',
+        'database_hint' => 'O que é ativado aqui é o que os jogadores recebem',
+        'files_hint' => 'CONTENT_SOURCE é files: o pacote ativo não é o que o jogo usa',
+        'packs' => 'Pacotes no banco de dados',
+    ],
+    'actions' => [
+        'login' => 'Entrada',
+        'login_failed' => 'Entrada falhou',
+        'logout' => 'Saída',
+        'mfa_enabled' => 'Aplicativo autenticador configurado',
+        'mfa_disabled' => 'Aplicativo autenticador removido',
+        'mfa_recovery_codes_changed' => 'Códigos de recuperação alterados',
+        'password_changed' => 'Senha alterada',
+        'admin_created' => 'Administrador criado',
+        'admin_updated' => 'Administrador alterado',
+        'content_pack_activated' => 'Pacote ativado',
+        'content_pack_refused' => 'Pacote recusado',
+    ],
+];

@@ -1,0 +1,55 @@
+<?php
+
+// The admin panel (F4): the words of the pages that were written for it. The panel itself speaks the language of ride.admin_locale.
+
+return [
+    'packs' => [
+        'one' => 'paczka treści',
+        'many' => 'Paczki treści',
+        'number' => 'Numer',
+        'live' => 'Żywa',
+        'checksum' => 'Suma kontrolna',
+        'documents' => 'Dokumenty',
+        'made' => 'Utworzona',
+        'activate' => 'Uruchom',
+        'activate_heading' => 'Uruchomić paczkę :number?',
+        'activate_description' => 'Od teraz gra czyta tę treść. Biegi są rozliczane tym, z czym były zamrożone, i przy następnym rozliczeniu zamrażane od nowa dla tej paczki. Paczka jest najpierw sprawdzana i odrzucana, jeśli nie pasuje do tej wersji gry.',
+        'refused' => 'Paczka nie została uruchomiona',
+        'activated' => 'Paczka :number jest żywa',
+    ],
+    'audit' => [
+        'one' => 'wpis dziennika',
+        'many' => 'Dziennik',
+        'when' => 'Kiedy',
+        'who' => 'Kto',
+        'action' => 'Działanie',
+        'subject' => 'Czego dotyczy',
+        'context' => 'Szczegóły',
+        'ip' => 'Adres',
+    ],
+    'widget' => [
+        'live_pack' => 'Żywa paczka',
+        'none' => 'brak',
+        'no_pack' => 'Żadna paczka nie została uruchomiona',
+        'since' => 'od :when',
+        'source' => 'Gra czyta z',
+        'database' => 'bazy',
+        'files' => 'plików',
+        'database_hint' => 'Co tu uruchomisz, to dostają gracze',
+        'files_hint' => 'CONTENT_SOURCE to pliki: żywa paczka nie jest tym, z czego korzysta gra',
+        'packs' => 'Paczki w bazie',
+    ],
+    'actions' => [
+        'login' => 'Zalogowanie',
+        'login_failed' => 'Nieudane logowanie',
+        'logout' => 'Wylogowanie',
+        'mfa_enabled' => 'Ustawiono aplikację uwierzytelniającą',
+        'mfa_disabled' => 'Zdjęto aplikację uwierzytelniającą',
+        'mfa_recovery_codes_changed' => 'Zmieniono kody odzyskiwania',
+        'password_changed' => 'Zmieniono hasło',
+        'admin_created' => 'Utworzono administratora',
+        'admin_updated' => 'Zmieniono administratora',
+        'content_pack_activated' => 'Uruchomiono paczkę',
+        'content_pack_refused' => 'Odrzucono paczkę',
+    ],
+];

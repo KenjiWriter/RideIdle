@@ -1,0 +1,55 @@
+<?php
+
+// The admin panel (F4): the words of the pages that were written for it. The panel itself speaks the language of ride.admin_locale.
+
+return [
+    'packs' => [
+        'one' => 'pack de contenu',
+        'many' => 'Packs de contenu',
+        'number' => 'Numéro',
+        'live' => 'En ligne',
+        'checksum' => 'Somme de contrôle',
+        'documents' => 'Documents',
+        'made' => 'Créé',
+        'activate' => 'Mettre en ligne',
+        'activate_heading' => 'Mettre le pack :number en ligne ?',
+        'activate_description' => 'Le jeu lit ce contenu à partir de maintenant. Les courses sont réglées avec ce avec quoi elles étaient figées, puis figées de nouveau pour ce pack au prochain règlement. Le pack est d’abord vérifié et refusé s’il ne convient pas à cette version du jeu.',
+        'refused' => 'Le pack n’a pas été mis en ligne',
+        'activated' => 'Le pack :number est en ligne',
+    ],
+    'audit' => [
+        'one' => 'entrée du journal',
+        'many' => 'Journal',
+        'when' => 'Quand',
+        'who' => 'Qui',
+        'action' => 'Action',
+        'subject' => 'Objet',
+        'context' => 'Détails',
+        'ip' => 'Adresse',
+    ],
+    'widget' => [
+        'live_pack' => 'Pack en ligne',
+        'none' => 'aucun',
+        'no_pack' => 'Aucun pack n’a été mis en ligne',
+        'since' => 'depuis :when',
+        'source' => 'Le jeu lit depuis',
+        'database' => 'la base de données',
+        'files' => 'les fichiers',
+        'database_hint' => 'Ce qui est mis en ligne ici est ce que les joueurs reçoivent',
+        'files_hint' => 'CONTENT_SOURCE vaut files : le pack en ligne n’est pas ce qu’utilise le jeu',
+        'packs' => 'Packs dans la base',
+    ],
+    'actions' => [
+        'login' => 'Connexion',
+        'login_failed' => 'Connexion échouée',
+        'logout' => 'Déconnexion',
+        'mfa_enabled' => 'Application d’authentification configurée',
+        'mfa_disabled' => 'Application d’authentification retirée',
+        'mfa_recovery_codes_changed' => 'Codes de récupération modifiés',
+        'password_changed' => 'Mot de passe modifié',
+        'admin_created' => 'Administrateur créé',
+        'admin_updated' => 'Administrateur modifié',
+        'content_pack_activated' => 'Pack mis en ligne',
+        'content_pack_refused' => 'Pack refusé',
+    ],
+];

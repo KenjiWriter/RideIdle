@@ -1,0 +1,55 @@
+<?php
+
+// The admin panel (F4): the words of the pages that were written for it. The panel itself speaks the language of ride.admin_locale.
+
+return [
+    'packs' => [
+        'one' => 'Inhaltspaket',
+        'many' => 'Inhaltspakete',
+        'number' => 'Nummer',
+        'live' => 'Aktiv',
+        'checksum' => 'Prüfsumme',
+        'documents' => 'Dokumente',
+        'made' => 'Erstellt',
+        'activate' => 'Aktivieren',
+        'activate_heading' => 'Paket :number aktivieren?',
+        'activate_description' => 'Das Spiel liest diesen Inhalt ab jetzt. Läufe werden mit dem abgerechnet, womit sie eingefroren waren, und bei der nächsten Abrechnung für dieses Paket neu eingefroren. Das Paket wird zuerst geprüft und abgelehnt, wenn es nicht zu dieser Version des Spiels passt.',
+        'refused' => 'Das Paket wurde nicht aktiviert',
+        'activated' => 'Paket :number ist aktiv',
+    ],
+    'audit' => [
+        'one' => 'Protokolleintrag',
+        'many' => 'Protokoll',
+        'when' => 'Wann',
+        'who' => 'Wer',
+        'action' => 'Aktion',
+        'subject' => 'Betrifft',
+        'context' => 'Details',
+        'ip' => 'Adresse',
+    ],
+    'widget' => [
+        'live_pack' => 'Aktives Paket',
+        'none' => 'keines',
+        'no_pack' => 'Es wurde noch kein Paket aktiviert',
+        'since' => 'seit :when',
+        'source' => 'Das Spiel liest aus',
+        'database' => 'der Datenbank',
+        'files' => 'Dateien',
+        'database_hint' => 'Was hier aktiviert wird, bekommen die Spieler',
+        'files_hint' => 'CONTENT_SOURCE ist files: Das aktive Paket nutzt das Spiel nicht',
+        'packs' => 'Pakete in der Datenbank',
+    ],
+    'actions' => [
+        'login' => 'Angemeldet',
+        'login_failed' => 'Anmeldung fehlgeschlagen',
+        'logout' => 'Abgemeldet',
+        'mfa_enabled' => 'Authenticator-App eingerichtet',
+        'mfa_disabled' => 'Authenticator-App entfernt',
+        'mfa_recovery_codes_changed' => 'Wiederherstellungscodes geändert',
+        'password_changed' => 'Passwort geändert',
+        'admin_created' => 'Administrator angelegt',
+        'admin_updated' => 'Administrator geändert',
+        'content_pack_activated' => 'Paket aktiviert',
+        'content_pack_refused' => 'Paket abgelehnt',
+    ],
+];
