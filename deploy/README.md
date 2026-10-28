@@ -28,6 +28,9 @@ PostgreSQL (baza)   Redis (tylko liczniki limitów)   rideidle-queue (systemd, w
 | `upload.sh` | z Twojego komputera: wysyła zatwierdzony stan repozytorium i wywołuje `deploy.sh` |
 | `nginx/`, `systemd/` | szablony konfiguracji, w które `provision.sh` wstawia domenę i foldery |
 | `bin/rideidle-backup` | nocna kopia bazy |
+| `bin/rideidle-backup-verify` | sprawdzanie kopii: co noc szybkie, co niedzielę z odtworzeniem do osobnej bazy |
+| `bin/rideidle-backup-offsite` | wysyłanie najnowszej kopii (szyfrowanej) na inny serwer |
+| `loadtest/loadtest.mjs` | test obciążeniowy API (Node 18+, bez pakietów) |
 | `env.production.example` | wzór `.env` na serwer |
 
 ## Czego potrzebujesz
@@ -253,20 +256,36 @@ sudo -u www-data php8.4 artisan accounts:delete --email=adres@example.com --dry-
 ## Kopie zapasowe
 
 - Co noc o 3:15 `pg_dump` zapisuje bazę do `/var/backups/rideidle/rideidle-RRRR-MM-DD-GGMM.dump` (prawa tylko dla roota). Kopie starsze niż 14 dni są kasowane; wynik jest w `/var/log/rideidle-backup.log`.
-- **Kopie leżą na tym samym serwerze**, więc nie ratują przed jego utratą. Kopiuj je gdzieś indziej, np. z innego komputera lub serwera (folder jest tylko dla roota):
+- **Sprawdzanie kopii** (`rideidle-backup-verify`; krok F5, 2026-10-28). **Kopia, której nikt nie odtworzył, to nadzieja, nie kopia.** Skrypt robi dwie rzeczy. **Co noc o 3:30 (`--quick`):** najnowsza kopia jest, nie jest starsza niż 26 godzin, nie jest maleńka (co najmniej 2 KB) i da się przeczytać jej spis treści. **Co niedzielę o 4:00 (pełne):** to samo, a potem kopia jest **odtwarzana do osobnej bazy `rideidle_verify`** (usuwanej na końcu; bazy gry nie rusza), sprawdza się, że są tabele, które mają znaczenie, i **że saldo każdego portfela jest sumą jego księgi** (gotówka i monety premium): zasada gry, którą kopia ma zachować. Wynik jest w `/var/backups/rideidle/last-verify.txt` (`ok` albo `FAILED: powód`, plik, rozmiar, wiek i liczby wierszy) i w `/var/log/rideidle-backup.log`, a kod wyjścia 1 mówi, że coś jest nie tak. **Uruchom go raz ręcznie, zanim będzie potrzebny:** `sudo rideidle-backup && sudo rideidle-backup-verify`. Sprawdzone tylko na atrapach narzędzi PostgreSQL (37 sprawdzeń logiki: brak kopii, stara, maleńka, uszkodzona, nieodtwarzalna, saldo różne od księgi, kopia najnowsza spośród kilku); na prawdziwym PostgreSQL jeszcze nie uruchomione.
+- **Kopia poza serwerem** (`rideidle-backup-offsite`, codziennie o 3:40). **Kopie leżą na tym samym serwerze**, więc nie ratują przed jego utratą. Skrypt nic nie robi, dopóki nie ustawisz, gdzie wysyłać, w `/etc/rideidle/backup.env` (plik tylko dla roota, linie `KLUCZ=wartość`):
 
 ```bash
-scp -r root@raceidle.cerasusdigital.pl:/var/backups/rideidle ./kopie-rideidle
+BACKUP_REMOTE=uzytkownik@serwer-kopii:/sciezka/rideidle       # dokąd (rsync przez ssh)
+BACKUP_SSH_KEY=/root/.ssh/rideidle-backup                     # klucz bez hasła, który może tam pisać
+BACKUP_PASSPHRASE_FILE=/etc/rideidle/backup.pass              # szyfrowanie AES-256 (openssl) przed wysłaniem
 ```
 
+  **Szyfruj** (kopia ma adresy e-mail i całą grę) i **zachowaj hasło także gdzie indziej**: bez niego kopii nie otworzysz. Otwarcie: `openssl enc -d -aes-256-cbc -pbkdf2 -in PLIK.dump.enc -out PLIK.dump -pass file:/etc/rideidle/backup.pass`. Stare kopie po drugiej stronie kasuje ten, kto ją prowadzi (kopia na noc to kilka megabajtów). Można też kopiować ręcznie, np. `scp -r root@raceidle.cerasusdigital.pl:/var/backups/rideidle ./kopie-rideidle`.
 - **Kopie a usuwanie kont:** konto usunięte przez kierowcę albo `accounts:delete` pozostaje w kopiach do 14 dni, a w kopiach przechowywanych gdzie indziej tak długo, jak je trzymasz. Polityka prywatności jeszcze o kopiach nie mówi (`docs/prawo.md`).
-- **Odtwarzanie** (jako `root`, bo `deploy` ma `sudo` tylko do przeładowania usług; zrób to raz na próbę, zanim będzie potrzebne). Właściciele tabel są w kopii, więc tabele zostają własnością użytkownika bazy `rideidle`:
+- **Odtwarzanie** (jako `root`, bo `deploy` ma `sudo` tylko do przeładowania usług). Właściciele tabel są w kopii, więc tabele zostają własnością użytkownika bazy `rideidle`. Kopię szyfrowaną najpierw otwórz (wyżej). **Zrób to na próbę w osobnej bazie, zanim będzie potrzebne** (to robi niedzielne sprawdzanie), a przy prawdziwej awarii:
 
 ```bash
 systemctl stop rideidle-queue
 runuser -u postgres -- pg_restore --clean --if-exists -d rideidle /var/backups/rideidle/PLIK.dump
 systemctl start rideidle-queue
 ```
+
+## Test obciążeniowy
+
+`loadtest/loadtest.mjs` (Node 18 lub nowszy, bez pakietów; krok F5, 2026-10-28) udaje wielu graczy naraz: każdy robi to, co gra robi sama, gdy jest otwarta (pyta o bieg co 15 s, od czasu do czasu o garaż, mapę, flotę i sklep). Niczego nie kupuje ani nie sprzedaje, tylko czyta, a serwer rozlicza biegi tak jak dla gracza.
+
+1. **Konta.** API pozwala jednemu adresowi założyć 10 gości na godzinę, więc nie zakłada się ich przez nie. Na serwerze: `cd /var/www/rideidle/current/api && sudo -u www-data php8.4 artisan loadtest:accounts 200 --output=/tmp/tokens.json --force` (`--force` jest potrzebne, bo `APP_ENV` to production: to prawdziwe wiersze w prawdziwej bazie). Tokeny trafiają do pliku (tylko dla właściciela), nie na ekran; nazwy zaczynają się od `LoadTest_`.
+2. **Test**, z innego komputera: `node deploy/loadtest/loadtest.mjs --base=https://raceidle.cerasusdigital.pl --tokens=tokens.json --users=200 --duration=300`. Opcje: `--poll=MS` (15000, jak w grze; mniej to ostrzejszy test), `--ramp=S` (10, gracze wchodzą w tym czasie), `--max-p95=MS` (1000) i `--max-error-rate=PROC` (1): przy wolniejszym 95. percentylu albo większej liczbie błędów test **kończy się kodem 1**. Raport: dla każdego rodzaju zapytania liczba, ile odpowiedziało, mediana, 95., 99. percentyl i najdłuższe, ile zatrzymał limit (429) i ile się nie udało (5xx, brak odpowiedzi), oraz ile zapytań na sekundę przyjął serwer.
+3. **Sprzątanie:** `sudo -u www-data php8.4 artisan loadtest:cleanup` usuwa konta `LoadTest_*` ze wszystkim, co zrobiły, tak jak usuwa się konto (`--dry-run` mówi tylko, ile by usunęło; ruszają się wyłącznie nazwy zaczynające się od `LoadTest`).
+
+**Limit adresu.** nginx wpuszcza z jednego adresu 20 zapytań na sekundę (`nginx/rideidle-global.conf`, strefa `rideidle_api`), więc test z jednego komputera mierzy głównie ten limit (będzie dużo 429), a nie możliwości serwera. Żeby zmierzyć serwer, trzeba puścić test z kilku adresów albo na czas testu podnieść limit. 200 graczy pytających co 15 s to ok. 13 zapytań na sekundę, czyli mieści się w limicie jednego adresu.
+
+**Co zmierzono, a czego nie.** Narzędzie sprawdzono lokalnie na tymczasowym API (serwer wbudowany PHP na Windows, SQLite): działa, liczy i kończy się kodem zgodnym z progami. **Liczb z tego nie wolno brać za wydajność serwera**: ten serwer obsługuje jedno żądanie naraz i każde trwa ok. 330 ms (start frameworku bez opcache), a 20 graczy naraz wydłużało to do kilku sekund przez kolejkę. Prawdziwy pomiar wymaga serwera produkcyjnego (PHP-FPM z opcache, PostgreSQL). Odpowiedź na pytanie, czy gra wytrzyma 20–50 graczy alfy, dopiero z tego testu na serwerze.
 
 ## Decyzje i ograniczenia
 
