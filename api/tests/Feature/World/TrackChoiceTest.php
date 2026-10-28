@@ -32,7 +32,7 @@ function mapOf(User $driver): TestResponse
     return test()->getJson('/api/v1/map', bearerFor($driver));
 }
 
-function changeTrack(User $driver, int $run, string $track, array $headers = []): TestResponse
+function putOnTrack(User $driver, int $run, string $track, array $headers = []): TestResponse
 {
     return test()->patchJson("/api/v1/runs/{$run}", ['track' => $track], [...bearerFor($driver), ...$headers]);
 }
@@ -102,7 +102,7 @@ describe('choosing the track of the car where it stands', function () {
     it('changes it to the sprint, paid and burnt by the lap of the sprint from the moment of the change', function () {
         [$driver, $run] = driverAtLevel(1);
 
-        changeTrack($driver, $run->id, 'zlomowo-yard-dash')
+        putOnTrack($driver, $run->id, 'zlomowo-yard-dash')
             ->assertOk()
             ->assertJsonPath('data.track.slug', 'zlomowo-yard-dash')
             ->assertJsonPath('data.track.kind', 'sprint');
@@ -114,13 +114,13 @@ describe('choosing the track of the car where it stands', function () {
             ->and($run->config['fuel_per_lap_ml'])->toBeLessThan(400);
 
         // And back to the standard track.
-        changeTrack($driver, $run->id, 'zlomowo-street')->assertOk()->assertJsonPath('data.track.kind', 'standard');
+        putOnTrack($driver, $run->id, 'zlomowo-street')->assertOk()->assertJsonPath('data.track.kind', 'standard');
     });
 
     it('keeps the level that a track asks: the ring road is for level 4 and not before', function () {
         [$driver, $run] = driverAtLevel(1);
 
-        changeTrack($driver, $run->id, 'zlomowo-ring-road', ['X-Locale' => 'en'])
+        putOnTrack($driver, $run->id, 'zlomowo-ring-road', ['X-Locale' => 'en'])
             ->assertStatus(422)
             ->assertJsonPath('code', 'track_locked')
             ->assertJsonPath('message', 'Requires player level 4 (you are level 1). You get XP by driving.');
@@ -129,7 +129,7 @@ describe('choosing the track of the car where it stands', function () {
 
         [$other, $otherRun] = driverAtLevel(4);
 
-        changeTrack($other, $otherRun->id, 'zlomowo-ring-road')->assertOk()->assertJsonPath('data.track.kind', 'endurance');
+        putOnTrack($other, $otherRun->id, 'zlomowo-ring-road')->assertOk()->assertJsonPath('data.track.kind', 'endurance');
     });
 
     it('refuses a track where the car cannot hold the fuel of one lap, and says how much it takes and how much the tank holds', function () {
@@ -140,7 +140,7 @@ describe('choosing the track of the car where it stands', function () {
         });
         [$driver, $run] = driverAtLevel(4);
 
-        changeTrack($driver, $run->id, 'zlomowo-ring-road', ['X-Locale' => 'en'])
+        putOnTrack($driver, $run->id, 'zlomowo-ring-road', ['X-Locale' => 'en'])
             ->assertStatus(422)
             ->assertJsonPath('code', 'track_tank_too_small')
             ->assertJsonPath('message', 'Cannot finish a lap here: a lap takes 60 l and the tank holds 45 l.');
@@ -156,6 +156,6 @@ describe('choosing the track of the car where it stands', function () {
         });
         [$driver, $run] = driverAtLevel(4);
 
-        changeTrack($driver, $run->id, 'zlomowo-ring-road', ['X-Locale' => 'pl'])->assertStatus(422)->assertJsonPath('message', 'Auto nie ukończy tu okrążenia: okrążenie zużywa 60 l, a zbiornik mieści 45 l.');
+        putOnTrack($driver, $run->id, 'zlomowo-ring-road', ['X-Locale' => 'pl'])->assertStatus(422)->assertJsonPath('message', 'Auto nie ukończy tu okrążenia: okrążenie zużywa 60 l, a zbiornik mieści 45 l.');
     });
 });
