@@ -1,0 +1,441 @@
+{
+  "schema": 0,
+  "version": "2026.10.3",
+  "messages": {
+    "slot.tires": {
+      "en": "Hull",
+      "pl": "Kadłub",
+      "fr": "Coque",
+      "de": "Rumpf",
+      "pt-BR": "Casco"
+    },
+    "slot.suspension": {
+      "en": "Stabilizers",
+      "pl": "Stabilizatory",
+      "fr": "Stabilisateurs",
+      "de": "Stabilisatoren",
+      "pt-BR": "Estabilizadores"
+    },
+    "slot.brakes": {
+      "en": "Anchors",
+      "pl": "Kotwice",
+      "fr": "Ancres",
+      "de": "Anker",
+      "pt-BR": "Âncoras"
+    },
+    "slot.boost": {
+      "en": "Turbines",
+      "pl": "Turbiny",
+      "fr": "Turbines",
+      "de": "Turbinen",
+      "pt-BR": "Turbinas"
+    },
+    "slot.gearbox": {
+      "en": "Propellers",
+      "pl": "Śruby okrętowe",
+      "fr": "Hélices",
+      "de": "Schiffsschrauben",
+      "pt-BR": "Hélices"
+    },
+    "slot.exhaust": {
+      "en": "Funnel",
+      "pl": "Komin",
+      "fr": "Cheminée",
+      "de": "Schornstein",
+      "pt-BR": "Chaminé"
+    },
+    "slot.tank": {
+      "en": "Fuel tank",
+      "pl": "Zbiornik paliwa",
+      "fr": "Réservoir de carburant",
+      "de": "Treibstofftank",
+      "pt-BR": "Tanque de combustível"
+    },
+    "carStat.accel": {
+      "en": "Thrust",
+      "pl": "Ciąg",
+      "fr": "Poussée",
+      "de": "Schub",
+      "pt-BR": "Empuxo"
+    },
+    "carStat.grip": {
+      "en": "Stability",
+      "pl": "Stabilność",
+      "fr": "Stabilité",
+      "de": "Stabilität",
+      "pt-BR": "Estabilidade"
+    },
+    "carStat.handling": {
+      "en": "Maneuverability",
+      "pl": "Zwrotność",
+      "fr": "Maniabilité",
+      "de": "Wendigkeit",
+      "pt-BR": "Manobrabilidade"
+    },
+    "carStat.braking": {
+      "en": "Stopping power",
+      "pl": "Siła hamowania",
+      "fr": "Puissance de freinage",
+      "de": "Bremskraft",
+      "pt-BR": "Poder de frenagem"
+    },
+    "carStat.clearance": {
+      "en": "Shallows",
+      "pl": "Płycizny",
+      "fr": "Hauts-fonds",
+      "de": "Flachwasser",
+      "pt-BR": "Águas rasas"
+    },
+    "weather.dry": {
+      "en": "calm",
+      "pl": "bezwietrznie",
+      "fr": "calme",
+      "de": "windstill",
+      "pt-BR": "calmaria"
+    },
+    "weather.downpour": {
+      "en": "storm",
+      "pl": "sztorm",
+      "fr": "tempête",
+      "de": "Sturm",
+      "pt-BR": "tempestade"
+    },
+    "nav.map": {
+      "en": "Chart",
+      "pl": "Mapa morska",
+      "fr": "Carte marine",
+      "de": "Seekarte",
+      "pt-BR": "Carta náutica"
+    },
+    "nav.garage": {
+      "en": "Dock",
+      "pl": "Dok",
+      "fr": "Quai",
+      "de": "Dock",
+      "pt-BR": "Doca"
+    },
+    "nav.tournament": {
+      "en": "Regatta",
+      "pl": "Regaty",
+      "fr": "Régate",
+      "de": "Regatta",
+      "pt-BR": "Regata"
+    },
+    "nav.race": {
+      "en": "Regatta",
+      "pl": "Regaty",
+      "fr": "Régate",
+      "de": "Regatta",
+      "pt-BR": "Regata"
+    },
+    "nav.city": {
+      "en": "Harbor",
+      "pl": "Port",
+      "fr": "Port",
+      "de": "Hafen",
+      "pt-BR": "Porto"
+    },
+    "nav.workshop": {
+      "en": "Shipyard",
+      "pl": "Stocznia",
+      "fr": "Chantier naval",
+      "de": "Werft",
+      "pt-BR": "Estaleiro"
+    },
+    "nav.shop": {
+      "en": "Chandlery",
+      "pl": "Sklep żeglarski",
+      "fr": "Shipchandler",
+      "de": "Schiffsausrüster",
+      "pt-BR": "Loja náutica"
+    },
+    "nav.lap": {
+      "en": "Leg {lap} · {time}",
+      "pl": "Etap {lap} · {time}"
+    },
+    "car.drivetrain.fwd": {
+      "en": "Single screw",
+      "pl": "Jedna śruba"
+    },
+    "car.drivetrain.rwd": {
+      "en": "Twin screw",
+      "pl": "Dwie śruby"
+    },
+    "car.drivetrain.awd": {
+      "en": "Azimuth thrusters",
+      "pl": "Pędniki azymutalne"
+    },
+    "garage.carLevel": {
+      "en": "Ship LV {level}",
+      "pl": "Statek LV {level}"
+    },
+    "garage.carXp": {
+      "en": "Ship XP",
+      "pl": "XP statku"
+    },
+    "garage.levelUp": {
+      "en": "The ship reached level {level}.",
+      "pl": "Statek awansował na poziom {level}."
+    },
+    "garage.gearboxLimit": {
+      "en": "Propeller limit: {speed} km/h",
+      "pl": "Limit śrub: {speed} km/h"
+    },
+    "choose.title": {
+      "en": "Choose your old hulk",
+      "pl": "Wybierz swój stary kuter"
+    },
+    "choose.subtitle": {
+      "en": "You will buy the rest of your ships later. This choice is not final.",
+      "pl": "Resztę statków kupisz później. Ten wybór nie jest ostateczny."
+    },
+    "choose.track": {
+      "en": "You start on the route {track}.",
+      "pl": "Zaczynasz na trasie: {track}."
+    },
+    "choose.loadError": {
+      "en": "The old hulks could not be loaded.",
+      "pl": "Nie udało się wczytać starych kutrów."
+    },
+    "run.laps": {
+      "en": "{n} voyage | {n} voyages",
+      "pl": "{n} rejs | {n} rejsy | {n} rejsów"
+    },
+    "run.status.running": {
+      "en": "Sailing",
+      "pl": "Płynie"
+    },
+    "run.status.workshop": {
+      "en": "In the shipyard",
+      "pl": "W stoczni"
+    },
+    "run.status.travel": {
+      "en": "At sea",
+      "pl": "W rejsie"
+    },
+    "run.status.parked": {
+      "en": "Waiting in port",
+      "pl": "Czeka w porcie"
+    },
+    "run.status.towed": {
+      "en": "Under tow",
+      "pl": "Na holu"
+    },
+    "run.stat.laps": {
+      "en": "Voyages",
+      "pl": "Rejsy"
+    },
+    "run.stat.reward": {
+      "en": "Reward per voyage",
+      "pl": "Nagroda za rejs"
+    },
+    "run.stat.lapTime": {
+      "en": "Voyage time",
+      "pl": "Czas rejsu"
+    },
+    "run.banner.fuel_empty": {
+      "en": "The tank is empty. The ship drifts until you refuel it.",
+      "pl": "Zbiornik jest pusty. Statek dryfuje, dopóki go nie zatankujesz."
+    },
+    "run.banner.breakdown": {
+      "en": "The ship broke down. It drifts until it is repaired.",
+      "pl": "Statek się zepsuł. Dryfuje, dopóki go nie naprawisz."
+    },
+    "run.banner.workshop": {
+      "en": "The ship stands in the shipyard while the mechanic works. It sails again when the last job is done.",
+      "pl": "Statek stoi w stoczni, dopóki mechanik pracuje. Popłynie dalej, gdy skończy się ostatnie zlecenie."
+    },
+    "run.banner.travel": {
+      "en": "The ship is on its way to {city}, arriving in {time}. It earns nothing at sea.",
+      "pl": "Statek płynie do miasta {city}, dopłynie za {time}. W rejsie nic nie zarabia."
+    },
+    "run.banner.parked": {
+      "en": "The ship is waiting in the dock. It earns nothing until you send it out with Start.",
+      "pl": "Statek czeka w doku. Nic nie zarabia, dopóki nie wyślesz go przyciskiem Start."
+    },
+    "run.repair.noCash": {
+      "en": "Not enough cash to repair the ship.",
+      "pl": "Za mało gotówki na naprawę statku."
+    },
+    "run.repair.doneRunning": {
+      "en": "Repaired for {cost}. The ship is back at sea.",
+      "pl": "Naprawiono za {cost}. Statek znów płynie."
+    },
+    "run.repair.notNeeded": {
+      "en": "The ship did not need a repair.",
+      "pl": "Statek nie wymagał naprawy."
+    },
+    "run.tow.button": {
+      "en": "Tow the ship · free",
+      "pl": "Holuj statek · za darmo"
+    },
+    "run.tow.underway": {
+      "en": "The ship is being towed. It sails again in about {time}.",
+      "pl": "Statek jest holowany. Popłynie za około {time}."
+    },
+    "run.away.breakdown": {
+      "en": "The ship broke down.",
+      "pl": "Statek się zepsuł."
+    },
+    "run.loadError": {
+      "en": "The state of your ship could not be loaded.",
+      "pl": "Nie udało się wczytać stanu statku."
+    },
+    "run.goToRace": {
+      "en": "Go to the regatta",
+      "pl": "Przejdź do Regat"
+    },
+    "trackPicker.title": {
+      "en": "Routes from this port",
+      "pl": "Trasy z tego portu"
+    },
+    "trackPicker.lap": {
+      "en": "Voyage",
+      "pl": "Rejs"
+    },
+    "trackPicker.pays": {
+      "en": "Pays per voyage",
+      "pl": "Wypłata za rejs"
+    },
+    "trackPicker.fuelLap": {
+      "en": "Fuel per voyage",
+      "pl": "Paliwo na rejs"
+    },
+    "trackPicker.lapsPerTank": {
+      "en": "Voyages per tank",
+      "pl": "Rejsów na zbiornik"
+    },
+    "trackPicker.choose": {
+      "en": "Sail this route",
+      "pl": "Płyń tą trasą"
+    },
+    "trackPicker.tooSmall": {
+      "en": "Tank too small for one voyage",
+      "pl": "Zbiornik za mały na jeden rejs"
+    },
+    "trackPicker.done": {
+      "en": "From now on the ship sails {name}.",
+      "pl": "Od teraz statek pływa trasą: {name}."
+    },
+    "map.title": {
+      "en": "Sea chart",
+      "pl": "Mapa morska"
+    },
+    "map.sub": {
+      "en": "Ports, sea lanes and routes. The ship earns on the route of the port it stands in.",
+      "pl": "Porty, szlaki i trasy. Statek zarabia na trasie portu, w którym stoi."
+    },
+    "map.label": {
+      "en": "Chart of the ports",
+      "pl": "Mapa portów"
+    },
+    "map.noCar": {
+      "en": "Choose a ship first, then you can set sail.",
+      "pl": "Najpierw wybierz statek, potem wypłyniesz."
+    },
+    "map.here": {
+      "en": "Your ship is here",
+      "pl": "Tu stoi twój statek"
+    },
+    "map.go": {
+      "en": "Sail here",
+      "pl": "Płyń tutaj"
+    },
+    "map.goFast": {
+      "en": "Sail faster",
+      "pl": "Płyń szybciej"
+    },
+    "map.boostNote": {
+      "en": "Faster: {time} instead of {normal}, {fuel} l of fuel instead of {normalFuel} l. The coast guard may stop you ({risk}%).",
+      "pl": "Szybciej: {time} zamiast {normal}, {fuel} l paliwa zamiast {normalFuel} l. Straż przybrzeżna może cię zatrzymać ({risk}%)."
+    },
+    "map.started": {
+      "en": "The ship is on its way to {city}.",
+      "pl": "Statek wypłynął do miasta {city}."
+    },
+    "map.fitLow": {
+      "en": "Change the hull or the ship",
+      "pl": "Zmień kadłub albo statek"
+    },
+    "map.garage": {
+      "en": "Dock: {used} / {capacity} berths",
+      "pl": "Dok: {used} / {capacity} miejsc"
+    },
+    "map.noGarage": {
+      "en": "You have no dock here.",
+      "pl": "Nie masz tu doku."
+    },
+    "map.buyGarage": {
+      "en": "Buy a dock · {price}",
+      "pl": "Kup dok · {price}"
+    },
+    "map.blockedNoGarage": {
+      "en": "You have no dock in {city}. Buy one there first, then the ship can sail.",
+      "pl": "Nie masz doku w mieście {city}. Najpierw kup go tam, wtedy statek będzie mógł popłynąć."
+    },
+    "map.blockedFull": {
+      "en": "The dock in {city} is full.",
+      "pl": "Dok w mieście {city} jest pełny."
+    },
+    "server.game.errors.no_run": {
+      "en": "You have no ship at sea yet.",
+      "pl": "Nie masz jeszcze statku na morzu."
+    },
+    "server.game.errors.run_exists": {
+      "en": "You already have a ship at sea.",
+      "pl": "Masz już statek na morzu."
+    },
+    "server.game.errors.no_car": {
+      "en": "You have no ship yet.",
+      "pl": "Nie masz jeszcze statku."
+    },
+    "server.game.errors.car_not_found": {
+      "en": "You do not have this ship.",
+      "pl": "Nie masz tego statku."
+    },
+    "server.game.errors.last_car": {
+      "en": "You cannot sell your last ship.",
+      "pl": "Nie możesz sprzedać ostatniego statku."
+    },
+    "server.game.errors.no_road": {
+      "en": "There is no sea lane there from here.",
+      "pl": "Nie ma stąd szlaku w tamto miejsce."
+    },
+    "server.game.errors.already_there": {
+      "en": "The ship is already there.",
+      "pl": "Statek już tam jest."
+    },
+    "server.game.errors.garage_full": {
+      "en": "The dock in :city is full.",
+      "pl": "Dok w mieście :city jest pełny."
+    },
+    "server.game.errors.no_garage": {
+      "en": "You have no dock in :city. Buy one there first.",
+      "pl": "Nie masz doku w mieście :city. Najpierw kup go tam."
+    },
+    "server.game.rarity.common": {
+      "en": "Plain",
+      "pl": "Pospolity"
+    },
+    "server.game.drivetrain.fwd": {
+      "en": "Single screw",
+      "pl": "Jedna śruba"
+    },
+    "server.game.drivetrain.rwd": {
+      "en": "Twin screw",
+      "pl": "Dwie śruby"
+    },
+    "server.game.drivetrain.awd": {
+      "en": "Azimuth thrusters",
+      "pl": "Pędniki azymutalne"
+    },
+    "server.game.weather.dry": {
+      "en": "Calm",
+      "pl": "Bezwietrznie"
+    },
+    "server.game.weather.rain": {
+      "en": "Rain",
+      "pl": "Deszcz"
+    }
+  }
+}
