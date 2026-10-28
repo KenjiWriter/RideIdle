@@ -52,7 +52,7 @@ final class PartResource extends JsonResource
      * The unique effect of a legendary part of the slot for the client: its name in the language of the driver, and what it does, either a special effect (`special`
      * with its `percent`) or modifiers (`mods`: the effect, the statistic if there is one, and how much, in percent).
      *
-     * @return array{name: string, special: string|null, percent: float|null, mods: list<array{effect: string, stat: string|null, percent: float}>|null}|null
+     * @return array{name: string, special: string|null, percent: float|null, mods: list<array{effect: string, stat: string|null, name: string|null, percent: float}>|null}|null
      */
     private static function unique(string $slot, Rarity $rarity): ?array
     {
@@ -66,8 +66,25 @@ final class PartResource extends JsonResource
             'name' => I18nText::from($unique['name'])->for(),
             'special' => $unique['special'] ?? null,
             'percent' => isset($unique['ppm']) ? round($unique['ppm'] / 10_000, 1) : null,
-            'mods' => isset($unique['mods']) ? array_map(static fn (array $mod): array => ['effect' => $mod['effect'], 'stat' => $mod['stat'] ?? null, 'percent' => round($mod['ppm'] / 10_000, 1)], $unique['mods']) : null,
+            'mods' => isset($unique['mods']) ? array_map(static fn (array $mod): array => ['effect' => $mod['effect'], 'stat' => $mod['stat'] ?? null, 'name' => self::nameOfEffect($mod), 'percent' => round($mod['ppm'] / 10_000, 1)], $unique['mods']) : null,
         ];
+    }
+
+    /**
+     * The name of what a modifier of a unique effect changes, in the language of the driver: the name of the affix of the rules that does the same (the one of the
+     * power for a modifier of the power, the one of the fuel for fuel), or null when the rules have none.
+     *
+     * @param  array{effect: string, stat?: string}  $mod
+     */
+    private static function nameOfEffect(array $mod): ?string
+    {
+        foreach (app(Rules::class)->affixes()['definitions'] as $affix) {
+            if ($affix['effect'] === $mod['effect'] && ($affix['stat'] ?? null) === ($mod['stat'] ?? null)) {
+                return I18nText::from($affix['name'])->for();
+            }
+        }
+
+        return null;
     }
 
     /** @return array<string, mixed> */
