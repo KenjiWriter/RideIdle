@@ -33,6 +33,8 @@ Otwarty ekran pyta o bieg co 15 s, gdy karta jest widoczna, jeszcze raz w chwili
 
 Przeglądarka pamięta, którą wersję biegu kierowca widział ostatnio (`ride.run.seen`: numer biegu i `state_version`). Przy następnym wejściu pyta o wszystko od tej wersji (`since_version`). Nieobecność dłuższa niż dwie minuty staje się kartą „Pod Twoją nieobecność”: czas, okrążenia, zarobek, doświadczenie i powód postoju. Karta zostaje, dopóki kierowca jej nie zatwierdzi, także po odświeżeniu strony, i dopiero wtedy wszystko do tej chwili liczy się jako widziane. Krótka nieobecność, na przykład przeładowanie strony, nie dostaje karty. Wylogowanie zapomina bieg i widzianą wersję, żeby następny kierowca na tym urządzeniu ich nie odziedziczył.
 
+**Reszta konta (F5).** Pod kartą „Pod Twoją nieobecność” jest druga karta, „Reszta konta” (`AccountAway`, `stores/away.ts`, `GET /away`): czas nieobecności, co zarobiły pozostałe auta (albo że czekają: brak paliwa, awaria), jakie zlecenia warsztatu się skończyły i które podróże dobiegły końca, z tym, co zrobiła policja przy przyspieszonej. Karta pokazuje się tylko wtedy, gdy jest coś poza autem, którym się gra, a przerwa bez takiej treści kończy się sama; „Rozumiem” (`POST /away/seen`) zamyka kartę, a błąd serwera nie psuje garażu. Pięć języków, 12 specyfikacji.
+
 ### Tankowanie
 
 Przycisk „Zatankuj do pełna · $118,11” podaje koszt przed naciśnięciem, zaokrąglony w górę do centa jak na serwerze. Gdy gotówki nie starcza na pełny bak, drugi przycisk oferuje to, na co kierowcę stać (całe litry), więc nie zostaje z pustym bakiem i nieaktywnym przyciskiem. Kto nie kupi nawet litra, dostaje o tym informację.
