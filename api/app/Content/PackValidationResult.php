@@ -30,6 +30,13 @@ final class PackValidationResult
         $this->warnings[] = ['file' => $file, 'pointer' => $pointer, 'message' => $message];
     }
 
+    /** Takes in what another result found, errors and warnings alike. */
+    public function merge(self $other): void
+    {
+        $this->errors = [...$this->errors, ...$other->errors];
+        $this->warnings = [...$this->warnings, ...$other->warnings];
+    }
+
     public function count(string $kind): void
     {
         $this->counts[$kind] = ($this->counts[$kind] ?? 0) + 1;

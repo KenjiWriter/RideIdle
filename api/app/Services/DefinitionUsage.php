@@ -9,6 +9,8 @@ use App\Models\Car;
 use App\Models\ContentDefinition;
 use App\Models\Part;
 use App\Models\RaceRun;
+use App\Models\TutorialProgress;
+use Illuminate\Support\Facades\DB;
 
 /**
  * What a definition is used by: the cars, the parts and the runs of the players that are made from it, and the places in the rules and the tutorial of the pack
@@ -35,6 +37,55 @@ final class DefinitionUsage
         };
 
         return array_filter($counts);
+    }
+
+    /**
+     * What a new document of the rules or of the tutorial takes out that the players are using: the cities that have a garage, a workshop, a job or a journey of
+     * a player, the tracks that a run drives and the steps of the tutorial that a driver has met. Taking such a thing out would leave a player in a place that
+     * is not there, so it is refused; a name is for good, and changing one is taking it out. Words for the panel, by what they are.
+     *
+     * @param  array<string, mixed>  $before
+     * @param  array<string, mixed>  $after
+     * @return list<string> empty when nothing that is used is taken out
+     */
+    public function removedInUse(string $slug, array $before, array $after): array
+    {
+        $used = [];
+
+        if ($slug === 'starter') {
+            foreach (array_diff(array_keys($before['regions'] ?? []), array_keys($after['regions'] ?? [])) as $region) {
+                $count = DB::table('city_garages')->where('region', $region)->count()
+                    + DB::table('city_workshops')->where('city', $region)->count()
+                    + DB::table('workshop_jobs')->where('city', $region)->count()
+                    + DB::table('travels')->where('from_region', $region)->orWhere('to_region', $region)->count();
+
+                if ($count > 0) {
+                    $used[] = "city {$region} ({$count})";
+                }
+            }
+
+            foreach (array_diff(array_keys($before['tracks'] ?? []), array_keys($after['tracks'] ?? [])) as $track) {
+                $count = RaceRun::withoutGlobalScopes()->where('track_slug', $track)->count();
+
+                if ($count > 0) {
+                    $used[] = "track {$track} ({$count})";
+                }
+            }
+        }
+
+        if ($slug === 'tutorial') {
+            $kept = array_column($after['steps'] ?? [], 'key');
+
+            foreach (array_diff(array_column($before['steps'] ?? [], 'key'), $kept) as $key) {
+                $count = TutorialProgress::query()->where('step_key', $key)->count();
+
+                if ($count > 0) {
+                    $used[] = "step {$key} ({$count})";
+                }
+            }
+        }
+
+        return $used;
     }
 
     /**

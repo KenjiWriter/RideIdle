@@ -541,3 +541,9 @@ function signedInAdmin(string $role = Admin::ROLE_EDITOR, string $email = 'boss@
 
     return $admin;
 }
+
+/** @return array<string, mixed> a document of the repository */
+function repositoryDocument(string $key): array
+{
+    return json_decode((string) repositoryContent()->raw($key), true);
+}

@@ -70,6 +70,29 @@ final class ContentPacks
     }
 
     /**
+     * The content as it is being worked on: for every definition that is not archived, the draft, or the latest published document when there is no draft, and
+     * what is given in `$replace` (key => text of a document) over that. This is what a pack made now would hold, and what a draft is checked against: a part that
+     * a draft of the rules names may itself be a draft.
+     *
+     * @param  array<string, string>  $replace
+     */
+    public function working(array $replace = []): PackContent
+    {
+        $folders = array_flip(self::KINDS);
+        $documents = [];
+
+        foreach (ContentDefinition::query()->where('status', '!=', ContentDefinition::STATUS_ARCHIVED)->with('latestVersion')->get() as $definition) {
+            $text = $definition->draft ?? $definition->latestVersion?->document;
+
+            if ($text !== null) {
+                $documents["{$folders[$definition->kind]}/{$definition->slug}"] = $text;
+            }
+        }
+
+        return new PackContent('working', [...$documents, ...$replace]);
+    }
+
+    /**
      * Whether a source can go in: its documents against their schemas, what the rules point to, and (when asked) the table of the bot profiles against the
      * pipeline of the game, because the field of bots that a stale table makes is not the one the content was balanced with.
      */

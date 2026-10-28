@@ -218,7 +218,7 @@ final class DefinitionForm
      * @param  array<string, mixed>  $texts
      * @return array<string, string|null>
      */
-    private static function texts(array $texts): array
+    public static function texts(array $texts): array
     {
         $state = [];
 
@@ -235,7 +235,7 @@ final class DefinitionForm
      * @param  array<string, mixed>  $texts
      * @return array<string, string>
      */
-    private static function i18n(array $texts): array
+    public static function i18n(array $texts): array
     {
         $document = [];
 
@@ -251,7 +251,7 @@ final class DefinitionForm
     }
 
     /** A text without the white space round it, or null when there is nothing in it. */
-    private static function text(mixed $value): ?string
+    public static function text(mixed $value): ?string
     {
         if (! is_string($value) && ! is_int($value) && ! is_float($value)) {
             return null;
@@ -266,7 +266,7 @@ final class DefinitionForm
      * A number from what a box held: an integer when it is a whole number written without a point, a float otherwise, and what is not a number as it was, so
      * that the schema says what is wrong with it.
      */
-    private static function number(mixed $value): mixed
+    public static function number(mixed $value): mixed
     {
         if (is_int($value) || is_float($value)) {
             return $value;
@@ -288,7 +288,7 @@ final class DefinitionForm
     }
 
     /** The price of the form, in dollars, as the cents of the document (a number that is not a whole number of cents is left for the schema). */
-    private static function cents(mixed $dollars): mixed
+    public static function cents(mixed $dollars): mixed
     {
         $number = self::number($dollars);
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Content\Definitions\JsonDocument;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,6 +19,9 @@ class ContentDefinition extends Model
     public const KIND_VEHICLE = 'vehicle';
 
     public const KIND_PART = 'part';
+
+    /** The rules of the game and the steps of the tutorial: single documents (`starter`, `tutorial`), whose parts are edited as sections. */
+    public const KIND_RULES = 'rules';
 
     /** Never published: only a draft. */
     public const STATUS_DRAFT = 'draft';
@@ -73,7 +77,7 @@ class ContentDefinition extends Model
     {
         $text = $this->latestVersion?->document;
 
-        return $text === null ? null : json_decode($text, true, 512, JSON_THROW_ON_ERROR);
+        return $text === null ? null : JsonDocument::decode($text);
     }
 
     /**
@@ -83,7 +87,7 @@ class ContentDefinition extends Model
      */
     public function draftDocument(): ?array
     {
-        return $this->draft === null ? null : json_decode($this->draft, true, 512, JSON_THROW_ON_ERROR);
+        return $this->draft === null ? null : JsonDocument::decode($this->draft);
     }
 
     /**

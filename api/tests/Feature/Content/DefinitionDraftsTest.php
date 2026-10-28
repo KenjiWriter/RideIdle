@@ -23,12 +23,6 @@ function drafts(): ContentDrafts
     return app(ContentDrafts::class);
 }
 
-/** @return array<string, mixed> a document of the repository */
-function repositoryDocument(string $key): array
-{
-    return json_decode((string) repositoryContent()->raw($key), true);
-}
-
 /** A car that is not in the pack: the Rdzak GT-4 under another slug. @return array<string, mixed> */
 function aNewCar(string $slug = 'rdzak-gt-9'): array
 {

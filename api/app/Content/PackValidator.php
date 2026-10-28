@@ -31,6 +31,12 @@ final class PackValidator
         'parts' => 'part.schema.json',
     ];
 
+    /** The documents of the rules that a person edits, by name => schema file. */
+    public const RULES = [
+        'starter' => 'rules.schema.json',
+        'tutorial' => 'tutorial.schema.json',
+    ];
+
     private readonly Validator $validator;
 
     public function __construct(string $schemaPath)
@@ -147,13 +153,18 @@ final class PackValidator
     {
         $result = new PackValidationResult;
         $relative = rtrim($folder, 's').($slug === null ? '' : " {$slug}");
-        $data = $this->validateJson($json, $relative, self::KINDS[$folder] ?? throw new InvalidArgumentException("There are no definitions in {$folder}."), $result);
+        $schema = $folder === 'rules' ? (self::RULES[$slug ?? ''] ?? null) : (self::KINDS[$folder] ?? null);
+        $data = $this->validateJson($json, $relative, $schema ?? throw new InvalidArgumentException("There are no definitions in {$folder}."), $result);
 
         if ($data === null) {
             return $result;
         }
 
         $result->count($folder);
+
+        if ($folder === 'rules') {
+            return $result;
+        }
 
         if ($slug !== null && ($data['slug'] ?? null) !== $slug) {
             $result->addError($relative, '/slug', "The slug of a definition is never changed: it is {$slug}.");
@@ -182,7 +193,22 @@ final class PackValidator
         return $this->validateJson($json, $relative, $schemaFile, $result);
     }
 
-    /** What the rules point to has to exist in the pack. */
+    /**
+     * What the rules and the tutorial point to, and what the world they describe needs to work, checked on content that is whole enough to be asked: a part
+     * that the shop sells is there, every city has a track and is reached by a road, and so on. A source that has no rules gives nothing to check.
+     */
+    public function validateReferences(ContentSource $source): PackValidationResult
+    {
+        $result = new PackValidationResult;
+
+        if ($source->has('rules/starter')) {
+            $this->checkReferences($source, $result);
+        }
+
+        return $result;
+    }
+
+    /** What the rules point to has to exist in the pack, and the world has to work. */
     private function checkReferences(ContentSource $source, PackValidationResult $result): void
     {
         $rules = $source->document('rules/starter');
@@ -219,6 +245,111 @@ final class PackValidator
                 if (! in_array($road[$end] ?? null, $regions, true)) {
                     $result->addError('rules/starter.json', "/roads/{$index}/{$end}", "The road leads to a region that does not exist: {$road[$end]}.");
                 }
+            }
+        }
+
+        $this->checkWorld($rules, $result);
+        $this->checkTutorial($source, $parts, $regions, $result);
+    }
+
+    /**
+     * What the world of the rules needs in order to be played: the demands of a track add up to 100 and have a reference each, the chances of the weather of a
+     * city add up to 1 000 000 and name weather that the rules know, every city has a track and a road to it, no road leads from a city to itself, and the first
+     * track, where a new driver starts, is open from the first level.
+     *
+     * @param  array<string, mixed>  $rules
+     */
+    private function checkWorld(array $rules, PackValidationResult $result): void
+    {
+        $file = 'rules/starter.json';
+
+        foreach ($rules['tracks'] ?? [] as $slug => $track) {
+            $demand = $track['demand'] ?? [];
+
+            if (array_sum($demand) !== 100) {
+                $result->addError($file, "/tracks/{$slug}/demand", 'The demands add up to '.array_sum($demand).', not 100.');
+            }
+
+            foreach (array_diff(array_keys($demand), array_keys($track['reference'] ?? [])) as $stat) {
+                $result->addError($file, "/tracks/{$slug}/reference", "The track asks for {$stat} and has no reference for it.");
+            }
+        }
+
+        foreach ($rules['regions'] ?? [] as $slug => $region) {
+            $chances = $region['weather_ppm'] ?? [];
+
+            if (array_sum($chances) !== 1_000_000) {
+                $result->addError($file, "/regions/{$slug}/weather_ppm", 'The chances add up to '.array_sum($chances).', not 1 000 000.');
+            }
+
+            foreach (array_diff(array_keys($chances), array_keys($rules['weather'] ?? [])) as $weather) {
+                $result->addError($file, "/regions/{$slug}/weather_ppm/{$weather}", "The rules have no weather {$weather}.");
+            }
+
+            if (array_filter($rules['tracks'] ?? [], fn (array $track): bool => ($track['region'] ?? null) === $slug) === []) {
+                $result->addError($file, "/regions/{$slug}", 'There is no track in this region, so there is nothing to drive there.');
+            }
+        }
+
+        $reached = array_slice(array_keys($rules['regions'] ?? []), 0, 1);
+
+        for ($index = 0; $index < count($reached); $index++) {
+            foreach ($rules['roads'] ?? [] as $road) {
+                foreach ([[$road['from'] ?? null, $road['to'] ?? null], [$road['to'] ?? null, $road['from'] ?? null]] as [$near, $far]) {
+                    if ($near === $reached[$index] && is_string($far) && ! in_array($far, $reached, true)) {
+                        $reached[] = $far;
+                    }
+                }
+            }
+        }
+
+        foreach (array_diff(array_keys($rules['regions'] ?? []), $reached) as $slug) {
+            $result->addError($file, "/regions/{$slug}", 'No road leads there from the first city.');
+        }
+
+        foreach ($rules['roads'] ?? [] as $index => $road) {
+            if (($road['from'] ?? null) === ($road['to'] ?? 0)) {
+                $result->addError($file, "/roads/{$index}", 'A road leads from a city to itself.');
+            }
+        }
+
+        $first = array_key_first($rules['tracks'] ?? []);
+
+        if ($first !== null && ($rules['tracks'][$first]['min_player_level'] ?? 1) !== 1) {
+            $result->addError($file, "/tracks/{$first}/min_player_level", 'The first track is where a new driver starts: it is open from level 1.');
+        }
+    }
+
+    /**
+     * The steps of the tutorial have keys of their own, and what they give away is in the pack.
+     *
+     * @param  list<string>  $parts
+     * @param  list<string>  $regions
+     */
+    private function checkTutorial(ContentSource $source, array $parts, array $regions, PackValidationResult $result): void
+    {
+        if (! $source->has('rules/tutorial')) {
+            return;
+        }
+
+        $file = 'rules/tutorial.json';
+        $keys = [];
+
+        foreach ($source->document('rules/tutorial')['steps'] ?? [] as $index => $step) {
+            $key = (string) ($step['key'] ?? '');
+
+            if (isset($keys[$key])) {
+                $result->addError($file, "/steps/{$index}/key", "The key {$key} is used by two steps.");
+            }
+
+            $keys[$key] = true;
+
+            if (isset($step['reward']['part']) && ! in_array($step['reward']['part'], $parts, true)) {
+                $result->addError($file, "/steps/{$index}/reward/part", "The step gives away {$step['reward']['part']}, which is not a part of the pack.");
+            }
+
+            if (isset($step['reward']['garage']) && ! in_array($step['reward']['garage'], $regions, true)) {
+                $result->addError($file, "/steps/{$index}/reward/garage", "The step gives a garage in {$step['reward']['garage']}, which is not a city.");
             }
         }
     }

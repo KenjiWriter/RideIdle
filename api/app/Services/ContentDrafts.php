@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Content\ContentPackInvalid;
 use App\Content\Definitions\DefinitionRefused;
+use App\Content\Definitions\JsonDocument;
 use App\Content\PackValidationResult;
 use App\Content\PackValidator;
 use App\Models\Admin;
@@ -21,9 +22,9 @@ use Illuminate\Support\Str;
 final class ContentDrafts
 {
     /** The folder of the pack that holds a kind of definition. */
-    private const FOLDERS = [ContentDefinition::KIND_VEHICLE => 'vehicles', ContentDefinition::KIND_PART => 'parts'];
+    private const FOLDERS = [ContentDefinition::KIND_VEHICLE => 'vehicles', ContentDefinition::KIND_PART => 'parts', ContentDefinition::KIND_RULES => 'rules'];
 
-    public function __construct(private readonly AdminAudit $audit) {}
+    public function __construct(private readonly AdminAudit $audit, private readonly ContentPacks $packs, private readonly DefinitionUsage $usage) {}
 
     /**
      * Whether a document passes: its schema, its slug, and the rules about the kind. The warnings (a language that is missing) do not stop it.
@@ -32,7 +33,16 @@ final class ContentDrafts
      */
     public function validate(string $kind, array $document, ?string $slug = null): PackValidationResult
     {
-        return PackValidator::fromConfig()->validateDefinition($this->folder($kind), self::encode($document), $slug);
+        $validator = PackValidator::fromConfig();
+        $json = self::encode($document);
+        $result = $validator->validateDefinition($this->folder($kind), $json, $slug);
+
+        // The rules and the tutorial point at the rest of the content, which is as it is being worked on: that is what they are asked against.
+        if ($kind === ContentDefinition::KIND_RULES && $result->isValid()) {
+            $result->merge($validator->validateReferences($this->packs->working(["rules/{$slug}" => $json])));
+        }
+
+        return $result;
     }
 
     /**
@@ -42,10 +52,14 @@ final class ContentDrafts
      * @param  array<string, mixed>  $document
      *
      * @throws ContentPackInvalid when the document does not pass
-     * @throws DefinitionRefused slug_taken
+     * @throws DefinitionRefused slug_taken or not_editable
      */
     public function create(string $kind, array $document, Admin $admin): ContentDefinition
     {
+        if ($kind === ContentDefinition::KIND_RULES) {
+            throw new DefinitionRefused('not_editable', ['kind' => $kind]);
+        }
+
         $result = $this->validate($kind, $document);
 
         if (! $result->isValid()) {
@@ -79,7 +93,7 @@ final class ContentDrafts
      * @param  array<string, mixed>  $document
      *
      * @throws ContentPackInvalid when the document does not pass
-     * @throws DefinitionRefused archived
+     * @throws DefinitionRefused archived, or removed_in_use when the rules or the tutorial lose something that the players are using
      */
     public function save(ContentDefinition $definition, array $document, Admin $admin): ContentDefinition
     {
@@ -95,6 +109,14 @@ final class ContentDrafts
 
         $before = $definition->workingDocument();
         $published = $definition->publishedDocument();
+
+        if ($definition->kind === ContentDefinition::KIND_RULES) {
+            $used = $this->usage->removedInUse($definition->slug, $published ?? [], $document);
+
+            if ($used !== []) {
+                throw new DefinitionRefused('removed_in_use', ['slug' => $definition->slug, 'what' => implode(', ', $used)]);
+            }
+        }
 
         // Compared by what they say: a number that was 20 and is 20.0 is the same number.
         if ($published !== null && $published == $document) {
@@ -154,6 +176,6 @@ final class ContentDrafts
     /** @param  array<string, mixed>  $document */
     private static function encode(array $document): string
     {
-        return json_encode($document, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+        return JsonDocument::encode($document);
     }
 }
