@@ -238,6 +238,8 @@ return [
         'completion' => 'Ends when',
         'target' => 'Highlights',
         'target_hint' => 'What the screen highlights while the step waits.',
+        'goal' => 'The goal (the bar of the goal)',
+        'waiting' => 'What it waits for (before it starts)',
         'no_target' => 'Nothing',
         'sms' => 'Messages',
         'sms_hint' => 'At most two: a greeting and the request. A step without any is carried out without being shown.',

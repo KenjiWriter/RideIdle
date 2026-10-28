@@ -47,6 +47,8 @@
             "description": "What the screen highlights while the step waits for the driver, or null for a step that needs no screen of its own. start is the button that sends the car out, and where the driver is not on its screen yet, the Tournament tab that leads there (so mount leads to the Workshop, crate to the Shop and travel to the Map).",
             "enum": ["start", "laps", "cash", "refuel", "repair", "mount", "crate", "travel", "merge", "exchange", "service", "away", "upgrade", "equipment", "profile", "garages", null]
           },
+          "goal": { "description": "The goal of the step in a few words, as the driver reads it on the bar of the goal at every screen of the game, from the moment the step is next until it is done: what to do, not why.", "$ref": "common.schema.json#/$defs/i18n" },
+          "waiting": { "description": "What the step waits for before it starts, in a few words, for a step whose trigger is more than the step before it being done (a rain on the forecast, the cash for a purchase): it is shown on the bar of the goal while the step is next and has not started.", "$ref": "common.schema.json#/$defs/i18n" },
           "sender": { "description": "The made-up number the mentor writes from. It changes with every step, because the mentor is in hiding.", "type": "string", "pattern": "^\\+48 555 010 [0-9]{3}$" },
           "sms": {
             "description": "At most two short messages: a greeting and the request. A step without any is carried out without being shown.",
@@ -86,7 +88,7 @@
             "additionalProperties": false
           }
         },
-        "required": ["key", "phase", "trigger", "completion", "target", "sender", "sms", "reward"],
+        "required": ["key", "phase", "trigger", "completion", "target", "goal", "sender", "sms", "reward"],
         "additionalProperties": false
       }
     }

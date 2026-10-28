@@ -70,6 +70,8 @@ final class TutorialFields
                             TextInput::make('completion')->label(__('admin.tutorial.completion'))->helperText(__('admin.tutorial.condition_hint'))->datalist($conditions)->required(),
                             Select::make('target')->label(__('admin.tutorial.target'))->helperText(__('admin.tutorial.target_hint'))->options(array_combine($targets, $targets))->placeholder(__('admin.tutorial.no_target')),
                         ]),
+                        DefinitionFields::texts('goal', __('admin.tutorial.goal')),
+                        DefinitionFields::texts('waiting', __('admin.tutorial.waiting'), required: false),
                         Repeater::make('sms')
                             ->label(__('admin.tutorial.sms'))
                             ->helperText(__('admin.tutorial.sms_hint'))

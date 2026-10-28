@@ -29,6 +29,8 @@ final class TutorialForm
                 'trigger' => self::conditionsText($step['trigger'] ?? null),
                 'completion' => self::conditionsText($step['completion'] ?? null),
                 'target' => $step['target'] ?? null,
+                'goal' => DefinitionForm::texts($step['goal'] ?? []),
+                'waiting' => DefinitionForm::texts($step['waiting'] ?? []),
                 'optional' => (bool) ($step['optional'] ?? false),
                 'arranges' => $step['arranges'] ?? [],
                 'gift_part' => $step['gift']['part'] ?? null,
@@ -97,6 +99,7 @@ final class TutorialForm
                 'trigger' => self::conditions($line['trigger'] ?? null),
                 'completion' => self::conditions($line['completion'] ?? null),
                 'target' => DefinitionForm::text($line['target'] ?? null),
+                'goal' => DefinitionForm::i18n((array) ($line['goal'] ?? [])),
                 'sender' => DefinitionForm::text($line['sender'] ?? null),
                 'sms' => array_values(array_filter(array_map(fn (mixed $text): array => DefinitionForm::i18n((array) $text), (array) ($line['sms'] ?? [])), fn (array $text): bool => $text !== [])),
             ];
@@ -105,6 +108,12 @@ final class TutorialForm
 
             if ($reply !== []) {
                 $step['reply'] = $reply;
+            }
+
+            $waiting = DefinitionForm::i18n((array) ($line['waiting'] ?? []));
+
+            if ($waiting !== []) {
+                $step['waiting'] = $waiting;
             }
 
             $decline = DefinitionForm::i18n((array) ($line['decline'] ?? []));

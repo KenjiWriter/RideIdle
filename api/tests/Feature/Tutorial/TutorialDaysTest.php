@@ -33,6 +33,7 @@ function daysStep(string $key, array $overrides = []): array
         'trigger' => 'none',
         'completion' => 'acknowledged',
         'target' => null,
+        'goal' => ['en' => 'Do '.$key, 'pl' => 'Zrób '.$key, 'fr' => 'Fais '.$key, 'de' => 'Mach '.$key, 'pt-BR' => 'Faça '.$key],
         'sender' => '+48 555 010 '.str_pad((string) (100 + crc32($key) % 800), 3, '0'),
         'sms' => [$text],
         'reply' => ['en' => 'OK', 'pl' => 'OK', 'fr' => 'OK', 'de' => 'OK', 'pt-BR' => 'OK'],
@@ -228,6 +229,49 @@ describe('the facts of the first day and week', function () {
 
         expect($driver->previous_seen_at->toDateTimeString())->toBe($before)
             ->and($driver->last_seen_at->gt($driver->previous_seen_at))->toBeTrue();
+    });
+});
+
+describe('the goal in front of the driver', function () {
+    it('names the step that waits for its trigger, with what it waits for and what it pays', function () {
+        theTutorialIs([
+            daysStep('one'),
+            daysStep('rich', [
+                'trigger' => 'cash:450',
+                'waiting' => ['en' => 'Save up $450', 'pl' => 'Uzbieraj $450', 'fr' => 'Économise 450 $', 'de' => 'Spare 450 $', 'pt-BR' => 'Junte US$ 450'],
+                'target' => 'exchange',
+                'reward' => ['cash_cents' => 30_000, 'part' => 'street-tires-t2', 'garage' => 'kruszyn'],
+            ]),
+        ]);
+        [$driver] = driverWithRun();
+
+        daysGet($driver, ['X-Locale' => 'pl'])->assertJsonPath('data.goal.key', 'one')->assertJsonPath('data.goal.title', 'Zrób one')->assertJsonPath('data.goal.waiting', null);
+        daysReply($driver)
+            ->assertJsonPath('data.current', null)
+            ->assertJsonPath('data.goal.key', 'rich')
+            ->assertJsonPath('data.goal.number', 2)
+            ->assertJsonPath('data.goal.target', 'exchange')
+            ->assertJsonPath('data.goal.reward.cash_cents', 30_000)
+            ->assertJsonPath('data.goal.reward.part', 'Street tires')
+            ->assertJsonPath('data.goal.reward.garage', 'Kruszyn');
+
+        // While the trigger does not hold the goal says what it waits for. The step has no row yet.
+        daysGet($driver, ['X-Locale' => 'pl'])->assertJsonPath('data.goal.key', 'rich')->assertJsonPath('data.goal.waiting', 'Uzbieraj $450');
+
+        daysCash($driver, 45_000);
+        // Once it has started the goal stays and no longer waits.
+        daysGet($driver, ['X-Locale' => 'pl'])->assertJsonPath('data.current.key', 'rich')->assertJsonPath('data.goal.key', 'rich')->assertJsonPath('data.goal.waiting', null);
+    });
+
+    it('is gone when the tutorial is over or was skipped', function () {
+        theTutorialIs([daysStep('only')]);
+        [$driver] = driverWithRun();
+
+        daysGet($driver)->assertJsonPath('data.goal.key', 'only');
+        daysReply($driver)->assertJsonPath('data.status', 'finished')->assertJsonPath('data.goal', null);
+
+        [$other] = driverWithRun();
+        daysSkip($other)->assertJsonPath('data.status', 'skipped')->assertJsonPath('data.goal', null);
     });
 });
 

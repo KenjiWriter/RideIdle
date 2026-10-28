@@ -67,7 +67,7 @@ it('writes the messages and the answer of every step in all five languages', fun
     $missing = [];
 
     foreach (tutorialData()['steps'] as $step) {
-        $texts = [...$step['sms'], ...(isset($step['reply']) ? [$step['reply']] : [])];
+        $texts = [...$step['sms'], $step['goal'], ...array_filter([$step['reply'] ?? null, $step['waiting'] ?? null, $step['decline'] ?? null])];
 
         foreach ($texts as $text) {
             foreach (array_diff(Locale::supported(), array_keys($text)) as $locale) {

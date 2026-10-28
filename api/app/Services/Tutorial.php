@@ -241,7 +241,37 @@ final class Tutorial
             default => TutorialState::IN_PROGRESS,
         };
 
-        return new TutorialState($status, $total, $done, $current, $rewarded);
+        return new TutorialState($status, $total, $done, $current, $rewarded, $status === TutorialState::IN_PROGRESS ? $this->goal($rows) : null);
+    }
+
+    /**
+     * The goal in front of the driver: the first step that is not passed, whether it has started (its row is active) or still waits for its trigger, with what it
+     * will pay, so that the driver always knows what to do next and what it is worth.
+     *
+     * @param  Collection<string, TutorialProgress>  $rows
+     * @return array<string, mixed>|null
+     */
+    private function goal(Collection $rows): ?array
+    {
+        foreach ($this->steps->all() as $step) {
+            $row = $rows->get($step['key']);
+
+            if ($row !== null && $row->state !== TutorialProgress::STATE_ACTIVE) {
+                continue;
+            }
+
+            $reward = $step['reward'];
+
+            return [
+                ...$step,
+                'number' => $this->steps->numberOf($step['key']),
+                'waits' => $row === null,
+                'reward_part_name' => isset($reward['part']) ? $this->catalog->part($reward['part'])['name'] ?? null : null,
+                'reward_garage_name' => isset($reward['garage']) ? $this->rules->region($reward['garage'])['name'] ?? null : null,
+            ];
+        }
+
+        return null;
     }
 
     /** Parts of the pack in the inventory of the driver, common unless said otherwise: the slug, or null for a part that the pack does not have. */

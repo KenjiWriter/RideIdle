@@ -68,7 +68,11 @@ describe('the tutorial', function () {
         getTutorial($driver)
             ->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')
-            ->assertExactJson(['data' => ['status' => 'in_progress', 'total' => 10, 'done' => 0, 'current' => null, 'rewarded' => []]]);
+            ->assertExactJson(['data' => [
+                'status' => 'in_progress', 'total' => 10, 'done' => 0, 'current' => null, 'rewarded' => [],
+                // The goal is in front of the driver from the first screen: the wreck is the first thing to do.
+                'goal' => ['key' => 'wreck', 'number' => 1, 'phase' => 1, 'title' => 'Pick your wreck', 'waiting' => null, 'target' => null, 'optional' => false, 'reward' => ['cash_cents' => 0, 'car_xp' => 0, 'xp' => 0, 'part' => null, 'garage' => null]],
+            ]]);
     });
 
     it('asks the driver to send the car out when the wreck is chosen, with the messages in the language of the driver', function () {

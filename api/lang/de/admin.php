@@ -238,6 +238,8 @@ return [
         'completion' => 'Endet, wenn',
         'target' => 'Hebt hervor',
         'target_hint' => 'Was der Bildschirm hervorhebt, während der Schritt wartet.',
+        'goal' => 'Das Ziel (die Zielleiste)',
+        'waiting' => 'Worauf er wartet (bevor er beginnt)',
         'no_target' => 'Nichts',
         'sms' => 'Nachrichten',
         'sms_hint' => 'Höchstens zwei: eine Begrüßung und die Bitte. Ein Schritt ohne Nachricht wird ausgeführt, ohne gezeigt zu werden.',

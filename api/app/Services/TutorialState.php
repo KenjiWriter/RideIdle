@@ -19,6 +19,8 @@ final readonly class TutorialState
     /**
      * @param  array<string, mixed>|null  $current  the definition of the step to show, with `acknowledged`
      * @param  list<array{key: string, cash_cents: int, car_xp: int, xp: int, part: string|null, garage: string|null}>  $rewarded
+     * @param  array<string, mixed>|null  $goal  the step the driver is to do next, started or not, with its number, whether it still `waits` for its trigger,
+     *                                           and the names of the part and the garage it will pay: null when the tutorial is over or was skipped
      */
     public function __construct(
         public string $status,
@@ -26,5 +28,6 @@ final readonly class TutorialState
         public int $done,
         public ?array $current,
         public array $rewarded,
+        public ?array $goal = null,
     ) {}
 }

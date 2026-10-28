@@ -238,6 +238,8 @@ return [
         'completion' => 'Kończy się, gdy',
         'target' => 'Podświetla',
         'target_hint' => 'Co ekran podświetla, gdy krok czeka.',
+        'goal' => 'Cel (pasek celu)',
+        'waiting' => 'Na co czeka (zanim się zacznie)',
         'no_target' => 'Nic',
         'sms' => 'Wiadomości',
         'sms_hint' => 'Najwyżej dwie: powitanie i prośba. Krok bez wiadomości jest wykonywany bez pokazywania.',

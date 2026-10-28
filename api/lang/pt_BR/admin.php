@@ -238,6 +238,8 @@ return [
         'completion' => 'Termina quando',
         'target' => 'Destaca',
         'target_hint' => 'O que a tela destaca enquanto a etapa espera.',
+        'goal' => 'A meta (a barra de meta)',
+        'waiting' => 'O que ela espera (antes de começar)',
         'no_target' => 'Nada',
         'sms' => 'Mensagens',
         'sms_hint' => 'No máximo duas: uma saudação e o pedido. Uma etapa sem mensagens é cumprida sem ser mostrada.',

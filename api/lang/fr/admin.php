@@ -238,6 +238,8 @@ return [
         'completion' => 'Finit quand',
         'target' => 'Met en avant',
         'target_hint' => 'Ce que l’écran met en avant pendant que l’étape attend.',
+        'goal' => 'L’objectif (la barre d’objectif)',
+        'waiting' => 'Ce qu’elle attend (avant de commencer)',
         'no_target' => 'Rien',
         'sms' => 'Messages',
         'sms_hint' => 'Deux au plus : une salutation et la demande. Une étape sans message est exécutée sans être montrée.',

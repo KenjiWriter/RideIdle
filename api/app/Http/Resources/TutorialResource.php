@@ -39,6 +39,35 @@ final class TutorialResource extends JsonResource
             ],
             // What the steps completed by this call paid, so the client can say it and refresh the cash.
             'rewarded' => $state->rewarded,
+            'goal' => $state->goal === null ? null : $this->goal($state->goal),
+        ];
+    }
+
+    /**
+     * The goal at every screen of the game: what to do, what the step waits for before it starts, where to go, and what it pays.
+     *
+     * @param  array<string, mixed>  $goal
+     * @return array<string, mixed>
+     */
+    private function goal(array $goal): array
+    {
+        $reward = $goal['reward'];
+
+        return [
+            'key' => $goal['key'],
+            'number' => $goal['number'],
+            'phase' => $goal['phase'],
+            'title' => I18nText::from($goal['goal'])->for(),
+            'waiting' => $goal['waits'] && isset($goal['waiting']) ? I18nText::from($goal['waiting'])->for() : null,
+            'target' => $goal['target'],
+            'optional' => (bool) ($goal['optional'] ?? false),
+            'reward' => [
+                'cash_cents' => (int) ($reward['cash_cents'] ?? 0),
+                'car_xp' => (int) ($reward['car_xp'] ?? 0),
+                'xp' => (int) ($reward['xp'] ?? 0),
+                'part' => $goal['reward_part_name'] === null ? null : I18nText::from($goal['reward_part_name'])->for(),
+                'garage' => $goal['reward_garage_name'] === null ? null : I18nText::from($goal['reward_garage_name'])->for(),
+            ],
         ];
     }
 }

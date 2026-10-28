@@ -8,6 +8,13 @@
       "trigger": "none",
       "completion": "run_started",
       "target": null,
+      "goal": {
+        "pl": "Wybierz swój wrak",
+        "en": "Pick your wreck",
+        "fr": "Choisis ton épave",
+        "de": "Wähle dein Wrack",
+        "pt-BR": "Escolha seu carro de sucata"
+      },
       "sender": "+48 555 010 112",
       "sms": [],
       "reward": {}
@@ -18,6 +25,13 @@
       "trigger": "run_started",
       "completion": "driving",
       "target": "start",
+      "goal": {
+        "pl": "Wyślij auto na tor: dotknij „Start”",
+        "en": "Send the car out: tap “Start”",
+        "fr": "Envoie la voiture sur la piste : touche « Démarrer »",
+        "de": "Schick das Auto auf die Strecke: tippe auf „Start“",
+        "pt-BR": "Mande o carro para a pista: toque em “Iniciar”"
+      },
       "sender": "+48 555 010 120",
       "sms": [
         {
@@ -50,6 +64,13 @@
       "trigger": "run_started",
       "completion": "lap_completed",
       "target": "laps",
+      "goal": {
+        "pl": "Poczekaj na pierwsze okrążenie",
+        "en": "Wait for the first lap",
+        "fr": "Attends le premier tour",
+        "de": "Warte auf die erste Runde",
+        "pt-BR": "Espere a primeira volta"
+      },
       "sender": "+48 555 010 134",
       "sms": [
         {
@@ -85,6 +106,13 @@
       "trigger": "lap_completed",
       "completion": "acknowledged",
       "target": "cash",
+      "goal": {
+        "pl": "Zobacz, co zarobiło auto",
+        "en": "See what the car has earned",
+        "fr": "Regarde ce que la voiture a gagné",
+        "de": "Sieh, was das Auto verdient hat",
+        "pt-BR": "Veja o que o carro ganhou"
+      },
       "sender": "+48 555 010 188",
       "sms": [
         {
@@ -120,6 +148,13 @@
       "trigger": "fuel_low",
       "completion": "fuel_restored",
       "target": "refuel",
+      "goal": {
+        "pl": "Zatankuj auto do pełna",
+        "en": "Fill the tank",
+        "fr": "Fais le plein",
+        "de": "Tanke voll",
+        "pt-BR": "Encha o tanque"
+      },
       "sender": "+48 555 010 247",
       "sms": [
         {
@@ -155,6 +190,13 @@
       "trigger": "breakdown",
       "completion": "recovered",
       "target": "repair",
+      "goal": {
+        "pl": "Napraw zepsute auto",
+        "en": "Repair the broken car",
+        "fr": "Répare la voiture en panne",
+        "de": "Repariere das defekte Auto",
+        "pt-BR": "Conserte o carro quebrado"
+      },
       "sender": "+48 555 010 301",
       "sms": [
         {
@@ -190,6 +232,13 @@
       "trigger": "none",
       "completion": "job_queued",
       "target": "mount",
+      "goal": {
+        "pl": "Załóż nowe opony w warsztacie",
+        "en": "Fit the new tires in the workshop",
+        "fr": "Monte les nouveaux pneus à l’atelier",
+        "de": "Montiere die neuen Reifen in der Werkstatt",
+        "pt-BR": "Monte os pneus novos na oficina"
+      },
       "sender": "+48 555 010 322",
       "sms": [
         {
@@ -224,6 +273,13 @@
       "trigger": "none",
       "completion": "crate_opened",
       "target": "crate",
+      "goal": {
+        "pl": "Otwórz darmową skrzynkę w sklepie",
+        "en": "Open the free crate in the shop",
+        "fr": "Ouvre la caisse gratuite à la boutique",
+        "de": "Öffne die kostenlose Kiste im Shop",
+        "pt-BR": "Abra a caixa grátis na loja"
+      },
       "sender": "+48 555 010 355",
       "sms": [
         {
@@ -258,6 +314,13 @@
       "trigger": "none",
       "completion": "acknowledged",
       "target": null,
+      "goal": {
+        "pl": "Poznaj blokady części",
+        "en": "Learn why parts are locked",
+        "fr": "Comprends pourquoi des pièces sont verrouillées",
+        "de": "Erfahre, warum Teile gesperrt sind",
+        "pt-BR": "Entenda por que peças ficam bloqueadas"
+      },
       "sender": "+48 555 010 388",
       "sms": [
         {
@@ -293,6 +356,13 @@
       "trigger": "none",
       "completion": "travel_started",
       "target": "travel",
+      "goal": {
+        "pl": "Jedź do Kruszyna",
+        "en": "Drive to Kruszyn",
+        "fr": "Pars pour Kruszyn",
+        "de": "Fahr nach Kruszyn",
+        "pt-BR": "Vá para Kruszyn"
+      },
       "sender": "+48 555 010 412",
       "sms": [
         {
