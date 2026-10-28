@@ -98,7 +98,10 @@ final class ContentPublisher
      */
     public function preview(): array
     {
-        @set_time_limit(180);
+        // A request of the panel has a limit of seconds and the simulators take longer than that the first time; a process that has none (the console, the queue) is left alone.
+        if ((int) ini_get('max_execution_time') > 0) {
+            @set_time_limit(180);
+        }
 
         // The pack has the number that the next publication would have, so that its manifest is judged as a real one is.
         $candidate = $this->candidates->make($this->nextNumber());
