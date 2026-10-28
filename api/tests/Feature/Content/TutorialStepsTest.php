@@ -123,3 +123,60 @@ it('numbers the steps from one', function () {
         ->and($steps->numberOf('nope'))->toBeNull()
         ->and($steps->find('refuel')['target'])->toBe('refuel');
 });
+
+it('goes through the phases in order, the guided first minutes in the first two', function () {
+    $steps = tutorialData()['steps'];
+    $phases = array_column($steps, 'phase');
+    $sorted = $phases;
+    sort($sorted);
+
+    expect($phases)->toBe($sorted)
+        ->and(array_column(array_slice($steps, 0, 10), 'phase'))->each->toBeLessThanOrEqual(2)
+        ->and(array_column(array_slice($steps, 10), 'phase'))->each->toBeGreaterThanOrEqual(3);
+});
+
+it('does not pay experience or garages after the guided first minutes, so that the levels are the work of the laps', function () {
+    $paid = [];
+
+    foreach (array_slice(tutorialData()['steps'], 10) as $step) {
+        if (isset($step['reward']['xp']) || isset($step['reward']['garage'])) {
+            $paid[] = $step['key'];
+        }
+    }
+
+    expect($paid)->toBe([]);
+});
+
+it('lets the driver leave only an optional step, which has the words of the button, and gives the parts a merge needs', function () {
+    $problems = [];
+
+    foreach (tutorialData()['steps'] as $step) {
+        if (($step['optional'] ?? false) && ! isset($step['decline'])) {
+            $problems[] = "{$step['key']}: optional with no button";
+        }
+
+        if (in_array('merge', $step['arranges'] ?? [], true) && ! (($step['gift']['count'] ?? 1) >= 2)) {
+            $problems[] = "{$step['key']}: arranges a merge but gives fewer than two parts";
+        }
+
+        if (in_array('car_bought', TutorialSteps::conditions($step['completion']), true) && ! isset(tutorialData()['script']['exchange_listing'])) {
+            $problems[] = "{$step['key']}: waits for a bought car and the script has no listing";
+        }
+    }
+
+    expect($problems)->toBe([]);
+});
+
+it('names a goal for every step, and says what a step waits for when its trigger is more than the step before it being done', function () {
+    $problems = [];
+
+    foreach (tutorialData()['steps'] as $step) {
+        $own = array_diff(TutorialSteps::conditions($step['trigger']), ['none', 'run_started']);
+
+        if ($own !== [] && ! isset($step['waiting']) && $step['phase'] >= 3) {
+            $problems[] = "{$step['key']}: waits for a fact and does not say it";
+        }
+    }
+
+    expect($problems)->toBe([]);
+});

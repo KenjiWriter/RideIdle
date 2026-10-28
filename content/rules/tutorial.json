@@ -1,6 +1,6 @@
 {
   "schema": 0,
-  "version": "2026.10.2",
+  "version": "2026.10.3",
   "steps": [
     {
       "key": "wreck",
@@ -391,6 +391,488 @@
         "cash_cents": 30000,
         "xp": 2100
       }
+    },
+    {
+      "key": "offroad",
+      "phase": 3,
+      "trigger": "travel_done",
+      "completion": "tires_mounted:offroad",
+      "target": "mount",
+      "goal": {
+        "pl": "Załóż opony terenowe",
+        "en": "Fit the off-road tires",
+        "fr": "Monte les pneus tout-terrain",
+        "de": "Montiere die Geländereifen",
+        "pt-BR": "Monte os pneus off-road"
+      },
+      "sender": "+48 555 010 431",
+      "sms": [
+        {
+          "pl": "Jesteś w Kruszynie: tu jest żwir, a zwykłe opony na żwirze tracą przyczepność.",
+          "en": "You’re in Kruszyn: it’s gravel here, and ordinary tires lose their grip on gravel.",
+          "fr": "Te voilà à Kruszyn : ici, c’est du gravier, et les pneus ordinaires y perdent leur adhérence.",
+          "de": "Du bist in Kruszyn: Hier ist Schotter, und normale Reifen verlieren darauf den Grip.",
+          "pt-BR": "Você chegou a Kruszyn: aqui é cascalho, e pneus comuns perdem aderência no cascalho."
+        },
+        {
+          "pl": "Dorzuciłem Ci opony terenowe do inwentarza. Wejdź w „Warsztat” i załóż je: zobaczysz, jak auto zmienia się na tym torze. — K.",
+          "en": "I put off-road tires in your inventory. Open “Workshop” and fit them: you’ll see how the car changes on this track. — K.",
+          "fr": "J’ai mis des pneus tout-terrain dans ton inventaire. Ouvre « Atelier » et monte-les : tu verras comment la voiture change sur cette piste. — K.",
+          "de": "Ich habe Geländereifen in dein Inventar gelegt. Öffne „Werkstatt“ und montiere sie: Du siehst, wie sich das Auto auf dieser Strecke verändert. — K.",
+          "pt-BR": "Coloquei pneus off-road no seu inventário. Abra “Oficina” e monte-os: você vai ver como o carro muda nesta pista. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, zakładam",
+        "en": "OK, fitting them",
+        "fr": "OK, je les monte",
+        "de": "OK, ich montiere sie",
+        "pt-BR": "OK, vou montar"
+      },
+      "waiting": {
+        "pl": "Czeka, aż auto dojedzie do Kruszyna",
+        "en": "Waits for the car to reach Kruszyn",
+        "fr": "Attend que la voiture arrive à Kruszyn",
+        "de": "Wartet, bis das Auto Kruszyn erreicht",
+        "pt-BR": "Espera o carro chegar a Kruszyn"
+      },
+      "arranges": [
+        "mount",
+        "unmount"
+      ],
+      "gift": {
+        "part": "offroad-tires-t2"
+      },
+      "reward": {}
+    },
+    {
+      "key": "rain",
+      "phase": 3,
+      "trigger": [
+        "rain_forecast",
+        "car_level:6"
+      ],
+      "completion": "tires_mounted:rain",
+      "target": "mount",
+      "goal": {
+        "pl": "Załóż opony deszczowe przed deszczem",
+        "en": "Fit the rain tires before it rains",
+        "fr": "Monte les pneus pluie avant l’averse",
+        "de": "Montiere die Regenreifen vor dem Regen",
+        "pt-BR": "Monte os pneus de chuva antes da chuva"
+      },
+      "sender": "+48 555 010 456",
+      "sms": [
+        {
+          "pl": "Zerknij na prognozę: zbiera się na deszcz, a na mokrym zwykłe opony ślizgają się jak na lodzie.",
+          "en": "Check the forecast: rain is coming, and on wet ground ordinary tires slide like on ice.",
+          "fr": "Regarde les prévisions : la pluie arrive, et sur sol mouillé les pneus ordinaires glissent comme sur de la glace.",
+          "de": "Wirf einen Blick auf die Vorhersage: Es zieht Regen auf, und auf nasser Fahrbahn rutschen normale Reifen wie auf Eis.",
+          "pt-BR": "Olhe a previsão: vem chuva, e no molhado pneus comuns escorregam como no gelo."
+        },
+        {
+          "pl": "Wrzuciłem Ci do inwentarza opony deszczowe. Załóż je w „Warsztacie”, zanim lunie. — K.",
+          "en": "I put rain tires in your inventory. Fit them in “Workshop” before it pours. — K.",
+          "fr": "J’ai mis des pneus pluie dans ton inventaire. Monte-les à l’« Atelier » avant l’averse. — K.",
+          "de": "Ich habe Regenreifen in dein Inventar gelegt. Montiere sie in der „Werkstatt“, bevor es schüttet. — K.",
+          "pt-BR": "Coloquei pneus de chuva no seu inventário. Monte-os na “Oficina” antes que chova forte. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, zakładam",
+        "en": "OK, fitting them",
+        "fr": "OK, je les monte",
+        "de": "OK, ich montiere sie",
+        "pt-BR": "OK, vou montar"
+      },
+      "waiting": {
+        "pl": "Czeka na deszcz w prognozie i auto na poziomie 6",
+        "en": "Waits for rain on the forecast and a level 6 car",
+        "fr": "Attend de la pluie dans les prévisions et une voiture de niveau 6",
+        "de": "Wartet auf Regen in der Vorhersage und ein Auto auf Stufe 6",
+        "pt-BR": "Espera chuva na previsão e um carro no nível 6"
+      },
+      "arranges": [
+        "mount",
+        "unmount"
+      ],
+      "gift": {
+        "part": "rain-tires-t3"
+      },
+      "reward": {}
+    },
+    {
+      "key": "merge",
+      "phase": 3,
+      "trigger": "none",
+      "completion": "merge_done",
+      "target": "merge",
+      "goal": {
+        "pl": "Połącz dwa hamulce w lepszy",
+        "en": "Merge two brakes into a better one",
+        "fr": "Fusionne deux freins en un meilleur",
+        "de": "Verschmelze zwei Bremsen zu einer besseren",
+        "pt-BR": "Funda dois freios em um melhor"
+      },
+      "sender": "+48 555 010 478",
+      "sms": [
+        {
+          "pl": "Dwie takie same części możesz połączyć w jedną, lepszą. Dałem Ci dwa hamulce.",
+          "en": "Two identical parts can be merged into one better part. I gave you two sets of brakes.",
+          "fr": "Deux pièces identiques peuvent être fusionnées en une meilleure. Je t’ai donné deux jeux de freins.",
+          "de": "Zwei gleiche Teile kannst du zu einem besseren verschmelzen. Ich habe dir zwei Bremsen gegeben.",
+          "pt-BR": "Duas peças iguais podem ser fundidas em uma melhor. Dei a você dois jogos de freios."
+        },
+        {
+          "pl": "Wejdź w „Warsztat”, dotknij „Połącz” przy hamulcach i wskaż drugi. Tym razem się uda, a płacę ja. — K.",
+          "en": "Open “Workshop”, tap “Merge” on the brakes and pick the other one. This time it will work, and I’m paying. — K.",
+          "fr": "Ouvre « Atelier », touche « Fusionner » sur les freins et choisis l’autre. Cette fois ça réussira, et c’est moi qui paie. — K.",
+          "de": "Öffne „Werkstatt“, tippe bei den Bremsen auf „Verschmelzen“ und wähle die andere. Diesmal gelingt es, und ich zahle. — K.",
+          "pt-BR": "Abra “Oficina”, toque em “Fundir” nos freios e escolha o outro. Desta vez vai dar certo, e eu pago. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, łączę",
+        "en": "OK, merging",
+        "fr": "OK, je fusionne",
+        "de": "OK, ich verschmelze",
+        "pt-BR": "OK, vou fundir"
+      },
+      "arranges": [
+        "merge"
+      ],
+      "gift": {
+        "part": "disc-brakes-t2",
+        "rarity": "uncommon",
+        "count": 2
+      },
+      "reward": {}
+    },
+    {
+      "key": "exchange",
+      "phase": 3,
+      "trigger": "cash:450",
+      "completion": "car_bought",
+      "target": "exchange",
+      "goal": {
+        "pl": "Kup tanie auto z giełdy",
+        "en": "Buy a cheap car from the exchange",
+        "fr": "Achète une voiture bon marché à la bourse",
+        "de": "Kauf ein günstiges Auto an der Börse",
+        "pt-BR": "Compre um carro barato na bolsa de carros"
+      },
+      "sender": "+48 555 010 503",
+      "sms": [
+        {
+          "pl": "Czas na drugie auto. Na giełdzie w „Mieście” wisi ogłoszenie, którego nikt nie chce: złom za $450.",
+          "en": "Time for a second car. There’s a listing on the exchange in “City” that nobody wants: a wreck for $450.",
+          "fr": "Il est temps d’avoir une deuxième voiture. À la bourse, dans « Ville », il y a une annonce dont personne ne veut : une épave à 450 $.",
+          "de": "Zeit für ein zweites Auto. An der Börse in „Stadt“ hängt ein Angebot, das keiner will: ein Wrack für $450.",
+          "pt-BR": "Hora de um segundo carro. Na bolsa de carros, em “Cidade”, há um anúncio que ninguém quer: uma sucata por $450."
+        },
+        {
+          "pl": "Zrób inspekcję (ją płacę ja), zobacz prawdziwy stan i kup. W garażu jest miejsce. Oddam Ci $300. — K.",
+          "en": "Run the inspection (I’m paying for it), see its real condition and buy it. There’s room in the garage. I’ll give you $300 back. — K.",
+          "fr": "Fais l’inspection (je la paie), regarde son vrai état et achète-la. Il y a de la place au garage. Je te rends 300 $. — K.",
+          "de": "Mach die Inspektion (die zahle ich), sieh dir den echten Zustand an und kauf es. In der Garage ist Platz. Ich gebe dir $300 zurück. — K.",
+          "pt-BR": "Faça a inspeção (eu pago), veja o estado real e compre. Há vaga na garagem. Devolvo $300 a você. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, idę na giełdę",
+        "en": "OK, to the exchange",
+        "fr": "OK, direction la bourse",
+        "de": "OK, ab zur Börse",
+        "pt-BR": "OK, vou à bolsa"
+      },
+      "waiting": {
+        "pl": "Czeka, aż uzbierasz $450",
+        "en": "Waits until you have $450",
+        "fr": "Attend que tu aies 450 $",
+        "de": "Wartet, bis du $450 hast",
+        "pt-BR": "Espera você juntar $450"
+      },
+      "reward": {
+        "cash_cents": 30000
+      }
+    },
+    {
+      "key": "service",
+      "phase": 3,
+      "trigger": "none",
+      "completion": "service_done",
+      "target": "service",
+      "goal": {
+        "pl": "Zleć serwis auta",
+        "en": "Order a service for the car",
+        "fr": "Fais entretenir la voiture",
+        "de": "Gib das Auto zur Wartung",
+        "pt-BR": "Faça a revisão do carro"
+      },
+      "sender": "+48 555 010 527",
+      "sms": [
+        {
+          "pl": "Auto jeździ i się zużywa. Spóźniony serwis kosztuje osiągi i zwiększa ryzyko awarii.",
+          "en": "The car keeps driving and wearing out. A late service costs performance and raises the risk of breakdowns.",
+          "fr": "La voiture roule et s’use. Un entretien en retard coûte des performances et augmente le risque de panne.",
+          "de": "Das Auto fährt und verschleißt. Eine verspätete Wartung kostet Leistung und erhöht das Pannenrisiko.",
+          "pt-BR": "O carro roda e se desgasta. Uma revisão atrasada custa desempenho e aumenta o risco de quebra."
+        },
+        {
+          "pl": "W „Warsztacie” dotknij „Serwis”. Ten pierwszy jest na mój koszt i szybki, a do tego dorzucam $150. — K.",
+          "en": "In “Workshop” tap “Service”. This first one is on me and quick, and I’m adding $150. — K.",
+          "fr": "Dans l’« Atelier », touche « Entretien ». Ce premier est pour moi et rapide, et j’ajoute 150 $. — K.",
+          "de": "Tippe in der „Werkstatt“ auf „Wartung“. Die erste geht auf mich und ist schnell, dazu lege ich $150 drauf. — K.",
+          "pt-BR": "Na “Oficina”, toque em “Revisão”. Esta primeira é por minha conta e rápida, e ainda mando $150. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, zlecam",
+        "en": "OK, ordering it",
+        "fr": "OK, je commande",
+        "de": "OK, ich beauftrage es",
+        "pt-BR": "OK, vou pedir"
+      },
+      "arranges": [
+        "service"
+      ],
+      "reward": {
+        "cash_cents": 15000
+      }
+    },
+    {
+      "key": "away",
+      "phase": 3,
+      "trigger": "returned:30",
+      "completion": "acknowledged",
+      "target": "away",
+      "goal": {
+        "pl": "Zobacz, co auto zarobiło bez Ciebie",
+        "en": "See what the car earned without you",
+        "fr": "Regarde ce que la voiture a gagné sans toi",
+        "de": "Sieh, was das Auto ohne dich verdient hat",
+        "pt-BR": "Veja o que o carro ganhou sem você"
+      },
+      "sender": "+48 555 010 549",
+      "sms": [
+        {
+          "pl": "Wróciłeś. Auto jechało przez cały ten czas, choć Ciebie nie było.",
+          "en": "You’re back. The car kept driving the whole time, even though you were away.",
+          "fr": "Te revoilà. La voiture a roulé tout ce temps, même si tu n’étais pas là.",
+          "de": "Du bist zurück. Das Auto ist die ganze Zeit gefahren, auch wenn du nicht da warst.",
+          "pt-BR": "Você voltou. O carro andou esse tempo todo, mesmo sem você."
+        },
+        {
+          "pl": "Sprawdź podsumowanie nieobecności: okrążenia, gotówka i XP wpadły same. Za dobry nawyk wysyłam $200. — K.",
+          "en": "Check the summary of your absence: laps, cash and XP came in by themselves. For the good habit, here’s $200. — K.",
+          "fr": "Regarde le récapitulatif de ton absence : tours, argent et XP sont arrivés tout seuls. Pour la bonne habitude, voici 200 $. — K.",
+          "de": "Sieh dir die Zusammenfassung deiner Abwesenheit an: Runden, Geld und XP sind von allein gekommen. Für die gute Gewohnheit schicke ich $200. — K.",
+          "pt-BR": "Veja o resumo da sua ausência: voltas, dinheiro e XP entraram sozinhos. Pelo bom hábito, mando $200. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, widzę",
+        "en": "OK, I see",
+        "fr": "OK, je vois",
+        "de": "OK, ich sehe es",
+        "pt-BR": "OK, entendi"
+      },
+      "waiting": {
+        "pl": "Czeka, aż wrócisz po przerwie (co najmniej pół godziny)",
+        "en": "Waits until you come back after a break (half an hour at least)",
+        "fr": "Attend ton retour après une pause (une demi-heure au moins)",
+        "de": "Wartet, bis du nach einer Pause zurückkommst (mindestens eine halbe Stunde)",
+        "pt-BR": "Espera você voltar depois de uma pausa (meia hora ou mais)"
+      },
+      "reward": {
+        "cash_cents": 20000
+      }
+    },
+    {
+      "key": "upgrade",
+      "phase": 4,
+      "trigger": "none",
+      "completion": "upgrade_done",
+      "target": "upgrade",
+      "goal": {
+        "pl": "Ulepsz zamontowaną część do +1",
+        "en": "Upgrade a mounted part to +1",
+        "fr": "Améliore une pièce montée à +1",
+        "de": "Verbessere ein montiertes Teil auf +1",
+        "pt-BR": "Aprimore uma peça montada para +1"
+      },
+      "sender": "+48 555 010 572",
+      "sms": [
+        {
+          "pl": "Części można ulepszać: każdy poziom +N daje kilka procent więcej statystyk.",
+          "en": "Parts can be upgraded: every +N level adds a few percent to their stats.",
+          "fr": "Les pièces peuvent être améliorées : chaque niveau +N ajoute quelques pour cent à leurs stats.",
+          "de": "Teile lassen sich verbessern: Jede Stufe +N bringt ein paar Prozent mehr Werte.",
+          "pt-BR": "As peças podem ser aprimoradas: cada nível +N soma alguns por cento às estatísticas."
+        },
+        {
+          "pl": "W „Warsztacie” wybierz zamontowaną część i dotknij „Ulepsz do +1”. Pierwsze ulepszenie na mój koszt. — K.",
+          "en": "In “Workshop” pick a mounted part and tap “Upgrade to +1”. The first upgrade is on me. — K.",
+          "fr": "Dans l’« Atelier », choisis une pièce montée et touche « Améliorer à +1 ». La première amélioration est pour moi. — K.",
+          "de": "Wähle in der „Werkstatt“ ein montiertes Teil und tippe auf „Auf +1 verbessern“. Die erste Verbesserung geht auf mich. — K.",
+          "pt-BR": "Na “Oficina”, escolha uma peça montada e toque em “Aprimorar para +1”. O primeiro aprimoramento é por minha conta. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, ulepszam",
+        "en": "OK, upgrading",
+        "fr": "OK, j’améliore",
+        "de": "OK, ich verbessere",
+        "pt-BR": "OK, vou aprimorar"
+      },
+      "arranges": [
+        "upgrade"
+      ],
+      "reward": {}
+    },
+    {
+      "key": "workshop",
+      "phase": 4,
+      "trigger": "cash:400",
+      "completion": "equipment_bought",
+      "target": "equipment",
+      "goal": {
+        "pl": "Kup wyposażenie warsztatu",
+        "en": "Buy equipment for the workshop",
+        "fr": "Achète du matériel pour l’atelier",
+        "de": "Kauf Ausrüstung für die Werkstatt",
+        "pt-BR": "Compre equipamento para a oficina"
+      },
+      "sender": "+48 555 010 596",
+      "sms": [
+        {
+          "pl": "Warsztat bez sprzętu to kolejka i czekanie. Maszyna do opon albo drugi mechanik skraca zlecenia.",
+          "en": "A workshop without equipment means queues and waiting. A tire machine or a second mechanic shortens the jobs.",
+          "fr": "Un atelier sans matériel, c’est de la file et de l’attente. Une machine à pneus ou un deuxième mécanicien raccourcit les travaux.",
+          "de": "Eine Werkstatt ohne Ausrüstung heißt Schlange und Warten. Eine Reifenmaschine oder ein zweiter Mechaniker verkürzt die Aufträge.",
+          "pt-BR": "Uma oficina sem equipamento é fila e espera. Uma máquina de pneus ou um segundo mecânico encurta os trabalhos."
+        },
+        {
+          "pl": "W „Warsztacie” kup maszynę do opon (od $400) albo zatrudnij mechanika. To inwestycja, która się zwraca. — K.",
+          "en": "In “Workshop” buy a tire machine (from $400) or hire a mechanic. It’s an investment that pays off. — K.",
+          "fr": "Dans l’« Atelier », achète une machine à pneus (dès 400 $) ou engage un mécanicien. C’est un investissement qui rapporte. — K.",
+          "de": "Kauf in der „Werkstatt“ eine Reifenmaschine (ab $400) oder stell einen Mechaniker ein. Das ist eine Investition, die sich lohnt. — K.",
+          "pt-BR": "Na “Oficina”, compre uma máquina de pneus (a partir de $400) ou contrate um mecânico. É um investimento que se paga. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, kupuję",
+        "en": "OK, buying",
+        "fr": "OK, j’achète",
+        "de": "OK, ich kaufe",
+        "pt-BR": "OK, vou comprar"
+      },
+      "waiting": {
+        "pl": "Czeka, aż uzbierasz $400",
+        "en": "Waits until you have $400",
+        "fr": "Attend que tu aies 400 $",
+        "de": "Wartet, bis du $400 hast",
+        "pt-BR": "Espera você juntar $400"
+      },
+      "reward": {}
+    },
+    {
+      "key": "profile",
+      "phase": 4,
+      "trigger": "none",
+      "completion": "email_confirmed",
+      "target": "profile",
+      "goal": {
+        "pl": "Zabezpiecz profil e-mailem",
+        "en": "Secure your profile with an e-mail",
+        "fr": "Sécurise ton profil avec un e-mail",
+        "de": "Sichere dein Profil mit einer E-Mail",
+        "pt-BR": "Proteja seu perfil com um e-mail"
+      },
+      "sender": "+48 555 010 618",
+      "sms": [
+        {
+          "pl": "Zadbaj o to, co zbudowałeś. Konto gościa znika, gdy zgubisz urządzenie albo wyczyścisz przeglądarkę.",
+          "en": "Look after what you’ve built. A guest account is gone when you lose the device or clear the browser.",
+          "fr": "Prends soin de ce que tu as construit. Un compte invité disparaît si tu perds l’appareil ou vides le navigateur.",
+          "de": "Pass auf das auf, was du aufgebaut hast. Ein Gastkonto ist weg, wenn du das Gerät verlierst oder den Browser leerst.",
+          "pt-BR": "Cuide do que você construiu. Uma conta de visitante some quando você perde o aparelho ou limpa o navegador."
+        },
+        {
+          "pl": "Dodaj e-mail do profilu i potwierdź go linkiem. Wyślę Ci $500. Możesz to zrobić później. — K.",
+          "en": "Add an e-mail to your profile and confirm it with the link. I’ll send you $500. You can do it later. — K.",
+          "fr": "Ajoute un e-mail à ton profil et confirme-le avec le lien. Je t’envoie 500 $. Tu peux le faire plus tard. — K.",
+          "de": "Füge deinem Profil eine E-Mail hinzu und bestätige sie mit dem Link. Ich schicke dir $500. Du kannst es auch später tun. — K.",
+          "pt-BR": "Adicione um e-mail ao perfil e confirme com o link. Mando $500 para você. Dá para fazer depois. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, dodaję",
+        "en": "OK, adding it",
+        "fr": "OK, je l’ajoute",
+        "de": "OK, ich füge sie hinzu",
+        "pt-BR": "OK, vou adicionar"
+      },
+      "decline": {
+        "pl": "Nie teraz",
+        "en": "Not now",
+        "fr": "Pas maintenant",
+        "de": "Nicht jetzt",
+        "pt-BR": "Agora não"
+      },
+      "optional": true,
+      "reward": {
+        "cash_cents": 50000
+      }
+    },
+    {
+      "key": "network",
+      "phase": 4,
+      "trigger": [
+        "cash:5000",
+        "city_open"
+      ],
+      "completion": "garage_bought",
+      "target": "garages",
+      "goal": {
+        "pl": "Kup garaż w kolejnym mieście",
+        "en": "Buy a garage in another city",
+        "fr": "Achète un garage dans une autre ville",
+        "de": "Kauf eine Garage in einer weiteren Stadt",
+        "pt-BR": "Compre uma garagem em outra cidade"
+      },
+      "sender": "+48 555 010 641",
+      "sms": [
+        {
+          "pl": "Stać Cię już na garaż w kolejnym mieście. Każde miasto ma własne tory, giełdę i pogodę.",
+          "en": "You can afford a garage in another city now. Every city has its own tracks, exchange and weather.",
+          "fr": "Tu peux maintenant te payer un garage dans une autre ville. Chaque ville a ses propres pistes, sa bourse et sa météo.",
+          "de": "Du kannst dir jetzt eine Garage in einer weiteren Stadt leisten. Jede Stadt hat eigene Strecken, eine eigene Börse und ihr eigenes Wetter.",
+          "pt-BR": "Agora você pode pagar uma garagem em outra cidade. Cada cidade tem suas pistas, sua bolsa de carros e seu clima."
+        },
+        {
+          "pl": "Otwórz „Mapę”, wybierz miasto i kup tam garaż. Tyle ode mnie, resztę zrobisz sam. — K.",
+          "en": "Open “Map”, pick a city and buy a garage there. That’s all from me, you’ll manage the rest. — K.",
+          "fr": "Ouvre « Carte », choisis une ville et achètes-y un garage. C’est tout pour moi, tu feras le reste. — K.",
+          "de": "Öffne die „Karte“, wähle eine Stadt und kauf dort eine Garage. Das war’s von mir, den Rest schaffst du allein. — K.",
+          "pt-BR": "Abra o “Mapa”, escolha uma cidade e compre uma garagem lá. É só isso de mim, o resto você faz sozinho. — K."
+        }
+      ],
+      "reply": {
+        "pl": "OK, kupuję garaż",
+        "en": "OK, buying a garage",
+        "fr": "OK, j’achète un garage",
+        "de": "OK, ich kaufe eine Garage",
+        "pt-BR": "OK, vou comprar a garagem"
+      },
+      "waiting": {
+        "pl": "Czeka, aż uzbierasz $5 000 i dojdziesz do poziomu kolejnego miasta",
+        "en": "Waits until you have $5,000 and reach the level of another city",
+        "fr": "Attend que tu aies 5 000 $ et le niveau d’une autre ville",
+        "de": "Wartet, bis du $5.000 hast und die Stufe einer weiteren Stadt erreichst",
+        "pt-BR": "Espera você juntar $5.000 e chegar ao nível de outra cidade"
+      },
+      "reward": {}
     }
   ],
   "script": {

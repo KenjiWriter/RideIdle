@@ -69,7 +69,7 @@ describe('the tutorial', function () {
             ->assertOk()
             ->assertHeader('Cache-Control', 'no-store, private')
             ->assertExactJson(['data' => [
-                'status' => 'in_progress', 'total' => 10, 'done' => 0, 'current' => null, 'rewarded' => [],
+                'status' => 'in_progress', 'total' => 20, 'done' => 0, 'current' => null, 'rewarded' => [],
                 // The goal is in front of the driver from the first screen: the wreck is the first thing to do.
                 'goal' => ['key' => 'wreck', 'number' => 1, 'phase' => 1, 'title' => 'Pick your wreck', 'waiting' => null, 'target' => null, 'optional' => false, 'reward' => ['cash_cents' => 0, 'car_xp' => 0, 'xp' => 0, 'part' => null, 'garage' => null]],
             ]]);
@@ -309,7 +309,8 @@ describe('the tutorial', function () {
         getTutorial($driver)->assertJsonPath('data.status', 'skipped')->assertJsonPath('data.current', null)->assertJsonPath('data.rewarded', []);
 
         expect(driverCash($driver))->toBe(1_550)
-            ->and(TutorialProgress::query()->where('user_id', $driver->id)->where('state', 'skipped')->count())->toBe(9);
+            // Every step but the first, which was done: the nineteen of the twenty.
+            ->and(TutorialProgress::query()->where('user_id', $driver->id)->where('state', 'skipped')->count())->toBe(19);
     });
 
     it('keeps what was done when the driver skips, and what it was paid', function () {
@@ -336,8 +337,8 @@ describe('the tutorial', function () {
 });
 
 describe('the guided first minutes', function () {
-    it('has ten steps that add up to the experience of the eighth level less the laps, and the cash of the design', function () {
-        $steps = app(TutorialSteps::class)->all();
+    it('has ten steps in the guided first minutes that add up to the experience of the eighth level less the laps, and the cash of the design', function () {
+        $steps = array_values(array_filter(app(TutorialSteps::class)->all(), fn (array $step): bool => $step['phase'] <= 2));
         $xp = array_sum(array_map(fn (array $step): int => $step['reward']['xp'] ?? 0, $steps));
         $cash = array_sum(array_map(fn (array $step): int => $step['reward']['cash_cents'] ?? 0, array_filter($steps, fn (array $step): bool => $step['key'] !== 'repair')));
 
@@ -458,7 +459,7 @@ describe('the guided first minutes', function () {
             ->and(Wallet::query()->find($driver->id)->xp)->toBe(760 + 1_160);
     });
 
-    it('finishes with the journey: the experience that makes the eighth level, and the cash of the last step', function () {
+    it('ends the guided minutes with the journey: the experience that makes the eighth level, and the cash of the last step, and the first day goes on', function () {
         [$driver, $run] = driverWithRun();
         tutorialBefore($driver, 'travel');
         getTutorial($driver)->assertJsonPath('data.current.key', 'travel')->assertJsonPath('data.current.target', 'travel');
@@ -466,8 +467,13 @@ describe('the guided first minutes', function () {
         Travel::factory()->create(['user_id' => $driver->id, 'race_run_id' => $run->id]);
 
         getTutorial($driver)->assertOk()
-            ->assertJsonPath('data.status', 'finished')
+            ->assertJsonPath('data.status', 'in_progress')
             ->assertJsonPath('data.done', 10)
+            // The journey of a test is over at once, so the first step of the first day has started: its goal is in front of the driver.
+            ->assertJsonPath('data.goal.key', 'offroad')
+            ->assertJsonPath('data.goal.number', 11)
+            ->assertJsonPath('data.goal.waiting', null)
+            ->assertJsonPath('data.current.key', 'offroad')
             ->assertJsonPath('data.rewarded', [['key' => 'travel', 'cash_cents' => 30_000, 'car_xp' => 0, 'xp' => 2_100, 'part' => null, 'garage' => null]]);
 
         expect(driverCash($driver))->toBe(30_000);
