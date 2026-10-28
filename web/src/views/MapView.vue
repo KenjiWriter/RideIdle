@@ -347,7 +347,7 @@ async function go(city: MapCity): Promise<void> {
 
         <div class="flex items-center justify-between gap-2.5 text-[13px] text-muted" data-test="garage">
           <span>{{ selected.garage.owned ? t('map.garage', { used: selected.garage.used, capacity: selected.garage.capacity }) : t('map.noGarage') }}</span>
-          <button v-if="!selected.garage.owned && selected.open" type="button" class="btn btn-secondary btn-sm flex-none" :disabled="!canBuyGarage" data-test="buy-garage" @click="buyGarage(selected)">
+          <button v-if="!selected.garage.owned && selected.open" type="button" class="btn btn-secondary btn-sm flex-none" :disabled="!canBuyGarage" data-tutorial="garages" data-test="buy-garage" @click="buyGarage(selected)">
             {{ t('map.buyGarage', { price: money(selected.garage.price_cents ?? 0) }) }}
           </button>
         </div>

@@ -635,7 +635,23 @@ export interface CancelJobResponse extends GarageResponse {
 export type TutorialStatus = 'in_progress' | 'finished' | 'skipped'
 
 /** The thing on a screen of the game that a step of the tutorial points at; a step that has no screen of its own (the locked parts) has none. */
-export type TutorialTarget = 'start' | 'laps' | 'cash' | 'refuel' | 'repair' | 'mount' | 'crate' | 'travel'
+export type TutorialTarget =
+  | 'start'
+  | 'laps'
+  | 'cash'
+  | 'refuel'
+  | 'repair'
+  | 'mount'
+  | 'crate'
+  | 'travel'
+  | 'merge'
+  | 'exchange'
+  | 'service'
+  | 'away'
+  | 'upgrade'
+  | 'equipment'
+  | 'profile'
+  | 'garages'
 
 /** The step that waits: the messages of the mentor, in the language of the driver, and what to highlight. */
 export interface TutorialStep {
@@ -649,6 +665,27 @@ export interface TutorialStep {
   target: TutorialTarget | null
   /** The driver answered the messages: the phone is put away, but the step may still wait for them to do the thing. */
   acknowledged: boolean
+  /** The driver may leave the step for later: the phone has a second button, with these words. */
+  optional: boolean
+  decline: string | null
+}
+
+/**
+ * The goal in front of the driver at every screen of the game: the first step that is not passed, started or not, with what it will pay. `waiting` says what a
+ * step that has not started waits for (rain on the forecast, the cash for a purchase), and is null for a step that has.
+ */
+export interface TutorialGoal {
+  key: string
+  /** The place of the step in the tutorial, from 1. */
+  number: number
+  /** 1 the first five minutes, 2 the first hour, 3 the first day, 4 the first week. */
+  phase: number
+  title: string
+  waiting: string | null
+  target: TutorialTarget | null
+  optional: boolean
+  /** What it pays: the names of the part and the garage are in the language of the driver. */
+  reward: { cash_cents: number; car_xp: number; xp: number; part: string | null; garage: string | null }
 }
 
 /** GET /api/v1/tutorial, and the answer of POST /api/v1/tutorial/reply and /skip. */
@@ -658,6 +695,8 @@ export interface TutorialResponse {
     total: number
     done: number
     current: TutorialStep | null
+    /** What to do next, started or not; null when the tutorial is over or was skipped. */
+    goal: TutorialGoal | null
     /**
      * What the steps completed by this very call paid: cash, experience of the car and of the driver, a part that was put in the inventory (its slug), and
      * the city whose garage was given (its slug).

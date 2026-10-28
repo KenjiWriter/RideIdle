@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 
+import TutorialGoal from '@/components/TutorialGoal.vue'
 import TutorialOverlay from '@/components/TutorialOverlay.vue'
 import { useTutorialReward } from '@/features/run/useTutorialReward'
 import { useGarageStore } from '@/stores/garage'
@@ -43,6 +44,7 @@ const { rewardMessage } = useTutorialReward(() => {
   <div class="mx-auto flex min-h-[calc(100vh-61px)] w-full max-w-[480px] flex-col border-x border-line bg-bg/70">
     <GameHud />
     <div class="flex flex-1 flex-col gap-3 px-3.5 py-3">
+      <TutorialGoal />
       <p v-if="rewardMessage" class="card card-hi text-sm" role="status" data-test="tutorial-reward">{{ rewardMessage }}</p>
       <slot />
     </div>

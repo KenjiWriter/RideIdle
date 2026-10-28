@@ -403,7 +403,7 @@ async function cancel(jobId: number): Promise<void> {
       </section>
 
       <!-- The equipment of the workshop of this city: what is bought here speeds up the jobs queued after it. There is no board for this card; it uses the cards of the screen. -->
-      <section class="flex flex-col gap-2" aria-labelledby="gear-title" data-test="gear">
+      <section class="flex flex-col gap-2" aria-labelledby="gear-title" data-tutorial="equipment" data-test="gear">
         <div class="flex items-center justify-between gap-2">
           <h2 id="gear-title" class="kick !mb-0">{{ t('workshop.gear.title') }}</h2>
           <button type="button" class="btn btn-secondary btn-sm" :aria-expanded="gearOpen" aria-controls="gear-body" data-test="gear-toggle" @click="gearOpen = !gearOpen">
@@ -536,7 +536,7 @@ async function cancel(jobId: number): Promise<void> {
           <p class="text-[13px]" :class="car.service.due_in_km < 0 ? 'text-danger' : 'text-ink'" data-test="service-line">{{ serviceLine(car.service) }}</p>
           <p v-if="breakdownLine(car)" class="sub" data-test="breakdown-line">{{ breakdownLine(car) }}</p>
           <div class="flex flex-wrap items-center gap-2">
-            <button type="button" class="btn btn-secondary btn-sm" :disabled="busy || servicing" data-test="service" @click="act('service', null)">
+            <button type="button" class="btn btn-secondary btn-sm" :disabled="busy || servicing" data-tutorial="service" data-test="service" @click="act('service', null)">
               {{ t('workshop.serviceButton') }}
             </button>
             <span class="sub" data-test="service-info">{{ servicing ? t('workshop.serviceWaits') : t('workshop.serviceCost', { price: money(car.service.cost_cents, 2), time: formatDuration(car.service.duration_ms) }) }}</span>
@@ -585,6 +585,7 @@ async function cancel(jobId: number): Promise<void> {
                   type="button"
                   class="btn btn-primary btn-sm mt-1.5 !min-h-9 !text-base"
                   :disabled="busy || busyPartIds.has(slot.part.id) || slot.part.upgrade_next.locked !== null"
+                  data-tutorial="upgrade"
                   :data-test="`upgrade-${slot.part.id}`"
                   @click="act('upgrade', slot.part)"
                 >
@@ -667,6 +668,7 @@ async function cancel(jobId: number): Promise<void> {
                 class="btn btn-secondary btn-sm"
                 :disabled="busy || busyPartIds.has(part.id)"
                 :aria-expanded="merging === part.id"
+                data-tutorial="merge"
                 :data-test="`merge-open-${part.id}`"
                 @click="merging = merging === part.id ? null : part.id"
               >

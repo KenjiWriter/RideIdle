@@ -607,7 +607,17 @@
     "rewardCarXp": "K. deu {xp} XP ao seu carro.",
     "rewardXp": "K. deu {xp} XP a você.",
     "rewardPart": "K. deixou uma peça no seu inventário: você pode montá-la na Oficina.",
-    "rewardGarage": "K. conseguiu uma garagem em {city} para você."
+    "rewardGarage": "K. conseguiu uma garagem em {city} para você.",
+    "goalAria": "Meta atual",
+    "goalLabel": "Meta",
+    "goalNext": "Próxima meta",
+    "goalStep": "Etapa {number} de {total}",
+    "goalOptional": "Opcional",
+    "goalReward": "Recompensa",
+    "goalShow": "Mostrar",
+    "goalXp": "{xp} XP",
+    "goalCarXp": "{xp} XP do carro",
+    "goalGarage": "Garagem em {city}"
   },
   "story": {
     "scene1": "“Escute, preciso sumir por um tempo.”",

@@ -72,6 +72,7 @@ function keep(event: KeyboardEvent): void {
   >
     <div
       ref="dialog"
+      data-tutorial="profile"
       role="dialog"
       aria-modal="true"
       aria-labelledby="link-account-title"

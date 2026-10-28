@@ -104,7 +104,7 @@ const buyWreck = (wreck: YardCar) =>
 
       <p v-if="listings.length === 0" class="text-muted" data-test="empty">{{ t('market.exchangeEmpty') }}</p>
 
-      <article v-for="(listing, index) in listings" :key="listing.key" class="card flex flex-col gap-2 !p-3" :data-test="`listing-${index}`" data-listing>
+      <article v-for="(listing, index) in listings" :key="listing.key" class="card flex flex-col gap-2 !p-3" :data-tutorial="listing.key === 'tutorial' ? 'exchange' : undefined" :data-test="`listing-${index}`" data-listing>
         <div class="flex items-center justify-between gap-2">
           <div class="flex min-w-0 items-center gap-2">
             <b class="truncate text-base" data-test="name">{{ listing.vehicle.name }}</b>

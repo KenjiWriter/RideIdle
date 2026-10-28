@@ -42,6 +42,14 @@ const TARGETS: Record<string, string[]> = {
   mount: ['mount', 'workshop'],
   crate: ['crate', 'shop'],
   travel: ['travel', 'map'],
+  merge: ['merge', 'workshop'],
+  exchange: ['exchange', 'shop'],
+  service: ['service', 'workshop'],
+  away: ['away', 'garage'],
+  upgrade: ['upgrade', 'workshop'],
+  equipment: ['equipment', 'workshop'],
+  profile: ['profile', 'garage'],
+  garages: ['garages', 'map'],
 }
 
 function targetElement(): HTMLElement | null {
@@ -165,6 +173,7 @@ async function run(action: () => Promise<void>): Promise<void> {
 }
 
 const reply = (): Promise<void> => run(() => store.reply())
+const decline = (): Promise<void> => run(() => store.decline())
 
 async function skip(): Promise<void> {
   await run(() => store.skip())
@@ -236,6 +245,7 @@ function onKeydown(event: KeyboardEvent): void {
 
             <div class="flex flex-none flex-wrap gap-1.5 px-2 pb-2">
               <button ref="replyButton" type="button" class="ph-send !min-h-11 !border" :disabled="busy" data-test="tutorial-reply" @click="reply">{{ step.reply }}</button>
+              <button v-if="step.optional && step.decline" type="button" class="ph-btn !min-h-11" :disabled="busy" data-test="tutorial-decline" @click="decline">{{ step.decline }}</button>
               <button v-if="!asked" type="button" class="ph-btn !min-h-11" data-test="tutorial-who" @click="asked = true">{{ t('tutorial.who') }}</button>
             </div>
             <div class="ph-input" aria-hidden="true">

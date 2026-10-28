@@ -282,6 +282,66 @@ body {
     color: #2a1800;
   }
 
+  /* ---------- the goal of the tutorial, under the HUD ---------- */
+  .goal {
+    @apply flex flex-col gap-1.5 rounded-lg px-3 py-2.5;
+    background: linear-gradient(#232a34, #181d25);
+    border: 1px solid #3a4252;
+    border-left: 4px solid var(--color-amber);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  }
+
+  .goal-wait {
+    border-left-color: var(--color-line-2);
+  }
+
+  .goal-top {
+    @apply flex items-center gap-2 text-[11px] text-muted;
+  }
+
+  .goal-step {
+    @apply font-mono;
+    letter-spacing: 0.04em;
+  }
+
+  .goal-opt {
+    @apply rounded border border-line-2 px-1.5 text-[10px] uppercase;
+  }
+
+  .goal-dots {
+    @apply ml-auto flex gap-1;
+  }
+
+  .goal-dots i {
+    @apply h-1.5 w-3.5 rounded-sm;
+    background: #07080b;
+  }
+
+  .goal-dots i.on {
+    background: var(--color-amber);
+  }
+
+  .goal-title {
+    @apply font-bold leading-snug text-ink;
+  }
+
+  .goal-title small {
+    @apply mr-1.5 text-[11px] font-normal uppercase text-amber;
+    letter-spacing: 0.1em;
+  }
+
+  .goal-note {
+    @apply text-[12.5px] text-muted;
+  }
+
+  .goal-foot {
+    @apply flex flex-wrap items-center justify-between gap-2;
+  }
+
+  .goal-reward {
+    @apply flex flex-wrap items-center gap-1.5 text-[12px] text-muted;
+  }
+
   /** The coin before the cash of the HUD. */
   .chip-coin::before {
     content: '';

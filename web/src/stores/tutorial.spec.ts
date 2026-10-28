@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { respond, serveApi } from '@/test/fetchServer'
-import { aStep, aTutorial } from '@/test/tutorialFixtures'
+import { aGoal, aStep, aTutorial } from '@/test/tutorialFixtures'
 
 import { useRunStore } from './run'
 import { useTutorialStore } from './tutorial'
@@ -45,6 +45,34 @@ describe('the tutorial store', () => {
     serveApi(fetchMock, { 'GET /api/v1/tutorial': () => respond(200, aTutorial(aStep(), { status: 'skipped' })) })
     await store.load()
     expect(store.current).toBeNull()
+  })
+
+  it('has a goal while the tutorial is on, whether the step has started or not, and none when it is over', async () => {
+    const store = useTutorialStore()
+    serveApi(fetchMock, { 'GET /api/v1/tutorial': () => respond(200, aTutorial(null, { goal: aGoal({ key: 'rain', waiting: 'Waits for rain' }) })) })
+
+    await store.load()
+    expect(store.current).toBeNull()
+    expect(store.goal?.key).toBe('rain')
+    expect(store.goal?.waiting).toBe('Waits for rain')
+
+    serveApi(fetchMock, { 'GET /api/v1/tutorial': () => respond(200, aTutorial(null, { status: 'skipped', goal: aGoal() })) })
+    await store.load()
+    expect(store.goal).toBeNull()
+  })
+
+  it('leaves an optional step for later, which pays nothing and goes on', async () => {
+    const calls = serveApi(fetchMock, {
+      'POST /api/v1/tutorial/decline': () => respond(200, aTutorial(null, { goal: aGoal({ key: 'network' }), done: 19 })),
+    })
+    const store = useTutorialStore()
+
+    await store.decline()
+
+    expect(calls.map((call) => `${call.method} ${call.url}`)).toEqual(['POST /api/v1/tutorial/decline'])
+    expect(store.goal?.key).toBe('network')
+    expect(store.tutorial?.done).toBe(19)
+    expect(store.reward).toBeNull()
   })
 
   it('leaves the tutorial when the driver skips', async () => {

@@ -21,7 +21,7 @@ const awayMs = computed(() => props.nowMs - (props.summary.from_ms ?? props.nowM
 </script>
 
 <template>
-  <section class="card flex flex-col gap-4 border-amber" aria-labelledby="away-title" data-test="away">
+  <section class="card flex flex-col gap-4 border-amber" aria-labelledby="away-title" data-tutorial="away" data-test="away">
     <h2 id="away-title" class="text-xl font-bold">{{ t('run.away.title') }}</h2>
 
     <dl class="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">

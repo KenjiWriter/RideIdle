@@ -607,7 +607,17 @@
     "rewardCarXp": "K. dorzucił Twojemu autu {xp} XP.",
     "rewardXp": "K. dorzucił Ci {xp} XP.",
     "rewardPart": "K. zostawił Ci część w inwentarzu: zamontujesz ją w Warsztacie.",
-    "rewardGarage": "K. załatwił Ci garaż w mieście {city}."
+    "rewardGarage": "K. załatwił Ci garaż w mieście {city}.",
+    "goalAria": "Aktualny cel",
+    "goalLabel": "Cel",
+    "goalNext": "Następny cel",
+    "goalStep": "Krok {number} z {total}",
+    "goalOptional": "Opcjonalnie",
+    "goalReward": "Nagroda",
+    "goalShow": "Pokaż",
+    "goalXp": "{xp} XP",
+    "goalCarXp": "{xp} XP auta",
+    "goalGarage": "Garaż w mieście {city}"
   },
   "story": {
     "scene1": "„Słuchaj, muszę zniknąć na jakiś czas.”",

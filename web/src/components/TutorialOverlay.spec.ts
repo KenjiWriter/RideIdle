@@ -187,6 +187,56 @@ describe('TutorialOverlay', () => {
     expect(wrapper.find('[data-test="tutorial-ring"]').exists()).toBe(true)
   })
 
+  it('points the steps of the first day and week at the tab that leads to the thing, and at the thing when the page has it', async () => {
+    const wanted: [string, string][] = [
+      ['merge', 'workshop'],
+      ['exchange', 'shop'],
+      ['service', 'workshop'],
+      ['upgrade', 'workshop'],
+      ['equipment', 'workshop'],
+      ['away', 'garage'],
+      ['profile', 'garage'],
+      ['garages', 'map'],
+    ]
+
+    for (const [target, tab] of wanted) {
+      const nav = putOnPage(tab, { top: 700, left: 10, width: 60, height: 50 })
+      const { wrapper } = await show(aTutorial(aStep({ target: target as never, acknowledged: true })))
+
+      // The tab of the navigation, while the page has not the thing.
+      expect(wrapper.get('[data-test="tutorial-ring"]').attributes('style'), target).toContain('top: 694px')
+      nav.remove()
+
+      const thing = putOnPage(target, { top: 120, left: 20, width: 300, height: 40 })
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      await flushPromises()
+      expect(wrapper.get('[data-test="tutorial-ring"]').attributes('style'), target).toContain('top: 114px')
+      thing.remove()
+      wrapper.unmount()
+      mounted.pop()
+    }
+  })
+
+  it('has a second button for a step that can be left for later, which leaves it', async () => {
+    const calls = serveApi(fetchMock, {
+      'POST /api/v1/tutorial/decline': () => respond(200, aTutorial(null, { done: 19 })),
+    })
+    const { wrapper } = await show(aTutorial(aStep({ optional: true, decline: 'Not now', target: 'profile' })))
+
+    expect(wrapper.get('[data-test="tutorial-decline"]').text()).toBe('Not now')
+    await wrapper.get('[data-test="tutorial-decline"]').trigger('click')
+    await flushPromises()
+
+    expect(calls.map((call) => `${call.method} ${call.url}`)).toEqual(['POST /api/v1/tutorial/decline'])
+    expect(wrapper.find('[data-test="tutorial-phone"]').exists()).toBe(false)
+  })
+
+  it('has no second button for a step that cannot be left', async () => {
+    const { wrapper } = await show()
+
+    expect(wrapper.find('[data-test="tutorial-decline"]').exists()).toBe(false)
+  })
+
   it('does not take the same answer twice while the first is on its way', async () => {
     let finish: (response: Response) => void = () => undefined
     const calls = serveApi(fetchMock, { 'POST /api/v1/tutorial/reply': () => new Promise<Response>((resolve) => (finish = resolve)) })

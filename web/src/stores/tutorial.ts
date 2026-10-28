@@ -16,6 +16,8 @@ export const useTutorialStore = defineStore('tutorial', () => {
   /** The server was asked at least once, whatever it answered: a screen that waits for the phone waits for this. */
   const asked = ref(false)
 
+  /** What to do next, while the tutorial is on, whether the step has started or still waits for its trigger. */
+  const goal = computed(() => (tutorial.value?.status === 'in_progress' ? (tutorial.value.goal ?? null) : null))
   /** The step that waits, while the tutorial is on. */
   const current = computed(() => (tutorial.value?.status === 'in_progress' ? tutorial.value.current : null))
   /** The phone is out: the driver has not answered the messages yet. */
@@ -54,6 +56,11 @@ export const useTutorialStore = defineStore('tutorial', () => {
     apply(await api<TutorialResponse>('/v1/tutorial/reply', { method: 'POST' }))
   }
 
+  /** Leaves the optional step that waits for later: no reward, and the next one goes on. */
+  async function decline(): Promise<void> {
+    apply(await api<TutorialResponse>('/v1/tutorial/decline', { method: 'POST' }))
+  }
+
   async function skip(): Promise<void> {
     apply(await api<TutorialResponse>('/v1/tutorial/skip', { method: 'POST' }))
   }
@@ -69,5 +76,5 @@ export const useTutorialStore = defineStore('tutorial', () => {
     asked.value = false
   }
 
-  return { tutorial, reward, asked, current, showing, waiting, load, reply, skip, acknowledgeReward, reset }
+  return { tutorial, reward, asked, goal, current, showing, waiting, load, reply, decline, skip, acknowledgeReward, reset }
 })
