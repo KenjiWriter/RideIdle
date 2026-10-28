@@ -64,6 +64,10 @@ final class RunInputsFactory
         }
 
         $tireKind = $this->tireKind($mounted);
+        $tiresEntry = $mounted['tires'] ?? null;
+        $tireAffixes = is_array($tiresEntry) ? (array) ($tiresEntry['affixes'] ?? []) : [];
+        $tireCondition = $this->rules->conditionStatPpm($this->rules->stagedConditionPpm(is_array($tiresEntry) ? (int) ($tiresEntry['wear'] ?? 0) : 0));
+        $surfaceLossPpm = $this->uniquePpm($mounted, 'tires', 'surface_loss');
         $tractionPpm = $this->rules->drivetrain($vehicle['drivetrain'])['traction_ppm'];
         $effects = [];
 
@@ -74,7 +78,15 @@ final class RunInputsFactory
             // The tires on this surface and the drive of the car (which puts the power on the road better or worse on it) multiply what depends on the grip of
             // the road, on top of what the weather does by itself.
             $surface = Surface::of($track['surface'], $effect['ground']);
-            $tirePpm = Ppm::mul($this->rules->tireGripPpm($tireKind, $surface), $tractionPpm[$surface]);
+            // What the tires grip on this surface: the matrix, less what the adaptive compound of a legendary pair does not lose, more what their affixes of the
+            // surface add, and the traction of the drive.
+            $matrixPpm = $this->rules->tireGripPpm($tireKind, $surface);
+
+            if ($surfaceLossPpm > 0 && $matrixPpm < Ppm::ONE) {
+                $matrixPpm = Ppm::ONE - Ppm::mul(Ppm::ONE - $matrixPpm, Ppm::ONE - $surfaceLossPpm);
+            }
+
+            $tirePpm = Ppm::mul(Ppm::mul($matrixPpm, Ppm::ONE + $this->rules->surfaceAffixPpm($tireAffixes, $surface, $tireCondition)), $tractionPpm[$surface]);
 
             foreach (self::TRACTION_STATS as $stat) {
                 $multipliersPpm[$stat] = Ppm::mul($tirePpm, $multipliersPpm[$stat] ?? Ppm::ONE);
@@ -108,6 +120,29 @@ final class RunInputsFactory
     }
 
     /**
+     * The affixes of a mounted part as the car feels them: the ones it was drawn with and, for a legendary part, the modifiers of the unique effect of its slot.
+     *
+     * @param  string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}  $entry
+     * @return array<string, int>
+     */
+    private function affixesOf(string $slot, string|array $entry): array
+    {
+        return is_array($entry) ? $this->rules->withUniqueAffixes((array) ($entry['affixes'] ?? []), Rarity::tryFrom((int) $entry['rarity']) ?? Rarity::Common, $slot) : [];
+    }
+
+    /**
+     * The amount of the special unique effect of the part in the slot of the car, in ppm, when it is a legendary part of a slot with that effect: 0 otherwise.
+     *
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted  the parts on the car, by slot
+     */
+    private function uniquePpm(array $mounted, string $slot, string $special): int
+    {
+        $entry = $mounted[$slot] ?? null;
+
+        return is_array($entry) ? $this->rules->uniqueSpecialPpm($slot, Rarity::tryFrom((int) $entry['rarity']) ?? Rarity::Common, $special) : 0;
+    }
+
+    /**
      * What is left of the chance of a breakdown after the affixes of reliability of the parts on the car, in ppm: each part with one takes its share off the chance.
      *
      * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted  the parts on the car, by slot
@@ -116,9 +151,9 @@ final class RunInputsFactory
     {
         $kept = Ppm::ONE;
 
-        foreach ($mounted as $entry) {
+        foreach ($mounted as $slot => $entry) {
             if (is_array($entry)) {
-                $kept = Ppm::mul($kept, Ppm::ONE - $this->rules->affixCutPpm((array) ($entry['affixes'] ?? []), 'reliability'));
+                $kept = Ppm::mul($kept, Ppm::ONE - $this->rules->affixCutPpm($this->affixesOf($slot, $entry), 'reliability'));
             }
         }
 
@@ -166,7 +201,7 @@ final class RunInputsFactory
 
             // A part with an affix of durability wears slower.
             if (is_array($entry)) {
-                $perKm[$slot] = Ppm::mul($perKm[$slot], Ppm::ONE - $this->rules->affixCutPpm((array) ($entry['affixes'] ?? []), 'wear'));
+                $perKm[$slot] = Ppm::mul($perKm[$slot], Ppm::ONE - $this->rules->affixCutPpm($this->affixesOf($slot, $entry), 'wear'));
             }
 
             $perLap[$slot] = intdiv($perKm[$slot] * $lengthM + 500, 1000);
@@ -390,8 +425,10 @@ final class RunInputsFactory
         $mass = $vehicle['mass_kg'] + $this->engineMassChange($vehicle, $parts) + array_sum(array_map(static fn (array $part): float => (float) ($part['stats']['mass_kg'] ?? 0.0), $parts));
         // A heavy car turns and stops worse, a light one better; the stock Rdzak has the mass the rules take as the reference.
         $massFactor = $this->rules->massFactor($mass);
+        // The dampers of a legendary suspension take a share off what a heavy body costs the handling.
+        $handlingMassFactor = $massFactor < 1.0 ? 1.0 - (1.0 - $massFactor) * (1.0 - $this->uniquePpm($mounted, 'suspension', 'mass_penalty') / Ppm::ONE) : $massFactor;
         // What the booster takes off the acceleration for its lag, and the launch of the gearbox adds to it or takes off (in percent).
-        $startFactor = $this->rules->lagFactor((float) ($parts['boost']['stats']['lag'] ?? 0.0)) * (1.0 + (float) ($parts['gearbox']['stats']['launch'] ?? 0.0) / 100.0);
+        $startFactor = $this->rules->lagFactor((float) ($parts['boost']['stats']['lag'] ?? 0.0) * (1.0 - $this->uniquePpm($mounted, 'boost', 'lag_cut') / Ppm::ONE)) * (1.0 + (float) ($parts['gearbox']['stats']['launch'] ?? 0.0) / 100.0);
         // The booster burns more through its own `fuel_mult`, so its gain is not counted again in the power that fuel use grows with.
         $fuelPower = $enginePower * $this->powerMultiplier($parts, withBooster: false);
         $fuelMultiplier = array_product(array_map(fn (array $part): float => (float) ($part['stats']['fuel_mult'] ?? 1.0) * (Ppm::ONE - $this->rules->affixCutPpm($part['affixes'] ?? [], 'fuel')) / Ppm::ONE, $parts));
@@ -410,7 +447,7 @@ final class RunInputsFactory
                 'accel' => $power / ($mass / 1000) * $startFactor * $driveStart * $kept,
                 'top_speed' => $topSpeed * $kept,
                 'grip' => (float) $tires['stats']['grip'] * $kept,
-                'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null) * $massFactor * $driveHandling * $kept,
+                'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null) * $handlingMassFactor * $driveHandling * $kept,
                 'braking' => $this->average($tires['stats']['braking'], $parts['brakes']['stats']['braking'] ?? null) * $massFactor * $kept,
                 'clearance' => $this->average($vehicle['clearance'], $parts['suspension']['stats']['clearance'] ?? null),
             ],
@@ -439,8 +476,8 @@ final class RunInputsFactory
                 throw new InvalidArgumentException("The part {$slug} belongs to the slot {$part['slot']}, not to {$slot}.");
             }
 
-            $condition = $this->rules->stagedConditionPpm(is_array($entry) ? (int) ($entry['wear'] ?? 0) : 0);
-            $affixes = is_array($entry) ? (array) ($entry['affixes'] ?? []) : [];
+            $condition = $this->rules->effectiveConditionPpm($slot, $rarity, $this->rules->stagedConditionPpm(is_array($entry) ? (int) ($entry['wear'] ?? 0) : 0));
+            $affixes = $this->rules->withUniqueAffixes(is_array($entry) ? (array) ($entry['affixes'] ?? []) : [], $rarity, $slot);
             $part['stats'] = $this->rules->scaledStats($part['stats'] ?? [], $rarity, $upgrade, $condition, $affixes);
             // What the affixes that are not about a statistic do is read from the part (`fuel` in the statistics of the car, `wear` and `reliability` in the plan).
             $part['affixes'] = $affixes;

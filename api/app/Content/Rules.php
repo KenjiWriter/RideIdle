@@ -800,7 +800,7 @@ final class Rules
         $extra = [];
 
         foreach ($affixes as $key => $amount) {
-            $definition = $this->affixes()['definitions'][$key] ?? null;
+            $definition = $this->affixDefinition($key);
 
             if ($definition !== null && $definition['effect'] === 'stat') {
                 $extra[$definition['stat']] = ($extra[$definition['stat']] ?? 0) + Ppm::mul($amount, $conditionStatPpm);
@@ -821,12 +821,100 @@ final class Rules
         $kept = Ppm::ONE;
 
         foreach ($affixes as $key => $amount) {
-            if (($this->affixes()['definitions'][$key]['effect'] ?? null) === $effect) {
+            if (($this->affixDefinition($key)['effect'] ?? null) === $effect) {
                 $kept = Ppm::mul($kept, Ppm::ONE - min(Ppm::ONE, $amount));
             }
         }
 
         return Ppm::ONE - $kept;
+    }
+
+    /**
+     * What the affixes of the tires add to their grip on a surface, in ppm: the `surface` affixes that name it, as much as the condition of the tires lets them give.
+     *
+     * @param  array<string, int>  $affixes  by key, with the amount in ppm
+     */
+    public function surfaceAffixPpm(array $affixes, string $surface, int $conditionStatPpm = Ppm::ONE): int
+    {
+        $extra = 0;
+
+        foreach ($affixes as $key => $amount) {
+            $definition = $this->affixDefinition($key);
+
+            if (($definition['effect'] ?? null) === 'surface' && in_array($surface, $definition['surfaces'], true)) {
+                $extra += Ppm::mul($amount, $conditionStatPpm);
+            }
+        }
+
+        return $extra;
+    }
+
+    /**
+     * The effect that a legendary part of a slot has of its own (not drawn: all of them have it), or null when the slot has none.
+     *
+     * @return array{name: array<string, string>, special?: string, ppm?: int, mods?: list<array{effect: string, stat?: string, ppm: int}>}|null
+     */
+    public function uniqueEffect(string $slot): ?array
+    {
+        return $this->data['affixes']['unique'][$slot] ?? null;
+    }
+
+    /** The amount of the special effect of a legendary part of the slot, in ppm, when its unique effect is that one: 0 for any other part and any other effect. */
+    public function uniqueSpecialPpm(string $slot, Rarity $rarity, string $special): int
+    {
+        $unique = $rarity === Rarity::Legendary ? $this->uniqueEffect($slot) : null;
+
+        return $unique !== null && ($unique['special'] ?? null) === $special ? (int) $unique['ppm'] : 0;
+    }
+
+    /**
+     * The affixes of a part for the pipeline: the ones it was drawn with, and, for a legendary part, the modifiers of the unique effect of its slot, which count as
+     * affixes of their own (`unique:{slot}:{n}`).
+     *
+     * @param  array<string, int>  $affixes
+     * @return array<string, int>
+     */
+    public function withUniqueAffixes(array $affixes, Rarity $rarity, string $slot): array
+    {
+        $unique = $rarity === Rarity::Legendary ? $this->uniqueEffect($slot) : null;
+
+        foreach ($unique['mods'] ?? [] as $n => $mod) {
+            $affixes["unique:{$slot}:{$n}"] = $mod['ppm'];
+        }
+
+        return $affixes;
+    }
+
+    /**
+     * The condition that a part gives its statistics by: the one it has, except that the brakes with the unique effect of the legendary ones brake as new down to the
+     * condition it names, and below it as worn as the condition is under that.
+     */
+    public function effectiveConditionPpm(string $slot, Rarity $rarity, int $conditionPpm): int
+    {
+        $floor = $this->uniqueSpecialPpm($slot, $rarity, 'braking_condition');
+
+        if ($floor === 0) {
+            return $conditionPpm;
+        }
+
+        return $conditionPpm >= $floor ? Ppm::ONE : intdiv(max(0, $conditionPpm) * Ppm::ONE, $floor);
+    }
+
+    /**
+     * An affix by its key: one of the rules, or a modifier of a unique effect.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function affixDefinition(string $key): ?array
+    {
+        if (str_starts_with($key, 'unique:')) {
+            [, $slot, $n] = explode(':', $key);
+            $mod = $this->data['affixes']['unique'][$slot]['mods'][(int) $n] ?? null;
+
+            return $mod === null ? null : ['effect' => $mod['effect'], 'stat' => $mod['stat'] ?? null];
+        }
+
+        return $this->affixes()['definitions'][$key] ?? null;
     }
 
     /**

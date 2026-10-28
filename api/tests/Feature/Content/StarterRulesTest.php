@@ -77,8 +77,16 @@ function rulesSchemaErrors(array $rules): array
     }
 
     foreach ((array) ($data->affixes->definitions ?? []) as $affix) {
-        if (isset($affix->slots) && is_object($affix->slots)) {
-            $affix->slots = array_values((array) $affix->slots);
+        foreach (['slots', 'surfaces'] as $key) {
+            if (isset($affix->{$key}) && is_object($affix->{$key})) {
+                $affix->{$key} = array_values((array) $affix->{$key});
+            }
+        }
+    }
+
+    foreach ((array) ($data->affixes->unique ?? []) as $unique) {
+        if (isset($unique->mods) && is_object($unique->mods)) {
+            $unique->mods = array_values((array) $unique->mods);
         }
     }
 

@@ -80,7 +80,7 @@ describe('how many affixes a rarity gives, and which', function () {
         foreach (range(1, 300) as $i) {
             $affixes = affixDraw()->roll("legend-{$i}", 'tires', Rarity::Legendary);
 
-            expect($affixes)->toHaveCount(3)->and(array_keys($affixes))->each->toBeIn(['grip', 'handling', 'braking', 'wear']);
+            expect($affixes)->toHaveCount(3)->and(array_keys($affixes))->each->toBeIn(['grip', 'handling', 'braking', 'wear', 'wet', 'loose']);
 
             foreach ($affixes as $key => $amount) {
                 expect($amount)->toBeGreaterThanOrEqual($definitions[$key]['min_ppm'])->and($amount)->toBeLessThanOrEqual($definitions[$key]['max_ppm']);
@@ -243,8 +243,8 @@ describe('what the client sees', function () {
         $inventory = test()->getJson('/api/v1/garage', [...bearerFor($driver), 'X-Locale' => 'pl'])->assertOk()->json('data.inventory');
 
         expect($inventory[0]['affixes'])->toEqual([
-            ['key' => 'grip', 'name' => 'Przyczepność', 'effect' => 'stat', 'stat' => 'grip', 'value_ppm' => 35_000, 'percent' => 3.5],
-            ['key' => 'wear', 'name' => 'Trwałość', 'effect' => 'wear', 'stat' => null, 'value_ppm' => 120_000, 'percent' => 12.0],
+            ['key' => 'grip', 'name' => 'Przyczepność', 'effect' => 'stat', 'stat' => 'grip', 'surfaces' => null, 'value_ppm' => 35_000, 'percent' => 3.5],
+            ['key' => 'wear', 'name' => 'Trwałość', 'effect' => 'wear', 'stat' => null, 'surfaces' => null, 'value_ppm' => 120_000, 'percent' => 12.0],
         ])->and($inventory[0]['stats']['grip'])->toBeGreaterThan(100 * 1.22);
     });
 
@@ -280,8 +280,8 @@ describe('what the pace of the rarities counts', function () {
     it('is the affixes that a part of a rarity has on average: the chance of each one times its mean amount', function () {
         $draw = affixDraw();
 
-        // An epic part of the tires has two of grip, handling, braking and durability (weights 3, 3, 3 and 2), so grip is there 6 times in 11.
-        expect($draw->expected('tires', Rarity::Epic))->toBe(['grip' => 19_091, 'handling' => 19_091, 'braking' => 19_091, 'wear' => 50_909])
+        // An epic part of the tires has two of grip, handling, braking, durability and the two of the surface (weights 3, 3, 3, 2, 1 and 1), so grip is there 6 times in 13.
+        expect($draw->expected('tires', Rarity::Epic))->toBe(['grip' => 16_154, 'handling' => 16_154, 'braking' => 16_154, 'wear' => 43_077, 'wet' => 8_462, 'loose' => 8_462])
             ->and($draw->expected('tires', Rarity::Common))->toBe([])
             // One affix fits a tank, and a legendary part has it for sure.
             ->and($draw->expected('tank', Rarity::Legendary))->toBe(['wear' => 140_000]);
@@ -300,10 +300,10 @@ describe('what the pace of the rarities counts', function () {
 });
 
 describe('the content', function () {
-    it('has the eight affixes of the first version, each with a name in five languages, inside its range and for slots that have the stat it changes', function () {
+    it('has the ten affixes, each with a name in five languages and inside its range', function () {
         $definitions = app(Rules::class)->affixes()['definitions'];
 
-        expect(array_keys($definitions))->toBe(['grip', 'handling', 'braking', 'clearance', 'power', 'wear', 'fuel', 'reliability']);
+        expect(array_keys($definitions))->toBe(['grip', 'handling', 'braking', 'clearance', 'power', 'wear', 'fuel', 'reliability', 'wet', 'loose']);
 
         foreach ($definitions as $key => $affix) {
             expect(array_keys($affix['name']))->toBe(['en', 'pl', 'fr', 'de', 'pt-BR'], $key)->and($affix['max_ppm'])->toBeGreaterThanOrEqual($affix['min_ppm']);

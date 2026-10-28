@@ -62,20 +62,20 @@ describe('the table of the pace of the rarities', function () {
             ->and($table['gain_by_crates'][$crates])->toBeGreaterThan($table['lap_gain_by_crates'][$crates]);
     })->with([
         'one crate' => [1, 10.8],
-        'ten crates' => [10, 39.1],
-        'forty crates' => [40, 50.3],
+        'ten crates' => [10, 39.0],
+        'forty crates' => [40, 50.1],
         'a hundred and fifty crates' => [150, 59.7],
     ]);
 
     it('says what a rarity of one slot is worth: the tires nearly all of it, and the exhaust nothing', function () {
         $gain = committedRarityPace()['rarity_gain'];
 
-        // Uncommon, rare, epic and legendary parts. The tires give grip, handling and braking at once, the exhaust only a gain of 2% of the power (and the affix of power).
-        expect($gain['tires'][2])->toEqualWithDelta(0.218, 0.001)
+        // Uncommon, rare, epic and legendary parts. The tires give grip, handling and braking at once, the exhaust only a gain of 2% of the power (and the affix of power, and the free flow of a legendary one).
+        expect($gain['tires'][2])->toEqualWithDelta(0.216, 0.001)
             ->and($gain['all_three'][3])->toEqualWithDelta(0.335, 0.001)
             ->and($gain['tires'][3])->toBeLessThan($gain['all_three'][3])
             ->and($gain['suspension'][3])->toBeLessThan($gain['tires'][3])
-            ->and($gain['exhaust'][3])->toBeLessThan(0.008);
+            ->and($gain['exhaust'][3])->toBeLessThan(0.015);
     });
 });
 

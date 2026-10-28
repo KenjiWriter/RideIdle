@@ -310,6 +310,54 @@
         "max_ppm": 120000,
         "slots": ["suspension", "brakes", "engine", "cooling"],
         "weight": 2
+      },
+      "wet": {
+        "name": { "en": "Wet grip", "pl": "Przyczepność na mokrym", "fr": "Adhérence sur le mouillé", "de": "Haftung bei Nässe", "pt-BR": "Aderência no molhado" },
+        "effect": "surface",
+        "surfaces": ["asphalt_wet", "mud"],
+        "min_ppm": 30000,
+        "max_ppm": 80000,
+        "slots": ["tires"],
+        "weight": 1
+      },
+      "loose": {
+        "name": { "en": "Loose-surface grip", "pl": "Przyczepność na luźnym", "fr": "Adhérence sur terrain meuble", "de": "Haftung auf losem Untergrund", "pt-BR": "Aderência em piso solto" },
+        "effect": "surface",
+        "surfaces": ["gravel_dry", "mud", "snow"],
+        "min_ppm": 30000,
+        "max_ppm": 80000,
+        "slots": ["tires"],
+        "weight": 1
+      }
+    },
+    "unique": {
+      "tires": {
+        "name": { "en": "Adaptive compound", "pl": "Adaptacyjna mieszanka", "fr": "Gomme adaptative", "de": "Adaptive Mischung", "pt-BR": "Composto adaptativo" },
+        "special": "surface_loss",
+        "ppm": 500000
+      },
+      "suspension": {
+        "name": { "en": "Adaptive dampers", "pl": "Zawieszenie adaptacyjne", "fr": "Amortisseurs adaptatifs", "de": "Adaptive Dämpfer", "pt-BR": "Amortecedores adaptativos" },
+        "special": "mass_penalty",
+        "ppm": 500000
+      },
+      "brakes": {
+        "name": { "en": "Fade-free", "pl": "Bez zaniku skuteczności", "fr": "Sans fading", "de": "Fading-frei", "pt-BR": "Sem fading" },
+        "special": "braking_condition",
+        "ppm": 500000
+      },
+      "exhaust": {
+        "name": { "en": "Free flow", "pl": "Swobodny przepływ", "fr": "Flux libre", "de": "Freier Durchfluss", "pt-BR": "Fluxo livre" },
+        "mods": [{ "effect": "stat", "stat": "power", "ppm": 20000 }, { "effect": "fuel", "ppm": 30000 }]
+      },
+      "engine": {
+        "name": { "en": "Tuned block", "pl": "Dopracowany blok", "fr": "Bloc affiné", "de": "Veredelter Block", "pt-BR": "Bloco refinado" },
+        "mods": [{ "effect": "stat", "stat": "power", "ppm": 15000 }, { "effect": "reliability", "ppm": 100000 }]
+      },
+      "boost": {
+        "name": { "en": "Compensated lag", "pl": "Skompensowane opóźnienie", "fr": "Retard compensé", "de": "Kompensierte Verzögerung", "pt-BR": "Atraso compensado" },
+        "special": "lag_cut",
+        "ppm": 500000
       }
     }
   },

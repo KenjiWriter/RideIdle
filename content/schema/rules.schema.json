@@ -510,6 +510,12 @@
           "minProperties": 1,
           "propertyNames": { "$ref": "common.schema.json#/$defs/slug" },
           "additionalProperties": { "$ref": "#/$defs/affix" }
+        },
+        "unique": {
+          "description": "The effect that a legendary part has of its own, by slot (Systemy I: 3 affixes and an effect that is the part's alone). It is not drawn: every legendary part of the slot has it. Either a special effect with its amount (surface_loss: the share of what the tires lose on a surface that does not suit them that they do not; mass_penalty: the share of what a heavy car loses in handling that it does not; braking_condition: the condition of the brakes down to which they brake as new; lag_cut: the share of the lag of a booster that is taken off), or modifiers that are fixed amounts of the effects an affix has.",
+          "type": "object",
+          "propertyNames": { "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"] },
+          "additionalProperties": { "$ref": "#/$defs/affixUnique" }
         }
       },
       "required": ["per_rarity", "definitions"],
@@ -839,19 +845,49 @@
       "additionalProperties": false
     },
     "affix": {
-      "description": "One kind of affix. stat is the statistic that a stat affix multiplies by 1 + the amount (power is the power of the engine, or the gain of a part that adds power); wear, fuel and reliability take the amount off how fast the part wears, how much fuel the car burns and how likely it is to break down.",
+      "description": "One kind of affix. stat is the statistic that a stat affix multiplies by 1 + the amount (power is the power of the engine, or the gain of a part that adds power); wear, fuel and reliability take the amount off how fast the part wears, how much fuel the car burns and how likely it is to break down; surface multiplies the grip of the tires on the surfaces it names by 1 + the amount.",
       "type": "object",
       "properties": {
         "name": { "$ref": "common.schema.json#/$defs/i18n" },
-        "effect": { "enum": ["stat", "wear", "fuel", "reliability"] },
+        "effect": { "enum": ["stat", "wear", "fuel", "reliability", "surface"] },
         "stat": { "enum": ["grip", "handling", "braking", "clearance", "power"] },
+        "surfaces": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["asphalt_dry", "asphalt_wet", "gravel_dry", "mud", "snow"] } },
         "min_ppm": { "type": "integer", "minimum": 1, "maximum": 1000000 },
         "max_ppm": { "type": "integer", "minimum": 1, "maximum": 1000000 },
         "slots": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"] } },
         "weight": { "description": "How often it is drawn among the affixes that fit the slot.", "type": "integer", "minimum": 1 }
       },
       "required": ["name", "effect", "min_ppm", "max_ppm", "slots", "weight"],
-      "allOf": [{ "if": { "properties": { "effect": { "const": "stat" } } }, "then": { "required": ["stat"] }, "else": { "not": { "required": ["stat"] } } }],
+      "allOf": [
+        { "if": { "properties": { "effect": { "const": "stat" } } }, "then": { "required": ["stat"] }, "else": { "not": { "required": ["stat"] } } },
+        { "if": { "properties": { "effect": { "const": "surface" } } }, "then": { "required": ["surfaces"] }, "else": { "not": { "required": ["surfaces"] } } }
+      ],
+      "additionalProperties": false
+    },
+    "affixUnique": {
+      "type": "object",
+      "properties": {
+        "name": { "$ref": "common.schema.json#/$defs/i18n" },
+        "special": { "enum": ["surface_loss", "mass_penalty", "braking_condition", "lag_cut"] },
+        "ppm": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "mods": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "effect": { "enum": ["stat", "wear", "fuel", "reliability"] },
+              "stat": { "enum": ["grip", "handling", "braking", "clearance", "power"] },
+              "ppm": { "type": "integer", "minimum": 1, "maximum": 1000000 }
+            },
+            "required": ["effect", "ppm"],
+            "allOf": [{ "if": { "properties": { "effect": { "const": "stat" } } }, "then": { "required": ["stat"] }, "else": { "not": { "required": ["stat"] } } }],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["name"],
+      "oneOf": [{ "required": ["special", "ppm"], "not": { "required": ["mods"] } }, { "required": ["mods"], "not": { "anyOf": [{ "required": ["special"] }, { "required": ["ppm"] }] } }],
       "additionalProperties": false
     },
     "storageClass": {
