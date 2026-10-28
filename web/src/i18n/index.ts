@@ -20,6 +20,54 @@ export const i18n = createI18n({
   pluralRules,
 })
 
+/** Słownik paczki: komunikaty, które paczka mówi po swojemu, po językach (język → klucz z kropkami → tekst). */
+export type Vocabulary = Record<string, Record<string, string>>
+
+let vocabulary: Vocabulary = {}
+
+/** Klucz z kropkami (slot.tires) jako drzewo komunikatów ({ slot: { tires } }), jakie ma plik języka. */
+function nested(flat: Record<string, string>): Record<string, unknown> {
+  const tree: Record<string, unknown> = {}
+
+  for (const [key, text] of Object.entries(flat)) {
+    const path = key.split('.')
+    let node = tree
+
+    for (const part of path.slice(0, -1)) {
+      if (typeof node[part] !== 'object' || node[part] === null) {
+        node[part] = {}
+      }
+
+      node = node[part] as Record<string, unknown>
+    }
+
+    node[path[path.length - 1]] = text
+  }
+
+  return tree
+}
+
+/** Nakłada słownik na teksty języka, o ile język jest już załadowany. */
+function mergeVocabulary(locale: AppLocale): void {
+  const flat = vocabulary[locale]
+
+  if (flat && Object.keys(flat).length > 0) {
+    i18n.global.mergeLocaleMessage(locale, nested(flat))
+  }
+}
+
+/**
+ * Ustawia słownik paczki: słowa, które paczka mówi inaczej niż aplikacja, nakładają się na jej teksty w załadowanych językach i w tych, które załadują się potem.
+ * Gdzie paczka nic nie mówi, zostaje tekst aplikacji.
+ */
+export function setVocabulary(next: Vocabulary): void {
+  vocabulary = next
+
+  for (const locale of i18n.global.availableLocales) {
+    mergeVocabulary(locale as AppLocale)
+  }
+}
+
 export function currentLocale(): AppLocale {
   return normalizeLocale(i18n.global.locale.value) ?? DEFAULT_LOCALE
 }
@@ -35,6 +83,7 @@ async function ensureLoaded(locale: AppLocale): Promise<void> {
   }
 
   i18n.global.setLocaleMessage(locale, (await loader()).default)
+  mergeVocabulary(locale)
 }
 
 /** Przełącza język interfejsu, zapamiętuje wybór i ustawia atrybut lang na stronie. */
