@@ -138,6 +138,8 @@ Ekran Mapa (plansza Mapa; w nawigacji jest pierwszy: Mapa, Garaż, Turniej, Wars
 
 **W drodze**: u góry baner „W drodze: Złomowo → Kruszyn” z paskiem i czasem dojazdu odliczanym zegarem serwera. Otwarta mapa pyta o podróż co 15 s i wtedy, gdy czas dojazdu minął (najwyżej co 3 s), jak warsztat. Auto w drodze ma na ekranach garażu i Turniej status „W drodze” (amber) i baner „Auto jedzie do miasta Kruszyn, dojazd za 1 min 30 s. W drodze nic nie zarabia.”, odliczany na żywo.
 
+Przyspieszona podróż (krok P2 płatnych funkcji): na arkuszu miasta, obok „Jedź tutaj”, jest „Jedź szybciej” z opisem, ile to trwa, ile pali i jakie jest ryzyko policji (z `route.boost` mapy), a przycisk wysyła `POST /travel` z `boost`. W pasku podróży jest znacznik „Przyspieszona”, a gdy policja zatrzyma auto (`travel.police`), **karta policji** (`PolicePrompt`): mandat, odliczanie minuty na wybór i trzy przyciski (zapłać mandat, daj łapówkę z ryzykiem, prawnik za RideCoin), po wyborze wynik słowami; błąd serwera (np. „Z policją już załatwione.”) pokazuje jego komunikat i odświeża mapę. Mapa odświeża się co 15 s, więc zatrzymanie widać zaraz po tym, jak nastąpiło. Teksty w pięciu językach; 16 nowych specyfikacji (`PolicePrompt.spec.ts` 12, widok mapy 4); nie sprawdzone w prawdziwej przeglądarce.
+
 ## Czas gry, prognoza i noc
 
 **HUD** pokazuje czas gry i pogodę tam, gdzie jedzie auto, jak plansza: „11:20 · sucho” w miejscu, gdzie była nazwa kierowcy (nazwa zostaje w tekście dla czytników ekranu), a po najechaniu „Czas w grze: 11:20, Dzień”. Godzinę liczy klient z zegara serwera i z `clock` z odpowiedzi biegu (trzy godziny realne to doba), odświeża ją co 2 s (minuta gry to 7,5 s) i pokazuje także bez auta, bo wzór jest stały; pogoda jest dopiero z biegu.
