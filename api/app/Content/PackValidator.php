@@ -637,8 +637,10 @@ final class PackValidator
                     $result->addError($relative, $pointer, 'A brace that is not a {name} cannot be shown: the app reads it as a part of a message.');
                 } elseif (! $isServer && (str_contains($text, '@:') || str_contains($text, '@.'))) {
                     $result->addError($relative, $pointer, 'A link to another message (@:key) is not allowed in the vocabulary.');
-                } elseif (substr_count($text, '|') !== substr_count($original, '|')) {
-                    $result->addError($relative, $pointer, 'The message has '.(substr_count($original, '|') + 1).' form(s) of a plural, separated by |: the text must have the same number.');
+                } elseif (substr_count($text, '|') !== substr_count($catalog->text($key, $locale) ?? $original, '|')) {
+                    // The forms of a plural are the ones of the language: Polish has three where English has two.
+                    $forms = substr_count($catalog->text($key, $locale) ?? $original, '|') + 1;
+                    $result->addError($relative, $pointer, "The message has {$forms} form(s) of a plural in this language, separated by |: the text must have the same number.");
                 }
             }
         }
