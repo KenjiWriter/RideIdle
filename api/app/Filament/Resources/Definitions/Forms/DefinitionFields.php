@@ -28,6 +28,7 @@ final class DefinitionFields
     /**
      * A text in every language of the game: English and Polish are required, the others fall back to English, which the validation warns about.
      *
+     * @param  string  $field  where the texts are in the state (the languages themselves when it is empty, for a list of texts)
      * @param  bool  $long  a box for a paragraph and not a line
      */
     public static function texts(string $field, string $label, bool $long = false, bool $required = true): Fieldset
@@ -35,7 +36,8 @@ final class DefinitionFields
         $boxes = [];
 
         foreach (DefinitionForm::LOCALES as $locale) {
-            $box = $long ? Textarea::make("{$field}.{$locale}")->rows(2)->maxLength(200) : TextInput::make("{$field}.{$locale}")->maxLength(200);
+            $path = $field === '' ? $locale : "{$field}.{$locale}";
+            $box = $long ? Textarea::make($path)->rows(2)->maxLength(200) : TextInput::make($path)->maxLength(200);
             $boxes[] = $box->label(config("ride.locale_names.{$locale}", $locale))->required($required && in_array($locale, ['en', 'pl'], true));
         }
 
