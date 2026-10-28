@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# Checks that the copies of the database of RideIdle are good for something. provision.sh installs this as /usr/local/sbin/rideidle-backup-verify and runs it from
+# /etc/cron.d/rideidle-backup: a quick check every night after the copy is made, and a full one (a restore) every Sunday.
+#
+#   --quick   the newest copy is there, is not old, is not tiny, and its table of contents can be read (a second)
+#   (none)    all of that, and then the copy is restored into a database of its own (rideidle_verify, which is dropped again), the tables that matter are there, and the
+#             balance of every wallet is the sum of its ledger: the rule of the game that a copy of it must keep. It does not touch the database of the game.
+#
+# The result is in $DIR/last-verify.txt (ok or FAILED, and the numbers), and the exit code is 1 when something is wrong, so that cron, a monitor or a person
+# running it by hand sees it. A copy that was never restored is a hope, not a copy: run it by hand once, as root, before you need it.
+#
+# Settings (environment): BACKUP_DIR, DB_NAME, VERIFY_DB, MAX_AGE_HOURS (26), MIN_BYTES (2048), PG_AS (the command that runs a PostgreSQL tool as its user: "runuser -u postgres --"),
+# PG_OWNER (postgres), STATUS_FILE.
+
+set -Eeuo pipefail
+
+DIR="${BACKUP_DIR:-/var/backups/rideidle}"
+DB_NAME="${DB_NAME:-rideidle}"
+VERIFY_DB="${VERIFY_DB:-${DB_NAME}_verify}"
+MAX_AGE_HOURS="${MAX_AGE_HOURS:-26}"
+MIN_BYTES="${MIN_BYTES:-2048}"
+PG_AS="${PG_AS-runuser -u postgres --}"
+PG_OWNER="${PG_OWNER:-postgres}"
+STATUS_FILE="${STATUS_FILE:-$DIR/last-verify.txt}"
+MODE="full"
+
+case "${1:-}" in
+    --quick) MODE="quick" ;;
+    "") ;;
+    *) echo "rideidle-backup-verify: unknown option ${1}. Use --quick or none." >&2; exit 2 ;;
+esac
+
+work=""
+scratch=0
+
+# shellcheck disable=SC2086  # PG_AS is a command with its arguments, on purpose
+pg() { $PG_AS "$@"; }
+
+cleanup() {
+    if [[ "$scratch" == "1" ]]; then
+        pg dropdb --if-exists "$VERIFY_DB" >/dev/null 2>&1 || true
+    fi
+
+    [[ -n "$work" ]] && rm -rf "$work"
+    return 0
+}
+trap cleanup EXIT
+
+write_status() {
+    mkdir -p "$(dirname "$STATUS_FILE")" 2>/dev/null || true
+    { printf '%s\n' "$1"; printf 'mode: %s\nat: %s\n' "$MODE" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"; shift; printf '%s\n' "$@"; } > "$STATUS_FILE" 2>/dev/null || true
+}
+
+fail() {
+    echo "rideidle-backup-verify: FAILED: $1" >&2
+    write_status "FAILED: $1"
+    exit 1
+}
+
+newest="$(find "$DIR" -maxdepth 1 -name "${DB_NAME}-*.dump" -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -1 | cut -d' ' -f2-)"
+[[ -n "$newest" ]] || fail "there is no copy in $DIR"
+
+age_hours=$(( ( $(date +%s) - $(stat -c %Y "$newest") ) / 3600 ))
+size="$(stat -c %s "$newest")"
+
+(( age_hours <= MAX_AGE_HOURS )) || fail "the newest copy, $newest, is ${age_hours} hours old (more than ${MAX_AGE_HOURS}): the nightly copy did not run or failed (see /var/log/rideidle-backup.log)"
+(( size >= MIN_BYTES )) || fail "the newest copy, $newest, is only ${size} bytes"
+
+# The folder is closed to everybody but root, so the copy goes to a place the PostgreSQL user can read, and is removed again.
+work="$(mktemp -d)"
+chmod 711 "$work"
+install -m 600 -o "$PG_OWNER" "$newest" "$work/copy.dump"
+
+pg pg_restore --list "$work/copy.dump" > "$work/contents.txt" 2>/dev/null || fail "the table of contents of $newest cannot be read: the copy is damaged"
+entries="$(grep -c . "$work/contents.txt" || true)"
+
+if [[ "$MODE" == "quick" ]]; then
+    write_status "ok" "file: $newest" "size_bytes: $size" "age_hours: $age_hours" "entries: $entries"
+    echo "rideidle-backup-verify: ok (quick): $newest, ${size} bytes, ${age_hours} hours old, $entries entries"
+    exit 0
+fi
+
+scratch=1
+pg dropdb --if-exists "$VERIFY_DB" >/dev/null 2>&1 || true
+pg createdb "$VERIFY_DB" || fail "cannot create the database $VERIFY_DB to restore into"
+pg pg_restore --no-owner --no-privileges --exit-on-error -d "$VERIFY_DB" "$work/copy.dump" 2>"$work/restore.log" || fail "the copy $newest could not be restored: $(head -c 300 "$work/restore.log" | tr '\n' ' ')"
+
+count() { pg psql -At -d "$VERIFY_DB" -c "select count(*) from $1" 2>/dev/null || echo "-1"; }
+
+declare -A rows=()
+
+for table in migrations users wallets ledger_entries race_runs cars settlements; do
+    value="$(count "$table")"
+    [[ "$value" != "-1" ]] || fail "the table $table is missing from the restored copy"
+    rows[$table]="$value"
+done
+
+# The rule of the game: the balance of a wallet is the sum of its ledger (cash, and the premium coins where the copy has them).
+mismatch_cash="$(pg psql -At -d "$VERIFY_DB" -c "select count(*) from wallets w where w.cash_cents <> coalesce((select sum(e.delta) from ledger_entries e where e.user_id = w.user_id and e.currency = 'cash'), 0)" 2>/dev/null || echo "-1")"
+[[ "$mismatch_cash" == "0" ]] || fail "the cash of $mismatch_cash wallets is not the sum of their ledger in the copy (-1 means the check could not be made)"
+
+mismatch_premium=0
+if [[ "$(pg psql -At -d "$VERIFY_DB" -c "select count(*) from information_schema.columns where table_name = 'wallets' and column_name = 'premium_coins'" 2>/dev/null || echo 0)" == "1" ]]; then
+    mismatch_premium="$(pg psql -At -d "$VERIFY_DB" -c "select count(*) from wallets w where w.premium_coins <> coalesce((select sum(e.delta) from ledger_entries e where e.user_id = w.user_id and e.currency = 'premium'), 0)" 2>/dev/null || echo "-1")"
+    [[ "$mismatch_premium" == "0" ]] || fail "the premium coins of $mismatch_premium wallets are not the sum of their ledger in the copy (-1 means the check could not be made)"
+fi
+
+write_status "ok" "file: $newest" "size_bytes: $size" "age_hours: $age_hours" "entries: $entries" \
+    "migrations: ${rows[migrations]}" "users: ${rows[users]}" "wallets: ${rows[wallets]}" "ledger_entries: ${rows[ledger_entries]}" "runs: ${rows[race_runs]}" "cars: ${rows[cars]}" "settlements: ${rows[settlements]}" \
+    "wallet_mismatches: 0"
+echo "rideidle-backup-verify: ok (restored): $newest, ${size} bytes, ${age_hours} hours old; ${rows[users]} users, ${rows[ledger_entries]} ledger entries, every wallet is the sum of its ledger"

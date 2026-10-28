@@ -156,7 +156,7 @@ check_system() {
     esac
 
     for file in nginx/rideidle.conf.template nginx/rideidle-global.conf nginx/rideidle-security.conf \
-        systemd/rideidle-queue.service.template env.production.example bin/rideidle-backup deploy.sh; do
+        systemd/rideidle-queue.service.template env.production.example bin/rideidle-backup bin/rideidle-backup-verify bin/rideidle-backup-offsite deploy.sh; do
         [[ -f "$HERE/$file" ]] || fail "Run this from the deploy/ folder of the repository: $file is missing next to it."
     done
 }
@@ -614,9 +614,15 @@ EOF
     chmod 644 /etc/cron.d/rideidle
 
     install -m 755 "$HERE/bin/rideidle-backup" /usr/local/sbin/rideidle-backup
+    install -m 755 "$HERE/bin/rideidle-backup-verify" /usr/local/sbin/rideidle-backup-verify
+    install -m 755 "$HERE/bin/rideidle-backup-offsite" /usr/local/sbin/rideidle-backup-offsite
     cat > /etc/cron.d/rideidle-backup <<'EOF'
-# RideIdle: a copy of the database every night
+# RideIdle: a copy of the database every night; a quick look that it is there and readable; a copy sent elsewhere (when /etc/rideidle/backup.env says where);
+# and, every Sunday, a restore of it into a database of its own to see that it is good for something
 15 3 * * * root /usr/local/sbin/rideidle-backup >> /var/log/rideidle-backup.log 2>&1
+30 3 * * * root /usr/local/sbin/rideidle-backup-verify --quick >> /var/log/rideidle-backup.log 2>&1
+40 3 * * * root /usr/local/sbin/rideidle-backup-offsite >> /var/log/rideidle-backup.log 2>&1
+0 4 * * 0 root /usr/local/sbin/rideidle-backup-verify >> /var/log/rideidle-backup.log 2>&1
 EOF
     chmod 644 /etc/cron.d/rideidle-backup
 
@@ -744,7 +750,8 @@ EOF
     fi
     echo "   - Fill the keys of Google, Facebook and Apple in the .env when you have them (deploy/README.md says where)."
     echo "   - Deploy the application from your computer:   deploy/upload.sh release ${DEPLOY_USER}@${DOMAIN}"
-    echo "   - Copy /var/backups/rideidle to another place now and then: a copy that is only on this server does not survive it."
+    echo "   - Send the copies to another place: a copy that is only on this server does not survive it. Set BACKUP_REMOTE in /etc/rideidle/backup.env (deploy/README.md, \"Kopie zapasowe\")."
+    echo "   - Run  sudo rideidle-backup && sudo rideidle-backup-verify  once by hand: a copy that was never restored is a hope, not a copy."
     [[ "$todo" == "1" ]] && echo && echo "  (The .env can be edited now; a change takes effect with the next deploy.)"
     echo
 }
