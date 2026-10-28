@@ -214,6 +214,12 @@ return [
         'app_says' => 'L’application dit : :text',
         'not_in_app' => 'L’application n’a pas ce message (il a été supprimé) ; videz les cases pour le retirer du vocabulaire.',
         'no_catalog' => 'Les fichiers des textes de l’application (web/src/i18n/locales) ne sont pas là : on ne voit pas ce que dit l’application et les clés ne peuvent pas être vérifiées. Seuls les messages que le pack modifie déjà sont listés.',
+        'download' => 'Télécharger le vocabulaire',
+        'import' => 'Charger un thème',
+        'import_title' => 'Charger un thème depuis un fichier',
+        'import_hint' => 'Les mots du fichier remplacent tous les mots du pack dans le brouillon (seul le brouillon change, et il est jugé comme un enregistrement du formulaire). Le fichier a la forme du vocabulaire que donne « Télécharger le vocabulaire » ; le thème prêt « Navires » se trouve dans content/themes/ships.json.',
+        'import_file' => 'Fichier JSON',
+        'import_invalid' => 'Ce n’est pas un vocabulaire : le fichier n’a pas de messages ou n’est pas du JSON.',
     ],
 
     'world' => [

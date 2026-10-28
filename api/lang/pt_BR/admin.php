@@ -214,6 +214,12 @@ return [
         'app_says' => 'O aplicativo diz: :text',
         'not_in_app' => 'O aplicativo não tem essa mensagem (foi removida); esvazie as caixas para tirá-la do vocabulário.',
         'no_catalog' => 'Os arquivos com os textos do aplicativo (web/src/i18n/locales) não estão aqui, então não dá para ver o que o aplicativo diz nem conferir as chaves. Só aparecem as mensagens que o pacote já altera.',
+        'download' => 'Baixar o vocabulário',
+        'import' => 'Carregar um tema',
+        'import_title' => 'Carregar um tema de um arquivo',
+        'import_hint' => 'As palavras do arquivo substituem todas as palavras do pacote no rascunho (só o rascunho muda, e ele é julgado como um salvamento do formulário). O arquivo tem o formato do vocabulário que “Baixar o vocabulário” dá; o tema pronto “Navios” está em content/themes/ships.json.',
+        'import_file' => 'Arquivo JSON',
+        'import_invalid' => 'Isto não é um vocabulário: o arquivo não tem mensagens ou não é JSON.',
     ],
 
     'world' => [

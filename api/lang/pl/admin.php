@@ -240,6 +240,12 @@ return [
         'app_says' => 'Aplikacja mówi: :text',
         'not_in_app' => 'Aplikacja nie ma takiego komunikatu (został usunięty); wyczyść pola, żeby go zdjąć ze słownika.',
         'no_catalog' => 'Nie ma tu plików z tekstami aplikacji (web/src/i18n/locales), więc nie widać, co aplikacja mówi, i nie da się sprawdzić kluczy. Widać tylko komunikaty, które paczka już zmienia.',
+        'download' => 'Pobierz słownik',
+        'import' => 'Wczytaj motyw',
+        'import_title' => 'Wczytaj motyw z pliku',
+        'import_hint' => 'Słowa z pliku zastąpią wszystkie słowa paczki w szkicu (zmieni się tylko szkic, zapis jak z formularza). Plik ma kształt słownika, jaki daje „Pobierz słownik”; gotowy motyw „Statki” leży w content/themes/ships.json.',
+        'import_file' => 'Plik JSON',
+        'import_invalid' => 'To nie jest słownik: plik nie ma komunikatów (messages) albo nie jest JSON-em.',
     ],
 
     'world' => [

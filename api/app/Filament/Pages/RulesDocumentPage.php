@@ -147,8 +147,13 @@ abstract class RulesDocumentPage extends Page implements HasSchemas
             return;
         }
 
+        $this->keep($definition, $this->toDocument($definition->workingDocument(), $this->form->getState()));
+    }
+
+    /** Keeps a document as the draft of the definition, if it is accepted, and says what is wrong when it is not; a form is not the only way to a document. */
+    protected function keep(ContentDefinition $definition, array $document): void
+    {
         $drafts = app(ContentDrafts::class);
-        $document = $this->toDocument($definition->workingDocument(), $this->form->getState());
         $result = $drafts->validate($definition->kind, $document, $definition->slug);
 
         if (! $result->isValid()) {
@@ -223,7 +228,7 @@ abstract class RulesDocumentPage extends Page implements HasSchemas
         Notification::make()->danger()->title(__("admin.definitions.refused.{$refusal->reason}", $refusal->params))->persistent()->send();
     }
 
-    private function admin(): Admin
+    protected function admin(): Admin
     {
         /** @var Admin $admin */
         $admin = Auth::guard('admin')->user();

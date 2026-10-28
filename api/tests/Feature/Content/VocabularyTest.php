@@ -15,6 +15,7 @@ use App\Models\ContentDefinition;
 use App\Models\User;
 use App\Services\ContentDrafts;
 use App\Services\ContentPublisher;
+use Illuminate\Http\UploadedFile;
 use Livewire\Livewire;
 
 // The vocabulary of a pack: the messages of the web app that the pack says in its own words. It is checked against the app that speaks them, is said by an endpoint
@@ -108,11 +109,15 @@ describe('the document', function () {
     it('keeps the forms of a plural the message has', function () {
         foreach (WebMessages::fromConfig()->all() as $key => $text) {
             if (str_contains($text, '|')) {
-                $forms = substr_count($text, '|');
                 $names = WebMessages::placeholders($text);
-                $same = implode(' | ', array_fill(0, $forms + 1, $names === [] ? 'x' : '{'.implode('} {', $names).'}'));
+                $texts = [];
 
-                expect(vocabularyResult([$key => ['en' => $same, 'pl' => $same]])['valid'])->toBeTrue();
+                foreach (['en', 'pl'] as $locale) {
+                    $forms = substr_count((string) WebMessages::fromConfig()->text($key, $locale), '|');
+                    $texts[$locale] = implode(' | ', array_fill(0, $forms + 1, $names === [] ? 'x' : '{'.implode('} {', $names).'}'));
+                }
+
+                expect(vocabularyResult([$key => $texts])['valid'])->toBeTrue();
 
                 return;
             }
@@ -360,5 +365,90 @@ describe('the texts of the server', function () {
         expect(trans('game.errors.run_exists', [], 'pl'))->toBe((include lang_path('pl/game.php'))['errors']['run_exists']);
 
         $this->getJson('/api/v1/runs/current', [...bearerFor($driver), 'X-Locale' => 'de'])->assertNotFound()->assertJsonPath('message', 'You have no ship at sea yet.');
+    });
+});
+
+/** The theme about ships that the repository keeps, as the vocabulary document it is. */
+function shipsTheme(): array
+{
+    return contentArray(json_decode((string) file_get_contents(dirname((string) config('ride.content_path').'/x').'/themes/ships.json')));
+}
+
+describe('a plural', function () {
+    it('has the forms of its language: three in Polish where English has two', function () {
+        $three = '{n} rejs | {n} rejsy | {n} rejsów';
+        $two = '{n} rejs | {n} rejsów';
+
+        $ok = vocabularyResult(['run.laps' => ['en' => '{n} voyage | {n} voyages', 'pl' => $three]]);
+        $wrong = vocabularyResult(['run.laps' => ['en' => '{n} voyage | {n} voyages', 'pl' => $two]]);
+
+        expect($ok['valid'])->toBeTrue()
+            ->and($wrong['valid'])->toBeFalse()
+            ->and($wrong['errors'][0]['pointer'])->toBe('/messages/run.laps/pl')
+            ->and($wrong['errors'][0]['message'])->toContain('3 form');
+    });
+});
+
+describe('the theme of ships', function () {
+    it('is a vocabulary that the app and the server accept in every word, and says so in the languages it has', function () {
+        $result = PackValidator::fromConfig()->validateSource(contentWith(['rules/vocabulary' => fn (): array => shipsTheme()]));
+
+        expect($result->errors())->toBe([])
+            ->and($result->isValid())->toBeTrue()
+            ->and(count(shipsTheme()['messages']))->toBeGreaterThan(80);
+    });
+
+    it('turns the slots, the stats, the menu and the voyages of the game into those of a ship, and what the server says', function () {
+        contentPacks()->import(contentWith(['rules/vocabulary' => fn (): array => shipsTheme()]), activate: true, checkTables: false);
+        readFromDatabase();
+
+        $web = $this->getJson('/api/v1/meta/vocabulary')->assertOk()->json('messages');
+
+        expect($web['pl']['slot.tires'])->toBe('Kadłub')
+            ->and($web['fr']['slot.tires'])->toBe('Coque')
+            ->and($web['en']['nav.garage'])->toBe('Dock')
+            ->and($web['de']['nav.lap'])->toBe('Leg {lap} · {time}')
+            ->and($web['pl']['run.laps'])->toBe('{n} rejs | {n} rejsy | {n} rejsów')
+            ->and(array_filter(array_keys($web['en']), fn (string $key): bool => str_starts_with($key, 'server.')))->toBe([])
+            ->and(Vocabulary::fromConfig()->serverLines('pl')['game.errors.no_run'])->toBe('Nie masz jeszcze statku na morzu.');
+    });
+});
+
+describe('the page and a theme', function () {
+    beforeEach(function () {
+        contentPacks()->import(repositoryContent(), checkTables: false, activate: true);
+        app()->setLocale('pl');
+    });
+
+    it('takes a theme from a file as the draft, in place of the words of the pack', function () {
+        signedInAdmin();
+        $json = (string) file_get_contents(dirname((string) config('ride.content_path').'/x').'/themes/ships.json');
+
+        Livewire::test(VocabularyPage::class)
+            ->callAction('import', ['theme' => UploadedFile::fake()->createWithContent('ships.json', $json)])
+            ->assertHasNoActionErrors();
+
+        expect(vocabularyDraft()['messages'])->toHaveCount(count(shipsTheme()['messages']))
+            ->and(vocabularyDraft()['messages']['slot.tires']['pl'])->toBe('Kadłub');
+    });
+
+    it('keeps no draft of a file that is not a vocabulary, or that has a word the app does not have', function () {
+        signedInAdmin();
+
+        $page = Livewire::test(VocabularyPage::class);
+        $page->callAction('import', ['theme' => UploadedFile::fake()->createWithContent('a.json', 'this is not json')]);
+        $page->callAction('import', ['theme' => UploadedFile::fake()->createWithContent('b.json', '{"messages": {"no.such.message": {"en": "x", "pl": "y"}}}')]);
+
+        expect(vocabularyDraft())->toBeNull();
+    });
+
+    it('gives the draft back as a file', function () {
+        signedInAdmin();
+
+        Livewire::test(VocabularyPage::class)
+            ->fillForm(['area' => 'slot', 'values' => ['m0' => ['pl' => 'Kadłub', 'en' => 'Hull']]])
+            ->call('save')
+            ->callAction('download')
+            ->assertFileDownloaded('vocabulary.json');
     });
 });

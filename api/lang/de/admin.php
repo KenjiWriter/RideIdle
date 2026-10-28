@@ -214,6 +214,12 @@ return [
         'app_says' => 'Die App sagt: :text',
         'not_in_app' => 'Die App hat diese Meldung nicht (sie wurde entfernt); leere die Felder, um sie aus dem Wortschatz zu nehmen.',
         'no_catalog' => 'Die Dateien mit den Texten der App (web/src/i18n/locales) sind hier nicht vorhanden, daher ist nicht zu sehen, was die App sagt, und die Schlüssel können nicht geprüft werden. Aufgeführt sind nur die Meldungen, die das Paket schon ändert.',
+        'download' => 'Wortschatz herunterladen',
+        'import' => 'Thema laden',
+        'import_title' => 'Thema aus einer Datei laden',
+        'import_hint' => 'Die Wörter der Datei ersetzen im Entwurf alle Wörter des Pakets (nur der Entwurf ändert sich, und er wird wie ein Speichern des Formulars geprüft). Die Datei hat die Form des Wortschatzes, den „Wortschatz herunterladen“ liefert; das fertige Thema „Schiffe“ liegt in content/themes/ships.json.',
+        'import_file' => 'JSON-Datei',
+        'import_invalid' => 'Das ist kein Wortschatz: Die Datei hat keine Meldungen oder ist kein JSON.',
     ],
 
     'world' => [

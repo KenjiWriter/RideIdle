@@ -240,6 +240,12 @@ return [
         'app_says' => 'The app says: :text',
         'not_in_app' => 'The app has no such message (it was removed); clear the boxes to take it out of the vocabulary.',
         'no_catalog' => 'The files with the texts of the app (web/src/i18n/locales) are not here, so what the app says cannot be shown and the keys cannot be checked. Only the messages that the pack already changes are listed.',
+        'download' => 'Download the vocabulary',
+        'import' => 'Load a theme',
+        'import_title' => 'Load a theme from a file',
+        'import_hint' => 'The words in the file replace all the words of the pack in the draft (only the draft changes, and it is judged like a save of the form). The file has the shape of the vocabulary that "Download the vocabulary" gives; the ready theme "Ships" is in content/themes/ships.json.',
+        'import_file' => 'JSON file',
+        'import_invalid' => 'This is not a vocabulary: the file has no messages or is not JSON.',
     ],
 
     'world' => [
