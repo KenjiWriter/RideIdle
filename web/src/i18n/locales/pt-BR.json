@@ -607,6 +607,25 @@
     "fog": "neblina",
     "snow": "neve"
   },
+  "trackPicker": {
+    "kind": { "sprint": "Sprint", "standard": "Padrão", "endurance": "Endurance" },
+    "title": "Pistas desta cidade",
+    "note": "Um sprint gasta pouco por hora, então o tanque dura muito. Uma endurance esvazia um tanque em minutos. O ganho por hora é contado depois do combustível, para este carro.",
+    "current": "Agora",
+    "choose": "Correr aqui",
+    "locked": "A partir do nível {level}",
+    "tooSmall": "Tanque pequeno demais para uma volta",
+    "lap": "Volta",
+    "pays": "Ganho por volta",
+    "fuelLap": "Combustível por volta",
+    "tank": "Um tanque dura",
+    "lapsPerTank": "Voltas por tanque",
+    "net": "Depois do combustível, por hora",
+    "position": "Posição entre os bots",
+    "positionValue": "{position} de {size}",
+    "error": "A pista não foi trocada.",
+    "done": "A partir de agora o carro corre em {name}."
+  },
   "race": {
     "live": "AO VIVO",
     "lapNow": "Volta {lap}",

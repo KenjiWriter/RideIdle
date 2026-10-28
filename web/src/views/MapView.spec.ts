@@ -44,7 +44,8 @@ function aCity(overrides: Partial<MapCity> & Pick<MapCity, 'slug' | 'name' | 'x'
     level_required: 3,
     open: true,
     garage: { owned: true, capacity: 3, used: 0, free: 3, price_cents: null },
-    track: { slug: `${overrides.slug}-track`, name: `${overrides.name} Track`, surface: 'gravel', lit: false, base_lap_ms: 95_000, demand: { accel: 5, grip: 25, handling: 25, braking: 10, clearance: 35 } },
+    track: { slug: `${overrides.slug}-track`, name: `${overrides.name} Track`, kind: 'standard', surface: 'gravel', lit: false, base_lap_ms: 95_000, demand: { accel: 5, grip: 25, handling: 25, braking: 10, clearance: 35 } },
+    tracks: [],
     fit_percent: 52,
     route: { km: 38, ms: 1_563_429, fuel_ml: 2_280 },
     ...overrides,
@@ -57,7 +58,7 @@ function aMap(overrides: Partial<MapResponse['data']> = {}, nowMs = NOW): MapRes
       here: 'zlomowo',
       level: 3,
       cities: [
-        aCity({ slug: 'zlomowo', name: 'Złomowo', x: 78, y: 290, home: true, here: true, level_required: 1, garage: { owned: true, capacity: 3, used: 1, free: 2, price_cents: null }, track: { slug: 'zlomowo-street', name: 'Złomowo Street Sprint', surface: 'asphalt', lit: true, base_lap_ms: 75_000, demand: { accel: 20, top_speed: 15, grip: 25, handling: 25, braking: 15 } }, fit_percent: 100, route: null }),
+        aCity({ slug: 'zlomowo', name: 'Złomowo', x: 78, y: 290, home: true, here: true, level_required: 1, garage: { owned: true, capacity: 3, used: 1, free: 2, price_cents: null }, track: { slug: 'zlomowo-street', name: 'Złomowo Street Sprint', kind: 'standard', surface: 'asphalt', lit: true, base_lap_ms: 75_000, demand: { accel: 20, top_speed: 15, grip: 25, handling: 25, braking: 15 } }, fit_percent: 100, route: null }),
         aCity({ slug: 'kruszyn', name: 'Kruszyn', x: 196, y: 185 }),
         aCity({ slug: 'autodrom', name: 'Autodrome', x: 90, y: 110, level_required: 12, open: false, garage: { owned: false, capacity: 3, used: 0, free: 0, price_cents: 500_000 }, route: { km: 68, ms: 2_800_000, fuel_ml: 4_080 } }),
       ],

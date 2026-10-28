@@ -7,6 +7,7 @@ import FuelGauge from '@/components/FuelGauge.vue'
 import GameShell from '@/components/GameShell.vue'
 import LapRing from '@/components/LapRing.vue'
 import RunAlerts from '@/components/RunAlerts.vue'
+import TrackPicker from '@/components/TrackPicker.vue'
 import { gameTime, untilNight } from '@/features/clock/gameClock'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { formatCountdown, lapProgress } from '@/features/run/lapProgress'
@@ -275,6 +276,9 @@ const ring = computed(() => {
             </div>
           </div>
         </div>
+
+        <!-- The tracks of the city where the car stands, when there are several: the driver chooses where it drives. -->
+        <TrackPicker />
 
         <!-- The field of eight, ranked by the lap in the dry; a run that was frozen before there were bots has the board with the driver alone, which is true. -->
         <div class="lb" data-test="board">

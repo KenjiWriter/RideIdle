@@ -607,6 +607,25 @@
     "fog": "brouillard",
     "snow": "neige"
   },
+  "trackPicker": {
+    "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Endurance" },
+    "title": "Circuits de cette ville",
+    "note": "Un sprint consomme peu à l’heure, donc le réservoir dure longtemps. Une endurance vide un réservoir en quelques minutes. Le gain à l’heure est compté après le carburant, pour cette voiture.",
+    "current": "Actuel",
+    "choose": "Rouler ici",
+    "locked": "À partir du niveau {level}",
+    "tooSmall": "Réservoir trop petit pour un tour",
+    "lap": "Tour",
+    "pays": "Gain par tour",
+    "fuelLap": "Carburant par tour",
+    "tank": "Un réservoir dure",
+    "lapsPerTank": "Tours par réservoir",
+    "net": "Après carburant, à l’heure",
+    "position": "Place parmi les bots",
+    "positionValue": "{position} sur {size}",
+    "error": "Le circuit n’a pas été changé.",
+    "done": "À partir de maintenant, la voiture roule sur {name}."
+  },
   "race": {
     "live": "EN DIRECT",
     "lapNow": "Tour {lap}",

@@ -607,6 +607,25 @@
     "fog": "fog",
     "snow": "snow"
   },
+  "trackPicker": {
+    "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Endurance" },
+    "title": "Tracks in this city",
+    "note": "A sprint burns little fuel an hour, so a tank lasts long. An endurance track burns a tank in minutes. What an hour earns is counted after the fuel, for this car.",
+    "current": "Now",
+    "choose": "Drive here",
+    "locked": "From level {level}",
+    "tooSmall": "Tank too small for one lap",
+    "lap": "Lap",
+    "pays": "Pays per lap",
+    "fuelLap": "Fuel per lap",
+    "tank": "A tank lasts",
+    "lapsPerTank": "Laps per tank",
+    "net": "After fuel, per hour",
+    "position": "Place among the bots",
+    "positionValue": "{position} of {size}",
+    "error": "The track was not changed.",
+    "done": "From now on the car drives {name}."
+  },
   "race": {
     "live": "LIVE",
     "lapNow": "Lap {lap}",

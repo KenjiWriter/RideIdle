@@ -607,6 +607,25 @@
     "fog": "mgła",
     "snow": "śnieg"
   },
+  "trackPicker": {
+    "kind": { "sprint": "Sprint", "standard": "Standardowy", "endurance": "Dystans" },
+    "title": "Tory w tym mieście",
+    "note": "Sprint spala mało paliwa na godzinę, więc zbiornik starcza na długo. Tor długodystansowy spala zbiornik w kilka minut. Zarobek na godzinę jest liczony po paliwie, dla tego auta.",
+    "current": "Teraz",
+    "choose": "Jedź tutaj",
+    "locked": "Od poziomu {level}",
+    "tooSmall": "Zbiornik za mały na jedno okrążenie",
+    "lap": "Okrążenie",
+    "pays": "Wypłata za okrążenie",
+    "fuelLap": "Paliwo na okrążenie",
+    "tank": "Zbiornik starcza na",
+    "lapsPerTank": "Okrążeń na zbiornik",
+    "net": "Po paliwie, na godzinę",
+    "position": "Miejsce wśród botów",
+    "positionValue": "{position} z {size}",
+    "error": "Nie zmieniono toru.",
+    "done": "Od teraz auto jeździ po: {name}."
+  },
   "race": {
     "live": "NA ŻYWO",
     "lapNow": "Okrążenie {lap}",

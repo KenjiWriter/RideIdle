@@ -182,6 +182,23 @@ export const useRunStore = defineStore('run', () => {
     return response
   }
 
+  /** Puts the car on another track of the city it stands in. What it earned on the old one is settled first. */
+  async function changeTrack(track: string): Promise<void> {
+    const current = run.value
+
+    if (!current) {
+      throw new Error('There is no run to change the track of.')
+    }
+
+    const response = await api<RunResponse>(`/v1/runs/${current.id}`, { method: 'PATCH', body: JSON.stringify({ track }) })
+
+    apply(response)
+
+    if (away.value === null) {
+      remember(response.data)
+    }
+  }
+
   /** Buys fuel: `liters` of it, or a full tank when null. */
   async function refuel(liters: number | null): Promise<RefuelResult> {
     const response = await act('refuel', String(liters ?? 'full'), liters !== null ? { liters } : {})
@@ -263,5 +280,5 @@ export const useRunStore = defineStore('run', () => {
     clearSeen()
   }
 
-  return { run, wallet, tow, loaded, away, brokenPart, starters, startTrack, serverNow, loadStarters, start, begin, load, refresh, refuel, repair, towCar, dismissAway, reset }
+  return { run, wallet, tow, loaded, away, brokenPart, starters, startTrack, serverNow, loadStarters, start, begin, load, refresh, changeTrack, refuel, repair, towCar, dismissAway, reset }
 })

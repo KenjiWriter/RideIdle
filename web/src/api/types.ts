@@ -61,7 +61,7 @@ export interface RunField {
 export interface Run {
   id: number
   car: { slug: string; name: string }
-  track: { slug: string; name: string }
+  track: { slug: string; name: string; kind?: TrackKind }
   status: RunStatus
   stop_reason: StopReason | null
   laps_done: number
@@ -661,11 +661,54 @@ export interface MapCity {
   level_required: number
   open: boolean
   garage: CityGarageState
-  track: { slug: string; name: string; surface: 'asphalt' | 'gravel'; lit: boolean; base_lap_ms: number; demand: Record<string, number> }
+  track: { slug: string; name: string; kind: TrackKind; surface: 'asphalt' | 'gravel'; lit: boolean; base_lap_ms: number; demand: Record<string, number> }
+  /** Every track of the city, in the order of the rules: the first is the one a car arrives on. */
+  tracks: MapTrack[]
   /** How well the car, with its parts, runs the track in the dry: 100 is the lap of a car that matches what the track asks. Null without a car. */
   fit_percent: number | null
   /** The way from the city the car is in: null for that city, without a car and while the car is on the road. */
   route: { km: number; ms: number; fuel_ml: number } | null
+}
+
+/** What a track asks of the driver: a lap of seconds that burns little, the usual one, or a lap of minutes that burns a tank in about twenty. */
+export type TrackKind = 'sprint' | 'standard' | 'endurance'
+
+/** A track of a city, and what a lap of it is for the car that is played (null without a car). */
+export interface MapTrack {
+  slug: string
+  name: string
+  kind: TrackKind
+  surface: 'asphalt' | 'gravel'
+  lit: boolean
+  level_required: number
+  /** The level of the driver opens it. */
+  open: boolean
+  /** The car drives it now. */
+  current: boolean
+  base_lap_ms: number
+  demand: Record<string, number>
+  car: MapTrackCar | null
+}
+
+/** The dry lap of the car on a track, and what it pays, burns and earns an hour after the fuel. Times in ms, fuel in ml, money in cents. */
+export interface MapTrackCar {
+  lap_ms: number
+  cash_cents: number
+  xp: number
+  fuel_ml: number
+  tank_ml: number
+  /** False when the tank cannot hold the fuel of one lap: the car cannot drive the track. */
+  fits_tank: boolean
+  laps_per_tank: number
+  /** How long a full tank lasts. */
+  tank_ms: number
+  gross_cents_per_hour: number
+  fuel_cents_per_hour: number
+  net_cents_per_hour: number
+  xp_per_hour: number
+  fit_percent: number
+  position: number | null
+  field_size: number | null
 }
 
 /** GET /api/v1/map, and the answer of POST /api/v1/travel. `now_ms` is the clock of the server. */

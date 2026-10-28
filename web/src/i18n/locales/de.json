@@ -607,6 +607,25 @@
     "fog": "Nebel",
     "snow": "Schnee"
   },
+  "trackPicker": {
+    "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Langstrecke" },
+    "title": "Strecken in dieser Stadt",
+    "note": "Ein Sprint verbraucht pro Stunde wenig, daher hält ein Tank lange. Eine Langstrecke leert einen Tank in Minuten. Der Verdienst pro Stunde ist nach dem Kraftstoff gerechnet, für dieses Auto.",
+    "current": "Jetzt",
+    "choose": "Hier fahren",
+    "locked": "Ab Stufe {level}",
+    "tooSmall": "Tank zu klein für eine Runde",
+    "lap": "Runde",
+    "pays": "Lohn pro Runde",
+    "fuelLap": "Kraftstoff pro Runde",
+    "tank": "Ein Tank hält",
+    "lapsPerTank": "Runden pro Tank",
+    "net": "Nach Kraftstoff, pro Stunde",
+    "position": "Platz unter den Bots",
+    "positionValue": "{position} von {size}",
+    "error": "Die Strecke wurde nicht gewechselt.",
+    "done": "Ab jetzt fährt das Auto auf {name}."
+  },
   "race": {
     "live": "LIVE",
     "lapNow": "Runde {lap}",
