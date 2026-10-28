@@ -10,6 +10,7 @@ use App\Domain\Run\TrackProfile;
 use App\Mail\AccountLinkMail;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
+use App\Models\Admin;
 use App\Models\Car;
 use App\Models\CityGarage;
 use App\Models\LedgerEntry;
@@ -514,4 +515,16 @@ function readFromDatabase(): void
 {
     config(['ride.content_source' => 'database']);
     app()->forgetScopedInstances();
+}
+
+// The panel of the people who run the content (AdminAccountsTest, AdminPanelTest).
+
+function anAdmin(array $attributes = []): Admin
+{
+    return Admin::query()->create([
+        'name' => 'Boss',
+        'email' => 'boss@example.com',
+        'password' => 'a-long-enough-password',
+        ...$attributes,
+    ]);
 }

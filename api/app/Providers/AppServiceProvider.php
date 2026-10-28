@@ -7,6 +7,7 @@ use App\Content\Catalog;
 use App\Content\ContentSource;
 use App\Content\Rules;
 use App\Content\TutorialSteps;
+use App\Listeners\AuditAdminSignIn;
 use App\Services\Accounts;
 use App\Services\ContentPacks;
 use App\Services\Ledger;
@@ -43,6 +44,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // The sign-ins of the admin panel go to its trail.
+        Event::subscribe(AuditAdminSignIn::class);
+
         // Apple is not one of the providers Socialite has built in.
         Event::listen(function (SocialiteWasCalled $event): void {
             $event->extendSocialite('apple', Provider::class);

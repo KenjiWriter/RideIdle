@@ -68,6 +68,11 @@ return [
 
     'content_path' => env('CONTENT_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'content'),
 
+    // The admin panel (F4): the host it answers on (admin.example.com; then it is the whole of that host), or nothing, and it is /admin on the host of the
+    // application, which is how a development machine has it. The language of the panel is the one of the people who run it.
+    'admin_domain' => env('ADMIN_DOMAIN') ?: null,
+    'admin_locale' => env('ADMIN_LOCALE', 'pl'),
+
     // Where the game reads its content from: `files` (the content/ folder, which is what a development machine and the tests use) or `database` (the pack that
     // was made live with content:activate; a deploy installs the one of the release the first time, with content:check --install).
     'content_source' => env('CONTENT_SOURCE', 'files'),
