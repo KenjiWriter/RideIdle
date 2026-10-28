@@ -354,7 +354,29 @@
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Condition: {percent}%",
-    "unserviceable": "Unserviceable"
+    "unserviceable": "Unserviceable",
+    "affix": {
+      "title": "Affixes",
+      "stat": "{name} +{percent}%",
+      "wear": "{name}: wear −{percent}%",
+      "fuel": "{name}: fuel −{percent}%",
+      "reliability": "{name}: breakdowns −{percent}%",
+      "surface": "{name} +{percent}% ({surfaces})",
+      "unnamed": {
+        "stat": "Bonus",
+        "wear": "Durability",
+        "fuel": "Efficiency",
+        "reliability": "Reliability",
+        "surface": "Grip"
+      }
+    },
+    "unique": {
+      "label": "Unique effect",
+      "surface_loss": "Keeps {percent}% of the grip it would lose on a surface that does not suit the tires",
+      "mass_penalty": "{percent}% less of the mass penalty on handling",
+      "braking_condition": "Brakes as new down to {percent}% condition",
+      "lag_cut": "{percent}% less turbo lag"
+    }
   },
   "shop": {
     "title": "Shop",
@@ -447,7 +469,7 @@
     "mergeChance": "Chance: {chance}%",
     "mergeChancePity": "Chance: {chance}% ({base}% + {pity} points of protection from bad luck)",
     "mergeCost": "An attempt costs {price} and takes {time}.",
-    "mergeKeeps": "The model and the upgrade of {part} stay; {other} is used up.",
+    "mergeKeeps": "The model and the upgrade of {part} stay, and so do its affixes (it gets the ones its new rarity lacks); {other} is used up.",
     "mergeFailure": "If it fails, both parts are lost and you get {scrap} in scrap.",
     "mergeConfirm": "Merge the parts",
     "mergeClose": "Close",

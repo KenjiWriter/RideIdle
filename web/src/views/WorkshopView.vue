@@ -8,6 +8,7 @@ import GameShell from '@/components/GameShell.vue'
 import JobCancel from '@/components/JobCancel.vue'
 import PartCondition from '@/components/PartCondition.vue'
 import PartMerge from '@/components/PartMerge.vue'
+import PartAffixes from '@/components/PartAffixes.vue'
 import PartStats from '@/components/PartStats.vue'
 import RarityMark from '@/components/RarityMark.vue'
 import UpgradeMark from '@/components/UpgradeMark.vue'
@@ -506,6 +507,7 @@ async function cancel(jobId: number): Promise<void> {
             </p>
             <p class="sub">{{ t(`slot.${result.slot}`) }} · {{ t('workshop.mergeChance', { chance: percent(result.chance_ppm / 10_000) }) }}</p>
             <p v-if="!result.success" class="sub" data-test="merge-result-scrap">{{ t('workshop.mergeScrap', { scrap: money(result.scrap_cents, 2) }) }}</p>
+            <PartAffixes v-if="result.success && result.part" :part="result.part" />
           </li>
         </ul>
       </section>
@@ -560,6 +562,7 @@ async function cancel(jobId: number): Promise<void> {
                 <RarityMark v-if="slot.part.rarity_rank > 1" :rarity="slot.part.rarity" />
                 <UpgradeMark :level="slot.part.upgrade" />
               </span>
+              <PartAffixes :part="slot.part" compact />
               <PartCondition :percent="slot.part.condition_percent" />
               <!-- Putting a worn part right: paid now, and the car stands while the mechanic is at it. A part that is worn out has to be replaced, and says so. -->
               <template v-if="canRepair(slot.part.repair_next) || slot.part.repair_next.locked?.reason === 'worn_out'">
@@ -626,6 +629,7 @@ async function cancel(jobId: number): Promise<void> {
                 <UpgradeMark :level="part.upgrade" />
               </p>
               <PartStats :part="part" />
+              <PartAffixes :part="part" />
               <PartCondition :percent="part.condition_percent" class="mt-1.5" />
               <p v-if="part.repair_next?.locked?.reason === 'worn_out'" class="sub mt-1" :data-test="`repair-info-${part.id}`">{{ t('workshop.repairWornOut') }}</p>
             </div>

@@ -354,7 +354,29 @@
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Estado: {percent}%",
-    "unserviceable": "Inutilizável"
+    "unserviceable": "Inutilizável",
+    "affix": {
+      "title": "Afixos",
+      "stat": "{name} +{percent}%",
+      "wear": "{name}: desgaste −{percent}%",
+      "fuel": "{name}: combustível −{percent}%",
+      "reliability": "{name}: quebras −{percent}%",
+      "surface": "{name} +{percent}% ({surfaces})",
+      "unnamed": {
+        "stat": "Bônus",
+        "wear": "Durabilidade",
+        "fuel": "Economia",
+        "reliability": "Confiabilidade",
+        "surface": "Aderência"
+      }
+    },
+    "unique": {
+      "label": "Efeito único",
+      "surface_loss": "Mantém {percent}% da aderência que perderia em um piso que não combina com os pneus",
+      "mass_penalty": "{percent}% menos penalidade de massa na dirigibilidade",
+      "braking_condition": "Freia como nova até {percent}% de condição",
+      "lag_cut": "{percent}% menos atraso do turbo"
+    }
   },
   "shop": {
     "title": "Loja",
@@ -447,7 +469,7 @@
     "mergeChance": "Chance: {chance}%",
     "mergeChancePity": "Chance: {chance}% ({base}% + {pity} p.p. de proteção contra o azar)",
     "mergeCost": "Uma tentativa custa {price} e leva {time}.",
-    "mergeKeeps": "O modelo e o aprimoramento de {part} ficam; {other} é consumida.",
+    "mergeKeeps": "O modelo e o aprimoramento de {part} ficam, assim como seus afixos (ela recebe os que faltam à nova raridade); {other} é consumida.",
     "mergeFailure": "Se falhar, as duas peças se perdem e você recebe {scrap} em sucata.",
     "mergeConfirm": "Fundir as peças",
     "mergeClose": "Fechar",

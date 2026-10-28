@@ -300,6 +300,34 @@ export interface PartInfo {
   upgrade_max: number
   /** Tires only: how well they grip on each surface, 1 being the grip of the tires on dry asphalt. */
   surfaces?: Record<SurfaceKey, number> | null
+  /** The affixes the part was drawn with when it got its rarity, in the order they were drawn: none for a common part and the parts of the shop. */
+  affixes?: PartAffix[]
+  /** What a legendary part has of its own, the same for all of its slot: null for any other part. */
+  unique?: PartUnique | null
+}
+
+/** What an affix changes: a statistic of the part, how fast it wears, the fuel of the car, how likely it is to break down, or the grip of the tires on some surfaces. */
+export type AffixEffect = 'stat' | 'wear' | 'fuel' | 'reliability' | 'surface'
+
+/** One affix of a part: `name` is in the language of the driver, `percent` how much it gives (the share it adds to the statistic or takes off the wear, the fuel or the breakdowns). */
+export interface PartAffix {
+  key: string
+  name: string
+  effect: AffixEffect
+  /** The statistic of a `stat` affix (grip, handling, braking, clearance or power). */
+  stat: string | null
+  /** The surfaces of a `surface` affix. */
+  surfaces: SurfaceKey[] | null
+  value_ppm: number
+  percent: number
+}
+
+/** The effect of a legendary part: a special one (`special`, by how much in `percent`), or modifiers (`mods`, each with the name of what it changes when the rules have one). */
+export interface PartUnique {
+  name: string
+  special: 'surface_loss' | 'mass_penalty' | 'braking_condition' | 'lag_cut' | null
+  percent: number | null
+  mods: { effect: AffixEffect; stat: string | null; name: string | null; percent: number }[] | null
 }
 
 /**

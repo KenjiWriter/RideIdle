@@ -7,6 +7,7 @@ import { ApiError } from '@/api/client'
 import type { CrateGroup, CrateOffer, CrateSlot, OpenedCrate, ShopOffer } from '@/api/types'
 import CityTabs from '@/components/CityTabs.vue'
 import GameShell from '@/components/GameShell.vue'
+import PartAffixes from '@/components/PartAffixes.vue'
 import PartStats from '@/components/PartStats.vue'
 import RarityMark from '@/components/RarityMark.vue'
 import { lockText } from '@/features/parts/lock'
@@ -213,6 +214,7 @@ async function openCrate(kind: CrateOffer): Promise<void> {
           </div>
           <p class="sub">{{ t(`slot.${found.slot}`) }}</p>
           <PartStats :part="found" />
+          <PartAffixes :part="found" />
           <p v-if="!found.mountable && store.shopCar" class="text-sm text-danger" data-test="found-needs-level">
             {{ t('shop.needsLevel', { level: found.required_car_level }) }} {{ t('shop.yourLevel', { level: store.shopCar.level }) }}
           </p>
