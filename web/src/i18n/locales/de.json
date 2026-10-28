@@ -649,6 +649,23 @@
     "tooFew": "Nicht genug RideCoin: Du hast {balance}.",
     "done": "Fertig: {coins} RideCoin ausgegeben."
   },
+  "police": {
+    "title": "Die Polizei hat dich angehalten!",
+    "fine": "Strafe: {amount}.",
+    "decideIn": "Du hast {time} zur Wahl; danach wird die Strafe für dich bezahlt.",
+    "pay": "Strafe zahlen · {amount}",
+    "payNote": "Das Auto steht {stop}.",
+    "bribe": "Bestechung anbieten · {amount}",
+    "bribeNote": "{risk} % Chance, dass es nicht klappt: dann {failAmount} und das Auto steht {failStop}.",
+    "lawyer": "Anwalt · {coins} RideCoin",
+    "lawyerNote": "Keine Strafe und kein Halt.",
+    "lawyerTooFew": "Nicht genug RideCoin: Du hast {balance}.",
+    "paid": "Strafe bezahlt: {amount}. Das Auto stand {stop}.",
+    "bribed": "Die Bestechung hat geklappt: {amount}. Du fährst weiter.",
+    "bribeFailed": "Die Bestechung hat nicht geklappt: {amount} und das Auto steht {stop}.",
+    "lawyered": "Der Anwalt hat es geregelt: keine Strafe.",
+    "defaulted": "Du hast nicht rechtzeitig gewählt: die Strafe von {amount} wurde bezahlt."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Langstrecke" },
     "title": "Strecken in dieser Stadt",
@@ -733,6 +750,9 @@
     "onTheWay": "Unterwegs: {from} → {to}",
     "eta": "in {time}",
     "go": "Hierhin fahren",
+    "goFast": "Schneller fahren",
+    "boostNote": "Schneller: {time} statt {normal}, {fuel} l Kraftstoff statt {normalFuel} l. Die Polizei kann dich anhalten ({risk} %).",
+    "boosted": "Beschleunigt",
     "started": "Das Auto ist nach {city} unterwegs.",
     "requires": "Was die Strecke verlangt",
     "fit": "Eignung von {car}",

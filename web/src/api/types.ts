@@ -751,7 +751,8 @@ export interface MapCity {
   /** How well the car, with its parts, runs the track in the dry: 100 is the lap of a car that matches what the track asks. Null without a car. */
   fit_percent: number | null
   /** The way from the city the car is in: null for that city, without a car and while the car is on the road. */
-  route: { km: number; ms: number; fuel_ml: number } | null
+  /** What the way costs, and what a boosted journey would take and burn, and the risk of it (absent in older answers, null when the game has no boost). */
+  route: { km: number; ms: number; fuel_ml: number; boost?: { ms: number; fuel_ml: number; police_chance_ppm: number } | null } | null
 }
 
 /** What a track asks of the driver: a lap of seconds that burns little, the usual one, or a lap of minutes that burns a tank in about twenty. */
@@ -802,11 +803,36 @@ export interface MapResponse {
     level: number
     cities: MapCity[]
     roads: { from: string; to: string; km: number }[]
-    travel: { from: string; to: string; distance_km: number; start_ms: number; arrive_ms: number; speedup?: Speedup | null } | null
+    travel: { from: string; to: string; distance_km: number; start_ms: number; arrive_ms: number; speedup?: Speedup | null; boosted?: boolean; police?: PoliceStop | null } | null
   }
   now_ms: number
   /** The premium coins of the driver (absent in older answers). */
   premium_coins?: number
+}
+
+/** What the police ask of a driver whose car they stopped on a boosted journey, and what came of it once the driver chose. */
+export interface PoliceStop {
+  at_ms: number
+  decide_by_ms: number
+  fine_cents: number
+  status: 'pending' | 'resolved'
+  choice: string | null
+  outcome: 'paid' | 'bribed' | 'bribe_failed' | 'lawyered' | 'defaulted' | 'waived' | null
+  paid_cents: number | null
+  /** What each choice costs while the driver has not chosen (null after). */
+  options: {
+    pay: { cents: number; stop_ms: number }
+    bribe: { cents: number; risk_ppm: number; fail_cents: number; fail_stop_ms: number }
+    lawyer: { coins: number } | null
+  } | null
+}
+
+export type PoliceChoice = 'pay' | 'bribe' | 'lawyer'
+
+/** POST /api/v1/travel/police: the map as it is now, and what came of the choice; `repeated` says the same choice was made before. */
+export interface PoliceChoiceResponse extends MapResponse {
+  repeated: boolean
+  police: { choice: string | null; outcome: PoliceStop['outcome']; paid_cents: number | null }
 }
 
 /** POST /api/v1/travel/finish: the map as it is now, and the coins it cost; `repeated` says it was done before (nothing was charged). */

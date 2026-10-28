@@ -3,8 +3,9 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
-import type { MapCity } from '@/api/types'
+import type { MapCity, PoliceChoice } from '@/api/types'
 import GameShell from '@/components/GameShell.vue'
+import PolicePrompt from '@/components/PolicePrompt.vue'
 import SpeedupButton from '@/components/SpeedupButton.vue'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -214,6 +215,34 @@ async function buyGarage(city: MapCity): Promise<void> {
   }
 }
 
+/** What the driver chooses when the police have stopped the car. */
+async function decide(choice: PoliceChoice): Promise<void> {
+  if (busy.value) {
+    return
+  }
+
+  busy.value = true
+  error.value = null
+
+  try {
+    await map.decidePolice(choice)
+    now.value = map.serverNow()
+  } catch (failure) {
+    if (endSessionIfUnauthorized(failure)) {
+      return
+    }
+
+    error.value = refusal(failure)
+
+    // The time ran out, or the stop was dealt with: what is shown is stale.
+    if (failure instanceof ApiError && failure.status === 422) {
+      void load()
+    }
+  } finally {
+    busy.value = false
+  }
+}
+
 /** Brings the car to the city at once for premium coins: the driver has said yes to the price. */
 async function finishTrip(): Promise<void> {
   if (busy.value) {
@@ -243,7 +272,7 @@ async function finishTrip(): Promise<void> {
   }
 }
 
-async function go(city: MapCity): Promise<void> {
+async function go(city: MapCity, boost = false): Promise<void> {
   if (!canGo.value) {
     return
   }
@@ -253,7 +282,7 @@ async function go(city: MapCity): Promise<void> {
   clearStarted()
 
   try {
-    await map.travel(city.slug)
+    await map.travel(city.slug, boost)
     now.value = map.serverNow()
     showStarted(t('map.started', { city: city.name }))
     // The server moves the tutorial when it is asked, and a journey that has begun is what a step waits for.
@@ -298,9 +327,12 @@ async function go(city: MapCity): Promise<void> {
           <p class="text-[13px] font-semibold text-ink">{{ t('map.onTheWay', { from: fromName, to: toName }) }}</p>
           <span class="chip chip-cy" data-test="travel-eta">{{ t('map.eta', { time: formatDuration(travel.arrive_ms - now) }) }}</span>
         </div>
+        <span v-if="travel.boosted" class="chip chip-am self-start" data-test="travel-boosted">{{ t('map.boosted') }}</span>
         <div class="bar bar-cy" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="Math.round(progress * 100)" data-test="travel-bar">
           <i :style="{ width: `${Math.round(progress * 100)}%` }" />
         </div>
+        <!-- The police on a boosted journey: the fine and the choices while the driver has not chosen, what came of it after. -->
+        <PolicePrompt v-if="travel.police" :police="travel.police" :now="now" :coins="map.premiumCoins" :disabled="busy" @choose="decide" />
         <!-- What arriving at once costs in premium coins, when the game sells it. -->
         <SpeedupButton
           v-if="travel.speedup"
@@ -393,6 +425,21 @@ async function go(city: MapCity): Promise<void> {
         </div>
 
         <button v-if="!selected.here" type="button" class="btn btn-primary" :disabled="!canGo" data-tutorial="travel" data-test="go" @click="go(selected)">{{ t('map.go') }}</button>
+        <!-- A faster journey: it burns more fuel, and the police may stop the car (the server says how likely). -->
+        <template v-if="!selected.here && selected.route?.boost">
+          <button type="button" class="btn btn-secondary" :disabled="!canGo" data-test="go-boost" @click="go(selected, true)">{{ t('map.goFast') }}</button>
+          <p class="text-[13px] text-muted" data-test="boost-note">
+            {{
+              t('map.boostNote', {
+                time: formatDuration(selected.route.boost.ms),
+                normal: formatDuration(selected.route.ms),
+                fuel: fixed(selected.route.boost.fuel_ml / 1000, 1),
+                normalFuel: fixed(selected.route.fuel_ml / 1000, 1),
+                risk: Math.round(selected.route.boost.police_chance_ppm / 10_000),
+              })
+            }}
+          </p>
+        </template>
         <p v-if="blocked" class="text-sm text-muted" data-test="reason">{{ blocked }}</p>
       </section>
     </template>

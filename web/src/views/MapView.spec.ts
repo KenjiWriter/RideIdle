@@ -269,6 +269,137 @@ describe('MapView', () => {
     expect(wrapper.get('[data-test="car-marker"]').attributes('style')).toContain('left: 35.128')
   })
 
+  describe('a boosted journey', () => {
+    const boostedMap = (overrides: Partial<MapResponse['data']> = {}, nowMs = NOW) => {
+      const map = aMap(overrides, nowMs)
+      const kruszyn = map.data.cities.find((city) => city.slug === 'kruszyn')
+
+      if (kruszyn?.route) {
+        kruszyn.route = { ...kruszyn.route, boost: { ms: 1_202_637, fuel_ml: 3_192, police_chance_ppm: 150_000 } }
+      }
+
+      return map
+    }
+
+    it('offers a faster way with what it costs and risks, and sends the car boosted', async () => {
+      const calls = serve({
+        'GET /api/v1/map': () => respond(200, boostedMap()),
+        'POST /api/v1/travel': () => respond(201, boostedMap({ travel: { from: 'zlomowo', to: 'kruszyn', distance_km: 38, start_ms: NOW, arrive_ms: NOW + 1_202_637, boosted: true, police: null } })),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(MapView, '/map')
+      await flushPromises()
+      await wrapper.get('[data-test="city-kruszyn"]').trigger('click')
+
+      expect(wrapper.get('[data-test="go-boost"]').text()).toBe('Drive faster')
+      expect(wrapper.get('[data-test="boost-note"]').text().replace(/\s/g, ' ')).toBe('Faster: 20 min 02 s instead of 26 min 03 s, 3.2 l of fuel instead of 2.3 l. The police may stop you (15%).')
+
+      await wrapper.get('[data-test="go-boost"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ to: 'kruszyn', boost: true })
+      expect(wrapper.get('[data-test="travel-boosted"]').text()).toBe('Boosted')
+    })
+
+    it('does not offer it when the game has no boost, and the plain way sends no boost', async () => {
+      const calls = serve({
+        'GET /api/v1/map': () => respond(200, aMap()),
+        'POST /api/v1/travel': () => respond(201, aMap({ travel: { from: 'zlomowo', to: 'kruszyn', distance_km: 38, start_ms: NOW, arrive_ms: NOW + 1_563_429 } })),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(MapView, '/map')
+      await flushPromises()
+      await wrapper.get('[data-test="city-kruszyn"]').trigger('click')
+
+      expect(wrapper.find('[data-test="go-boost"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="go"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ to: 'kruszyn' })
+    })
+
+    it('shows the stop of the police with the choices, and what came of the one that was made', async () => {
+      const stopped = {
+        from: 'zlomowo',
+        to: 'kruszyn',
+        distance_km: 38,
+        start_ms: NOW,
+        arrive_ms: NOW + 1_202_637,
+        boosted: true,
+        police: {
+          at_ms: NOW,
+          decide_by_ms: NOW + 60_000,
+          fine_cents: 1_250,
+          status: 'pending' as const,
+          choice: null,
+          outcome: null,
+          paid_cents: null,
+          options: { pay: { cents: 1_250, stop_ms: 120_000 }, bribe: { cents: 1_875, risk_ppm: 250_000, fail_cents: 2_500, fail_stop_ms: 300_000 }, lawyer: { coins: 5 } },
+        },
+      }
+      const calls = serve({
+        'GET /api/v1/map': () => respond(200, { ...boostedMap({ travel: stopped }, Date.now()), premium_coins: 10 }),
+        'POST /api/v1/travel/police': () =>
+          respond(200, {
+            ...boostedMap({ travel: { ...stopped, arrive_ms: NOW + 1_322_637, police: { ...stopped.police, status: 'resolved' as const, choice: 'pay', outcome: 'paid' as const, paid_cents: 1_250, options: null } } }, Date.now()),
+            premium_coins: 10,
+            repeated: false,
+            police: { choice: 'pay', outcome: 'paid', paid_cents: 1_250 },
+          }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(MapView, '/map')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="police-fine"]').text()).toBe('Fine: $12.50.')
+
+      await wrapper.get('[data-test="police-pay"]').trigger('click')
+      await flushPromises()
+
+      expect(calls.find((call) => call.url === '/api/v1/travel/police')?.body).toEqual({ choice: 'pay' })
+      expect(wrapper.find('[data-test="police"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="police-outcome"]').text()).toContain('Fine paid: $12.50.')
+    })
+
+    it('shows what the server says when the choice comes too late, and asks for the map again', async () => {
+      const stopped = {
+        from: 'zlomowo',
+        to: 'kruszyn',
+        distance_km: 38,
+        start_ms: NOW,
+        arrive_ms: NOW + 1_202_637,
+        boosted: true,
+        police: {
+          at_ms: NOW,
+          decide_by_ms: NOW + 60_000,
+          fine_cents: 1_250,
+          status: 'pending' as const,
+          choice: null,
+          outcome: null,
+          paid_cents: null,
+          options: { pay: { cents: 1_250, stop_ms: 120_000 }, bribe: { cents: 1_875, risk_ppm: 250_000, fail_cents: 2_500, fail_stop_ms: 300_000 }, lawyer: null },
+        },
+      }
+      const calls = serve({
+        'GET /api/v1/map': () => respond(200, boostedMap({ travel: stopped }, Date.now())),
+        'POST /api/v1/travel/police': () => respond(422, { message: 'The police have been dealt with already.', code: 'police_resolved' }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(MapView, '/map')
+      await flushPromises()
+      await wrapper.get('[data-test="police-bribe"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="error"]').text()).toBe('The police have been dealt with already.')
+      expect(calls.filter((call) => call.method === 'GET' && call.url === '/api/v1/map').length).toBeGreaterThan(1)
+    })
+  })
+
   it('offers to arrive at once for premium coins: says the price, asks, and then the car is there', async () => {
     const journey = { from: 'zlomowo', to: 'kruszyn', distance_km: 38, start_ms: NOW, arrive_ms: NOW + 1_563_429, speedup: { coins: 6, remaining_ms: 1_563_429 } }
     const calls = serve({

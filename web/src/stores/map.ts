@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { api } from '@/api/client'
-import type { FinishTravelResponse, MapResponse } from '@/api/types'
+import type { FinishTravelResponse, MapResponse, PoliceChoice, PoliceChoiceResponse } from '@/api/types'
 import { intentionIds } from '@/features/run/intentionIds'
 import { useRunStore } from '@/stores/run'
 
@@ -36,9 +36,9 @@ export const useMapStore = defineStore('map', () => {
     apply(await api<MapResponse>('/v1/map'))
   }
 
-  /** Sends the car to a city. The run is asked for again: it stands on the road now, and its fuel is lower. */
-  async function travel(to: string): Promise<void> {
-    apply(await api<MapResponse>('/v1/travel', { method: 'POST', body: JSON.stringify({ to }) }))
+  /** Sends the car to a city, faster (`boost`: it burns more fuel and the police may stop it). The run is asked for again: it stands on the road now, and its fuel is lower. */
+  async function travel(to: string, boost = false): Promise<void> {
+    apply(await api<MapResponse>('/v1/travel', { method: 'POST', body: JSON.stringify({ to, ...(boost ? { boost: true } : {}) }) }))
 
     useRunStore()
       .refresh()
@@ -59,5 +59,14 @@ export const useMapStore = defineStore('map', () => {
     return response.spent_coins
   }
 
-  return { map, loaded, premiumCoins, serverNow, load, travel, finishTravel }
+  /** What the driver chooses when the police have stopped the car: pay the fine, give a bribe or have a lawyer. Returns what came of it. */
+  async function decidePolice(choice: PoliceChoice): Promise<PoliceChoiceResponse['police']> {
+    const response = await api<PoliceChoiceResponse>('/v1/travel/police', { method: 'POST', body: JSON.stringify({ choice }) })
+
+    apply(response)
+
+    return response.police
+  }
+
+  return { map, loaded, premiumCoins, serverNow, load, travel, finishTravel, decidePolice }
 })

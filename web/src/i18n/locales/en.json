@@ -649,6 +649,23 @@
     "tooFew": "Not enough RideCoin: you have {balance}.",
     "done": "Done: {coins} RideCoin spent."
   },
+  "police": {
+    "title": "The police stopped you!",
+    "fine": "Fine: {amount}.",
+    "decideIn": "You have {time} to choose; then the fine is paid for you.",
+    "pay": "Pay the fine · {amount}",
+    "payNote": "The car stands {stop}.",
+    "bribe": "Offer a bribe · {amount}",
+    "bribeNote": "{risk}% that it does not work: then {failAmount} and the car stands {failStop}.",
+    "lawyer": "Lawyer · {coins} RideCoin",
+    "lawyerNote": "No fine and no stop.",
+    "lawyerTooFew": "Not enough RideCoin: you have {balance}.",
+    "paid": "Fine paid: {amount}. The car stood {stop}.",
+    "bribed": "The bribe worked: {amount}. You drive on.",
+    "bribeFailed": "The bribe did not work: {amount} and the car stands {stop}.",
+    "lawyered": "The lawyer settled it: no fine.",
+    "defaulted": "You did not choose in time: the fine of {amount} was paid."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Endurance" },
     "title": "Tracks in this city",
@@ -733,6 +750,9 @@
     "onTheWay": "On the road: {from} → {to}",
     "eta": "in {time}",
     "go": "Drive here",
+    "goFast": "Drive faster",
+    "boostNote": "Faster: {time} instead of {normal}, {fuel} l of fuel instead of {normalFuel} l. The police may stop you ({risk}%).",
+    "boosted": "Boosted",
     "started": "The car is on its way to {city}.",
     "requires": "What the track asks for",
     "fit": "Fit for {car}",

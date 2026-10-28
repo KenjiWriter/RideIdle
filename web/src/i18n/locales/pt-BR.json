@@ -649,6 +649,23 @@
     "tooFew": "RideCoin insuficientes: você tem {balance}.",
     "done": "Pronto: {coins} RideCoin gastos."
   },
+  "police": {
+    "title": "A polícia parou você!",
+    "fine": "Multa: {amount}.",
+    "decideIn": "Você tem {time} para escolher; depois a multa é paga por você.",
+    "pay": "Pagar a multa · {amount}",
+    "payNote": "O carro fica parado {stop}.",
+    "bribe": "Oferecer suborno · {amount}",
+    "bribeNote": "{risk}% de chance de não funcionar: então {failAmount} e o carro fica parado {failStop}.",
+    "lawyer": "Advogado · {coins} RideCoin",
+    "lawyerNote": "Sem multa e sem parada.",
+    "lawyerTooFew": "RideCoin insuficientes: você tem {balance}.",
+    "paid": "Multa paga: {amount}. O carro ficou parado {stop}.",
+    "bribed": "O suborno funcionou: {amount}. Você segue viagem.",
+    "bribeFailed": "O suborno não funcionou: {amount} e o carro fica parado {stop}.",
+    "lawyered": "O advogado resolveu: sem multa.",
+    "defaulted": "Você não escolheu a tempo: a multa de {amount} foi paga."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Padrão", "endurance": "Endurance" },
     "title": "Pistas desta cidade",
@@ -733,6 +750,9 @@
     "onTheWay": "Na estrada: {from} → {to}",
     "eta": "em {time}",
     "go": "Ir para cá",
+    "goFast": "Dirigir mais rápido",
+    "boostNote": "Mais rápido: {time} em vez de {normal}, {fuel} l de combustível em vez de {normalFuel} l. A polícia pode parar você ({risk}%).",
+    "boosted": "Acelerada",
     "started": "O carro está a caminho de {city}.",
     "requires": "O que a pista exige",
     "fit": "Adequação de {car}",

@@ -649,6 +649,23 @@
     "tooFew": "Pas assez de RideCoin : vous en avez {balance}.",
     "done": "Terminé : {coins} RideCoin dépensés."
   },
+  "police": {
+    "title": "La police vous a arrêté !",
+    "fine": "Amende : {amount}.",
+    "decideIn": "Vous avez {time} pour choisir ; ensuite l’amende est payée pour vous.",
+    "pay": "Payer l’amende · {amount}",
+    "payNote": "La voiture reste à l’arrêt {stop}.",
+    "bribe": "Offrir un pot-de-vin · {amount}",
+    "bribeNote": "{risk} % de chances que ça ne marche pas : alors {failAmount} et la voiture reste à l’arrêt {failStop}.",
+    "lawyer": "Avocat · {coins} RideCoin",
+    "lawyerNote": "Ni amende ni arrêt.",
+    "lawyerTooFew": "Pas assez de RideCoin : vous en avez {balance}.",
+    "paid": "Amende payée : {amount}. La voiture est restée à l’arrêt {stop}.",
+    "bribed": "Le pot-de-vin a marché : {amount}. Vous repartez.",
+    "bribeFailed": "Le pot-de-vin n’a pas marché : {amount} et la voiture reste à l’arrêt {stop}.",
+    "lawyered": "L’avocat a réglé l’affaire : pas d’amende.",
+    "defaulted": "Vous n’avez pas choisi à temps : l’amende de {amount} a été payée."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Endurance" },
     "title": "Circuits de cette ville",
@@ -733,6 +750,9 @@
     "onTheWay": "En route · {from} → {to}",
     "eta": "dans {time}",
     "go": "Aller ici",
+    "goFast": "Rouler plus vite",
+    "boostNote": "Plus vite : {time} au lieu de {normal}, {fuel} l de carburant au lieu de {normalFuel} l. La police peut vous arrêter ({risk} %).",
+    "boosted": "Accéléré",
     "started": "La voiture est partie pour {city}.",
     "requires": "Ce que demande la piste",
     "fit": "Adéquation de {car}",

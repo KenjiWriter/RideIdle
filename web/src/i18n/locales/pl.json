@@ -649,6 +649,23 @@
     "tooFew": "Za mało RideCoin: masz {balance}.",
     "done": "Gotowe: wydano {coins} RideCoin."
   },
+  "police": {
+    "title": "Zatrzymała cię policja!",
+    "fine": "Mandat: {amount}.",
+    "decideIn": "Masz {time} na wybór; potem mandat zapłacimy za ciebie.",
+    "pay": "Zapłać mandat · {amount}",
+    "payNote": "Auto stoi {stop}.",
+    "bribe": "Daj łapówkę · {amount}",
+    "bribeNote": "{risk}% szans, że nie przejdzie: wtedy {failAmount} i auto stoi {failStop}.",
+    "lawyer": "Prawnik · {coins} RideCoin",
+    "lawyerNote": "Bez mandatu i bez postoju.",
+    "lawyerTooFew": "Za mało RideCoin: masz {balance}.",
+    "paid": "Mandat zapłacony: {amount}. Auto stało {stop}.",
+    "bribed": "Łapówka przeszła: {amount}. Jedziesz dalej.",
+    "bribeFailed": "Łapówka nie pomogła: {amount} i auto stoi {stop}.",
+    "lawyered": "Prawnik załatwił sprawę: bez mandatu.",
+    "defaulted": "Nie wybrano na czas: mandat {amount} został zapłacony."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standardowy", "endurance": "Dystans" },
     "title": "Tory w tym mieście",
@@ -733,6 +750,9 @@
     "onTheWay": "W drodze: {from} → {to}",
     "eta": "za {time}",
     "go": "Jedź tutaj",
+    "goFast": "Jedź szybciej",
+    "boostNote": "Szybciej: {time} zamiast {normal}, {fuel} l paliwa zamiast {normalFuel} l. Policja może cię zatrzymać ({risk}%).",
+    "boosted": "Przyspieszona",
     "started": "Auto ruszyło do miasta {city}.",
     "requires": "Czego wymaga tor",
     "fit": "Dopasowanie {car}",
