@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { ApiError } from '@/api/client'
@@ -77,8 +77,22 @@ const cash = computed(() => {
 })
 const waiting = computed(() => jobs.value.filter((job) => job.status === 'queued'))
 const inventory = computed(() => store.garage?.inventory ?? [])
-/** The part that the tutorial points at when it asks for the tires to be put on: the first pair of tires in the inventory, or the first part. */
-const mountTarget = computed(() => (inventory.value.find((part) => part.slot === 'tires') ?? inventory.value[0])?.id ?? null)
+/**
+ * The part that the tutorial points at when it asks for the tires to be put on. A step that names a kind of tires (the off-road ones) points at the tires of that
+ * kind, and at nothing when there are none in the inventory, so that it never points at the wrong pair; a step that names none points at the first pair of tires in
+ * the inventory, or the first part.
+ */
+const mountTarget = computed(() => {
+  const kind = tutorial.goal?.tire_kind ?? tutorial.current?.tire_kind ?? null
+
+  if (kind !== null) {
+    return inventory.value.find((part) => part.slot === 'tires' && part.tire_kind === kind)?.id ?? null
+  }
+
+  return (inventory.value.find((part) => part.slot === 'tires') ?? inventory.value[0])?.id ?? null
+})
+/** The card of the mechanic, which a job that is queued is shown on: the page is taken to it, because the parts are far below it. */
+const mechanicCard = ref<HTMLElement | null>(null)
 const standing = computed(() => car.value?.run?.stop_reason === 'workshop')
 /** The parts that wait in a job: a merge keeps the two of them busy, and a service is a job on the car, with no part. */
 const busyPartIds = computed(() => new Set(jobs.value.flatMap((job) => [job.part?.id, job.merge_with?.id].filter((id): id is number => id !== undefined))))
@@ -221,6 +235,9 @@ async function act(kind: JobKind, part: OwnedPart | null, other?: OwnedPart['id'
     now.value = store.serverNow()
     // The server moves the tutorial when it is asked, and a job in the queue is what a step waits for.
     void tutorial.load().catch(() => undefined)
+    // The job is on the card of the mechanic ("Putting on: …"), at the top: the driver who pressed the button down in the inventory is taken there.
+    await nextTick()
+    mechanicCard.value?.scrollIntoView?.({ behavior: 'smooth', block: 'nearest' })
   } catch (failure) {
     if (endSessionIfUnauthorized(failure)) {
       return
@@ -382,7 +399,7 @@ async function finish(jobId: number): Promise<void> {
       <p v-if="cancelled" class="card card-cy text-sm" role="status" data-test="cancelled">{{ cancelled }}</p>
       <p v-if="finished" class="card card-cy text-sm" role="status" data-test="finished">{{ finished }}</p>
 
-      <section class="card flex flex-col gap-1.5 !p-3" aria-labelledby="mechanic-title" data-test="mechanic-card">
+      <section ref="mechanicCard" class="card flex scroll-mt-32 flex-col gap-1.5 !p-3" aria-labelledby="mechanic-title" data-test="mechanic-card">
         <div class="flex items-center justify-between gap-2">
           <p id="mechanic-title" class="text-[15px] font-bold text-ink">
             {{ t('workshop.mechanicTitle') }}

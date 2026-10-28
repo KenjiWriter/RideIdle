@@ -7,7 +7,7 @@ import { respond, serveApi } from '@/test/fetchServer'
 import { NOTHING_TO_REPAIR, NOW, aCar, aGarage, aGear, aJob, aMergeOffer, aMergeResult, aMountedPart, aPart, aRepairStep, aService, anUpgradeStep } from '@/test/garageFixtures'
 import { mountView } from '@/test/mountView'
 import { useRunStore } from '@/stores/run'
-import { aTutorial } from '@/test/tutorialFixtures'
+import { aGoal, aTutorial } from '@/test/tutorialFixtures'
 
 import WorkshopView from './WorkshopView.vue'
 
@@ -94,6 +94,100 @@ describe('WorkshopView', () => {
 
     // A job in the queue is what a step of the tutorial waits for, and the server moves it only when it is asked.
     expect(asked()).toBe(2)
+  })
+
+  describe('the tires that the tutorial points at', () => {
+    const streetTires = aPart({ id: 21, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, tire_kind: 'street' })
+    const offroadTires = aPart({ id: 22, slug: 'offroad-tires-t2', name: 'Off-road tires T2', slot: 'tires', tier: 2, tire_kind: 'offroad' })
+    const offroadGoal = () => aTutorial(null, { goal: aGoal({ key: 'offroad', title: 'Fit the off-road tires', target: 'mount', tire_kind: 'offroad' }) })
+
+    it('is the pair of the kind that the step names, and not the first pair in the inventory', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ inventory: [streetTires, offroadTires] })),
+        'GET /api/v1/tutorial': () => respond(200, offroadGoal()),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.findAll('[data-tutorial="mount"]')).toHaveLength(1)
+      expect(wrapper.get('[data-tutorial="mount"]').attributes('data-test')).toBe('put-on-22')
+    })
+
+    it('is nothing when the step names a kind that the inventory does not have, so that it never points at the wrong pair', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ inventory: [streetTires] })),
+        'GET /api/v1/tutorial': () => respond(200, offroadGoal()),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="put-on-21"]').exists()).toBe(true)
+      expect(wrapper.findAll('[data-tutorial="mount"]')).toHaveLength(0)
+    })
+  })
+
+  describe('after a job is queued', () => {
+    const scrollIntoView = vi.fn()
+    const jobAnswer = () =>
+      respond(
+        201,
+        aGarage({
+          inventory: [tires],
+          workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs: [aJob({ id: 3, part: tires, finish_ms: NOW + 235_200 })] },
+        }),
+      )
+
+    beforeEach(() => {
+      scrollIntoView.mockReset()
+      // jsdom has no scrolling of its own.
+      HTMLElement.prototype.scrollIntoView = scrollIntoView
+    })
+
+    afterEach(() => {
+      Reflect.deleteProperty(HTMLElement.prototype, 'scrollIntoView')
+    })
+
+    it('takes the page to the card of the mechanic, where the job is', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ inventory: [tires] })),
+        'POST /api/v1/garage/jobs': jobAnswer,
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(scrollIntoView).not.toHaveBeenCalled()
+
+      await wrapper.get('[data-test="put-on-21"]').trigger('click')
+      await flushPromises()
+
+      expect(scrollIntoView).toHaveBeenCalledTimes(1)
+      expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'nearest' })
+      expect((scrollIntoView.mock.contexts[0] as HTMLElement).getAttribute('data-test')).toBe('mechanic-card')
+      expect(wrapper.get('[data-test="job-3"]').text()).toContain('Putting on: Street tires T2')
+    })
+
+    it('leaves the page where it is when the server refuses the job', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ inventory: [tires] })),
+        'POST /api/v1/garage/jobs': () => respond(422, { message: 'The queue is full.' }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      await wrapper.get('[data-test="put-on-21"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="error"]').text()).toBe('The queue is full.')
+      expect(scrollIntoView).not.toHaveBeenCalled()
+    })
   })
 
   it('puts a part on the car and shows the job', async () => {

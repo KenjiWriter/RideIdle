@@ -286,6 +286,8 @@ export interface PartInfo {
   name: string
   /** The picture of the model, a path of the API, or null when the pack gives it none. */
   image_url?: string | null
+  /** Tires only: the kind (`street`, `offroad`, …), which a step of the tutorial names when it asks for tires of one kind. Null for any other part. */
+  tire_kind?: string | null
   slot: string
   tier: number | null
   price_cents: number | null
@@ -728,6 +730,8 @@ export interface TutorialStep {
   /** The words of the button that answers the messages. */
   reply: string
   target: TutorialTarget | null
+  /** The kind of tires the step waits to see on the car (`offroad`), or null when it names none. */
+  tire_kind?: string | null
   /** The driver answered the messages: the phone is put away, but the step may still wait for them to do the thing. */
   acknowledged: boolean
   /** The driver may leave the step for later: the phone has a second button, with these words. */
@@ -748,6 +752,8 @@ export interface TutorialGoal {
   title: string
   waiting: string | null
   target: TutorialTarget | null
+  /** The kind of tires the step waits to see on the car (`offroad`), or null when it names none. */
+  tire_kind?: string | null
   optional: boolean
   /** What it pays: the names of the part and the garage are in the language of the driver. */
   reward: { cash_cents: number; car_xp: number; xp: number; part: string | null; garage: string | null }
