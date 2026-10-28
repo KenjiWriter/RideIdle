@@ -297,6 +297,45 @@ describe('GarageView', () => {
     expect(wrapper.find('[data-test="tow-button"]').exists()).toBe(false)
   })
 
+  describe('the summary of the rest of the account', () => {
+    const rest = {
+      pending: true,
+      from_ms: NOW - 5 * 3_600_000,
+      to_ms: NOW - 60_000,
+      away_minutes: 299,
+      earned_cents: 4_500,
+      cars: [{ id: 2, name: 'Bizon M-2', played: false, earned_cents: 4_500, laps: 12, waiting: null }],
+      jobs: [{ kind: 'upgrade', part: 'Street tires', finished_ms: NOW - 3_600_000 }],
+      journeys: [],
+    }
+
+    it('shows what the other cars earned and the jobs that were done, until the driver has seen it', async () => {
+      const calls = serve(() => respond(200, runAnswer(aRun())), undefined, {
+        'GET /api/v1/away': () => respond(200, { data: rest, now_ms: NOW }),
+        'POST /api/v1/away/seen': () => respond(200, { data: { pending: false }, now_ms: NOW }),
+      })
+      const { wrapper } = await show()
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="away-account"]').text()).toContain('Other cars: +$45.00')
+      expect(wrapper.get('[data-test="away-jobs"]').text()).toContain('Upgraded: Street tires')
+
+      await wrapper.get('[data-test="away-account-dismiss"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="away-account"]').exists()).toBe(false)
+      expect(calls.some((call) => call.method === 'POST' && call.url === '/api/v1/away/seen')).toBe(true)
+    })
+
+    it('shows nothing when the server has no break to tell of', async () => {
+      serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/away': () => respond(200, { data: { pending: false }, now_ms: NOW }) })
+      const { wrapper } = await show()
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="away-account"]').exists()).toBe(false)
+    })
+  })
+
   describe('the summary of an absence', () => {
     const away = aSummary({ laps: 312, cash_cents: 486_000, xp: 7_800, from_ms: NOW - (8 * 3_600_000 + 12 * 60_000), to_ms: NOW - 60_000, stop_reason: 'fuel_empty' })
 

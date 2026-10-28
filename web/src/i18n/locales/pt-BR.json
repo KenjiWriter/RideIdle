@@ -666,6 +666,31 @@
     "lawyered": "O advogado resolveu: sem multa.",
     "defaulted": "Você não escolheu a tempo: a multa de {amount} foi paga."
   },
+  "awayAccount": {
+    "title": "O resto da conta",
+    "cars": "Outros carros: +{earned}",
+    "laps": "{count} voltas",
+    "jobs": "Feito na oficina",
+    "journeys": "Viagens",
+    "arrived": "Chegou a {city}",
+    "waiting": {
+      "fuel_empty": "sem combustível",
+      "breakdown": "quebrado"
+    },
+    "job": {
+      "mount": "Instalado",
+      "unmount": "Removido",
+      "upgrade": "Melhorado",
+      "merge": "Fundido",
+      "repair": "Reparado",
+      "service": "Revisado"
+    },
+    "policeDefaulted": "A polícia parou você: a multa de {amount} foi paga por você.",
+    "policePaid": "A polícia parou você: multa paga, {amount}.",
+    "policeBribed": "A polícia parou você: o suborno funcionou, {amount}.",
+    "policeBribeFailed": "A polícia parou você: o suborno não funcionou, {amount}.",
+    "policeLawyered": "A polícia parou você: o advogado resolveu."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Padrão", "endurance": "Endurance" },
     "title": "Pistas desta cidade",

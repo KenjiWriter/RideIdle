@@ -666,6 +666,31 @@
     "lawyered": "The lawyer settled it: no fine.",
     "defaulted": "You did not choose in time: the fine of {amount} was paid."
   },
+  "awayAccount": {
+    "title": "The rest of your account",
+    "cars": "Other cars: +{earned}",
+    "laps": "{count} laps",
+    "jobs": "Done in the workshop",
+    "journeys": "Journeys",
+    "arrived": "Arrived in {city}",
+    "waiting": {
+      "fuel_empty": "out of fuel",
+      "breakdown": "broken down"
+    },
+    "job": {
+      "mount": "Put on",
+      "unmount": "Taken off",
+      "upgrade": "Upgraded",
+      "merge": "Merged",
+      "repair": "Repaired",
+      "service": "Serviced"
+    },
+    "policeDefaulted": "The police stopped you: the fine of {amount} was paid for you.",
+    "policePaid": "The police stopped you: fine paid, {amount}.",
+    "policeBribed": "The police stopped you: the bribe worked, {amount}.",
+    "policeBribeFailed": "The police stopped you: the bribe did not work, {amount}.",
+    "policeLawyered": "The police stopped you: the lawyer settled it."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Endurance" },
     "title": "Tracks in this city",

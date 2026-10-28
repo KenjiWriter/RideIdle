@@ -5,6 +5,7 @@ import { RouterLink, useRouter } from 'vue-router'
 
 import type { CarStatKey } from '@/api/types'
 import AccountData from '@/components/AccountData.vue'
+import AccountAway from '@/components/AccountAway.vue'
 import AwaySummary from '@/components/AwaySummary.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
 import GarageTabs from '@/components/GarageTabs.vue'
@@ -28,6 +29,7 @@ import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatLapTime } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useGarageStore } from '@/stores/garage'
+import { useAwayStore } from '@/stores/away'
 import { useRunStore } from '@/stores/run'
 import { useSessionStore } from '@/stores/session'
 import { useTutorialStore } from '@/stores/tutorial'
@@ -36,6 +38,7 @@ const { t } = useI18n()
 const router = useRouter()
 const session = useSessionStore()
 const run = useRunStore()
+const away = useAwayStore()
 const garage = useGarageStore()
 const tutorial = useTutorialStore()
 const { money, number } = useFormat()
@@ -68,6 +71,9 @@ async function open(): Promise<void> {
 
     // The tutorial is no reason for an error either: without it the garage is the garage.
     await tutorial.load().catch(() => undefined)
+
+    // Nor is the summary of the rest of the account: what the other cars did while the driver was away.
+    await away.load().catch(() => undefined)
   } catch (failure) {
     if (!endSessionIfUnauthorized(failure)) {
       loadError.value = true
@@ -177,6 +183,7 @@ async function useCode(): Promise<void> {
 
     <template v-else>
       <AwaySummary v-if="run.away" :summary="run.away" :now-ms="run.run.server_time_ms" @dismiss="run.dismissAway()" />
+      <AccountAway v-if="away.visible && away.summary" :summary="away.summary" @dismiss="away.dismiss().catch(() => undefined)" />
 
       <section class="flex flex-col gap-3" aria-labelledby="run-title" data-test="run">
         <div class="flex items-start justify-between gap-3">

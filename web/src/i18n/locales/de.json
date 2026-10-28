@@ -666,6 +666,31 @@
     "lawyered": "Der Anwalt hat es geregelt: keine Strafe.",
     "defaulted": "Du hast nicht rechtzeitig gewählt: die Strafe von {amount} wurde bezahlt."
   },
+  "awayAccount": {
+    "title": "Der Rest des Kontos",
+    "cars": "Andere Autos: +{earned}",
+    "laps": "{count} Runden",
+    "jobs": "In der Werkstatt erledigt",
+    "journeys": "Reisen",
+    "arrived": "Angekommen in {city}",
+    "waiting": {
+      "fuel_empty": "kein Kraftstoff",
+      "breakdown": "Panne"
+    },
+    "job": {
+      "mount": "Montiert",
+      "unmount": "Demontiert",
+      "upgrade": "Verbessert",
+      "merge": "Verschmolzen",
+      "repair": "Repariert",
+      "service": "Gewartet"
+    },
+    "policeDefaulted": "Die Polizei hat dich angehalten: die Strafe von {amount} wurde für dich bezahlt.",
+    "policePaid": "Die Polizei hat dich angehalten: Strafe bezahlt, {amount}.",
+    "policeBribed": "Die Polizei hat dich angehalten: die Bestechung hat geklappt, {amount}.",
+    "policeBribeFailed": "Die Polizei hat dich angehalten: die Bestechung hat nicht geklappt, {amount}.",
+    "policeLawyered": "Die Polizei hat dich angehalten: der Anwalt hat es geregelt."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Langstrecke" },
     "title": "Strecken in dieser Stadt",

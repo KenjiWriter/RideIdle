@@ -666,6 +666,31 @@
     "lawyered": "Prawnik załatwił sprawę: bez mandatu.",
     "defaulted": "Nie wybrano na czas: mandat {amount} został zapłacony."
   },
+  "awayAccount": {
+    "title": "Reszta konta",
+    "cars": "Pozostałe auta: +{earned}",
+    "laps": "{count} okr.",
+    "jobs": "Zrobione w warsztacie",
+    "journeys": "Podróże",
+    "arrived": "Dojazd do: {city}",
+    "waiting": {
+      "fuel_empty": "brak paliwa",
+      "breakdown": "awaria"
+    },
+    "job": {
+      "mount": "Założono",
+      "unmount": "Zdjęto",
+      "upgrade": "Ulepszono",
+      "merge": "Scalono",
+      "repair": "Naprawiono",
+      "service": "Serwis"
+    },
+    "policeDefaulted": "Zatrzymała cię policja: mandat {amount} został zapłacony za ciebie.",
+    "policePaid": "Zatrzymała cię policja: mandat zapłacony, {amount}.",
+    "policeBribed": "Zatrzymała cię policja: łapówka przeszła, {amount}.",
+    "policeBribeFailed": "Zatrzymała cię policja: łapówka nie pomogła, {amount}.",
+    "policeLawyered": "Zatrzymała cię policja: prawnik załatwił sprawę."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standardowy", "endurance": "Dystans" },
     "title": "Tory w tym mieście",

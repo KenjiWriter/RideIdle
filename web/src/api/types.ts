@@ -570,6 +570,50 @@ export interface WorkshopGear {
   mechanics: EquipmentCount
 }
 
+/** A car of the account in the summary of a break: what it earned in it, and whether it waits for the driver (no fuel, broken down). */
+export interface AwayCar {
+  id: number | null
+  name: string
+  /** The car the driver plays: the card of the garage tells of it. */
+  played: boolean
+  earned_cents: number
+  laps: number
+  waiting: 'fuel_empty' | 'breakdown' | null
+}
+
+/** A job of the workshop that was done in the break. */
+export interface AwayJob {
+  kind: JobKind
+  part: string | null
+  finished_ms: number
+}
+
+/** A journey that ended in the break, with what the police made of a boosted one. */
+export interface AwayJourney {
+  to: string
+  arrived_ms: number
+  boosted: boolean
+  police: { outcome: string; paid_cents: number } | null
+}
+
+/** What happened to the whole account while the driver was away (`pending: false` when there is no break to tell of). */
+export interface AwayAccount {
+  pending: boolean
+  from_ms?: number
+  to_ms?: number
+  away_minutes?: number
+  earned_cents?: number
+  cars?: AwayCar[]
+  jobs?: AwayJob[]
+  journeys?: AwayJourney[]
+}
+
+/** GET /api/v1/away and POST /api/v1/away/seen. */
+export interface AwayResponse {
+  data: AwayAccount
+  now_ms: number
+}
+
 /** What finishing a timer at once costs in premium coins, and what was left of it (ms) when the server answered. */
 export interface Speedup {
   coins: number
