@@ -160,7 +160,7 @@ describe('the unique effect of a legendary part', function () {
 
         expect($inventory[$legend->id]['unique'])->toEqual(['name' => 'Adaptacyjna mieszanka', 'special' => 'surface_loss', 'percent' => 50, 'mods' => null])
             ->and($inventory[$epic->id]['unique'])->toBeNull()
-            ->and($inventory[$exhaust->id]['unique']['mods'])->toEqual([['effect' => 'stat', 'stat' => 'power', 'percent' => 2], ['effect' => 'fuel', 'stat' => null, 'percent' => 3]]);
+            ->and($inventory[$exhaust->id]['unique']['mods'])->toEqual([['effect' => 'stat', 'stat' => 'power', 'name' => 'Moc', 'percent' => 2], ['effect' => 'fuel', 'stat' => null, 'name' => 'Oszczędność', 'percent' => 3]]);
     });
 });
 

@@ -354,7 +354,29 @@
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "État : {percent} %",
-    "unserviceable": "Hors service"
+    "unserviceable": "Hors service",
+    "affix": {
+      "title": "Affixes",
+      "stat": "{name} +{percent} %",
+      "wear": "{name} : usure −{percent} %",
+      "fuel": "{name} : carburant −{percent} %",
+      "reliability": "{name} : pannes −{percent} %",
+      "surface": "{name} +{percent} % ({surfaces})",
+      "unnamed": {
+        "stat": "Bonus",
+        "wear": "Durabilité",
+        "fuel": "Sobriété",
+        "reliability": "Fiabilité",
+        "surface": "Adhérence"
+      }
+    },
+    "unique": {
+      "label": "Effet unique",
+      "surface_loss": "Conserve {percent} % de l’adhérence perdue sur un revêtement qui ne convient pas aux pneus",
+      "mass_penalty": "{percent} % de moins de pénalité de masse sur la tenue de route",
+      "braking_condition": "Freine comme neuf jusqu’à {percent} % d’état",
+      "lag_cut": "{percent} % de retard du turbo en moins"
+    }
   },
   "shop": {
     "title": "Boutique",
@@ -447,7 +469,7 @@
     "mergeChance": "Chance : {chance} %",
     "mergeChancePity": "Chance : {chance} % ({base} % + {pity} points de protection contre la malchance)",
     "mergeCost": "Une tentative coûte {price} et dure {time}.",
-    "mergeKeeps": "Le modèle et l’amélioration de {part} restent ; {other} est consommée.",
+    "mergeKeeps": "Le modèle et l’amélioration de {part} restent, ainsi que ses affixes (elle reçoit ceux qui manquent à sa nouvelle rareté) ; {other} est consommée.",
     "mergeFailure": "En cas d’échec, les deux pièces sont perdues et vous recevez {scrap} de ferraille.",
     "mergeConfirm": "Fusionner les pièces",
     "mergeClose": "Fermer",

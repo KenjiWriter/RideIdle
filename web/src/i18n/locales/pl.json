@@ -354,7 +354,29 @@
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Stan: {percent}%",
-    "unserviceable": "Niesprawna"
+    "unserviceable": "Niesprawna",
+    "affix": {
+      "title": "Afiksy",
+      "stat": "{name} +{percent}%",
+      "wear": "{name}: zużycie −{percent}%",
+      "fuel": "{name}: paliwo −{percent}%",
+      "reliability": "{name}: awarie −{percent}%",
+      "surface": "{name} +{percent}% ({surfaces})",
+      "unnamed": {
+        "stat": "Bonus",
+        "wear": "Trwałość",
+        "fuel": "Oszczędność",
+        "reliability": "Niezawodność",
+        "surface": "Przyczepność"
+      }
+    },
+    "unique": {
+      "label": "Efekt unikatowy",
+      "surface_loss": "Zachowuje {percent}% przyczepności, którą traci na nawierzchni niepasującej do opon",
+      "mass_penalty": "O {percent}% mniejsza kara za masę dla prowadzenia",
+      "braking_condition": "Hamuje jak nowe do {percent}% kondycji",
+      "lag_cut": "O {percent}% mniejsze opóźnienie turbo"
+    }
   },
   "shop": {
     "title": "Sklep",
@@ -447,7 +469,7 @@
     "mergeChance": "Szansa: {chance}%",
     "mergeChancePity": "Szansa: {chance}% ({base}% + {pity} pp ochrony przed pechem)",
     "mergeCost": "Próba kosztuje {price} i trwa {time}.",
-    "mergeKeeps": "Model i ulepszenie zostają z części: {part}. Druga część ({other}) jest zużywana.",
+    "mergeKeeps": "Model i ulepszenie zostają z części: {part}, razem z jej afiksami (dostaje te, których brakuje jej w nowej rzadkości). Druga część ({other}) jest zużywana.",
     "mergeFailure": "Przy porażce obie części przepadają, a Ty dostajesz {scrap} złomu.",
     "mergeConfirm": "Połącz części",
     "mergeClose": "Zamknij",

@@ -562,6 +562,49 @@ describe('WorkshopView', () => {
     })
   })
 
+  describe('the affixes of the parts', () => {
+    const gripAffix = { key: 'grip', name: 'Grip', effect: 'stat', stat: 'grip', surfaces: null, value_ppm: 35_000, percent: 3.5 } as const
+    const wearAffix = { key: 'wear', name: 'Durability', effect: 'wear', stat: null, surfaces: null, value_ppm: 120_000, percent: 12 } as const
+    const unique = { name: 'Adaptive compound', special: 'surface_loss', percent: 50, mods: null } as const
+
+    it('says the affixes of a part in the inventory, and a part that has none says nothing', async () => {
+      serve({
+        'GET /api/v1/garage': () =>
+          respond(200, aGarage({ inventory: [aPart({ id: 31, name: 'Rare tires', slot: 'tires', rarity: 'rare', rarity_rank: 3, affixes: [gripAffix, wearAffix] }), aPart({ id: 32, name: 'Plain exhaust' })] })),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.findAll('[data-test="part-31"] [data-test="part-affixes"] li').map((li) => li.text())).toEqual(['✦ Grip +3.5%', '✦ Durability: wear −12%'])
+      expect(wrapper.find('[data-test="part-32"] [data-test="part-affixes"]').exists()).toBe(false)
+    })
+
+    it('says the affixes and the unique effect of a part on the car', async () => {
+      const tires = aMountedPart({ id: 33, name: 'Legendary tires', slot: 'tires', rarity: 'legendary', rarity_rank: 5, affixes: [gripAffix], unique })
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires }) })), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      const slot = wrapper.get('[data-test="slot-tires"]')
+
+      expect(slot.get('[data-test="part-affixes"]').text()).toBe('✦ Grip +3.5%')
+      expect(slot.get('[data-test="part-unique"]').text()).toContain('Adaptive compound')
+    })
+
+    it('says the affixes of the part that a merge made', async () => {
+      const made = aPart({ id: 34, name: 'Street tires T2', slot: 'tires', rarity: 'uncommon', rarity_rank: 2, affixes: [gripAffix] })
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ merges: [aMergeResult({ id: 3, part: made })] })), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="merge-result-3"] [data-test="part-affixes"]').text()).toBe('✦ Grip +3.5%')
+    })
+  })
+
   describe('merging parts', () => {
     // Two street tires of tier 2 that go together, a rare pair that does not go with them, and an exhaust with no partner at all.
     const base = (overrides: Parameters<typeof aPart>[0] = {}) =>
@@ -635,7 +678,7 @@ describe('WorkshopView', () => {
       expect(wrapper.get('[data-test="merge-target"]').text()).toContain('→')
       expect(wrapper.get('[data-test="merge-chance"]').text()).toBe('Chance: 46% (40% + 6 points of protection from bad luck)')
       expect(wrapper.get('[data-test="merge-cost"]').text()).toBe('An attempt costs $57.00 and takes 7 min 50 s.')
-      expect(wrapper.get('[data-test="merge-keeps"]').text()).toBe('The model and the upgrade of Street tires T2 stay; Spare tires is used up.')
+      expect(wrapper.get('[data-test="merge-keeps"]').text()).toBe('The model and the upgrade of Street tires T2 stay, and so do its affixes (it gets the ones its new rarity lacks); Spare tires is used up.')
       expect(wrapper.get('[data-test="merge-failure"]').text()).toBe('If it fails, both parts are lost and you get $142.50 in scrap.')
       expect(calls.some((call) => call.method === 'POST')).toBe(false)
 

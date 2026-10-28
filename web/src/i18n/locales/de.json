@@ -354,7 +354,29 @@
     },
     "surfaceLine": "{surface} ×{value}",
     "condition": "Zustand: {percent} %",
-    "unserviceable": "Unbrauchbar"
+    "unserviceable": "Unbrauchbar",
+    "affix": {
+      "title": "Affixe",
+      "stat": "{name} +{percent} %",
+      "wear": "{name}: Verschleiß −{percent} %",
+      "fuel": "{name}: Kraftstoff −{percent} %",
+      "reliability": "{name}: Pannen −{percent} %",
+      "surface": "{name} +{percent} % ({surfaces})",
+      "unnamed": {
+        "stat": "Bonus",
+        "wear": "Haltbarkeit",
+        "fuel": "Sparsamkeit",
+        "reliability": "Zuverlässigkeit",
+        "surface": "Haftung"
+      }
+    },
+    "unique": {
+      "label": "Einzigartiger Effekt",
+      "surface_loss": "Behält {percent} % der Haftung, die auf einem nicht passenden Untergrund verloren ginge",
+      "mass_penalty": "{percent} % weniger Massenstrafe beim Fahrverhalten",
+      "braking_condition": "Bremst wie neu bis {percent} % Zustand",
+      "lag_cut": "{percent} % weniger Turboloch"
+    }
   },
   "shop": {
     "title": "Shop",
@@ -447,7 +469,7 @@
     "mergeChance": "Chance: {chance} %",
     "mergeChancePity": "Chance: {chance} % ({base} % + {pity} Punkte Pechschutz)",
     "mergeCost": "Ein Versuch kostet {price} und dauert {time}.",
-    "mergeKeeps": "Modell und Upgrade von {part} bleiben; {other} wird verbraucht.",
+    "mergeKeeps": "Modell und Upgrade von {part} bleiben, ebenso ihre Affixe (sie bekommt die, die ihrer neuen Seltenheit fehlen); {other} wird verbraucht.",
     "mergeFailure": "Bei einem Fehlschlag gehen beide Teile verloren, und du bekommst {scrap} Schrott.",
     "mergeConfirm": "Teile verschmelzen",
     "mergeClose": "Schließen",

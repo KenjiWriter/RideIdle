@@ -316,6 +316,31 @@ describe('ShopView', () => {
       expect(asked()).toBe(2)
     })
 
+    it('shows the affixes the part was drawn with, and the unique effect of a legendary one', async () => {
+      const affixes = [
+        { key: 'grip', name: 'Grip', effect: 'stat', stat: 'grip', surfaces: null, value_ppm: 35_000, percent: 3.5 },
+        { key: 'wear', name: 'Durability', effect: 'wear', stat: null, surfaces: null, value_ppm: 120_000, percent: 12 },
+      ] as const
+      const unique = { name: 'Adaptive compound', special: 'surface_loss', percent: 50, mods: null } as const
+      serve({
+        'GET /api/v1/shop': () => shop(500_000),
+        'POST /api/v1/shop/crates/slot/open': () =>
+          respond(201, { data: { parts: [], car: { id: 5, level: 3 }, crates: aCrates() }, wallet: { cash_cents: 440_500, xp: 0 }, repeated: false, opened: anOpenedCrate({ rarity: 'legendary', rarity_rank: 5, affixes: [...affixes], unique }) }),
+        'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }),
+      })
+
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+      await wrapper.get('[data-test="crate-slot-tires"]').trigger('click')
+      await wrapper.get('[data-test="crate-slot"] [data-test="crate-open"]').trigger('click')
+      await flushPromises()
+
+      const found = wrapper.get('[data-test="found"]')
+
+      expect(found.findAll('[data-test="part-affixes"] li').map((line) => line.text())).toEqual(['✦ Grip +3.5%', '✦ Durability: wear −12%'])
+      expect(found.get('[data-test="part-unique"]').text()).toContain('Adaptive compound')
+    })
+
     it('opens a crate with one request id and the slot that was chosen, and shows what was in it', async () => {
       const after = { ...aCrates(), groups: { ...aCrates().groups, standard: { ...aCrates().groups.standard, until: 3, legendary_until: 129 } } }
       const calls = serve({
