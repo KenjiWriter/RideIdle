@@ -205,7 +205,7 @@ Panel (`/admin`, Filament) służy do patrzenia na paczki treści i ich uruchami
    sudo env ADMIN_DOMAIN=admin.raceidle.cerasusdigital.pl ADMIN_EMAIL=ty@example.com bash /var/www/rideidle/current/deploy/admin-site.sh
    ```
 
-   Sprawdza DNS, bierze osobny certyfikat dla hosta panelu, kładzie stronę z `nginx/rideidle-admin.conf.template` (jeśli nginx jej nie przyjmie, wycofuje ją i nic innego się nie zmienia), wpisuje `ADMIN_DOMAIN` i `SESSION_SECURE_COOKIE=true` do `.env` i robi `config:cache` oraz `route:cache`. Strony gry nie rusza. Można go uruchomić ponownie.
+   Sprawdza DNS, bierze osobny certyfikat dla hosta panelu, kładzie stronę z `nginx/rideidle-admin.conf.template` (jeśli nginx jej nie przyjmie, wycofuje ją i nic innego się nie zmienia), wpisuje `ADMIN_DOMAIN` i `SESSION_SECURE_COOKIE=true` do `.env`, robi `config:cache` oraz `route:cache` i **przeładowuje PHP-FPM** (opcache nie sprawdza zmian plików, więc bez tego pracujące procesy trzymają starą konfigurację bez hosta panelu, a pod adresem panelu widać stronę powitalną Laravela zamiast logowania; gdyby to się zdarzyło, wystarczy `sudo systemctl reload php8.4-fpm`). Strony gry nie rusza. Można go uruchomić ponownie.
 3. **Pierwszy administrator** (hasło jest pokazane raz i nigdzie niezapisane; przy pierwszym logowaniu panel wymusi ustawienie aplikacji uwierzytelniającej, a kody odzyskiwania zapisz w bezpiecznym miejscu):
 
    ```bash

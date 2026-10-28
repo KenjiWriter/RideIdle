@@ -184,6 +184,9 @@ tell_the_game() {
     # The routes of the panel are tied to the host, and the cached ones are made from the .env of the moment they were made.
     if [[ -f "$APP_DIR/current/api/artisan" ]]; then
         (cd "$APP_DIR/current/api" && sudo -n -u www-data -H "/usr/bin/php${PHP_VERSION}" artisan config:cache && sudo -n -u www-data -H "/usr/bin/php${PHP_VERSION}" artisan route:cache)
+        # opcache does not look at the files again (provision.sh turns validate_timestamps off), so the workers that are running keep the old config and routes, and the
+        # panel would answer under /admin of its host, not at / of it, until PHP is reloaded.
+        systemctl reload "php${PHP_VERSION}-fpm"
     else
         note "There is no release live yet: the next deploy makes the caches."
     fi
