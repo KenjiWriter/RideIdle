@@ -557,7 +557,7 @@
           "additionalProperties": false
         },
         "upgrade": {
-          "description": "Upgrading a part to +N (Systemy II, point 7): the statistics of a part are the ones of the model times the rarity times (1 + stat_ppm_per_level * N), and the step from +n to +n+1 costs cost_ppm_of_price * cost_growth_ppm ^ n of the price of the model and takes base_time_ms * time_growth_ppm ^ n (cut by the level of the mechanic, like any job). How far a part goes is limited by its rarity (max_by_rarity) and by the level of the car (car.levels_per_upgrade).",
+          "description": "Upgrading a part to +N (Systemy II, point 7): the statistics of a part are the ones of the model times the rarity times (1 + stat_ppm_per_level * N), and the step from +n to +n+1 costs cost_ppm_of_price * cost_growth_ppm ^ n of the price of the model and takes base_time_ms * time_growth_ppm ^ n * tier_time_growth_ppm ^ (tier - 1) (cut by the level of the mechanic, like any job). How far a part goes is limited by its rarity (max_by_rarity) and by the level of the car (car.levels_per_upgrade).",
           "type": "object",
           "properties": {
             "stat_ppm_per_level": { "type": "integer", "minimum": 1, "maximum": 200000 },
@@ -576,7 +576,8 @@
             "cost_ppm_of_price": { "type": "integer", "minimum": 1 },
             "cost_growth_ppm": { "type": "integer", "minimum": 1000000, "maximum": 3000000 },
             "base_time_ms": { "type": "integer", "minimum": 1000 },
-            "time_growth_ppm": { "type": "integer", "minimum": 1000000, "maximum": 3000000 }
+            "time_growth_ppm": { "type": "integer", "minimum": 1000000, "maximum": 3000000 },
+            "tier_time_growth_ppm": { "description": "How much longer a step takes for every tier of the part above the first (1000000 is no difference). Without it the tiers take the same time.", "type": "integer", "minimum": 1000000, "maximum": 3000000 }
           },
           "required": ["stat_ppm_per_level", "max_by_rarity", "cost_ppm_of_price", "cost_growth_ppm", "base_time_ms", "time_growth_ppm"],
           "additionalProperties": false

@@ -420,8 +420,9 @@
       "max_by_rarity": { "common": 3, "uncommon": 5, "rare": 7, "epic": 9, "legendary": 12 },
       "cost_ppm_of_price": 350000,
       "cost_growth_ppm": 1450000,
-      "base_time_ms": 300000,
-      "time_growth_ppm": 1400000
+      "base_time_ms": 8200,
+      "time_growth_ppm": 1300000,
+      "tier_time_growth_ppm": 1300000
     },
     "merge": {
       "base_ppm": { "uncommon": 800000, "rare": 600000, "epic": 400000, "legendary": 250000 },

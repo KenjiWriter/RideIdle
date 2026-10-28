@@ -13,10 +13,11 @@ use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 
 // Street tires of tier 2 cost $570. The step from +n to +n+1 costs 35% of that and 45% more for every step before it, and takes the mechanic of
-// level 1 5 minutes and 40% more for every step before it, less 2%: 300 000 x 0.98 = 294 000 ms, 420 000 x 0.98 = 411 600 ms, 588 000 x 0.98 = 576 240 ms.
+// level 1 8.2 seconds, 30% more for every step before it and 30% more for the tier above the first, less 2%: 8 200 x 1.3 x 0.98 = 10 447 ms, then
+// 13 581 ms (8 200 x 1.3 x 1.3 x 0.98) and 17 655 ms.
 const UPGRADE_TIRES_PRICE = 57_000;
 const UPGRADE_STEP_0_CENTS = 19_950;
-const UPGRADE_STEP_0_MS = 294_000;
+const UPGRADE_STEP_0_MS = 10_447;
 
 beforeEach(fn () => withoutTireFee());
 afterEach(fn () => Carbon::setTestNow());
@@ -69,11 +70,26 @@ describe('the rules of the upgrade', function () {
             ->and($rules->requiredCarLevelForUpgrade(3))->toBe(4);
     });
 
-    it('prices the steps at 35% of the model and 45% more for every step, and times them at 5 minutes and 40% more for every step', function () {
+    it('prices the steps at 35% of the model and 45% more for every step, and times them at 8 seconds, 30% more for every step and for every tier', function () {
         $rules = app(Rules::class);
 
         expect(array_map(fn (int $from): int => $rules->upgradeCostCents(UPGRADE_TIRES_PRICE, $from), [0, 1, 2]))->toBe([UPGRADE_STEP_0_CENTS, 28_928, 41_946])
-            ->and(array_map(fn (int $from): int => $rules->upgradeJobMs($from), [0, 1, 2]))->toBe([UPGRADE_STEP_0_MS, 411_600, 576_240]);
+            ->and(array_map(fn (int $from): int => $rules->upgradeJobMs($from, 2), [0, 1, 2]))->toBe([UPGRADE_STEP_0_MS, 13_581, 17_655])
+            ->and($rules->upgradeJobMs(0, 1))->toBe(8_036);
+    });
+
+    it('keeps the early steps of the cheap parts between 8 and 30 seconds, and makes every step and every tier take longer', function () {
+        $rules = app(Rules::class);
+
+        foreach ([1 => range(0, 5), 2 => range(0, 4)] as $tier => $steps) {
+            foreach ($steps as $from) {
+                expect($rules->upgradeJobMs($from, $tier))->toBeBetween(8_000, 30_000);
+            }
+        }
+
+        expect($rules->upgradeJobMs(3, 1))->toBeGreaterThan($rules->upgradeJobMs(2, 1))
+            ->and($rules->upgradeJobMs(2, 4))->toBeGreaterThan($rules->upgradeJobMs(2, 2))
+            ->and($rules->upgradeJobMs(0, 10))->toBeGreaterThan(60_000);
     });
 });
 
@@ -128,7 +144,7 @@ describe('upgrading a part', function () {
             ->assertJsonPath('data.car.slots.0.part.upgrade_next', [
                 'to' => 3,
                 'cost_cents' => 41_946,
-                'duration_ms' => 576_240,
+                'duration_ms' => 17_655,
                 'locked' => ['reason' => 'car_level', 'required' => 4, 'current' => 3],
             ]);
 

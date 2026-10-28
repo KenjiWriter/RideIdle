@@ -120,10 +120,11 @@ describe('the rules of the equipment', function () {
     it('speeds up an upgrade by the equipment of the slot, and the longer ones by as much', function () {
         $rules = app(Rules::class);
 
-        // The first step of the upgrade of tires: 294 s; the third one 576 s, and 13 minutes for the fourth.
-        expect($rules->upgradeJobMs(0))->toBe(294_000)
-            ->and($rules->upgradeJobMs(0, new WorkshopGear(tireMachine: 2, toolkit: 2), 'tires'))->toBe(82_320)
-            ->and($rules->upgradeJobMs(0, new WorkshopGear(tireMachine: 2, toolkit: 2), 'exhaust'))->toBe(235_200);
+        // The first step of the upgrade of a part of the first tier: 8 s, and with the automatic tire machine and the electric toolkit 2.3 s for tires (x0.35 x0.8)
+        // and 6.4 s for an exhaust (the toolkit alone).
+        expect($rules->upgradeJobMs(0))->toBe(8_036)
+            ->and($rules->upgradeJobMs(0, 1, new WorkshopGear(tireMachine: 2, toolkit: 2), 'tires'))->toBe(2_250)
+            ->and($rules->upgradeJobMs(0, 1, new WorkshopGear(tireMachine: 2, toolkit: 2), 'exhaust'))->toBe(6_429);
     });
 
     it('prices the equipment at $14 450 for all of it, the bays at $23 000 and the mechanics at $18 800, bought one after the other', function () {
@@ -350,7 +351,7 @@ describe('the times and the fee of the jobs', function () {
         $without = gearGarage($driver)->json('data.car.slots.0.part');
 
         expect($without['upgrade_next']['cost_cents'])->toBe(19_950 + GEAR_TIRE_FEE_CENTS)
-            ->and($without['upgrade_next']['duration_ms'])->toBe(294_000)
+            ->and($without['upgrade_next']['duration_ms'])->toBe(10_447)
             ->and($without['repair_next']['cost_cents'])->toBe(14_250 + GEAR_TIRE_FEE_CENTS)
             ->and($without['repair_next']['duration_ms'])->toBe(117_600);
 
@@ -358,7 +359,7 @@ describe('the times and the fee of the jobs', function () {
         $with = gearGarage($driver)->json('data.car.slots.0.part');
 
         expect($with['upgrade_next']['cost_cents'])->toBe(19_950)
-            ->and($with['upgrade_next']['duration_ms'])->toBe(102_900)
+            ->and($with['upgrade_next']['duration_ms'])->toBe(3_656)
             ->and($with['repair_next']['cost_cents'])->toBe(14_250)
             ->and($with['repair_next']['duration_ms'])->toBe(41_160);
     });

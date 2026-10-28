@@ -693,16 +693,21 @@ final class Rules
     }
 
     /**
-     * How long the step from +n to +n+1 takes the mechanic: 5 minutes for the first, 40% more for every step after it, cut by the level of the mechanic, and
-     * by the equipment of the workshop for the slot of the part (`$slot`) and its toolkit.
+     * How long the step from +n to +n+1 of a part of the tier `$tier` takes the mechanic: a few seconds for the first step of a part of the first tier, and the time
+     * grows with every step (`time_growth_ppm`) and with every tier (`tier_time_growth_ppm`), so that the first steps of the cheap parts are quick and the high
+     * ones are work; then cut by the level of the mechanic, and by the equipment of the workshop for the slot of the part (`$slot`) and its toolkit.
      */
-    public function upgradeJobMs(int $from, ?WorkshopGear $gear = null, ?string $slot = null): int
+    public function upgradeJobMs(int $from, int $tier = 1, ?WorkshopGear $gear = null, ?string $slot = null): int
     {
         $upgrade = $this->data['workshop']['upgrade'];
         $ms = $upgrade['base_time_ms'];
 
         for ($step = 0; $step < $from; $step++) {
             $ms = Ppm::mul($ms, $upgrade['time_growth_ppm']);
+        }
+
+        for ($rung = 1; $rung < $tier; $rung++) {
+            $ms = Ppm::mul($ms, $upgrade['tier_time_growth_ppm'] ?? Ppm::ONE);
         }
 
         return $this->withGear(max(1, Ppm::mul($ms, Ppm::ONE - $this->mechanic()['time_cut_ppm'])), $gear, $slot);

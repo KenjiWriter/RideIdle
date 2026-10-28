@@ -663,7 +663,7 @@ final class Workshop
             ...$this->script->arrange([
                 // The fee of the vulcanizer is part of the price, like the one of a repair.
                 'cost_cents' => $this->rules->upgradeCostCents($price, $level) + $this->rules->gearFeeCents($gear, $part->slot),
-                'duration_ms' => $this->rules->upgradeJobMs($level, $gear, $part->slot),
+                'duration_ms' => $this->rules->upgradeJobMs($level, $this->catalog->part($part->part_slug)['tier'] ?? 1, $gear, $part->slot),
             ], $arranged[WorkshopJob::KIND_UPGRADE] ?? null),
             'locked' => $level >= $this->rules->upgradeCap($rarity, $car->level)
                 ? ['reason' => 'car_level', 'required' => $this->rules->requiredCarLevelForUpgrade($to), 'current' => $car->level]
