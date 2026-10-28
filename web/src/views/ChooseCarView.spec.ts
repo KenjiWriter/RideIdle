@@ -90,6 +90,17 @@ describe('ChooseCarView', () => {
     expect(cards.map((card) => card.attributes('data-recommended'))).toEqual(['true', 'false', 'false'])
   })
 
+  it('shows the picture that the pack gives a wreck in place of the one the app brings, and the one the app brings for a wreck with none', async () => {
+    const withPicture = { ...starters, data: [car({ image_url: '/api/v1/media/aaaaaaaa.png' }), ...starters.data.slice(1)] }
+    serve({ 'GET /api/v1/runs/current': noRun, 'GET /api/v1/starter-cars': () => respond(200, withPicture) })
+
+    const { wrapper } = await mountView(ChooseCarView, '/choose')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="car-rdzak-gt-4"] [data-test="picture"]').attributes('src')).toBe('/api/v1/media/aaaaaaaa.png')
+    expect(wrapper.get('[data-test="car-kuna-4x4"] [data-test="picture"]').attributes('src')).not.toContain('/api/v1/media/')
+  })
+
   it('shows a wreck as the canvas does: the picture, the drivetrain, the engine and what it is good for', async () => {
     serve({ 'GET /api/v1/runs/current': noRun, 'GET /api/v1/starter-cars': () => respond(200, starters) })
 

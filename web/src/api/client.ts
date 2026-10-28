@@ -3,6 +3,18 @@ import { currentLocale } from '@/i18n'
 
 const API_URL: string = import.meta.env.VITE_API_URL ?? '/api'
 
+/**
+ * The address of a picture that the API names by a path (`/api/v1/media/…`): that path on this host, or on the host of the API when the app is built to
+ * talk to another one. Null when there is no picture.
+ */
+export function mediaUrl(path: string | null | undefined): string | null {
+  if (!path) {
+    return null
+  }
+
+  return /^https?:\/\//.test(API_URL) ? new URL(API_URL).origin + path : path
+}
+
 /** Validation messages from the API, keyed by field name. */
 export type FieldErrors = Record<string, string[]>
 

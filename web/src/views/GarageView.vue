@@ -13,6 +13,7 @@ import GameShell from '@/components/GameShell.vue'
 import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
 import LinkAccountDialog from '@/components/LinkAccountDialog.vue'
 import LinkedAccounts from '@/components/LinkedAccounts.vue'
+import MediaPicture from '@/components/MediaPicture.vue'
 import RarityMark from '@/components/RarityMark.vue'
 import UpgradeMark from '@/components/UpgradeMark.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
@@ -111,6 +112,8 @@ watch(
 const { statusKey, chipClass } = useRunStatus()
 
 const car = computed(() => garage.garage?.car ?? null)
+/** The picture the pack gives the car that drives, if it gives one: it is shown in place of the one the app brings. */
+const pictureUrl = computed(() => run.run?.car.image_url ?? car.value?.vehicle.image_url ?? null)
 
 /** How far the car is into its level, how much the level takes, and how full the bar is: all of it at the highest level. */
 const xpInto = computed(() => (car.value ? car.value.xp.total - car.value.xp.level_start : 0))
@@ -211,8 +214,8 @@ async function useCode(): Promise<void> {
           <p v-if="car.tier_unlock" class="sub mt-1" data-test="tier-unlock">{{ t('garage.nextTier', { level: car.tier_unlock.level, tier: car.tier_unlock.tier }) }}</p>
         </div>
 
-        <div v-if="carPicture(run.run.car.slug)" class="card flex items-stretch overflow-hidden !p-0" data-test="picture">
-          <img :src="carPicture(run.run.car.slug) ?? ''" :alt="run.run.car.name" class="h-[86px] w-[130px] flex-none object-cover" />
+        <div v-if="pictureUrl || carPicture(run.run.car.slug)" class="card flex items-stretch overflow-hidden !p-0" data-test="picture">
+          <MediaPicture :src="pictureUrl" :fallback="carPicture(run.run.car.slug)" :alt="run.run.car.name" class="h-[86px] w-[130px] flex-none object-cover" />
           <div class="flex min-w-0 flex-col justify-center gap-1.5 px-3 py-2">
             <div class="flex flex-wrap gap-1.5">
               <span v-if="car?.vehicle.drivetrain" class="tag tag-am" data-test="drivetrain">{{ car.vehicle.drivetrain.toUpperCase() }}</span>

@@ -8,6 +8,7 @@ import type { CrateGroup, CrateOffer, CrateSlot, OpenedCrate, ShopOffer } from '
 import CityTabs from '@/components/CityTabs.vue'
 import GameShell from '@/components/GameShell.vue'
 import PartAffixes from '@/components/PartAffixes.vue'
+import MediaPicture from '@/components/MediaPicture.vue'
 import PartStats from '@/components/PartStats.vue'
 import RarityMark from '@/components/RarityMark.vue'
 import { lockText } from '@/features/parts/lock'
@@ -324,12 +325,15 @@ async function openCrate(kind: CrateOffer): Promise<void> {
         <ul class="flex flex-col gap-2.5">
           <li v-for="offer in group.offers" :key="offer.slug" class="card flex flex-col gap-1.5 !p-3" :data-test="`offer-${offer.slug}`">
             <div class="flex items-center justify-between gap-2.5">
-              <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                  <h2 class="text-[15px] font-bold text-ink">{{ offer.name }}</h2>
-                  <span class="tag">{{ t('part.tier', { tier: offer.tier ?? 0 }) }}</span>
+              <div class="flex min-w-0 items-center gap-2.5">
+                <MediaPicture :src="offer.image_url" :alt="offer.name" class="h-12 w-12 flex-none rounded-md border border-line-2 object-cover" data-test="part-picture" />
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2">
+                    <h2 class="text-[15px] font-bold text-ink">{{ offer.name }}</h2>
+                    <span class="tag">{{ t('part.tier', { tier: offer.tier ?? 0 }) }}</span>
+                  </div>
+                  <p class="sub">{{ t(`slot.${offer.slot}`) }}</p>
                 </div>
-                <p class="sub">{{ t(`slot.${offer.slot}`) }}</p>
               </div>
               <button
                 type="button"

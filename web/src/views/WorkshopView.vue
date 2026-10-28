@@ -9,6 +9,7 @@ import JobCancel from '@/components/JobCancel.vue'
 import PartCondition from '@/components/PartCondition.vue'
 import PartMerge from '@/components/PartMerge.vue'
 import PartAffixes from '@/components/PartAffixes.vue'
+import MediaPicture from '@/components/MediaPicture.vue'
 import PartStats from '@/components/PartStats.vue'
 import SpeedupButton from '@/components/SpeedupButton.vue'
 import RarityMark from '@/components/RarityMark.vue'
@@ -665,7 +666,9 @@ async function finish(jobId: number): Promise<void> {
 
         <ul v-else class="flex flex-col gap-2">
           <li v-for="part in inventory" :key="part.id" class="card flex flex-wrap items-start justify-between gap-2.5 !p-3" :data-test="`part-${part.id}`">
-            <div class="min-w-0">
+            <div class="flex min-w-0 gap-2.5">
+              <MediaPicture :src="part.image_url" :alt="part.name" class="h-14 w-14 flex-none rounded-md border border-line-2 object-cover" data-test="part-picture" />
+              <div class="min-w-0">
               <p class="flex items-center gap-2 text-[15px] font-bold text-ink">
                 {{ part.name }}
                 <span class="tag">{{ t('part.tier', { tier: part.tier ?? 0 }) }}</span>
@@ -679,6 +682,7 @@ async function finish(jobId: number): Promise<void> {
               <PartAffixes :part="part" />
               <PartCondition :percent="part.condition_percent" class="mt-1.5" />
               <p v-if="part.repair_next?.locked?.reason === 'worn_out'" class="sub mt-1" :data-test="`repair-info-${part.id}`">{{ t('workshop.repairWornOut') }}</p>
+              </div>
             </div>
             <!-- A long reason (the engine bay says what it does not take) wraps inside the card instead of pushing it out of the screen. -->
             <div class="flex max-w-full shrink-0 flex-col gap-1.5">

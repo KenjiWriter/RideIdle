@@ -59,6 +59,24 @@ describe('ShopView', () => {
     expect(wrapper.findAll('[data-test="offer-street-tires-t2"] [data-test="part-stats"] li').map((line) => line.text())).toEqual(['Grip 100', 'Handling 98', 'Braking 100'])
   })
 
+  it('shows the picture that the pack gives a part, and nothing for a part that has none', async () => {
+    serve({
+      'GET /api/v1/shop': () =>
+        respond(200, {
+          data: { crates: aCrates(), parts: [anOffer({ image_url: '/api/v1/media/aaaaaaaa.webp' }), anOffer({ slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires' })], car: { id: 5, level: 3 } },
+          wallet: { cash_cents: 90_000, xp: 0 },
+        }),
+    })
+
+    const { wrapper } = await mountView(ShopView, '/shop')
+    await flushPromises()
+
+    const picture = wrapper.get('[data-test="offer-sport-exhaust-t2"] [data-test="part-picture"]')
+    expect(picture.attributes('src')).toBe('/api/v1/media/aaaaaaaa.webp')
+    expect(picture.attributes('alt')).toBe('Sport exhaust')
+    expect(wrapper.find('[data-test="offer-street-tires-t2"] [data-test="part-picture"]').exists()).toBe(false)
+  })
+
   it('buys a part, says where it is and offers the way to the workshop', async () => {
     const calls = serve({
       'GET /api/v1/shop': () => shop(),

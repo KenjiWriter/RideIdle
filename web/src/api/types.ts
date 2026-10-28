@@ -60,7 +60,7 @@ export interface RunField {
 /** A run: a car driving laps on a track (GET /api/v1/runs/current). Times are ms of the server clock, fuel is in ml. */
 export interface Run {
   id: number
-  car: { slug: string; name: string }
+  car: { slug: string; name: string; image_url?: string | null }
   track: { slug: string; name: string; kind?: TrackKind }
   status: RunStatus
   stop_reason: StopReason | null
@@ -190,6 +190,8 @@ export interface StarterCar {
   slug: string
   name: string
   description: string | null
+  /** The picture of the car, a path of the API, or null when the pack gives it none. */
+  image_url?: string | null
   class: string
   drivetrain: 'fwd' | 'rwd' | 'awd'
   engine: { layout: string; displacement_l: number }
@@ -282,6 +284,8 @@ export type PartLock =
 export interface PartInfo {
   slug: string
   name: string
+  /** The picture of the model, a path of the API, or null when the pack gives it none. */
+  image_url?: string | null
   slot: string
   tier: number | null
   price_cents: number | null
@@ -510,7 +514,7 @@ export interface GarageCar {
   xp: { total: number; level_start: number; next_level_at: number | null }
   /** The next tier of parts the car cannot have mounted yet, and the level that opens it, or null when no level does. */
   tier_unlock: { tier: number; level: number } | null
-  vehicle: { slug: string; name: string; engine: string | null; power_kw: number | null; drivetrain: 'fwd' | 'rwd' | 'awd' | null }
+  vehicle: { slug: string; name: string; image_url?: string | null; engine: string | null; power_kw: number | null; drivetrain: 'fwd' | 'rwd' | 'awd' | null }
   /** With the parts that are on the car, and without them. */
   stats: Record<CarStatKey, number>
   base_stats: Record<CarStatKey, number>

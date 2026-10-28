@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 
 import type { StarterCar } from '@/api/types'
+import MediaPicture from '@/components/MediaPicture.vue'
 import { carPicture } from '@/features/art'
 import { useFormat } from '@/i18n/useFormat'
 
@@ -29,14 +30,17 @@ const { fixed } = useFormat()
     :data-recommended="recommended"
     :aria-labelledby="`car-${car.slug}-name`"
   >
-    <img
-      v-if="carPicture(car.slug)"
-      :src="carPicture(car.slug) ?? ''"
+    <MediaPicture
+      :src="car.image_url"
+      :fallback="carPicture(car.slug)"
       :alt="car.name"
       class="h-full min-h-[138px] w-[132px] rounded-md border border-[#333b49] object-cover object-[50%_58%]"
       data-test="picture"
-    />
-    <div v-else class="min-h-[138px] w-[132px] rounded-md border border-dashed border-line-2 bg-surface-2" aria-hidden="true" />
+    >
+      <template #placeholder>
+        <div class="min-h-[138px] w-[132px] rounded-md border border-dashed border-line-2 bg-surface-2" aria-hidden="true" />
+      </template>
+    </MediaPicture>
 
     <div class="flex min-w-0 flex-col gap-1.5">
       <div class="flex flex-wrap items-center gap-2">
