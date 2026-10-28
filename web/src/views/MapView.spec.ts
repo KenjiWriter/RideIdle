@@ -269,6 +269,51 @@ describe('MapView', () => {
     expect(wrapper.get('[data-test="car-marker"]').attributes('style')).toContain('left: 35.128')
   })
 
+  it('offers to arrive at once for premium coins: says the price, asks, and then the car is there', async () => {
+    const journey = { from: 'zlomowo', to: 'kruszyn', distance_km: 38, start_ms: NOW, arrive_ms: NOW + 1_563_429, speedup: { coins: 6, remaining_ms: 1_563_429 } }
+    const calls = serve({
+      'GET /api/v1/map': () => respond(200, { ...aMap({ travel: journey }, Date.now()), premium_coins: 10 }),
+      'POST /api/v1/travel/finish': () => respond(200, { ...aMap({ here: 'kruszyn', travel: null }, Date.now()), premium_coins: 4, repeated: false, spent_coins: 6 }),
+      'GET /api/v1/runs/current': noRun,
+    })
+
+    const { wrapper } = await mountView(MapView, '/map')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="finish-travel"]').text()).toBe('Arrive now · 6 RideCoin')
+
+    await wrapper.get('[data-test="finish-travel"]').trigger('click')
+
+    expect(wrapper.get('[data-test="finish-travel-sure"]').text()).toContain('Pay 6 RideCoin? You have 10.')
+
+    await wrapper.get('[data-test="finish-travel-confirm"]').trigger('click')
+    await flushPromises()
+
+    const finish = calls.find((call) => call.method === 'POST' && call.url === '/api/v1/travel/finish')
+
+    expect(finish?.body).toEqual({ request_id: expect.any(String) })
+    expect(wrapper.find('[data-test="travel-banner"]').exists()).toBe(false)
+    expect(wrapper.get('[data-test="started"]').text()).toBe('Done: 6 RideCoin spent.')
+  })
+
+  it('does not offer to arrive at once to a driver who has too few coins, and not when the game sells nothing', async () => {
+    const journey = { from: 'zlomowo', to: 'kruszyn', distance_km: 38, start_ms: NOW, arrive_ms: NOW + 1_563_429, speedup: { coins: 6, remaining_ms: 1_563_429 } }
+    serve({ 'GET /api/v1/map': () => respond(200, { ...aMap({ travel: journey }, Date.now()), premium_coins: 5 }), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(MapView, '/map')
+    await flushPromises()
+
+    expect(wrapper.get('[data-test="finish-travel"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-test="finish-travel-poor"]').text()).toBe('Not enough RideCoin: you have 5.')
+
+    serve({ 'GET /api/v1/map': () => respond(200, aMap({ travel: { ...journey, speedup: null } }, Date.now())), 'GET /api/v1/runs/current': noRun })
+
+    const other = await mountView(MapView, '/map')
+    await flushPromises()
+
+    expect(other.wrapper.find('[data-test="finish-travel"]').exists()).toBe(false)
+  })
+
   it('asks the server again when the journey is due, and shows the car in the new city', async () => {
     let asked = 0
     serve({

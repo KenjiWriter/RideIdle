@@ -639,6 +639,16 @@
     "fog": "brouillard",
     "snow": "neige"
   },
+  "speedup": {
+    "finishNow": "Terminer maintenant",
+    "arriveNow": "Arriver maintenant",
+    "button": "{label} · {coins} RideCoin",
+    "sure": "Payer {coins} RideCoin ? Vous en avez {balance}.",
+    "confirm": "Oui, payer",
+    "keep": "Pas maintenant",
+    "tooFew": "Pas assez de RideCoin : vous en avez {balance}.",
+    "done": "Terminé : {coins} RideCoin dépensés."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Endurance" },
     "title": "Circuits de cette ville",

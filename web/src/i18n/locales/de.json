@@ -639,6 +639,16 @@
     "fog": "Nebel",
     "snow": "Schnee"
   },
+  "speedup": {
+    "finishNow": "Sofort abschließen",
+    "arriveNow": "Sofort ankommen",
+    "button": "{label} · {coins} RideCoin",
+    "sure": "{coins} RideCoin bezahlen? Du hast {balance}.",
+    "confirm": "Ja, bezahlen",
+    "keep": "Jetzt nicht",
+    "tooFew": "Nicht genug RideCoin: Du hast {balance}.",
+    "done": "Fertig: {coins} RideCoin ausgegeben."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Langstrecke" },
     "title": "Strecken in dieser Stadt",

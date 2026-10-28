@@ -639,6 +639,16 @@
     "fog": "mgła",
     "snow": "śnieg"
   },
+  "speedup": {
+    "finishNow": "Skończ od razu",
+    "arriveNow": "Dojedź od razu",
+    "button": "{label} · {coins} RideCoin",
+    "sure": "Zapłacić {coins} RideCoin? Masz {balance}.",
+    "confirm": "Tak, zapłać",
+    "keep": "Nie teraz",
+    "tooFew": "Za mało RideCoin: masz {balance}.",
+    "done": "Gotowe: wydano {coins} RideCoin."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standardowy", "endurance": "Dystans" },
     "title": "Tory w tym mieście",

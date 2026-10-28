@@ -570,6 +570,12 @@ export interface WorkshopGear {
   mechanics: EquipmentCount
 }
 
+/** What finishing a timer at once costs in premium coins, and what was left of it (ms) when the server answered. */
+export interface Speedup {
+  coins: number
+  remaining_ms: number
+}
+
 /** A job of the workshop. The times are ms of the clock of the server. */
 export interface WorkshopJob {
   id: number
@@ -587,6 +593,8 @@ export interface WorkshopJob {
   part: OwnedPart | null
   start_ms: number
   finish_ms: number
+  /** What finishing the job at once costs: only for the job the mechanic is at, and null when the game sells nothing (absent in older answers). */
+  speedup?: Speedup | null
 }
 
 /** What became of an attempt of merging, as the garage tells the last five. */
@@ -619,7 +627,16 @@ export interface GarageResponse {
   }
   /** What the driver has to spend as of this answer: what a job or a purchase has just cost is already taken off. */
   wallet: Wallet
+  /** The premium coins of the driver (absent in older answers). */
+  premium_coins?: number
   now_ms: number
+}
+
+/** POST /api/v1/garage/jobs/{job}/finish: the garage as it is now, the id of the job that was finished and the coins it cost; `repeated` says it was done before (nothing was charged). */
+export interface FinishJobResponse extends GarageResponse {
+  repeated: boolean
+  finished: number | null
+  spent_coins: number
 }
 
 /** POST /api/v1/garage/equipment: the garage as it is now; `repeated` says the purchase was made before (nothing was charged this time). */
@@ -785,9 +802,17 @@ export interface MapResponse {
     level: number
     cities: MapCity[]
     roads: { from: string; to: string; km: number }[]
-    travel: { from: string; to: string; distance_km: number; start_ms: number; arrive_ms: number } | null
+    travel: { from: string; to: string; distance_km: number; start_ms: number; arrive_ms: number; speedup?: Speedup | null } | null
   }
   now_ms: number
+  /** The premium coins of the driver (absent in older answers). */
+  premium_coins?: number
+}
+
+/** POST /api/v1/travel/finish: the map as it is now, and the coins it cost; `repeated` says it was done before (nothing was charged). */
+export interface FinishTravelResponse extends MapResponse {
+  repeated: boolean
+  spent_coins: number
 }
 
 /** A car of the driver as the list of the fleet has it: where it stands, and what its run is doing. */

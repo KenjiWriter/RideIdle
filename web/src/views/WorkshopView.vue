@@ -10,6 +10,7 @@ import PartCondition from '@/components/PartCondition.vue'
 import PartMerge from '@/components/PartMerge.vue'
 import PartAffixes from '@/components/PartAffixes.vue'
 import PartStats from '@/components/PartStats.vue'
+import SpeedupButton from '@/components/SpeedupButton.vue'
 import RarityMark from '@/components/RarityMark.vue'
 import UpgradeMark from '@/components/UpgradeMark.vue'
 import { useServiceLine } from '@/features/car/serviceLine'
@@ -47,6 +48,7 @@ const busy = ref(false)
 const error = ref<string | null>(null)
 const { message: cancelled, show: showCancelled, clear: clearCancelled } = useFlash()
 const { message: bought, show: showBought, clear: clearBought } = useFlash()
+const { message: finished, show: showFinished, clear: clearFinished } = useFlash()
 /** Why a purchase of equipment failed: shown in the card of the equipment, because the page may be scrolled far from the top. */
 const gearError = ref<string | null>(null)
 /** The card of the equipment is folded away until the driver wants it. */
@@ -319,6 +321,37 @@ async function cancel(jobId: number): Promise<void> {
     busy.value = false
   }
 }
+
+/** Finishes the job the mechanic is at, now, for premium coins: the driver has said yes to the price. */
+async function finish(jobId: number): Promise<void> {
+  if (busy.value) {
+    return
+  }
+
+  busy.value = true
+  error.value = null
+  clearFinished()
+  clearCancelled()
+
+  try {
+    const spent = await store.finishJob(jobId)
+    now.value = store.serverNow()
+    showFinished(t('speedup.done', { coins: spent }))
+  } catch (failure) {
+    if (endSessionIfUnauthorized(failure)) {
+      return
+    }
+
+    error.value = failureText(failure)
+
+    // The job was done in the meantime, or the coins were too few: what is shown is stale.
+    if (failure instanceof ApiError && failure.status === 422) {
+      void load()
+    }
+  } finally {
+    busy.value = false
+  }
+}
 </script>
 
 <template>
@@ -346,6 +379,7 @@ async function cancel(jobId: number): Promise<void> {
       </p>
       <p v-if="error" class="text-danger" role="alert" data-test="error">{{ error }}</p>
       <p v-if="cancelled" class="card card-cy text-sm" role="status" data-test="cancelled">{{ cancelled }}</p>
+      <p v-if="finished" class="card card-cy text-sm" role="status" data-test="finished">{{ finished }}</p>
 
       <section class="card flex flex-col gap-1.5 !p-3" aria-labelledby="mechanic-title" data-test="mechanic-card">
         <div class="flex items-center justify-between gap-2">
@@ -374,7 +408,19 @@ async function cancel(jobId: number): Promise<void> {
               <span class="mono text-ink">{{ clock(now - working.start_ms) }} / {{ clock(working.finish_ms - working.start_ms) }}</span>
               <span>{{ `${t('workshop.working')}: ${t('workshop.left', { time: left(working) })}` }}</span>
             </p>
-            <JobCancel :key="working.id" class="self-start" :job="working" :dependents="dependents(working)" :disabled="busy" @cancel="cancel" />
+            <div class="flex flex-wrap items-start gap-2">
+              <JobCancel :key="working.id" :job="working" :dependents="dependents(working)" :disabled="busy" @cancel="cancel" />
+              <!-- What finishing the job at once costs in premium coins: only for the job the mechanic is at, and only when the game sells it. -->
+              <SpeedupButton
+                v-if="working.speedup"
+                :coins="working.speedup.coins"
+                :balance="store.premiumCoins"
+                :label="t('speedup.finishNow')"
+                :disabled="busy"
+                :test-id="`finish-${working.id}`"
+                @confirm="finish(working.id)"
+              />
+            </div>
           </div>
         </template>
         <p v-else class="sub" data-test="mechanic-idle">{{ t('workshop.idle') }}</p>

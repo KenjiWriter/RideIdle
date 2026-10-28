@@ -639,6 +639,16 @@
     "fog": "fog",
     "snow": "snow"
   },
+  "speedup": {
+    "finishNow": "Finish now",
+    "arriveNow": "Arrive now",
+    "button": "{label} · {coins} RideCoin",
+    "sure": "Pay {coins} RideCoin? You have {balance}.",
+    "confirm": "Yes, pay",
+    "keep": "Not now",
+    "tooFew": "Not enough RideCoin: you have {balance}.",
+    "done": "Done: {coins} RideCoin spent."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Endurance" },
     "title": "Tracks in this city",

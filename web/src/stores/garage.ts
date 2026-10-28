@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { api } from '@/api/client'
-import type { BuyEquipmentResponse, CancelJobResponse, CrateKind, CrateOpenResponse, EquipmentKey, GarageResponse, JobKind, OpenedCrate, PurchaseResponse, ShopCrates, ShopOffer, ShopResponse, Wallet, WorkshopJob } from '@/api/types'
+import type { BuyEquipmentResponse, CancelJobResponse, CrateKind, CrateOpenResponse, EquipmentKey, FinishJobResponse, GarageResponse, JobKind, OpenedCrate, PurchaseResponse, ShopCrates, ShopOffer, ShopResponse, Wallet, WorkshopJob } from '@/api/types'
 import { intentionIds } from '@/features/run/intentionIds'
 import { newRequestId } from '@/features/run/requestId'
 import { useRunStore } from '@/stores/run'
@@ -34,6 +34,9 @@ export const useGarageStore = defineStore('garage', () => {
   const crates = ref<ShopCrates | null>(null)
   const crateIds = intentionIds(PURCHASE_ID_LIFETIME_MS)
   const equipmentIds = intentionIds(PURCHASE_ID_LIFETIME_MS)
+  const finishIds = intentionIds(PURCHASE_ID_LIFETIME_MS)
+  /** The premium coins of the driver as the last answer said (0 until one did). */
+  const premiumCoins = ref(0)
   /** The cash of the driver as the shop last saw it. */
   const cash = ref<Wallet | null>(null)
 
@@ -55,6 +58,7 @@ export const useGarageStore = defineStore('garage', () => {
 
     garage.value = response.data
     cash.value = response.wallet
+    premiumCoins.value = response.premium_coins ?? premiumCoins.value
     clockOffsetMs.value = response.now_ms - Date.now()
     loaded.value = true
   }
@@ -175,9 +179,26 @@ export const useGarageStore = defineStore('garage', () => {
     return !response.repeated
   }
 
+  /**
+   * Finishes the job the mechanic is at, now, for premium coins (`job.speedup.coins`). A request that was lost on its way and is sent again charges once: the server
+   * answers with `repeated`. Returns the coins this call spent.
+   */
+  async function finishJob(jobId: number): Promise<number> {
+    const response = await api<FinishJobResponse>(`/v1/garage/jobs/${jobId}/finish`, {
+      method: 'POST',
+      body: JSON.stringify({ request_id: finishIds.forKey(`job:${jobId}`) }),
+    })
+
+    finishIds.answered()
+    applyGarage(response)
+    syncRun()
+
+    return response.spent_coins
+  }
+
   function acknowledgeLevelUp(): void {
     levelUp.value = null
   }
 
-  return { garage, loaded, offers, shopCar, shopLoaded, crates, cash, levelUp, serverNow, loadGarage, loadShop, buy, openCrate, queue, cancelJob, buyEquipment, acknowledgeLevelUp }
+  return { garage, loaded, offers, shopCar, shopLoaded, crates, cash, premiumCoins, levelUp, serverNow, loadGarage, loadShop, buy, openCrate, queue, cancelJob, finishJob, buyEquipment, acknowledgeLevelUp }
 })

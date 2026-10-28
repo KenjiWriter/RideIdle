@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { ApiError } from '@/api/client'
 import type { MapCity } from '@/api/types'
 import GameShell from '@/components/GameShell.vue'
+import SpeedupButton from '@/components/SpeedupButton.vue'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
@@ -213,6 +214,35 @@ async function buyGarage(city: MapCity): Promise<void> {
   }
 }
 
+/** Brings the car to the city at once for premium coins: the driver has said yes to the price. */
+async function finishTrip(): Promise<void> {
+  if (busy.value) {
+    return
+  }
+
+  busy.value = true
+  error.value = null
+  clearStarted()
+
+  try {
+    const spent = await map.finishTravel()
+    now.value = map.serverNow()
+    showStarted(t('speedup.done', { coins: spent }))
+  } catch (failure) {
+    if (endSessionIfUnauthorized(failure)) {
+      return
+    }
+
+    error.value = refusal(failure)
+
+    if (failure instanceof ApiError && failure.status === 422) {
+      void load()
+    }
+  } finally {
+    busy.value = false
+  }
+}
+
 async function go(city: MapCity): Promise<void> {
   if (!canGo.value) {
     return
@@ -271,6 +301,16 @@ async function go(city: MapCity): Promise<void> {
         <div class="bar bar-cy" role="progressbar" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="Math.round(progress * 100)" data-test="travel-bar">
           <i :style="{ width: `${Math.round(progress * 100)}%` }" />
         </div>
+        <!-- What arriving at once costs in premium coins, when the game sells it. -->
+        <SpeedupButton
+          v-if="travel.speedup"
+          :coins="travel.speedup.coins"
+          :balance="map.premiumCoins"
+          :label="t('speedup.arriveNow')"
+          :disabled="busy"
+          test-id="finish-travel"
+          @confirm="finishTrip"
+        />
       </div>
 
       <section class="card relative aspect-[390/300] overflow-hidden !p-0" :aria-label="t('map.label')" data-test="map">

@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
 import { api } from '@/api/client'
-import type { MapResponse } from '@/api/types'
+import type { FinishTravelResponse, MapResponse } from '@/api/types'
+import { intentionIds } from '@/features/run/intentionIds'
 import { useRunStore } from '@/stores/run'
 
 /**
@@ -15,6 +16,9 @@ export const useMapStore = defineStore('map', () => {
   const loaded = ref(false)
   /** The clock of the server minus the clock of this device, as it was at the last answer. */
   const clockOffsetMs = ref(0)
+  /** The premium coins of the driver as the last answer said (0 until one did). */
+  const premiumCoins = ref(0)
+  const finishIds = intentionIds(10 * 60_000)
 
   /** What time it is for the server now. */
   function serverNow(): number {
@@ -23,6 +27,7 @@ export const useMapStore = defineStore('map', () => {
 
   function apply(response: MapResponse): void {
     map.value = response.data
+    premiumCoins.value = response.premium_coins ?? premiumCoins.value
     clockOffsetMs.value = response.now_ms - Date.now()
     loaded.value = true
   }
@@ -40,5 +45,19 @@ export const useMapStore = defineStore('map', () => {
       .catch(() => undefined)
   }
 
-  return { map, loaded, serverNow, load, travel }
+  /** Brings the car to the city it is going to, now, for premium coins (`travel.speedup.coins`). A request sent again charges once. Returns the coins this call spent. */
+  async function finishTravel(): Promise<number> {
+    const response = await api<FinishTravelResponse>('/v1/travel/finish', { method: 'POST', body: JSON.stringify({ request_id: finishIds.forKey('travel') }) })
+
+    finishIds.answered()
+    apply(response)
+
+    useRunStore()
+      .refresh()
+      .catch(() => undefined)
+
+    return response.spent_coins
+  }
+
+  return { map, loaded, premiumCoins, serverNow, load, travel, finishTravel }
 })

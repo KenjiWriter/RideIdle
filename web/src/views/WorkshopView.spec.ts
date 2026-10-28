@@ -234,6 +234,85 @@ describe('WorkshopView', () => {
     expect(wrapper.get('[data-test="error"]').text()).toBe('Requires car level 3 (you have 2).')
   })
 
+  describe('finishing a job for premium coins', () => {
+    const upgradeJob = (coins: number | null) =>
+      aJob({ id: 1, kind: 'upgrade', upgrade_to: 1, part: exhaust, finish_ms: NOW + 8_400, speedup: coins === null ? null : { coins, remaining_ms: 8_400 } })
+    const garageWith = (jobs: ReturnType<typeof aJob>[], premiumCoins: number) => ({
+      ...aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs } }),
+      premium_coins: premiumCoins,
+    })
+
+    it('offers it for the job the mechanic is at, says the price, asks, and then the job is done and the coins are spent', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, garageWith([upgradeJob(1)], 10)),
+        'POST /api/v1/garage/jobs/1/finish': () => respond(200, { ...garageWith([], 9), repeated: false, finished: 1, spent_coins: 1 }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="finish-1"]').text()).toBe('Finish now · 1 RideCoin')
+
+      await wrapper.get('[data-test="finish-1"]').trigger('click')
+
+      expect(wrapper.get('[data-test="finish-1-sure"]').text()).toContain('Pay 1 RideCoin? You have 10.')
+
+      await wrapper.get('[data-test="finish-1-confirm"]').trigger('click')
+      await flushPromises()
+
+      const finish = calls.find((call) => call.method === 'POST' && call.url === '/api/v1/garage/jobs/1/finish')
+
+      expect(finish).toBeDefined()
+      expect(finish?.body).toEqual({ request_id: expect.any(String) })
+      expect(wrapper.find('[data-test="job-1"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="finished"]').text()).toBe('Done: 1 RideCoin spent.')
+    })
+
+    it('does not offer it for a job that waits, or when the game sells nothing', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, garageWith([upgradeJob(null), aJob({ id: 2, status: 'queued', part: tires, start_ms: NOW + 8_400, finish_ms: NOW + 20_000 })], 10)),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="finish-1"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="finish-2"]').exists()).toBe(false)
+    })
+
+    it('does not offer it to a driver who has too few coins, and says how many they have', async () => {
+      serve({
+        'GET /api/v1/garage': () => respond(200, garageWith([upgradeJob(6)], 5)),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="finish-1"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-test="finish-1-poor"]').text()).toBe('Not enough RideCoin: you have 5.')
+    })
+
+    it('shows what the server says when it refuses, and asks for the queue again', async () => {
+      const calls = serve({
+        'GET /api/v1/garage': () => respond(200, garageWith([upgradeJob(1)], 10)),
+        'POST /api/v1/garage/jobs/1/finish': () => respond(422, { message: 'That job is already done.', code: 'job_done' }),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+      await wrapper.get('[data-test="finish-1"]').trigger('click')
+      await wrapper.get('[data-test="finish-1-confirm"]').trigger('click')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="error"]').text()).toBe('That job is already done.')
+      expect(calls.filter((call) => call.method === 'GET' && call.url === '/api/v1/garage').length).toBeGreaterThan(1)
+    })
+  })
+
   describe('cancelling a job', () => {
     const factoryTires = aPart({ id: 31, slug: 'street-tires-t1', name: 'Street tires T1', slot: 'tires', tier: 1, mounted: true, car_id: 5 })
     const queueOf = (jobs: ReturnType<typeof aJob>[]) => aGarage({ workshop: { city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs } })

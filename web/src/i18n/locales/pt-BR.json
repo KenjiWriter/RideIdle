@@ -639,6 +639,16 @@
     "fog": "neblina",
     "snow": "neve"
   },
+  "speedup": {
+    "finishNow": "Concluir agora",
+    "arriveNow": "Chegar agora",
+    "button": "{label} · {coins} RideCoin",
+    "sure": "Pagar {coins} RideCoin? Você tem {balance}.",
+    "confirm": "Sim, pagar",
+    "keep": "Agora não",
+    "tooFew": "RideCoin insuficientes: você tem {balance}.",
+    "done": "Pronto: {coins} RideCoin gastos."
+  },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Padrão", "endurance": "Endurance" },
     "title": "Pistas desta cidade",
