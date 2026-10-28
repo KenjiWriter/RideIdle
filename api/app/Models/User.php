@@ -37,6 +37,8 @@ class User extends Authenticatable
             'claimed_at' => 'datetime',
             'last_seen_at' => 'datetime',
             'previous_seen_at' => 'datetime',
+            'away_from' => 'datetime',
+            'away_to' => 'datetime',
             'recovery_code_set_at' => 'datetime',
             'terms_accepted_at' => 'datetime',
             'age_confirmed_at' => 'datetime',

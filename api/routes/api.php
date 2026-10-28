@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\V1\AccountDataController;
 use App\Http\Controllers\Api\V1\AccountEmailController;
 use App\Http\Controllers\Api\V1\AccountRecoveryController;
 use App\Http\Controllers\Api\V1\AuthProviderController;
+use App\Http\Controllers\Api\V1\AwayController;
 use App\Http\Controllers\Api\V1\FleetController;
 use App\Http\Controllers\Api\V1\GarageController;
 use App\Http\Controllers\Api\V1\LegalController;
@@ -88,6 +89,9 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/tutorial/skip', [TutorialController::class, 'skip']);
 
         Route::get('/premium', [PremiumController::class, 'show']);
+
+        Route::get('/away', [AwayController::class, 'show']);
+        Route::post('/away/seen', [AwayController::class, 'seen']);
 
         Route::get('/shop', [ShopController::class, 'index']);
         Route::post('/shop/purchases', [ShopController::class, 'purchase']);
