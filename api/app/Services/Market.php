@@ -39,6 +39,7 @@ final class Market
         private readonly Garage $garage,
         private readonly CityGarages $garages,
         private readonly CarSales $sales,
+        private readonly TutorialScript $script,
     ) {
         $pricing = new UsedCarPricing($rules->marketPricing());
 
@@ -67,6 +68,10 @@ final class Market
         $level = $this->levelOf($userId);
         $window = $this->exchange->window($nowMs);
         $listings = $this->exchange->listings($this->seed($userId), $region, $window, $this->exchangePool($level));
+
+        // The step of the tutorial that asks for a bought car puts its own listing first.
+        $tutorial = $this->tutorialListing($userId);
+        $listings = $tutorial === null ? $listings : [$tutorial, ...$listings];
 
         $done = $this->done($userId, $listings);
         $listings = array_values(array_filter($listings, fn (UsedListing $listing): bool => ! isset($done["listing:{$userId}:{$listing->key}"])));
@@ -102,9 +107,15 @@ final class Market
             $this->ledger->lockWallet($userId);
 
             $listing = $this->listing($userId, $key, $nowMs);
+            $cost = $this->exchange->inspectionCostCents($listing->priceCents);
+
+            // The mentor pays for the inspection of the car of the tutorial: the driver gets the cost back in the same transaction.
+            if ($listing->key === TutorialScript::LISTING_KEY && ! LedgerEntry::query()->where('idem_key', "inspect:{$userId}:{$listing->key}")->exists()) {
+                $this->ledger->post($userId, $cost, 'tutorial', "tutorial-inspection:{$userId}");
+            }
 
             // Posting with the same key twice is the same posting, so a second request pays nothing.
-            $this->ledger->post($userId, -$this->exchange->inspectionCostCents($listing->priceCents), 'inspection', "inspect:{$userId}:{$listing->key}");
+            $this->ledger->post($userId, -$cost, 'inspection', "inspect:{$userId}:{$listing->key}");
         }, Ledger::DEADLOCK_ATTEMPTS);
     }
 
@@ -318,6 +329,10 @@ final class Market
      */
     private function listing(int $userId, string $key, int $nowMs): UsedListing
     {
+        if ($key === TutorialScript::LISTING_KEY) {
+            return $this->tutorialListing($userId) ?? throw new RuleRefusedException('listing_gone');
+        }
+
         $listing = $this->exchange->find($key, $this->seed($userId), $nowMs, $this->exchangePool($this->levelOf($userId)));
 
         if ($listing === null || $listing->region !== $this->cityOf($userId) || LedgerEntry::query()->where('idem_key', "listing:{$userId}:{$listing->key}")->exists()) {
@@ -325,6 +340,40 @@ final class Market
         }
 
         return $listing;
+    }
+
+    /**
+     * The car of the tutorial on the exchange of the city where the driver's car stands, in the state and at the price the script gives it, or null when the step
+     * that asks for it is not the one that waits, or it was bought.
+     */
+    private function tutorialListing(int $userId): ?UsedListing
+    {
+        $car = $this->script->exchangeListing($userId);
+
+        if ($car === null) {
+            return null;
+        }
+
+        $description = $this->rules->marketExchange()['description'];
+        $word = match (true) {
+            $car['condition_ppm'] >= $description['good_from_ppm'] => UsedListing::GOOD,
+            $car['condition_ppm'] >= $description['fair_from_ppm'] => UsedListing::FAIR,
+            default => UsedListing::POOR,
+        };
+
+        return new UsedListing(
+            TutorialScript::LISTING_KEY,
+            $this->cityOf($userId),
+            0,
+            0,
+            $car['vehicle'],
+            $car['age_years'],
+            $car['mileage_km'],
+            $car['condition_ppm'],
+            max(1, (int) round((1_000_000 - $car['condition_ppm']) / 250_000)),
+            $word,
+            $car['price_cents'],
+        );
     }
 
     /**

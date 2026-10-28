@@ -103,7 +103,9 @@ final class TutorialScript
 
         foreach (TutorialProgress::query()->where('user_id', $userId)->where('state', TutorialProgress::STATE_ACTIVE)->pluck('step_key') as $key) {
             foreach ($this->steps->find($key)['arranges'] ?? [] as $kind) {
-                $arranged[$kind] = ['ms' => $script['first_mount_ms'], 'covers_cents' => $script['covers_up_to_cents']];
+                // A service costs what the car earns between two services, which the driver does not choose, so the mentor pays all of it; for the rest of the
+                // jobs, whose cost follows from the part the driver picks, the sum of the script is the most.
+                $arranged[$kind] = ['ms' => $script['first_mount_ms'], 'covers_cents' => $kind === WorkshopJob::KIND_SERVICE ? PHP_INT_MAX : $script['covers_up_to_cents']];
             }
         }
 

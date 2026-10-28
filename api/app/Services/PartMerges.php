@@ -8,6 +8,7 @@ use App\Content\Catalog;
 use App\Content\Rules;
 use App\Domain\Run\Rarity;
 use App\Domain\Run\Rng;
+use App\Domain\Settlement\Ppm;
 use App\Domain\Workshop\WorkshopGear;
 use App\Http\Resources\PartResource;
 use App\Models\MergeAttempt;
