@@ -201,7 +201,16 @@ abstract class RulesDocumentPage extends Page implements HasSchemas
             ->where('kind', ContentDefinition::KIND_RULES)
             ->where('slug', $this->documentSlug())
             ->with('latestVersion')
-            ->first();
+            ->first() ?? $this->unstartedDefinition();
+    }
+
+    /**
+     * The definition that a page may start, for a document that no pack has brought yet (a database that was made before the document existed): not saved
+     * until the first draft is, and it has nothing published. Null, for the documents that every pack has.
+     */
+    protected function unstartedDefinition(): ?ContentDefinition
+    {
+        return null;
     }
 
     protected function forgetDefinition(): void

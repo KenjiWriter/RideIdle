@@ -200,6 +200,22 @@ return [
         'anchor' => 'Ancre',
         'xp_hour' => 'XP par heure (brouillon)',
     ],
+    'vocabulary' => [
+        'nav' => 'Vocabulaire',
+        'title' => 'Vocabulaire du jeu',
+        'hint' => 'Une case vide est le texte de l’application. N’écrivez un mot que là où le pack doit parler autrement ; l’anglais et le polonais sont complétés par le texte de l’application, et une langue sans texte propre reçoit le texte anglais du pack. Ce qui n’est pas enregistré est perdu quand on change de domaine, de recherche ou de filtre.',
+        'area' => 'Domaine',
+        'all_areas' => 'Tous les domaines (:count)',
+        'area_option' => ':area (:total, modifiés : :changed)',
+        'search' => 'Rechercher',
+        'search_hint' => 'Dans la clé et dans les textes (de l’application et du pack). Validez avec Entrée.',
+        'only_changed' => 'Seulement ceux que le pack modifie',
+        'shown' => ':shown messages affichés sur :matching.',
+        'app_says' => 'L’application dit : :text',
+        'not_in_app' => 'L’application n’a pas ce message (il a été supprimé) ; videz les cases pour le retirer du vocabulaire.',
+        'no_catalog' => 'Les fichiers des textes de l’application (web/src/i18n/locales) ne sont pas là : on ne voit pas ce que dit l’application et les clés ne peuvent pas être vérifiées. Seuls les messages que le pack modifie déjà sont listés.',
+    ],
+
     'world' => [
         'nav' => 'Monde',
         'title' => 'Le monde : villes, routes et circuits',

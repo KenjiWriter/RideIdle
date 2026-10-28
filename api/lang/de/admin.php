@@ -200,6 +200,22 @@ return [
         'anchor' => 'Anker',
         'xp_hour' => 'XP pro Stunde (Entwurf)',
     ],
+    'vocabulary' => [
+        'nav' => 'Wortschatz',
+        'title' => 'Wortschatz des Spiels',
+        'hint' => 'Ein leeres Feld ist der Text der App. Schreibe nur dort ein Wort, wo das Paket es anders sagen soll; Englisch und Polnisch werden mit dem Text der App ergänzt, und eine Sprache ohne eigenen Text bekommt den englischen Text des Pakets. Was nicht gespeichert ist, geht beim Wechsel von Bereich, Suche oder Filter verloren.',
+        'area' => 'Bereich',
+        'all_areas' => 'Alle Bereiche (:count)',
+        'area_option' => ':area (:total, geändert: :changed)',
+        'search' => 'Suchen',
+        'search_hint' => 'Im Schlüssel und in den Texten (der App und des Pakets). Mit Enter bestätigen.',
+        'only_changed' => 'Nur die, die das Paket ändert',
+        'shown' => ':shown von :matching Meldungen angezeigt.',
+        'app_says' => 'Die App sagt: :text',
+        'not_in_app' => 'Die App hat diese Meldung nicht (sie wurde entfernt); leere die Felder, um sie aus dem Wortschatz zu nehmen.',
+        'no_catalog' => 'Die Dateien mit den Texten der App (web/src/i18n/locales) sind hier nicht vorhanden, daher ist nicht zu sehen, was die App sagt, und die Schlüssel können nicht geprüft werden. Aufgeführt sind nur die Meldungen, die das Paket schon ändert.',
+    ],
+
     'world' => [
         'nav' => 'Welt',
         'title' => 'Die Welt: Städte, Straßen und Strecken',

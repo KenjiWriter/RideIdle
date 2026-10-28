@@ -226,6 +226,22 @@ return [
             'tracks' => 'Tracks: times, rewards, weights',
         ],
     ],
+    'vocabulary' => [
+        'nav' => 'Vocabulary',
+        'title' => 'Vocabulary of the game',
+        'hint' => 'An empty box is the text of the app. Write a word only where the pack is to say it differently; English and Polish are filled in with the text of the app, and a language with no text of its own gets the English text of the pack. What is not saved is lost when the area, the search or the filter is changed.',
+        'area' => 'Area',
+        'all_areas' => 'All areas (:count)',
+        'area_option' => ':area (:total, changed: :changed)',
+        'search' => 'Search',
+        'search_hint' => 'In the key and in the texts (of the app and of the pack). Press Enter to apply.',
+        'only_changed' => 'Only those that the pack changes',
+        'shown' => 'Showing :shown of :matching messages.',
+        'app_says' => 'The app says: :text',
+        'not_in_app' => 'The app has no such message (it was removed); clear the boxes to take it out of the vocabulary.',
+        'no_catalog' => 'The files with the texts of the app (web/src/i18n/locales) are not here, so what the app says cannot be shown and the keys cannot be checked. Only the messages that the pack already changes are listed.',
+    ],
+
     'world' => [
         'nav' => 'World',
         'title' => 'The world: cities, roads and tracks',

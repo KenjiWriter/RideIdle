@@ -200,6 +200,22 @@ return [
         'anchor' => 'Âncora',
         'xp_hour' => 'XP por hora (rascunho)',
     ],
+    'vocabulary' => [
+        'nav' => 'Vocabulário',
+        'title' => 'Vocabulário do jogo',
+        'hint' => 'Uma caixa vazia é o texto do aplicativo. Escreva uma palavra só onde o pacote deve dizer de outro jeito; inglês e polonês são preenchidos com o texto do aplicativo, e um idioma sem texto próprio recebe o texto em inglês do pacote. O que não foi salvo se perde ao mudar de área, busca ou filtro.',
+        'area' => 'Área',
+        'all_areas' => 'Todas as áreas (:count)',
+        'area_option' => ':area (:total, alteradas: :changed)',
+        'search' => 'Buscar',
+        'search_hint' => 'Na chave e nos textos (do aplicativo e do pacote). Confirme com Enter.',
+        'only_changed' => 'Só as que o pacote altera',
+        'shown' => ':shown de :matching mensagens exibidas.',
+        'app_says' => 'O aplicativo diz: :text',
+        'not_in_app' => 'O aplicativo não tem essa mensagem (foi removida); esvazie as caixas para tirá-la do vocabulário.',
+        'no_catalog' => 'Os arquivos com os textos do aplicativo (web/src/i18n/locales) não estão aqui, então não dá para ver o que o aplicativo diz nem conferir as chaves. Só aparecem as mensagens que o pacote já altera.',
+    ],
+
     'world' => [
         'nav' => 'Mundo',
         'title' => 'O mundo: cidades, estradas e pistas',

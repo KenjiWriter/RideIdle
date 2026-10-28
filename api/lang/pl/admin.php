@@ -226,6 +226,22 @@ return [
             'tracks' => 'Tory: czasy, nagrody, wagi',
         ],
     ],
+    'vocabulary' => [
+        'nav' => 'Słownik',
+        'title' => 'Słownik gry',
+        'hint' => 'Puste pola to teksty aplikacji. Wpisz słowo tylko tam, gdzie paczka ma mówić inaczej; angielski i polski uzupełnią się tekstem aplikacji, a język bez własnego tekstu dostaje angielski tekst paczki. Zmiany niezapisane giną przy zmianie obszaru, wyszukiwania i filtra.',
+        'area' => 'Obszar',
+        'all_areas' => 'Wszystkie obszary (:count)',
+        'area_option' => ':area (:total, zmienionych: :changed)',
+        'search' => 'Szukaj',
+        'search_hint' => 'W kluczu i w tekstach (aplikacji i paczki). Zatwierdź klawiszem Enter.',
+        'only_changed' => 'Tylko zmienione przez paczkę',
+        'shown' => 'Pokazano :shown z :matching komunikatów.',
+        'app_says' => 'Aplikacja mówi: :text',
+        'not_in_app' => 'Aplikacja nie ma takiego komunikatu (został usunięty); wyczyść pola, żeby go zdjąć ze słownika.',
+        'no_catalog' => 'Nie ma tu plików z tekstami aplikacji (web/src/i18n/locales), więc nie widać, co aplikacja mówi, i nie da się sprawdzić kluczy. Widać tylko komunikaty, które paczka już zmienia.',
+    ],
+
     'world' => [
         'nav' => 'Świat',
         'title' => 'Świat: miasta, drogi i tory',
