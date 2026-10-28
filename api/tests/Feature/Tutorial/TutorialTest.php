@@ -71,7 +71,7 @@ describe('the tutorial', function () {
             ->assertExactJson(['data' => [
                 'status' => 'in_progress', 'total' => 20, 'done' => 0, 'current' => null, 'rewarded' => [],
                 // The goal is in front of the driver from the first screen: the wreck is the first thing to do.
-                'goal' => ['key' => 'wreck', 'number' => 1, 'phase' => 1, 'title' => 'Pick your wreck', 'waiting' => null, 'target' => null, 'optional' => false, 'reward' => ['cash_cents' => 0, 'car_xp' => 0, 'xp' => 0, 'part' => null, 'garage' => null]],
+                'goal' => ['key' => 'wreck', 'number' => 1, 'phase' => 1, 'title' => 'Pick your wreck', 'waiting' => null, 'target' => null, 'tire_kind' => null, 'optional' => false, 'reward' => ['cash_cents' => 0, 'car_xp' => 0, 'xp' => 0, 'part' => null, 'garage' => null]],
             ]]);
     });
 
@@ -280,6 +280,9 @@ describe('the tutorial', function () {
             ->assertJsonPath('data.done', 6)
             ->assertJsonPath('data.current.key', 'mount')
             ->assertJsonPath('data.current.target', 'mount')
+            // A step that asks for tires without a kind (the new ones) names none.
+            ->assertJsonPath('data.current.tire_kind', null)
+            ->assertJsonPath('data.goal.tire_kind', null)
             ->assertJsonPath('data.rewarded', [['key' => 'repair', 'cash_cents' => 3_000, 'car_xp' => 0, 'xp' => 0, 'part' => 'street-tires-t2', 'garage' => null]]);
 
         // The repair cost $30 and the step gave it back, and the tires are in the inventory, common.

@@ -139,6 +139,8 @@ final class PartResource extends JsonResource
             'unique' => self::unique($definition['slot'], $rarity),
             // Tires only: how they grip on every surface, which is what tells one kind from another.
             'surfaces' => isset($definition['tire_kind']) ? app(Rules::class)->tireSurfaces($definition['tire_kind']) : null,
+            // Tires only: the kind (`street`, `offroad`, ...), which a step of the tutorial names when it asks for tires of one kind to be put on.
+            'tire_kind' => $definition['tire_kind'] ?? null,
         ];
     }
 }

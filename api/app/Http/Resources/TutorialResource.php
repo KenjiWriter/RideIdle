@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Content\TutorialSteps;
 use App\Services\TutorialState;
 use App\Support\I18nText;
 use Illuminate\Http\Request;
@@ -35,12 +36,30 @@ final class TutorialResource extends JsonResource
                 'optional' => (bool) ($step['optional'] ?? false),
                 'decline' => isset($step['decline']) ? I18nText::from($step['decline'])->for() : null,
                 'target' => $step['target'],
+                'tire_kind' => self::tireKind($step),
                 'acknowledged' => $step['acknowledged'],
             ],
             // What the steps completed by this call paid, so the client can say it and refresh the cash.
             'rewarded' => $state->rewarded,
             'goal' => $state->goal === null ? null : $this->goal($state->goal),
         ];
+    }
+
+    /**
+     * The kind of tires that a step waits to see on the car (`tires_mounted:offroad` makes `offroad`), so that the workshop can point at those tires and not at
+     * the first ones in the inventory; null for a step that names no kind.
+     *
+     * @param  array<string, mixed>  $step
+     */
+    private static function tireKind(array $step): ?string
+    {
+        foreach (TutorialSteps::conditions($step['completion'] ?? []) as $fact) {
+            if (str_starts_with($fact, 'tires_mounted:')) {
+                return substr($fact, strlen('tires_mounted:'));
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -60,6 +79,7 @@ final class TutorialResource extends JsonResource
             'title' => I18nText::from($goal['goal'])->for(),
             'waiting' => $goal['waits'] && isset($goal['waiting']) ? I18nText::from($goal['waiting'])->for() : null,
             'target' => $goal['target'],
+            'tire_kind' => self::tireKind($goal),
             'optional' => (bool) ($goal['optional'] ?? false),
             'reward' => [
                 'cash_cents' => (int) ($reward['cash_cents'] ?? 0),

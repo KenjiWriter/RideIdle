@@ -61,6 +61,16 @@ describe('the shop', function () {
             ]);
     });
 
+    it('tells the kind of the tires, which a step of the tutorial names, and no kind for the other parts', function () {
+        $driver = driverWithMoney(0);
+
+        $parts = collect($this->getJson('/api/v1/shop', bearerFor($driver))->assertOk()->json('data.parts'))->keyBy('slug');
+
+        expect($parts['offroad-tires-t2']['tire_kind'])->toBe('offroad')
+            ->and($parts['street-tires-t2']['tire_kind'])->toBe('street')
+            ->and($parts['sport-exhaust-t2']['tire_kind'])->toBeNull();
+    });
+
     it('tells how the tires grip on every surface, and nothing of the sort for the other parts', function () {
         $driver = driverWithMoney(0);
 

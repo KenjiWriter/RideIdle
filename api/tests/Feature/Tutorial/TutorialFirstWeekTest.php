@@ -49,7 +49,9 @@ describe('the first day', function () {
         expect(Part::query()->where('user_id', $driver->id)->count())->toBe(0);
 
         $travel->update(['status' => Travel::STATUS_ARRIVED]);
-        weekGet($driver)->assertJsonPath('data.current.key', 'offroad')->assertJsonPath('data.goal.waiting', null)->assertJsonPath('data.goal.target', 'mount');
+        weekGet($driver)->assertJsonPath('data.current.key', 'offroad')->assertJsonPath('data.goal.waiting', null)->assertJsonPath('data.goal.target', 'mount')
+            // The step names the kind of tires it waits for, so that the workshop points at those and not at the first tires in the inventory.
+            ->assertJsonPath('data.goal.tire_kind', 'offroad')->assertJsonPath('data.current.tire_kind', 'offroad');
 
         $gift = Part::query()->where('user_id', $driver->id)->get();
         expect($gift)->toHaveCount(1)->and($gift->first()->part_slug)->toBe('offroad-tires-t2')->and($gift->first()->rarity)->toBe(1);
