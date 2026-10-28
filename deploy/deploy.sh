@@ -11,8 +11,9 @@
 #
 #   1. the source is put in releases/<time>   2. composer install (API)   3. npm ci and npm run build (web)
 #   4. the .env and the storage are linked in from shared/   5. content:validate   6. the migrations
-#   7. the caches of Laravel   8. `current` points to the release   9. PHP-FPM is reloaded and the queue worker restarted
-#  10. the site is asked if it is well; if it is not, the previous release is put back and this exits with an error
+#   7. content:check --install (the content the game reads is whole and fits this code; from the database, the first pack is put in)
+#   8. the caches of Laravel   9. `current` points to the release  10. PHP-FPM is reloaded and the queue worker restarted
+#  11. the site is asked if it is well; if it is not, the previous release is put back and this exits with an error
 #
 # The migrations run BEFORE the link changes, while the old release is still serving. So a migration must work for the old
 # code as well (add a column, do not rename or remove one in the same release), and a rollback puts the old code back on
@@ -211,6 +212,11 @@ artisan content:validate
 
 say "Running the migrations"
 artisan migrate --force --no-interaction
+
+# After the migrations, because with CONTENT_SOURCE=database the content lives in tables that this release may have just made. A pack that is live and does not
+# fit the code of this release stops the deploy here, before the link changes; it never replaces a pack that is live (content:import --activate does that).
+say "Checking the content the game reads"
+artisan content:check --install
 
 say "Making the caches of Laravel"
 artisan config:cache
