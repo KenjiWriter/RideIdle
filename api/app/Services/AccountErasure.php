@@ -13,6 +13,7 @@ use App\Models\CrateOpening;
 use App\Models\LedgerEntry;
 use App\Models\MergeAttempt;
 use App\Models\Part;
+use App\Models\Purchase;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
@@ -111,6 +112,8 @@ final class AccountErasure
             StorageOpening::query()->where('user_id', $user->id)->delete();
             CrateOpening::query()->where('user_id', $user->id)->delete();
             MergeAttempt::query()->where('user_id', $user->id)->delete();
+            // What was paid for stays in the books of the shop; only the account is cut off from it.
+            Purchase::query()->where('user_id', $user->id)->update(['user_id' => null]);
             Wallet::query()->where('user_id', $user->id)->delete();
             AccountToken::query()->where('user_id', $user->id)->delete();
             AccountIdentity::query()->where('user_id', $user->id)->delete();

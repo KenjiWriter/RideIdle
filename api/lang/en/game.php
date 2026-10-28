@@ -4,6 +4,8 @@ return [
 
     'errors' => [
         'insufficient_funds' => 'Not enough cash.',
+        'insufficient_premium' => 'Not enough premium coins: you have :available, you need :required.',
+        'product_not_found' => 'That pack is not for sale.',
         'run_exists' => 'You already have a car on the track.',
         'no_run' => 'You have no car on the track yet.',
         'player_level_required' => 'Requires player level :required (you have :current).',

@@ -725,3 +725,33 @@ it('levels the driver by the car that is played only, and refuses a share that i
 
     expect(rulesSchemaErrors($rules))->not->toBe([]);
 });
+
+it('sells packs of premium coins that name the currency and the packs in all five languages, and that give more for the price the bigger they are', function () {
+    $premium = starterRules()['premium'];
+    $products = $premium['products'];
+    $perCoin = array_map(fn (array $pack): float => $pack['price_minor'] / $pack['coins'], array_values($products));
+
+    expect(Locale::supported())->toEqualCanonicalizing(array_keys($premium['currency']['name']))
+        ->and($premium['price_currency'])->toBe('PLN');
+
+    foreach ($products as $pack) {
+        expect(array_keys($pack['name']))->toEqualCanonicalizing(Locale::supported());
+    }
+
+    // The packs are listed from the first, and every next one is cheaper per coin: that is the bonus of a bigger pack.
+    for ($i = 1; $i < count($perCoin); $i++) {
+        expect($perCoin[$i])->toBeLessThan($perCoin[$i - 1]);
+    }
+
+    $rules = starterRules();
+    $rules['premium']['products']['coins-small']['price_minor'] = 0;
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    $rules['premium']['products'] = [];
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    $rules = starterRules();
+    unset($rules['premium']);
+    expect(rulesSchemaErrors($rules))->toBe([]);
+});

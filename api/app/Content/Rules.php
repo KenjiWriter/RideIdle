@@ -388,6 +388,52 @@ final class Rules
         return I18nText::from($this->data['regions'][$region]['name'])->for();
     }
 
+    /** The premium currency, as the shop names it: the code the client knows it by and the name in the language of the driver. @return array{code: string, name: string}|null */
+    public function premiumCurrency(): ?array
+    {
+        $premium = $this->data['premium'] ?? null;
+
+        return $premium === null ? null : ['code' => $premium['currency']['code'], 'name' => I18nText::from($premium['currency']['name'])->for()];
+    }
+
+    /** The currency the packs of coins are priced in (ISO 4217), or null when the rules sell nothing. */
+    public function premiumPriceCurrency(): ?string
+    {
+        return $this->data['premium']['price_currency'] ?? null;
+    }
+
+    /**
+     * The packs of premium coins that are sold, in the order of the rules (the cheapest per coin first). `bonus_percent` is how many more coins a pack gives for
+     * its price than the first pack does, rounded to a whole percent.
+     *
+     * @return array<string, array{name: string, coins: int, price_minor: int, bonus_percent: int}>
+     */
+    public function premiumProducts(): array
+    {
+        $products = $this->data['premium']['products'] ?? [];
+        $first = $products === [] ? null : $products[array_key_first($products)];
+        $packs = [];
+
+        foreach ($products as $slug => $product) {
+            $bonus = $first === null ? 0 : (int) round(($product['coins'] * $first['price_minor'] / ($product['price_minor'] * $first['coins']) - 1) * 100);
+
+            $packs[$slug] = [
+                'name' => I18nText::from($product['name'])->for(),
+                'coins' => $product['coins'],
+                'price_minor' => $product['price_minor'],
+                'bonus_percent' => max(0, $bonus),
+            ];
+        }
+
+        return $packs;
+    }
+
+    /** One pack of premium coins by its slug (what a payment names), or null when the rules do not sell it. @return array{name: string, coins: int, price_minor: int, bonus_percent: int}|null */
+    public function premiumProduct(string $slug): ?array
+    {
+        return $this->premiumProducts()[$slug] ?? null;
+    }
+
     /** How many cars a garage holds. */
     public function garageCapacity(): int
     {

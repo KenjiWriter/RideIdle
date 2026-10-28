@@ -6,13 +6,14 @@ namespace App\Services;
 
 use App\Exceptions\IdempotencyConflictException;
 use App\Exceptions\InsufficientFundsException;
+use App\Exceptions\RuleRefusedException;
 use App\Models\LedgerEntry;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 /**
- * The only way to change a cash balance.
+ * The only way to change a balance of the wallet: the cash, and the premium coins (the same rules, a column and a currency each).
  *
  * Every posting runs in a transaction that first locks the wallet row (SELECT ... FOR UPDATE), so postings
  * of one driver are processed one after another on every database. A posting carries an idempotency key:
@@ -22,6 +23,10 @@ use InvalidArgumentException;
 final class Ledger
 {
     public const MAX_KEY_LENGTH = 128;
+
+    public const CASH = 'cash';
+
+    public const PREMIUM = 'premium';
 
     /** A transaction that lost a deadlock is retried this many times in all (only the outermost one is retried). */
     public const DEADLOCK_ATTEMPTS = 3;
@@ -37,6 +42,26 @@ final class Ledger
      */
     public function post(int $userId, int $delta, string $reason, string $idemKey, ?int $settlementId = null): LedgerEntry
     {
+        return $this->apply($userId, self::CASH, $delta, $reason, $idemKey, $settlementId);
+    }
+
+    /**
+     * Posts a change of the premium coins: a purchase and a gift add them, spending takes them away. Spending never takes the balance below zero; only a
+     * payment that is taken back after the coins were spent (`$allowDebt`) may, and then the driver owes the difference until the next purchase.
+     *
+     * @param  string  $reason  what the coins were for, for example purchase, gift, refund, speedup
+     * @param  string  $idemKey  identifies this posting, for example purchase:{provider}:{payment}
+     *
+     * @throws RuleRefusedException `insufficient_premium` when the balance would go below zero (and a debt is not allowed)
+     * @throws IdempotencyConflictException when the key was used for a different posting
+     */
+    public function postPremium(int $userId, int $delta, string $reason, string $idemKey, bool $allowDebt = false): LedgerEntry
+    {
+        return $this->apply($userId, self::PREMIUM, $delta, $reason, $idemKey, null, $allowDebt);
+    }
+
+    private function apply(int $userId, string $currency, int $delta, string $reason, string $idemKey, ?int $settlementId, bool $allowDebt = false): LedgerEntry
+    {
         if ($delta === 0) {
             throw new InvalidArgumentException('A posting must change the balance.');
         }
@@ -46,30 +71,34 @@ final class Ledger
         }
 
         $this->ensureWallet($userId);
+        $column = $currency === self::CASH ? 'cash_cents' : 'premium_coins';
 
-        return DB::transaction(function () use ($userId, $delta, $reason, $idemKey, $settlementId): LedgerEntry {
+        return DB::transaction(function () use ($userId, $currency, $column, $delta, $reason, $idemKey, $settlementId, $allowDebt): LedgerEntry {
             $wallet = $this->lockWallet($userId);
 
             // Checked after the lock, so a concurrent twin of this posting has finished and is visible.
             $existing = LedgerEntry::query()->where('idem_key', $idemKey)->first();
 
             if ($existing !== null) {
-                if ($existing->user_id !== $userId || $existing->delta !== $delta || $existing->reason !== $reason) {
+                if ($existing->user_id !== $userId || $existing->currency !== $currency || $existing->delta !== $delta || $existing->reason !== $reason) {
                     throw new IdempotencyConflictException($idemKey);
                 }
 
                 return $existing;
             }
 
-            $balance = $wallet->cash_cents + $delta;
+            $current = (int) $wallet->{$column};
+            $balance = $current + $delta;
 
-            if ($balance < 0) {
-                throw new InsufficientFundsException($wallet->cash_cents, -$delta);
+            if ($balance < 0 && ! ($allowDebt && $delta < 0)) {
+                throw $currency === self::CASH
+                    ? new InsufficientFundsException($current, -$delta)
+                    : new RuleRefusedException('insufficient_premium', ['available' => $current, 'required' => -$delta]);
             }
 
             $entry = LedgerEntry::query()->create([
                 'user_id' => $userId,
-                'currency' => 'cash',
+                'currency' => $currency,
                 'delta' => $delta,
                 'balance_after' => $balance,
                 'reason' => $reason,
@@ -77,7 +106,7 @@ final class Ledger
                 'idem_key' => $idemKey,
             ]);
 
-            $wallet->forceFill(['cash_cents' => $balance])->save();
+            $wallet->forceFill([$column => $balance])->save();
 
             return $entry;
         }, self::DEADLOCK_ATTEMPTS);
@@ -107,18 +136,24 @@ final class Ledger
         return (int) (Wallet::query()->whereKey($userId)->value('cash_cents') ?? 0);
     }
 
+    /** The premium coins of the driver (negative when a payment was taken back after they were spent). */
+    public function premiumBalance(int $userId): int
+    {
+        return (int) (Wallet::query()->whereKey($userId)->value('premium_coins') ?? 0);
+    }
+
     /** The experience of the driver: it gives the level that opens the tracks. */
     public function xp(int $userId): int
     {
         return (int) (Wallet::query()->whereKey($userId)->value('xp') ?? 0);
     }
 
-    /** The balance equals the sum of the ledger and the last entry agrees with it. */
-    public function isConsistent(int $userId): bool
+    /** The balance of a currency (the cash, or the premium coins) equals the sum of its entries of the ledger and the last entry agrees with it. */
+    public function isConsistent(int $userId, string $currency = self::CASH): bool
     {
-        $balance = $this->balance($userId);
-        $sum = (int) LedgerEntry::query()->where('user_id', $userId)->sum('delta');
-        $last = LedgerEntry::query()->where('user_id', $userId)->orderByDesc('id')->first();
+        $balance = $currency === self::CASH ? $this->balance($userId) : $this->premiumBalance($userId);
+        $sum = (int) LedgerEntry::query()->where('user_id', $userId)->where('currency', $currency)->sum('delta');
+        $last = LedgerEntry::query()->where('user_id', $userId)->where('currency', $currency)->orderByDesc('id')->first();
 
         return $balance === $sum && ($last === null || $last->balance_after === $balance);
     }

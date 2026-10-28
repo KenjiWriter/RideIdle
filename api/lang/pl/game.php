@@ -4,6 +4,8 @@ return [
 
     'errors' => [
         'insufficient_funds' => 'Za mało gotówki.',
+        'insufficient_premium' => 'Za mało monet premium: masz :available, potrzebujesz :required.',
+        'product_not_found' => 'Tej paczki nie ma w sprzedaży.',
         'run_exists' => 'Masz już auto na torze.',
         'no_run' => 'Nie masz jeszcze auta na torze.',
         'player_level_required' => 'Wymaga poziomu gracza :required (masz :current).',

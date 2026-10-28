@@ -373,6 +373,19 @@
     "service": { "every_km": 5000, "step_km": 500, "penalty_ppm_per_step": 40000, "max_steps": 5, "cost_ppm_of_income": 40000, "min_cost_cents": 2000, "time_ms": 900000 },
     "breakdown": { "wear_factor": 3, "overdue_factor": 2, "unserviceable_factor": 1 }
   },
+  "premium": {
+    "currency": {
+      "code": "ridecoin",
+      "name": { "en": "RideCoin", "pl": "RideCoin", "fr": "RideCoin", "de": "RideCoin", "pt-BR": "RideCoin" }
+    },
+    "price_currency": "PLN",
+    "products": {
+      "coins-small": { "name": { "en": "Small pack", "pl": "Mała paczka", "fr": "Petit pack", "de": "Kleines Paket", "pt-BR": "Pacote pequeno" }, "coins": 50, "price_minor": 499 },
+      "coins-medium": { "name": { "en": "Medium pack", "pl": "Średnia paczka", "fr": "Pack moyen", "de": "Mittleres Paket", "pt-BR": "Pacote médio" }, "coins": 220, "price_minor": 1999 },
+      "coins-large": { "name": { "en": "Large pack", "pl": "Duża paczka", "fr": "Grand pack", "de": "Großes Paket", "pt-BR": "Pacote grande" }, "coins": 600, "price_minor": 4999 },
+      "coins-huge": { "name": { "en": "Huge pack", "pl": "Ogromna paczka", "fr": "Pack géant", "de": "Riesiges Paket", "pt-BR": "Pacote gigante" }, "coins": 1300, "price_minor": 9999 }
+    }
+  },
   "workshop": {
     "mechanic_level": 1,
     "time_cut_ppm_per_level": 20000,

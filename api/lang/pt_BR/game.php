@@ -4,6 +4,8 @@ return [
 
     'errors' => [
         'insufficient_funds' => 'Dinheiro insuficiente.',
+        'insufficient_premium' => 'Moedas premium insuficientes: você tem :available, precisa de :required.',
+        'product_not_found' => 'Esse pacote não está à venda.',
         'run_exists' => 'Você já tem um carro na pista.',
         'no_run' => 'Você ainda não tem um carro na pista.',
         'player_level_required' => 'Requer nível de jogador :required (você tem :current).',

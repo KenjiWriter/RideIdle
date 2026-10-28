@@ -521,6 +521,40 @@
       "required": ["per_rarity", "definitions"],
       "additionalProperties": false
     },
+    "premium": {
+      "description": "The paid features (the premium currency): its name, and the packs of it that are sold for real money. The price is in the smallest unit of price_currency (grosze). The bonus of a bigger pack is not written: the game works it out from the coins per price of the first pack. Without this section the game sells nothing.",
+      "type": "object",
+      "properties": {
+        "currency": {
+          "type": "object",
+          "properties": {
+            "code": { "description": "What the client calls the currency (a key for its icon), lower case.", "type": "string", "pattern": "^[a-z][a-z0-9-]{1,31}$" },
+            "name": { "description": "The name of the currency, as the shop shows it.", "$ref": "common.schema.json#/$defs/i18n" }
+          },
+          "required": ["code", "name"],
+          "additionalProperties": false
+        },
+        "price_currency": { "description": "The currency the packs are sold in (ISO 4217).", "type": "string", "pattern": "^[A-Z]{3}$" },
+        "products": {
+          "description": "The packs of coins, from the cheapest per coin. The slug is what a payment names.",
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "pattern": "^[a-z][a-z0-9-]{1,63}$" },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": { "$ref": "common.schema.json#/$defs/i18n" },
+              "coins": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+              "price_minor": { "type": "integer", "minimum": 1, "maximum": 100000000 }
+            },
+            "required": ["name", "coins", "price_minor"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["currency", "price_currency", "products"],
+      "additionalProperties": false
+    },
     "workshop": {
       "description": "Jobs of the workshop: putting a part on a car and taking it off. One mechanic, and no equipment yet, so a job takes base_time_ms of the slot times the tier, cut by the level of the mechanic.",
       "type": "object",

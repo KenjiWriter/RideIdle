@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MarketController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PlayerController;
+use App\Http\Controllers\Api\V1\PremiumController;
 use App\Http\Controllers\Api\V1\RunController;
 use App\Http\Controllers\Api\V1\ShopController;
 use App\Http\Controllers\Api\V1\SocialAuthController;
@@ -82,6 +83,8 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/tutorial/reply', [TutorialController::class, 'reply']);
         Route::post('/tutorial/decline', [TutorialController::class, 'decline']);
         Route::post('/tutorial/skip', [TutorialController::class, 'skip']);
+
+        Route::get('/premium', [PremiumController::class, 'show']);
 
         Route::get('/shop', [ShopController::class, 'index']);
         Route::post('/shop/purchases', [ShopController::class, 'purchase']);

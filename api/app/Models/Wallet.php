@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-/** The balance of a driver: cash in cents and XP. Changed only through the ledger, under a row lock. */
+/** The balance of a driver: cash in cents, XP and premium coins. The cash and the coins change only through the ledger, under a row lock. */
 class Wallet extends Model
 {
     protected $primaryKey = 'user_id';
@@ -20,7 +20,7 @@ class Wallet extends Model
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['cash_cents' => 'integer', 'xp' => 'integer'];
+        return ['cash_cents' => 'integer', 'xp' => 'integer', 'premium_coins' => 'integer'];
     }
 
     /** @return BelongsTo<User, $this> */

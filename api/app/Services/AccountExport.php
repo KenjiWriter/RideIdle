@@ -13,6 +13,7 @@ use App\Models\CrateOpening;
 use App\Models\LedgerEntry;
 use App\Models\MergeAttempt;
 use App\Models\Part;
+use App\Models\Purchase;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\StorageOpening;
@@ -94,6 +95,7 @@ final class AccountExport
             'wallet' => $wallet === null ? null : [
                 'cash_cents' => $wallet->cash_cents,
                 'xp' => $wallet->xp,
+                'premium_coins' => $wallet->premium_coins,
                 'updated_at' => $this->day($wallet->updated_at),
             ],
             'cars' => Car::query()->withoutGlobalScopes()->where('user_id', $user->id)->orderBy('id')->get()->map(
@@ -128,6 +130,8 @@ final class AccountExport
                         ->map(fn (Settlement $settlement): array => $settlement->makeHidden(['race_run_id'])->toArray())->all(),
                 ],
             )->all(),
+            'purchases' => Purchase::query()->where('user_id', $user->id)->orderBy('id')->get()
+                ->map(fn (Purchase $purchase): array => $purchase->makeHidden(['id', 'user_id'])->toArray())->all(),
             'ledger' => LedgerEntry::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (LedgerEntry $entry): array => $entry->makeHidden(['user_id', 'settlement_id', 'idem_key'])->toArray())->all(),
         ];
