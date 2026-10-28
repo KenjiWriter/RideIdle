@@ -17,10 +17,10 @@ describe('the files of the repository as a content source', function () {
 
         expect($source->slugs('vehicles'))->toHaveCount(23)->toContain('rdzak-gt-4')
             ->and($source->slugs('parts'))->toHaveCount(74)
-            ->and($source->slugs('rules'))->toBe(['economy', 'starter', 'tutorial'])
+            ->and($source->slugs('rules'))->toBe(['economy', 'starter', 'tutorial', 'vocabulary'])
             ->and($source->slugs('tables'))->toBe(['bot-profiles', 'elo-expected-ppm', 'rarity-pace', 'unit-returns'])
             ->and($source->slugs('anything-else'))->toBe([])
-            ->and($source->keys())->toHaveCount(23 + 74 + 3 + 4)->toContain('vehicles/rdzak-gt-4', 'rules/starter', 'tables/bot-profiles')->not->toContain('pack');
+            ->and($source->keys())->toHaveCount(23 + 74 + 4 + 4)->toContain('vehicles/rdzak-gt-4', 'rules/starter', 'tables/bot-profiles')->not->toContain('pack');
     });
 
     it('reads a document as written, decoded, and says it when there is none', function () {

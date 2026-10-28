@@ -227,7 +227,7 @@ describe('a draft of the rules', function () {
 
         expect(fn () => app(ContentDrafts::class)->validate('rules', ['anything' => 1], 'economy'))->toThrow(InvalidArgumentException::class)
             ->and($economy->status)->toBe(ContentDefinition::STATUS_ACTIVE)
-            ->and(PackValidator::RULES)->toBe(['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json']);
+            ->and(PackValidator::RULES)->toBe(['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json', 'vocabulary' => 'vocabulary.schema.json']);
     });
 });
 

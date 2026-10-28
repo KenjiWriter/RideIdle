@@ -102,7 +102,7 @@ describe('content:export', function () {
 
         try {
             $this->artisan('content:export', ['path' => $directory])
-                ->expectsOutputToContain('written: 105 files in')
+                ->expectsOutputToContain('written: 106 files in')
                 ->assertExitCode(0);
 
             expect(is_file("{$directory}/packs/core/vehicles/rdzak-gt-4.json"))->toBeTrue();
