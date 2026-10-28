@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Content\Rules;
 use App\Domain\Run\Rarity;
 use App\Models\WorkshopJob;
+use App\Services\RunService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -34,6 +36,21 @@ final class WorkshopJobResource extends JsonResource
             'part' => $this->resource->part === null ? null : PartResource::make($this->resource->part)->resolve(),
             'start_ms' => $this->resource->start_ms,
             'finish_ms' => $this->resource->finish_ms,
+            // What finishing the job at once costs in premium coins: only for the one the mechanic is at (null for the ones that wait, and when nothing is sold).
+            'speedup' => $this->speedup(),
         ];
+    }
+
+    /** @return array{coins: int, remaining_ms: int}|null */
+    private function speedup(): ?array
+    {
+        if ($this->resource->status !== WorkshopJob::STATUS_WORKING) {
+            return null;
+        }
+
+        $remaining = max(0, $this->resource->finish_ms - RunService::nowMs());
+        $coins = app(Rules::class)->speedupCoins($remaining);
+
+        return $coins === null ? null : ['coins' => $coins, 'remaining_ms' => $remaining];
     }
 }

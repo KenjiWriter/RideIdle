@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Services\Ledger;
 use App\Services\RunService;
 use App\Services\Travel;
 use App\Services\Workshop;
@@ -20,6 +21,7 @@ final class WorldController extends Controller
     public function __construct(
         private readonly Travel $travel,
         private readonly Workshop $workshop,
+        private readonly Ledger $ledger,
     ) {}
 
     /** The map as it is now: an arrival that is due is carried out first. */
@@ -46,10 +48,26 @@ final class WorldController extends Controller
         return $this->respond($userId, 201);
     }
 
-    private function respond(int $userId, int $status = 200): JsonResponse
+    /**
+     * Brings a car to the city it is going to, now, for premium coins (`travel.speedup.coins` of the map says how many). `car` is the id of the car (the one the
+     * driver plays when left out). `request_id` is one intention: sending it again charges nothing and answers with `repeated: true`.
+     */
+    public function finishTravel(Request $request): JsonResponse
+    {
+        $data = $request->validate(['car' => ['nullable', 'integer', 'min:1'], 'request_id' => ['required', 'string', 'max:'.RunService::MAX_REQUEST_ID_LENGTH]]);
+
+        $userId = (int) $request->user()->getAuthIdentifier();
+        $this->workshop->advance($userId);
+        $done = $this->travel->finish($userId, $data['car'] ?? null, $data['request_id']);
+
+        return $this->respond($userId, 200, ['repeated' => $done === null, 'spent_coins' => $done['coins'] ?? 0]);
+    }
+
+    /** @param  array<string, mixed>  $extra  more keys of the top level of the answer */
+    private function respond(int $userId, int $status = 200, array $extra = []): JsonResponse
     {
         $nowMs = RunService::nowMs();
 
-        return response()->json(['data' => $this->travel->map($userId, $nowMs), 'now_ms' => $nowMs], $status)->header('Cache-Control', 'no-store');
+        return response()->json(['data' => $this->travel->map($userId, $nowMs), 'now_ms' => $nowMs, 'premium_coins' => $this->ledger->premiumBalance($userId), ...$extra], $status)->header('Cache-Control', 'no-store');
     }
 }

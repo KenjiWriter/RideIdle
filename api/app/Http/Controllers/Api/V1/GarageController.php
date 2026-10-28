@@ -93,6 +93,21 @@ final class GarageController extends Controller
     }
 
     /**
+     * Finishes the job that the mechanic is at, now, for premium coins (`speedup.coins` of the job says how many). `request_id` is one intention: sending it again
+     * charges nothing and answers with `repeated: true`. Answers with the garage, `finished` (the id of the job) and `spent_coins`.
+     */
+    public function finishJob(Request $request, int $job): JsonResponse
+    {
+        $data = $request->validate(['request_id' => ['required', 'string', 'max:'.RunService::MAX_REQUEST_ID_LENGTH]]);
+
+        $userId = (int) $request->user()->getAuthIdentifier();
+        $this->workshop->advance($userId);
+        $done = $this->workshop->finish($userId, $job, $data['request_id']);
+
+        return $this->respond($userId, 200, ['repeated' => $done === null, 'finished' => $done === null ? null : $done['job']->id, 'spent_coins' => $done['coins'] ?? 0]);
+    }
+
+    /**
      * Buys the next level of an item of the workshop of the city the car is in (`item`: tire_machine, lift, hoist, toolkit, bays or mechanics), for cash.
      * `request_id` makes a repeated request harmless (it buys nothing twice, and `repeated` says so).
      */
@@ -144,6 +159,7 @@ final class GarageController extends Controller
             ],
             // What the driver has to spend, as of this answer (what a job or a purchase has just cost is already taken off).
             'wallet' => ['cash_cents' => $this->ledger->balance($userId), 'xp' => $this->ledger->xp($userId)],
+            'premium_coins' => $this->ledger->premiumBalance($userId),
             'now_ms' => RunService::nowMs(),
             ...$extra,
         ], $status)->header('Cache-Control', 'no-store');

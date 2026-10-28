@@ -101,7 +101,7 @@ describe('leaving', function () {
 
         travelTo($driver, 'kruszyn')
             ->assertCreated()
-            ->assertJsonPath('data.travel', ['from' => 'zlomowo', 'to' => 'kruszyn', 'distance_km' => 38, 'start_ms' => RUN_T0 + 150_000, 'arrive_ms' => RUN_T0 + 150_000 + TO_KRUSZYN_MS]);
+            ->assertJsonPath('data.travel', ['from' => 'zlomowo', 'to' => 'kruszyn', 'distance_km' => 38, 'start_ms' => RUN_T0 + 150_000, 'arrive_ms' => RUN_T0 + 150_000 + TO_KRUSZYN_MS, 'speedup' => ['coins' => 6, 'remaining_ms' => TO_KRUSZYN_MS]]);
 
         $run->refresh();
 

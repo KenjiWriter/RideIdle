@@ -428,6 +428,29 @@ final class Rules
         return $packs;
     }
 
+    /** How many minutes of a timer one premium coin buys, or null when the rules sell nothing (no premium section). */
+    public function speedupMinutesPerCoin(): ?int
+    {
+        return isset($this->data['premium']) ? (int) ($this->data['premium']['speedup']['minutes_per_coin'] ?? 5) : null;
+    }
+
+    /**
+     * What it costs, in premium coins, to finish at once what has `$remainingMs` left: a coin for every started block of minutes (`speedupMinutesPerCoin`), and
+     * never less than one. Null when the rules sell nothing.
+     */
+    public function speedupCoins(int $remainingMs): ?int
+    {
+        $minutes = $this->speedupMinutesPerCoin();
+
+        if ($minutes === null) {
+            return null;
+        }
+
+        $block = $minutes * 60_000;
+
+        return max(1, intdiv(max(0, $remainingMs) + $block - 1, $block));
+    }
+
     /** One pack of premium coins by its slug (what a payment names), or null when the rules do not sell it. @return array{name: string, coins: int, price_minor: int, bonus_percent: int}|null */
     public function premiumProduct(string $slug): ?array
     {

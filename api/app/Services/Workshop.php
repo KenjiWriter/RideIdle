@@ -48,6 +48,7 @@ final class Workshop
         private readonly PartMerges $merges,
         private readonly WorkshopEquipment $equipment,
         private readonly PartRequirements $requirements,
+        private readonly Premium $premium,
     ) {}
 
     /**
@@ -307,6 +308,64 @@ final class Workshop
             }
 
             return [$job, ...$cancelled->reject(fn (WorkshopJob $other): bool => $other->id === $job->id)->values()->all()];
+        });
+    }
+
+    /**
+     * Finishes, now, the job that the mechanic is at, for premium coins: one for every started block of minutes that was left (`Rules::speedupCoins`). It is
+     * the same as if the time had passed: the part is on the car or off it, the car drives again when it was the last job of its row, and the jobs that
+     * wait move up, the first of them starting at once.
+     *
+     * `$requestId` is one intention to finish a job: sent again it charges nothing and finishes nothing (null).
+     *
+     * @return array{job: WorkshopJob, coins: int}|null what was finished and what it cost, or null when this request was served before
+     *
+     * @throws RuleRefusedException `speedup_unavailable` (the rules sell nothing), `job_not_found`, `job_done`, `job_not_started` (the mechanic is not at it yet:
+     *                              finish the ones before it) or `insufficient_premium` (nothing is changed)
+     */
+    public function finish(int $userId, int $jobId, string $requestId, ?int $nowMs = null): ?array
+    {
+        return $this->locked($userId, $nowMs, function (Collection $runs, int $now) use ($userId, $jobId, $requestId): ?array {
+            $key = "speedup:job:{$jobId}:{$requestId}";
+
+            if (LedgerEntry::query()->where('idem_key', $key)->exists()) {
+                return null;
+            }
+
+            // What is due comes first: a job that ended in the meantime is done, and is not paid for.
+            $this->advanceLocked($userId, $runs, $now);
+
+            $job = WorkshopJob::query()->where('user_id', $userId)->find($jobId) ?? throw new RuleRefusedException('job_not_found');
+
+            if ($job->status === WorkshopJob::STATUS_DONE) {
+                throw new RuleRefusedException('job_done');
+            }
+
+            if ($job->status !== WorkshopJob::STATUS_WORKING) {
+                throw new RuleRefusedException('job_not_started');
+            }
+
+            $coins = $this->rules->speedupCoins($job->finish_ms - $now) ?? throw new RuleRefusedException('speedup_unavailable');
+            $this->premium->spend($userId, $coins, 'speedup', $key);
+
+            $job->forceFill(['finish_ms' => $now])->save();
+            $this->advanceLocked($userId, $runs, $now);
+
+            $pending = WorkshopJob::query()
+                ->where('user_id', $userId)
+                ->where('city', $job->city)
+                ->where('status', '!=', WorkshopJob::STATUS_DONE)
+                ->orderBy('start_ms')
+                ->orderBy('id')
+                ->with('part')
+                ->lockForUpdate()
+                ->get()
+                ->values();
+
+            $this->moveUp($pending, $now, $this->equipment->gearOf($userId, $job->city)->workers());
+            $this->advanceLocked($userId, $runs, $now);
+
+            return ['job' => $job->refresh(), 'coins' => $coins];
         });
     }
 

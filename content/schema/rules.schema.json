@@ -535,6 +535,13 @@
           "additionalProperties": false
         },
         "price_currency": { "description": "The currency the packs are sold in (ISO 4217).", "type": "string", "pattern": "^[A-Z]{3}$" },
+        "speedup": {
+          "description": "What it costs to finish a timer at once (a job of the workshop, a journey): a premium coin for every started block of minutes that was left, and at least one coin. Without it a timer is 5 minutes a coin.",
+          "type": "object",
+          "properties": { "minutes_per_coin": { "type": "integer", "minimum": 1, "maximum": 1440 } },
+          "required": ["minutes_per_coin"],
+          "additionalProperties": false
+        },
         "products": {
           "description": "The packs of coins, from the cheapest per coin. The slug is what a payment names.",
           "type": "object",

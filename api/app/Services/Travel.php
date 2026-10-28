@@ -11,6 +11,7 @@ use App\Domain\Run\RoadMap;
 use App\Domain\Run\RunFreezer;
 use App\Exceptions\RuleRefusedException;
 use App\Models\Car;
+use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\Travel as Journey;
 use App\Support\I18nText;
@@ -40,6 +41,7 @@ final class Travel
         private readonly Garage $garage,
         private readonly CityGarages $garages,
         private readonly TrackChoices $choices,
+        private readonly Premium $premium,
     ) {}
 
     /** Carries out the arrivals that are due, if there are any. Safe to call at any time; a cheap read when nobody is on the road. */
@@ -52,6 +54,59 @@ final class Travel
         $this->locked($userId, $nowMs, function (Collection $runs, int $now) use ($userId): void {
             $this->arriveLocked($userId, $runs, $now);
         });
+    }
+
+    /**
+     * Brings the car, now, to the city it is going to, for premium coins: one for every started block of minutes that was left (`Rules::speedupCoins`). The car
+     * is there from this moment and drives from it, as if the time had passed.
+     *
+     * `$requestId` is one intention: sent again it charges nothing and moves nothing (null).
+     *
+     * @param  int|null  $carId  the car, or the one the driver plays when left out
+     * @return array{journey: Journey, coins: int}|null what was finished and what it cost, or null when this request was served before
+     *
+     * @throws RuleRefusedException `speedup_unavailable`, `no_run` or `car_not_found`, `not_travelling` or `insufficient_premium` (nothing is changed)
+     */
+    public function finish(int $userId, ?int $carId, string $requestId, ?int $nowMs = null): ?array
+    {
+        return $this->locked($userId, $nowMs, function (Collection $runs, int $now) use ($userId, $carId, $requestId): ?array {
+            $car = $carId === null
+                ? $this->garage->carOf($userId)
+                : Car::query()->where('user_id', $userId)->find($carId);
+
+            $run = $car === null ? null : $runs->get($car->id);
+
+            if ($car === null || $run === null) {
+                throw new RuleRefusedException($carId === null ? 'no_run' : 'car_not_found');
+            }
+
+            $key = "speedup:travel:{$run->id}:{$requestId}";
+
+            if (LedgerEntry::query()->where('idem_key', $key)->exists()) {
+                return null;
+            }
+
+            // What is due comes first: a car that has just arrived is there, and is not paid for.
+            $this->arriveLocked($userId, $runs, $now);
+
+            $journey = $this->activeOf($run->id) ?? throw new RuleRefusedException('not_travelling');
+            $coins = $this->rules->speedupCoins($journey->arrive_ms - $now) ?? throw new RuleRefusedException('speedup_unavailable');
+
+            $this->premium->spend($userId, $coins, 'speedup', $key);
+
+            $journey->forceFill(['arrive_ms' => $now])->save();
+            $this->arriveLocked($userId, $runs, $now);
+
+            return ['journey' => $journey->refresh(), 'coins' => $coins];
+        });
+    }
+
+    /** @return array{coins: int, remaining_ms: int}|null */
+    private function speedupOf(int $remainingMs): ?array
+    {
+        $coins = $this->rules->speedupCoins($remainingMs);
+
+        return $coins === null ? null : ['coins' => $coins, 'remaining_ms' => max(0, $remainingMs)];
     }
 
     /** The journey the car of a run is on, or null. */
@@ -210,6 +265,8 @@ final class Travel
                 'distance_km' => $journey->distance_km,
                 'start_ms' => $journey->start_ms,
                 'arrive_ms' => $journey->arrive_ms,
+                // What finishing the journey at once costs in premium coins, or null when the rules sell nothing.
+                'speedup' => $this->speedupOf($journey->arrive_ms - $nowMs),
             ],
             'now_ms' => $nowMs,
         ];

@@ -379,6 +379,7 @@
       "name": { "en": "RideCoin", "pl": "RideCoin", "fr": "RideCoin", "de": "RideCoin", "pt-BR": "RideCoin" }
     },
     "price_currency": "PLN",
+    "speedup": { "minutes_per_coin": 5 },
     "products": {
       "coins-small": { "name": { "en": "Small pack", "pl": "Mała paczka", "fr": "Petit pack", "de": "Kleines Paket", "pt-BR": "Pacote pequeno" }, "coins": 50, "price_minor": 499 },
       "coins-medium": { "name": { "en": "Medium pack", "pl": "Średnia paczka", "fr": "Pack moyen", "de": "Mittleres Paket", "pt-BR": "Pacote médio" }, "coins": 220, "price_minor": 1999 },
