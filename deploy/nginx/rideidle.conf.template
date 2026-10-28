@@ -104,6 +104,26 @@ server {
         add_header Cache-Control "no-cache" always;
     }
 
+    # The worker and the manifest of the PWA are asked for again at every start, so a change of either is seen at once (a worker that is kept would keep the
+    # old app). The type of the manifest is set here because the mime.types of an older nginx does not know .webmanifest.
+    location = /sw.js {
+        include /etc/nginx/snippets/rideidle-security.conf;
+        add_header Cache-Control "no-cache" always;
+    }
+
+    location = /manifest.webmanifest {
+        include /etc/nginx/snippets/rideidle-security.conf;
+        default_type application/manifest+json;
+        add_header Cache-Control "no-cache" always;
+    }
+
+    # The icons keep their names from release to release, so they are kept for a week and no longer.
+    location /icons/ {
+        include /etc/nginx/snippets/rideidle-security.conf;
+        add_header Cache-Control "public, max-age=604800";
+        try_files $uri =404;
+    }
+
     # Every other address is a page of the app (/garage, /terms, /account/confirm, /auth/callback ...): the app routes it.
     location / {
         try_files $uri /index.html;
