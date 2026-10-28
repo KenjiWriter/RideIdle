@@ -8,6 +8,7 @@ use App\Content\Catalog;
 use App\Content\Rules;
 use App\Domain\Run\Rarity;
 use App\Models\Part;
+use App\Services\ContentImages;
 use App\Support\I18nText;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -116,6 +117,8 @@ final class PartResource extends JsonResource
         return [
             'slug' => $definition['slug'],
             'name' => isset($definition['name']) ? I18nText::from($definition['name'])->for() : $definition['slug'],
+            // The picture of the model, a path of the API, or null when the pack gives it none.
+            'image_url' => ContentImages::urlOf($definition),
             'slot' => $definition['slot'],
             'tier' => $definition['tier'] ?? null,
             'price_cents' => $definition['price_cents'] ?? null,

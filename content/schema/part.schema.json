@@ -6,6 +6,10 @@
   "properties": {
     "slug": { "$ref": "common.schema.json#/$defs/slug" },
     "name": { "$ref": "common.schema.json#/$defs/i18n" },
+    "image": {
+      "description": "Optional picture of the part, shown on its tile in the workshop and the shop.",
+      "$ref": "common.schema.json#/$defs/image"
+    },
     "slot": {
       "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"]
     },

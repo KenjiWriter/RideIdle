@@ -39,6 +39,7 @@ abstract class EditDefinition extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $data = $this->withImage($data);
         $this->checkOrHalt($data, $this->definition()->slug);
 
         return $data;

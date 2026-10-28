@@ -10,6 +10,10 @@
       "description": "Optional short text for the player, for example on the choice of a starter wreck.",
       "$ref": "common.schema.json#/$defs/i18n"
     },
+    "image": {
+      "description": "Optional picture of the car, shown on its cards where the game has none of its own.",
+      "$ref": "common.schema.json#/$defs/image"
+    },
     "class": {
       "enum": ["hatchback", "hot_hatch", "sedan", "coupe", "muscle", "pickup", "van", "gt", "super", "hyper"]
     },

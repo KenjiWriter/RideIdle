@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\LegalController;
 use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MarketController;
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\PlayerController;
 use App\Http\Controllers\Api\V1\PremiumController;
 use App\Http\Controllers\Api\V1\RunController;
@@ -25,12 +26,16 @@ use App\Http\Controllers\Api\V1\WorldController;
 use App\Http\Middleware\ApplyVocabulary;
 use App\Http\Middleware\TouchLastSeen;
 use App\Models\AccountIdentity;
+use App\Services\ContentImages;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/meta/locales', [LocaleController::class, 'index']);
     Route::get('/meta/legal', [LegalController::class, 'show']);
     Route::get('/meta/vocabulary', [VocabularyController::class, 'show']);
+
+    // The pictures of the cars and the parts, by the checksum of their bytes.
+    Route::get('/media/{name}', [MediaController::class, 'show'])->where('name', ContentImages::ROUTE)->name('media');
 
     // The sign-ins with another service that are on, and the way in and out of each of them. The providers are
     // Google, Facebook and Apple; the callback is where the provider sends the person back (Apple with a form post).

@@ -19,6 +19,7 @@ abstract class CreateDefinition extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $data = $this->withImage($data);
         $this->checkOrHalt($data);
 
         return $data;

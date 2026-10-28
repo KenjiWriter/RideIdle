@@ -22,6 +22,11 @@
       "required": ["en", "pl"],
       "additionalProperties": false
     },
+    "image": {
+      "description": "A picture kept by the game under the checksum of its bytes: the SHA-256 in lower case hex, a dot and the kind of the file (png, webp or jpg). The bytes are in the store of images (the panel puts them there), not in the pack, so a pack names a picture and a bundle carries it.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}\\.(png|webp|jpg)$"
+    },
     "cents": {
       "description": "Money in cents (integer). 1 dollar is 100.",
       "type": "integer",

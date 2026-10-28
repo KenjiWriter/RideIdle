@@ -42,6 +42,7 @@ final class ContentPublisher
         private readonly DerivedTables $tables,
         private readonly PackGates $gates,
         private readonly ContentBundle $bundles,
+        private readonly ContentImages $images,
         private readonly DefinitionUsage $usage,
         private readonly AdminAudit $audit,
     ) {}
@@ -259,22 +260,27 @@ final class ContentPublisher
         return $changed;
     }
 
-    /** The pack as a file that can travel to another environment. */
+    /** The pack as a file that can travel to another environment, with the pictures that its cars and parts name. */
     public function export(ContentPack $pack): string
     {
-        return $this->bundles->export($this->packs->sourceOf($pack), $pack->number);
+        $source = $this->packs->sourceOf($pack);
+
+        return $this->bundles->export($source, $pack->number, $this->images->bytesOf($this->images->namesIn($source)));
     }
 
     /**
      * Makes a pack of a bundle that was made in another environment (and, when asked, makes it live). The pack is checked as any pack is, tables included, and the
      * number that it came with is used unless another is given; a number that is taken by other content is refused.
      *
-     * @throws ContentException when the file is not a bundle, or the number is taken by other content
+     * @throws ContentException when the file is not a bundle, a picture in it is not the one it is named after, or the number is taken by other content
      * @throws ContentPackInvalid when the content does not pass the validation
      */
     public function import(Admin $admin, string $bundle, bool $activate = false, ?string $number = null): ContentImport
     {
         $content = $this->bundles->read($bundle);
+
+        // The pictures first, so that the pack is judged with them there. A pack that is refused leaves them kept, which does no harm: a name is its bytes.
+        $this->images->keep($this->bundles->images($bundle));
         $import = $this->packs->import($content, $number === null || trim($number) === '' ? $content->number() : trim($number), 'bundle');
 
         $this->audit->record('content_pack_imported', $admin, "content_pack:{$import->pack->number}", ['created' => $import->created, 'new_versions' => $import->newVersions]);

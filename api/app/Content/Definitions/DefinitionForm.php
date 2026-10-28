@@ -57,6 +57,7 @@ final class DefinitionForm
             'slug' => $document['slug'] ?? null,
             'name' => self::texts($document['name'] ?? []),
             'description' => self::texts($document['description'] ?? []),
+            'image' => $document['image'] ?? null,
             'class' => $document['class'] ?? null,
             'drivetrain' => $document['drivetrain'] ?? null,
             'powertrain' => $document['powertrain'] ?? 'ice',
@@ -93,6 +94,10 @@ final class DefinitionForm
 
         if ($description !== []) {
             $document['description'] = $description;
+        }
+
+        if (self::text($state['image'] ?? null) !== null) {
+            $document['image'] = self::text($state['image']);
         }
 
         $document['class'] = self::text($state['class'] ?? null);
@@ -133,6 +138,7 @@ final class DefinitionForm
         return [
             'slug' => $document['slug'] ?? null,
             'name' => self::texts($document['name'] ?? []),
+            'image' => $document['image'] ?? null,
             'slot' => $document['slot'] ?? null,
             'tire_kind' => $document['tire_kind'] ?? null,
             'tier' => $document['tier'] ?? null,
@@ -154,7 +160,13 @@ final class DefinitionForm
     private static function partDocument(array $state): array
     {
         $slot = self::text($state['slot'] ?? null);
-        $document = ['slug' => self::text($state['slug'] ?? null), 'name' => self::i18n($state['name'] ?? []), 'slot' => $slot];
+        $document = ['slug' => self::text($state['slug'] ?? null), 'name' => self::i18n($state['name'] ?? [])];
+
+        if (self::text($state['image'] ?? null) !== null) {
+            $document['image'] = self::text($state['image']);
+        }
+
+        $document['slot'] = $slot;
 
         if ($slot === 'tires') {
             $document['tire_kind'] = self::text($state['tire_kind'] ?? null);

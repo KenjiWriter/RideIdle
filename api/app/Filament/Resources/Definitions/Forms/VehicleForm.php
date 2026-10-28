@@ -28,6 +28,7 @@ final class VehicleForm
                 DefinitionFields::texts('name', __('admin.definitions.name')),
                 DefinitionFields::texts('description', __('admin.definitions.description'), long: true, required: false),
             ]),
+            DefinitionFields::image(),
             Section::make(__('admin.definitions.sections.car'))->schema([
                 Grid::make(3)->schema([
                     Select::make('class')->label(__('admin.definitions.class'))->options(self::options(self::CLASSES))->required(),

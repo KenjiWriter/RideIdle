@@ -31,6 +31,7 @@ final class PartForm
                 DefinitionFields::slug(),
                 DefinitionFields::texts('name', __('admin.definitions.name')),
             ]),
+            DefinitionFields::image(),
             Section::make(__('admin.definitions.sections.part'))->schema([
                 Grid::make(4)->schema([
                     Select::make('slot')->label(__('admin.definitions.slot'))->options(self::options(['tires', 'suspension', 'brakes', 'engine', 'boost', 'gearbox', 'exhaust', 'cooling', 'tank', 'ecu']))->required()->live(),

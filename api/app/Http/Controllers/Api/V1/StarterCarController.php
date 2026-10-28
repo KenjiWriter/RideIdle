@@ -9,6 +9,7 @@ use App\Content\Rules;
 use App\Content\RunInputsFactory;
 use App\Domain\Run\RunFreezer;
 use App\Http\Controllers\Controller;
+use App\Services\ContentImages;
 use App\Support\I18nText;
 use Illuminate\Http\JsonResponse;
 
@@ -26,7 +27,7 @@ final class StarterCarController extends Controller
         $chances = $rules->region($track['region'])['weather_ppm'];
         $weather = (string) array_search(max($chances), $chances, true);
 
-        $freezer = new RunFreezer();
+        $freezer = new RunFreezer;
 
         // The cheapest first: that is the car recommended for a start.
         $vehicles = collect($catalog->startingVehicles())->sortBy('price_cents')->values();
@@ -38,6 +39,7 @@ final class StarterCarController extends Controller
                 'slug' => $vehicle['slug'],
                 'name' => I18nText::from($vehicle['name'])->for(),
                 'description' => isset($vehicle['description']) ? I18nText::from($vehicle['description'])->for() : null,
+                'image_url' => ContentImages::urlOf($vehicle),
                 'class' => $vehicle['class'],
                 'drivetrain' => $vehicle['drivetrain'],
                 'engine' => ['layout' => $vehicle['engine']['layout'], 'displacement_l' => $vehicle['engine']['displacement_l']],

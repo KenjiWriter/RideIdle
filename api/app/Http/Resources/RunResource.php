@@ -14,6 +14,7 @@ use App\Domain\Settlement\Ppm;
 use App\Domain\Settlement\RunConfig;
 use App\Domain\Settlement\Settler;
 use App\Models\RaceRun;
+use App\Services\ContentImages;
 use App\Services\RunService;
 use App\Services\Travel;
 use App\Support\I18nText;
@@ -44,6 +45,7 @@ final class RunResource extends JsonResource
             'car' => [
                 'slug' => $this->car_slug,
                 'name' => $vehicle !== null ? I18nText::from($vehicle['name'])->for() : $this->car_slug,
+                'image_url' => $vehicle !== null ? ContentImages::urlOf($vehicle) : null,
             ],
             'track' => [
                 'slug' => $this->track_slug,

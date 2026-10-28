@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Content;
 
 use App\Content\Vocabulary\MessageCatalog;
+use App\Services\ContentImages;
 use App\Support\Locale;
 use InvalidArgumentException;
 use JsonException;
@@ -93,6 +94,9 @@ final class PackValidator
 
         $this->validateDocument($source, 'pack', 'pack.json', 'pack.schema.json', $result);
 
+        /** @var array<string, string> $pictures the picture that a car or a part names, by the file it is in */
+        $pictures = [];
+
         foreach (self::KINDS as $folder => $schemaFile) {
             foreach ($source->slugs($folder) as $slug) {
                 $relative = "{$folder}/{$slug}.json";
@@ -110,11 +114,17 @@ final class PackValidator
 
                 $this->warnAboutMissingTranslations($relative, $data, $result);
 
+                if (is_string($data['image'] ?? null)) {
+                    $pictures[$relative] = $data['image'];
+                }
+
                 if ($folder === 'vehicles') {
                     $this->checkVehicleRules($relative, $data, $result);
                 }
             }
         }
+
+        $this->warnAboutMissingPictures($pictures, $result);
 
         foreach (['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json', 'economy' => 'economy.schema.json', 'vocabulary' => 'vocabulary.schema.json'] as $name => $schemaFile) {
             if (! $source->has("rules/{$name}")) {
@@ -190,6 +200,23 @@ final class PackValidator
         }
 
         return $result;
+    }
+
+    /**
+     * A picture that a car or a part names and the store of images does not have: the pack is whole without it (the game shows the car as it did before), but the
+     * person who made it live should know. The bytes of a picture travel in a bundle, not in the files of the content.
+     *
+     * @param  array<string, string>  $pictures  the name of the picture by the file that names it
+     */
+    private function warnAboutMissingPictures(array $pictures, PackValidationResult $result): void
+    {
+        $missing = array_flip(app(ContentImages::class)->missing(array_values($pictures)));
+
+        foreach ($pictures as $relative => $name) {
+            if (isset($missing[$name])) {
+                $result->addWarning($relative, '/image', "The picture {$name} is not in the store of images of this environment: upload it in the panel, or import the bundle that carries it.");
+            }
+        }
     }
 
     /** @return array<string, mixed>|null */

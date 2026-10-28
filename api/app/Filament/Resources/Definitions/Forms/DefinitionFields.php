@@ -5,9 +5,16 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Definitions\Forms;
 
 use App\Content\Definitions\DefinitionForm;
+use App\Services\ContentImages;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\View;
 
 /** The parts of the forms of cars and parts that are the same: the slug and the texts in the languages of the game. */
 final class DefinitionFields
@@ -23,6 +30,25 @@ final class DefinitionFields
             ->regex('/^[a-z0-9]+(-[a-z0-9]+)*$/')
             ->disabled(fn (?object $record): bool => $record !== null)
             ->dehydrated();
+    }
+
+    /**
+     * The picture of a car or of a part: the one the draft names, a box for another one, and a way to take it off. The file is not kept by the box but by the page
+     * that saves the draft (see ChecksDefinitionDrafts), which puts its name in `image`.
+     */
+    public static function image(): Section
+    {
+        return Section::make(__('admin.definitions.sections.image'))->schema([
+            Hidden::make('image'),
+            View::make('filament.forms.definition-image')->viewData(fn (Get $get): array => ['name' => $get('image')]),
+            FileUpload::make('image_upload')
+                ->label(__('admin.definitions.image_upload'))
+                ->helperText(__('admin.definitions.image_hint', ['min' => ContentImages::MIN_SIDE, 'max' => ContentImages::MAX_SIDE]))
+                ->storeFiles(false)
+                ->acceptedFileTypes(['image/png', 'image/webp', 'image/jpeg'])
+                ->maxSize(intdiv(ContentImages::MAX_BYTES, 1024)),
+            Toggle::make('image_remove')->label(__('admin.definitions.image_remove'))->visible(fn (Get $get): bool => filled($get('image')))->default(false),
+        ]);
     }
 
     /**

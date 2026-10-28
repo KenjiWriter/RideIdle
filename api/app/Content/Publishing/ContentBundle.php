@@ -7,13 +7,15 @@ namespace App\Content\Publishing;
 use App\Content\ContentException;
 use App\Content\ContentSource;
 use App\Content\PackContent;
+use App\Services\ContentImages;
 use JsonException;
 use stdClass;
 
 /**
  * A pack as one file that can travel: the manifest and every document as JSON objects, with the number of the pack and the checksum of its content. The pack of one
  * environment goes to another through it (the panel downloads and uploads it) without a folder, and the checksum says that what arrived is what left: a bundle that
- * was changed on the way is not taken.
+ * was changed on the way is not taken. The pictures that the cars and the parts name go with it (`images`, by name, as base64): a name is the checksum of the
+ * bytes, so what arrived is checked against the name it came with.
  */
 final class ContentBundle
 {
@@ -24,8 +26,12 @@ final class ContentBundle
 
     private const NUMBER = '/^[0-9]{4}\.[0-9]{1,2}\.[0-9]+$/';
 
-    /** The pack of a source as the text of a bundle, under the number. */
-    public function export(ContentSource $source, string $number): string
+    /**
+     * The pack of a source as the text of a bundle, under the number.
+     *
+     * @param  array<string, string>  $images  the bytes of the pictures that the pack names, by name
+     */
+    public function export(ContentSource $source, string $number, array $images = []): string
     {
         $manifest = $this->decode((string) $source->raw('pack'), 'the manifest');
         $manifest->version = $number;
@@ -37,13 +43,20 @@ final class ContentBundle
             $documents->{$key} = $this->decode((string) $source->raw($key), $key);
         }
 
-        return json_encode([
+        $bundle = [
             'bundle' => self::FORMAT,
             'number' => $number,
             'checksum' => $source->checksum(),
             'pack' => $manifest,
             'documents' => $documents,
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)."\n";
+        ];
+
+        if ($images !== []) {
+            ksort($images);
+            $bundle['images'] = array_map(base64_encode(...), $images);
+        }
+
+        return json_encode($bundle, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR)."\n";
     }
 
     /**
@@ -94,6 +107,41 @@ final class ContentBundle
         }
 
         return $content;
+    }
+
+    /**
+     * The pictures that a bundle carries, by name, as bytes. A bundle without pictures (the ones that were made before there were any) has none.
+     *
+     * @return array<string, string>
+     *
+     * @throws ContentException when the pictures are not a list of names and base64
+     */
+    public function images(string $json): array
+    {
+        $bundle = json_decode($json, false, 512);
+        $carried = $bundle instanceof stdClass ? ($bundle->images ?? null) : null;
+
+        if ($carried === null) {
+            return [];
+        }
+
+        if (! $carried instanceof stdClass) {
+            throw new ContentException('The pictures of the bundle are not a list of names.');
+        }
+
+        $images = [];
+
+        foreach ((array) $carried as $name => $data) {
+            $bytes = is_string($data) ? base64_decode($data, true) : false;
+
+            if (preg_match(ContentImages::NAME, (string) $name) !== 1 || $bytes === false) {
+                throw new ContentException("The picture {$name} of the bundle is not a picture that the game keeps.");
+            }
+
+            $images[(string) $name] = $bytes;
+        }
+
+        return $images;
     }
 
     private function decode(string $json, string $what): stdClass
