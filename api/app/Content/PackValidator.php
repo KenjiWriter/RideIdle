@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Content;
 
 use App\Support\Locale;
+use InvalidArgumentException;
 use JsonException;
 use Opis\JsonSchema\Errors\ErrorFormatter;
 use Opis\JsonSchema\Validator;
@@ -129,6 +130,39 @@ final class PackValidator
 
         if ($result->isValid()) {
             $this->checkReferences($source, $result);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Validates one car or part on its own, as the panel does with a draft: its schema, that its slug is the one it is meant to have, the dealer level of a car,
+     * and a warning for every language that is missing. What the rest of the content has to say about it (a shop that sells it, a tire that the rules call
+     * the stock ones) is for a pack to check.
+     *
+     * @param  string  $folder  vehicles or parts
+     * @param  string|null  $slug  what the slug of the document has to be, when it is already known
+     */
+    public function validateDefinition(string $folder, string $json, ?string $slug = null): PackValidationResult
+    {
+        $result = new PackValidationResult();
+        $relative = rtrim($folder, 's').($slug === null ? '' : " {$slug}");
+        $data = $this->validateJson($json, $relative, self::KINDS[$folder] ?? throw new InvalidArgumentException("There are no definitions in {$folder}."), $result);
+
+        if ($data === null) {
+            return $result;
+        }
+
+        $result->count($folder);
+
+        if ($slug !== null && ($data['slug'] ?? null) !== $slug) {
+            $result->addError($relative, '/slug', "The slug of a definition is never changed: it is {$slug}.");
+        }
+
+        $this->warnAboutMissingTranslations($relative, $data, $result);
+
+        if ($folder === 'vehicles') {
+            $this->checkVehicleRules($relative, $data, $result);
         }
 
         return $result;
