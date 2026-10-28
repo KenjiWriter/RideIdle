@@ -25,6 +25,7 @@ use App\Models\WorkshopJob;
 use App\Services\ContentPacks;
 use App\Services\Ledger;
 use App\Services\RunService;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Artisan;
@@ -527,4 +528,16 @@ function anAdmin(array $attributes = []): Admin
         'password' => 'a-long-enough-password',
         ...$attributes,
     ]);
+}
+
+/** An admin who has set up the authenticator app, which is what the panel asks of everyone before it shows anything. */
+function signedInAdmin(string $role = Admin::ROLE_EDITOR, string $email = 'boss@example.com'): Admin
+{
+    $admin = anAdmin(['email' => $email, 'role' => $role]);
+    $admin->saveAppAuthenticationSecret('JBSWY3DPEHPK3PXP');
+    $admin->saveAppAuthenticationRecoveryCodes(['abcd-1234']);
+    test()->actingAs($admin, 'admin');
+    Filament::setCurrentPanel('admin');
+
+    return $admin;
 }

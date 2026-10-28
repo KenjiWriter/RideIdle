@@ -12,23 +12,10 @@ use App\Models\AdminAuditLog;
 use App\Models\ContentPack;
 use App\Models\User;
 use App\Providers\Filament\AdminPanelProvider;
-use Filament\Facades\Filament;
 use Filament\Panel;
 use Livewire\Livewire;
 
 // The admin panel: who gets in, what each role sees and does, and what is written down.
-
-/** An admin who has set up the authenticator app, which is what the panel asks of everyone before it shows anything. */
-function signedInAdmin(string $role = Admin::ROLE_EDITOR, string $email = 'boss@example.com'): Admin
-{
-    $admin = anAdmin(['email' => $email, 'role' => $role]);
-    $admin->saveAppAuthenticationSecret('JBSWY3DPEHPK3PXP');
-    $admin->saveAppAuthenticationRecoveryCodes(['abcd-1234']);
-    test()->actingAs($admin, 'admin');
-    Filament::setCurrentPanel('admin');
-
-    return $admin;
-}
 
 describe('getting in', function () {
     it('sends somebody who is not signed in to the sign-in page, and shows it', function () {
