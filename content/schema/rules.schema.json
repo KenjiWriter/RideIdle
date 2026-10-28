@@ -489,6 +489,32 @@
       "required": ["parts", "rarity_stat_ppm", "crates"],
       "additionalProperties": false
     },
+    "affixes": {
+      "description": "The bonuses that a part above common has (Systemy I), drawn once when the part gets its rarity and kept: how many a rarity gives, and what an affix is. A part never has the same affix twice. An affix changes one thing: a statistic of the part (stat), how fast the part wears (wear), how much fuel the car burns (fuel), or how likely the car is to break down (reliability). The amount is drawn between min_ppm and max_ppm, in ppm.",
+      "type": "object",
+      "properties": {
+        "per_rarity": {
+          "description": "How many affixes a part gets when it is made of that rarity, drawn between min and max. A part that is merged up keeps the ones it has and gets the ones it lacks; a rarity gives more affixes, not bigger ones.",
+          "type": "object",
+          "properties": {
+            "uncommon": { "$ref": "#/$defs/affixCount" },
+            "rare": { "$ref": "#/$defs/affixCount" },
+            "epic": { "$ref": "#/$defs/affixCount" },
+            "legendary": { "$ref": "#/$defs/affixCount" }
+          },
+          "required": ["uncommon", "rare", "epic", "legendary"],
+          "additionalProperties": false
+        },
+        "definitions": {
+          "type": "object",
+          "minProperties": 1,
+          "propertyNames": { "$ref": "common.schema.json#/$defs/slug" },
+          "additionalProperties": { "$ref": "#/$defs/affix" }
+        }
+      },
+      "required": ["per_rarity", "definitions"],
+      "additionalProperties": false
+    },
     "workshop": {
       "description": "Jobs of the workshop: putting a part on a car and taking it off. One mechanic, and no equipment yet, so a job takes base_time_ms of the slot times the tier, cut by the level of the mechanic.",
       "type": "object",
@@ -806,6 +832,28 @@
       "additionalProperties": false
     },
     "stat": { "enum": ["accel", "top_speed", "grip", "handling", "braking", "clearance"] },
+    "affixCount": {
+      "type": "object",
+      "properties": { "min": { "type": "integer", "minimum": 1, "maximum": 6 }, "max": { "type": "integer", "minimum": 1, "maximum": 6 } },
+      "required": ["min", "max"],
+      "additionalProperties": false
+    },
+    "affix": {
+      "description": "One kind of affix. stat is the statistic that a stat affix multiplies by 1 + the amount (power is the power of the engine, or the gain of a part that adds power); wear, fuel and reliability take the amount off how fast the part wears, how much fuel the car burns and how likely it is to break down.",
+      "type": "object",
+      "properties": {
+        "name": { "$ref": "common.schema.json#/$defs/i18n" },
+        "effect": { "enum": ["stat", "wear", "fuel", "reliability"] },
+        "stat": { "enum": ["grip", "handling", "braking", "clearance", "power"] },
+        "min_ppm": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "max_ppm": { "type": "integer", "minimum": 1, "maximum": 1000000 },
+        "slots": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"] } },
+        "weight": { "description": "How often it is drawn among the affixes that fit the slot.", "type": "integer", "minimum": 1 }
+      },
+      "required": ["name", "effect", "min_ppm", "max_ppm", "slots", "weight"],
+      "allOf": [{ "if": { "properties": { "effect": { "const": "stat" } } }, "then": { "required": ["stat"] }, "else": { "not": { "required": ["stat"] } } }],
+      "additionalProperties": false
+    },
     "storageClass": {
       "type": "object",
       "properties": {

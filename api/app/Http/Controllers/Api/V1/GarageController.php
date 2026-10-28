@@ -154,7 +154,7 @@ final class GarageController extends Controller
     {
         $vehicle = $this->catalog->vehicle($car->vehicle_slug);
         $mounted = $car->parts()->whereNotNull('mounted_slot')->get()->keyBy('mounted_slot');
-        $slugs = $mounted->map(static fn (Part $part): array => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity, 'upgrade' => (int) $part->upgrade_level, 'wear' => (int) $part->wear_ppb])->all();
+        $slugs = $mounted->map(static fn (Part $part): array => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity, 'upgrade' => (int) $part->upgrade_level, 'wear' => (int) $part->wear_ppb, 'affixes' => $part->affixes ?? []])->all();
         // The wear of its parts and the service of the car: what the odometer says, how far the service is, what the overdue takes off, how often it breaks down.
         $plan = $this->inputs->wearPlan($car->vehicle_slug, $run?->track_slug ?? $this->rules->tracksOf($this->rules->homeRegion())[0], $slugs, $car->odometer());
 

@@ -76,6 +76,12 @@ function rulesSchemaErrors(array $rules): array
         }
     }
 
+    foreach ((array) ($data->affixes->definitions ?? []) as $affix) {
+        if (isset($affix->slots) && is_object($affix->slots)) {
+            $affix->slots = array_values((array) $affix->slots);
+        }
+    }
+
     if (isset($data->player->early_xp) && is_object($data->player->early_xp)) {
         $data->player->early_xp = array_values((array) $data->player->early_xp);
     }

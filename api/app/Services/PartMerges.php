@@ -30,6 +30,7 @@ final class PartMerges
         private readonly Ledger $ledger,
         private readonly Rules $rules,
         private readonly Catalog $catalog,
+        private readonly PartAffixes $affixes,
     ) {}
 
     /**
@@ -54,6 +55,7 @@ final class PartMerges
 
         if ($success) {
             $base->forceFill(['rarity' => $to->value])->save();
+            $this->affixes->give($base, $to);
             $other->delete();
         } else {
             $base->delete();

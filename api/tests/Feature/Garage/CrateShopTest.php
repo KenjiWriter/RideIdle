@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Content\Rules;
+use App\Domain\Run\Rarity;
 use App\Models\Car;
 use App\Models\CrateOpening;
 use App\Models\LedgerEntry;
@@ -141,11 +142,13 @@ describe('opening a crate', function () {
         $driver = crateDriver(cashCents: 100_000);
         openedCrates($driver, array_fill(0, 149, 1));
 
-        // The 150th crate without a legendary part is a legendary one, so the grip of all-season tires (85) is multiplied by 1.6.
+        // The 150th crate without a legendary part is a legendary one, so the grip of all-season tires (85) is multiplied by 1.6, and by the affixes it was drawn with.
         $opened = openCrate($driver)->assertCreated()->json('opened');
+        $affixes = Part::query()->findOrFail($opened['id'])->affixes;
 
         expect($opened['rarity'])->toBe('legendary')
-            ->and($opened['stats'])->toEqual(['grip' => 136, 'handling' => 132.8, 'braking' => 136]);
+            ->and($affixes)->toHaveCount(3)
+            ->and($opened['stats'])->toEqual(app(Rules::class)->scaledStats(['grip' => 85, 'handling' => 83, 'braking' => 85], Rarity::Legendary, 0, 1_000_000, $affixes));
     });
 
     it('writes down the draw: the kind, the group, the place, the part and the price', function () {

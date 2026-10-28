@@ -257,6 +257,27 @@ final class PackValidator
         $this->checkWorld($rules, $result);
         $this->checkTutorial($source, $parts, $regions, $result);
         $this->checkWithdrawn($source, $parts, $vehicles, $result);
+        $this->checkAffixes($rules, $result);
+    }
+
+    /**
+     * What the schema cannot say about the affixes: a rarity gives at least as many as it asks, and the amount of an affix is a range, not the other way round.
+     *
+     * @param  array<string, mixed>  $rules
+     */
+    private function checkAffixes(array $rules, PackValidationResult $result): void
+    {
+        foreach ($rules['affixes']['per_rarity'] ?? [] as $rarity => $count) {
+            if (($count['max'] ?? 0) < ($count['min'] ?? 0)) {
+                $result->addError('rules/starter.json', "/affixes/per_rarity/{$rarity}", 'A part gets at most fewer affixes than it gets at least.');
+            }
+        }
+
+        foreach ($rules['affixes']['definitions'] ?? [] as $key => $affix) {
+            if (($affix['max_ppm'] ?? 0) < ($affix['min_ppm'] ?? 0)) {
+                $result->addError('rules/starter.json', "/affixes/definitions/{$key}/max_ppm", 'The most an affix gives is less than the least.');
+            }
+        }
     }
 
     /**

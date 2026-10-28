@@ -234,6 +234,85 @@
       }
     }
   },
+  "affixes": {
+    "per_rarity": {
+      "uncommon": { "min": 1, "max": 1 },
+      "rare": { "min": 1, "max": 2 },
+      "epic": { "min": 2, "max": 2 },
+      "legendary": { "min": 3, "max": 3 }
+    },
+    "definitions": {
+      "grip": {
+        "name": { "en": "Grip", "pl": "Przyczepność", "fr": "Adhérence", "de": "Haftung", "pt-BR": "Aderência" },
+        "effect": "stat",
+        "stat": "grip",
+        "min_ppm": 20000,
+        "max_ppm": 50000,
+        "slots": ["tires"],
+        "weight": 3
+      },
+      "handling": {
+        "name": { "en": "Handling", "pl": "Prowadzenie", "fr": "Tenue de route", "de": "Fahrverhalten", "pt-BR": "Dirigibilidade" },
+        "effect": "stat",
+        "stat": "handling",
+        "min_ppm": 20000,
+        "max_ppm": 50000,
+        "slots": ["tires", "suspension"],
+        "weight": 3
+      },
+      "braking": {
+        "name": { "en": "Braking", "pl": "Hamowanie", "fr": "Freinage", "de": "Bremsverhalten", "pt-BR": "Frenagem" },
+        "effect": "stat",
+        "stat": "braking",
+        "min_ppm": 20000,
+        "max_ppm": 50000,
+        "slots": ["tires", "brakes"],
+        "weight": 3
+      },
+      "clearance": {
+        "name": { "en": "Ground clearance", "pl": "Prześwit", "fr": "Garde au sol", "de": "Bodenfreiheit", "pt-BR": "Altura do solo" },
+        "effect": "stat",
+        "stat": "clearance",
+        "min_ppm": 20000,
+        "max_ppm": 60000,
+        "slots": ["suspension"],
+        "weight": 3
+      },
+      "power": {
+        "name": { "en": "Power", "pl": "Moc", "fr": "Puissance", "de": "Leistung", "pt-BR": "Potência" },
+        "effect": "stat",
+        "stat": "power",
+        "min_ppm": 10000,
+        "max_ppm": 20000,
+        "slots": ["exhaust", "engine", "boost"],
+        "weight": 2
+      },
+      "wear": {
+        "name": { "en": "Durability", "pl": "Trwałość", "fr": "Durabilité", "de": "Haltbarkeit", "pt-BR": "Durabilidade" },
+        "effect": "wear",
+        "min_ppm": 80000,
+        "max_ppm": 200000,
+        "slots": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"],
+        "weight": 2
+      },
+      "fuel": {
+        "name": { "en": "Efficiency", "pl": "Oszczędność", "fr": "Sobriété", "de": "Sparsamkeit", "pt-BR": "Economia" },
+        "effect": "fuel",
+        "min_ppm": 20000,
+        "max_ppm": 50000,
+        "slots": ["exhaust", "engine", "ecu", "gearbox"],
+        "weight": 2
+      },
+      "reliability": {
+        "name": { "en": "Reliability", "pl": "Niezawodność", "fr": "Fiabilité", "de": "Zuverlässigkeit", "pt-BR": "Confiabilidade" },
+        "effect": "reliability",
+        "min_ppm": 50000,
+        "max_ppm": 120000,
+        "slots": ["suspension", "brakes", "engine", "cooling"],
+        "weight": 2
+      }
+    }
+  },
   "wear": {
     "life_km": { "tires": 40000, "suspension": 80000, "brakes": 50000, "exhaust": 80000, "engine": 120000, "boost": 120000, "gearbox": 120000, "cooling": 120000, "tank": 200000, "ecu": 120000 },
     "rough_ppm": { "tires": 2000000, "suspension": 2000000 },

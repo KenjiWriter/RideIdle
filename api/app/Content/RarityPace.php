@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Content;
 
+use App\Domain\Market\Affixes;
 use App\Domain\Market\Crates;
+use App\Domain\Run\Rarity;
 use App\Domain\Run\RunFreezer;
 use JsonException;
 
@@ -165,9 +167,12 @@ final class RarityPace
         }
 
         $mounted = [];
+        $affixes = new Affixes($this->rules->affixes());
 
+        // The parts have the affixes that a part of their rarity has on average, so the table is the same on every machine (the gain of a part that has the ones that
+        // are about a statistic is what the table counts: durability, fuel and reliability do not change a lap or what it pays).
         foreach (self::PARTS as $slot => $slug) {
-            $mounted[$slot] = ['slug' => $slug, 'rarity' => $ranks[$slot]];
+            $mounted[$slot] = ['slug' => $slug, 'rarity' => $ranks[$slot], 'affixes' => $affixes->expected($slot, Rarity::from($ranks[$slot]))];
         }
 
         $config = (new RunFreezer)->freeze($this->inputs->make(self::CAR, self::TRACK, $mounted), 'rarity-pace', 0)->config;

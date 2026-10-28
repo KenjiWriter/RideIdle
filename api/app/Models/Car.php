@@ -87,7 +87,7 @@ class Car extends Model
     public function mountedParts(): array
     {
         return $this->parts()->whereNotNull('mounted_slot')->orderBy('mounted_slot')->get()
-            ->mapWithKeys(static fn (Part $part): array => [$part->mounted_slot => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity, 'upgrade' => (int) $part->upgrade_level, 'wear' => (int) $part->wear_ppb]])
+            ->mapWithKeys(static fn (Part $part): array => [$part->mounted_slot => ['slug' => $part->part_slug, 'rarity' => (int) $part->rarity, 'upgrade' => (int) $part->upgrade_level, 'wear' => (int) $part->wear_ppb, 'affixes' => $part->affixes ?? []]])
             ->all();
     }
 }

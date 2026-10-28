@@ -44,7 +44,7 @@ final class RunInputsFactory
     }
 
     /**
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot: the slug, or the slug with the rarity, the upgrade and the wear of the part
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted  the parts on the car, by slot: the slug, or the slug with the rarity, the upgrade and the wear of the part
      * @param  int  $conditionPpm  the condition of the car (1 000 000 is perfect): a worn car breaks down more
      * @param  array{mileage_m: int, serviced_at_m: int}|null  $odometer  how far the car has driven and where it was serviced last; without it the car has no wear plan and no service
      */
@@ -100,11 +100,29 @@ final class RunInputsFactory
             weatherChancesPpm: $region['weather_ppm'],
             weatherEffects: $effects,
             climateSeed: $region['climate_seed'],
-            breakChancePerLapPpm: $this->rules->breakChancePerLapPpmFor($conditionPpm, $plan?->meanWearPpm() ?? 0, $plan?->overdueSharePpm() ?? 0, $plan?->unserviceableParts($this->rules->unserviceablePpm()) ?? 0),
+            breakChancePerLapPpm: $this->rules->breakChancePerLapPpmFor($conditionPpm, $plan?->meanWearPpm() ?? 0, $plan?->overdueSharePpm() ?? 0, $plan?->unserviceableParts($this->rules->unserviceablePpm()) ?? 0, $this->reliabilityKeptPpm($mounted)),
             nightLapPpm: $track['lit'] ? Ppm::ONE : $this->rules->nightLapPpm(),
             field: $this->field($trackSlug, (int) $vehicle['tier']),
             wear: $plan,
         );
+    }
+
+    /**
+     * What is left of the chance of a breakdown after the affixes of reliability of the parts on the car, in ppm: each part with one takes its share off the chance.
+     *
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted  the parts on the car, by slot
+     */
+    private function reliabilityKeptPpm(array $mounted): int
+    {
+        $kept = Ppm::ONE;
+
+        foreach ($mounted as $entry) {
+            if (is_array($entry)) {
+                $kept = Ppm::mul($kept, Ppm::ONE - $this->rules->affixCutPpm((array) ($entry['affixes'] ?? []), 'reliability'));
+            }
+        }
+
+        return $kept;
     }
 
     /**
@@ -128,7 +146,7 @@ final class RunInputsFactory
      * What the wear of the parts on a car and its service come to on a track: how worn each part is, what a lap and a kilometre wear it by (on the ground of
      * the track, with the power of the car and the load of its engine), and the odometer. The floating point numbers are made here, once.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted  the parts on the car, by slot
      * @param  array{mileage_m: int, serviced_at_m: int}  $odometer
      */
     public function wearPlan(string $carSlug, string $trackSlug, array $mounted, array $odometer): WearPlan
@@ -145,6 +163,12 @@ final class RunInputsFactory
         foreach ($mounted as $slot => $entry) {
             $wear[$slot] = is_array($entry) ? (int) ($entry['wear'] ?? 0) : 0;
             $perKm[$slot] = $this->rules->wearPerKmPpb($slot, $track['surface'], $power, $load);
+
+            // A part with an affix of durability wears slower.
+            if (is_array($entry)) {
+                $perKm[$slot] = Ppm::mul($perKm[$slot], Ppm::ONE - $this->rules->affixCutPpm((array) ($entry['affixes'] ?? []), 'wear'));
+            }
+
             $perLap[$slot] = intdiv($perKm[$slot] * $lengthM + 500, 1000);
         }
 
@@ -167,7 +191,7 @@ final class RunInputsFactory
      * The power of a car with these parts on it, in kW: the power of its engine times the `power_mult` of every part (as worn as it is), where the gain of a
      * booster is grown by the intercooler that works with it.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted
      */
     public function power(string $carSlug, array $mounted = []): float
     {
@@ -179,7 +203,7 @@ final class RunInputsFactory
     /**
      * The power of the engine of a car alone, in kW, with no booster and nothing else counted: the engine part on it as worn as it is, or the factory engine.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted
      */
     public function enginePowerKw(string $carSlug, array $mounted = []): float
     {
@@ -297,7 +321,7 @@ final class RunInputsFactory
     /**
      * What the tank of the car holds, in millilitres: the tank mounted on it, or the one of the body.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted  the parts on the car, by slot
      */
     public function tankMl(string $carSlug, array $mounted = []): int
     {
@@ -342,7 +366,7 @@ final class RunInputsFactory
      * its service gives less of everything but its clearance: `$servicePenaltyPpm` is taken off the acceleration, the top speed, the grip, the handling and
      * the braking at the end.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted  the parts on the car, by slot
      * @param  int  $servicePenaltyPpm  what the overdue of the service takes off the performance, in ppm
      */
     public function stats(string $carSlug, array $mounted = [], int $servicePenaltyPpm = 0): CarStats
@@ -370,7 +394,7 @@ final class RunInputsFactory
         $startFactor = $this->rules->lagFactor((float) ($parts['boost']['stats']['lag'] ?? 0.0)) * (1.0 + (float) ($parts['gearbox']['stats']['launch'] ?? 0.0) / 100.0);
         // The booster burns more through its own `fuel_mult`, so its gain is not counted again in the power that fuel use grows with.
         $fuelPower = $enginePower * $this->powerMultiplier($parts, withBooster: false);
-        $fuelMultiplier = array_product(array_map(static fn (array $part): float => (float) ($part['stats']['fuel_mult'] ?? 1.0), $parts));
+        $fuelMultiplier = array_product(array_map(fn (array $part): float => (float) ($part['stats']['fuel_mult'] ?? 1.0) * (Ppm::ONE - $this->rules->affixCutPpm($part['affixes'] ?? [], 'fuel')) / Ppm::ONE, $parts));
 
         // The drive of the car: how it gets off the line and turns (and what its own weight costs it), what it can put on the road at the most (the traction on
         // each surface is in the weather effects of `make`), and how thirsty it is. The top speed is not the drive's business.
@@ -398,7 +422,7 @@ final class RunInputsFactory
      * The definitions of the mounted parts, by slot. A slug that is not in the pack, or a part in a slot it does not
      * belong to, is a mistake of whoever saved it, not something to drive on.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted  the parts on the car, by slot
      * @return array<string, array<string, mixed>>
      */
     private function parts(array $mounted): array
@@ -416,7 +440,10 @@ final class RunInputsFactory
             }
 
             $condition = $this->rules->stagedConditionPpm(is_array($entry) ? (int) ($entry['wear'] ?? 0) : 0);
-            $part['stats'] = $this->rules->scaledStats($part['stats'] ?? [], $rarity, $upgrade, $condition);
+            $affixes = is_array($entry) ? (array) ($entry['affixes'] ?? []) : [];
+            $part['stats'] = $this->rules->scaledStats($part['stats'] ?? [], $rarity, $upgrade, $condition, $affixes);
+            // What the affixes that are not about a statistic do is read from the part (`fuel` in the statistics of the car, `wear` and `reliability` in the plan).
+            $part['affixes'] = $affixes;
             $parts[$slot] = $part;
         }
 
@@ -426,7 +453,7 @@ final class RunInputsFactory
     /**
      * The kind of the tires on the car, which picks the column of the tire matrix: the stock tires when none are mounted.
      *
-     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int}>  $mounted  the parts on the car, by slot
+     * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted  the parts on the car, by slot
      */
     private function tireKind(array $mounted): string
     {
