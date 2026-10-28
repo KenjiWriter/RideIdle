@@ -31,6 +31,24 @@ final class ContentOptions
     }
 
     /**
+     * The cars that can be named, by slug, with their name.
+     *
+     * @return array<string, string>
+     */
+    public static function cars(): array
+    {
+        $options = [];
+
+        $cars = ContentDefinition::query()->where('kind', ContentDefinition::KIND_VEHICLE)->where('status', '!=', ContentDefinition::STATUS_ARCHIVED)->with('latestVersion')->orderBy('slug')->get();
+
+        foreach ($cars as $car) {
+            $options[$car->slug] = "{$car->title(self::locale())} ({$car->slug})";
+        }
+
+        return $options;
+    }
+
+    /**
      * The cities of the lines of a form, by slug, with their name.
      *
      * @param  array<int|string, mixed>|null  $regions  the state of the cities
