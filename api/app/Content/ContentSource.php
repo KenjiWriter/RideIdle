@@ -100,6 +100,16 @@ abstract class ContentSource
     }
 
     /**
+     * The cars and parts that the pack keeps but does not offer any more (the manifest says which; a source without a manifest withdraws nothing).
+     *
+     * @return list<string>
+     */
+    public function withdrawn(): array
+    {
+        return $this->has('pack') ? array_values($this->manifest()['withdrawn'] ?? []) : [];
+    }
+
+    /**
      * What identifies the content: the checksum of the manifest (without its version and its own checksum, which say which copy it is, not what it holds)
      * and of every document, in the order of the keys. The white space of a document does not count, the order of its keys and of its lists does.
      */

@@ -67,7 +67,18 @@ final class Catalog
     private function load(string $folder): array
     {
         if ($this->source !== null) {
-            return $this->source->documents($folder);
+            $documents = $this->source->documents($folder);
+
+            // A withdrawn car is still a car (the ones that players own run), but nothing offers it any more.
+            if ($folder === 'vehicles') {
+                foreach ($this->source->withdrawn() as $slug) {
+                    if (isset($documents[$slug])) {
+                        $documents[$slug]['sources'] = [];
+                    }
+                }
+            }
+
+            return $documents;
         }
 
         $files = glob("{$this->packPath}/{$folder}/*.json") ?: [];

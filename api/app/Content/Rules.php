@@ -30,7 +30,14 @@ final class Rules
 
     public static function fromSource(ContentSource $source): self
     {
-        return new self($source->document('rules/starter'));
+        $data = $source->document('rules/starter');
+
+        // A part that was withdrawn leaves the shop (and with it the crates, which draw from the shop), but the ones that players own run as before.
+        if (isset($data['shop']['parts'])) {
+            $data['shop']['parts'] = array_values(array_diff($data['shop']['parts'], $source->withdrawn()));
+        }
+
+        return new self($data);
     }
 
     public static function fromFile(string $path): self

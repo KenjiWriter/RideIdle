@@ -15,6 +15,12 @@
       "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$"
     },
     "description": { "$ref": "common.schema.json#/$defs/i18n" },
+    "withdrawn": {
+      "description": "The cars and parts of the pack that are no longer on offer: a withdrawn part leaves the shop and the crates, a withdrawn car has no source (no wreck to start with, nothing on the exchange or at the dealer). They stay in the pack, so that what players own works. Written by the publication of a pack, from the definitions that were withdrawn.",
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/slug" },
+      "uniqueItems": true
+    },
     "checksum": {
       "description": "Written by content:export: the checksum of the content of the pack (the manifest without its version and this field, and every document). When it is there, content:import checks it, so a pack that was changed after it was exported is not taken for the one that was.",
       "type": "string",

@@ -256,6 +256,34 @@ final class PackValidator
 
         $this->checkWorld($rules, $result);
         $this->checkTutorial($source, $parts, $regions, $result);
+        $this->checkWithdrawn($source, $parts, $vehicles, $result);
+    }
+
+    /**
+     * What a pack withdraws is in the pack, and a new driver still has a car to start with.
+     *
+     * @param  list<string>  $parts
+     * @param  list<string>  $vehicles
+     */
+    private function checkWithdrawn(ContentSource $source, array $parts, array $vehicles, PackValidationResult $result): void
+    {
+        $withdrawn = $source->withdrawn();
+
+        foreach ($withdrawn as $index => $slug) {
+            if (! in_array($slug, [...$parts, ...$vehicles], true)) {
+                $result->addError('pack.json', "/withdrawn/{$index}", "The pack withdraws {$slug}, which is neither a car nor a part of it.");
+            }
+        }
+
+        if ($withdrawn === []) {
+            return;
+        }
+
+        $starting = array_filter($source->documents('vehicles'), static fn (array $vehicle, string $slug): bool => in_array('start', $vehicle['sources'] ?? [], true) && ! in_array($slug, $withdrawn, true), ARRAY_FILTER_USE_BOTH);
+
+        if ($starting === []) {
+            $result->addError('pack.json', '/withdrawn', 'Every car that a new driver can start with is withdrawn.');
+        }
     }
 
     /**
