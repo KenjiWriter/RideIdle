@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Content\TutorialSteps;
 use App\Models\CrateOpening;
+use App\Models\LedgerEntry;
 use App\Models\RaceRun;
 use App\Models\TutorialProgress;
 use App\Models\WorkshopJob;
@@ -19,6 +20,9 @@ use Illuminate\Support\Collection;
  */
 final class TutorialScript
 {
+    /** What the exchange calls the listing of the tutorial. */
+    public const LISTING_KEY = 'tutorial';
+
     public function __construct(private readonly TutorialSteps $steps) {}
 
     /** How much fuel the tank of the first run of a driver starts with, or null for a run that is not the first. */
@@ -84,6 +88,73 @@ final class TutorialScript
         }
 
         return $rows->get('crate')?->state !== TutorialProgress::STATE_DONE && ! CrateOpening::query()->where('user_id', $userId)->exists();
+    }
+
+    /**
+     * The kinds of job of the workshop that the step that waits for the driver arranges (see `arranges` in the steps), by kind: the job takes at most `ms`, and the
+     * mentor pays up to `covers_cents` of its cost. A driver who is at no such step has none.
+     *
+     * @return array<string, array{ms: int, covers_cents: int}>
+     */
+    public function arrangements(int $userId): array
+    {
+        $script = $this->steps->script();
+        $arranged = [];
+
+        foreach (TutorialProgress::query()->where('user_id', $userId)->where('state', TutorialProgress::STATE_ACTIVE)->pluck('step_key') as $key) {
+            foreach ($this->steps->find($key)['arranges'] ?? [] as $kind) {
+                $arranged[$kind] = ['ms' => $script['first_mount_ms'], 'covers_cents' => $script['covers_up_to_cents']];
+            }
+        }
+
+        return $arranged;
+    }
+
+    /**
+     * What a job costs and takes as the step arranges it: shorter, and cheaper by what the mentor pays. A job that cannot be done (no cost, no time) is as it was.
+     *
+     * @param  array{ms: int, covers_cents: int}|null  $arrangement  the arrangement of the kind of the job, from `arrangements`
+     * @param  array{cost_cents?: int|null, duration_ms?: int|null}  $quote
+     * @return array{cost_cents?: int|null, duration_ms?: int|null}
+     */
+    public function arrange(array $quote, ?array $arrangement): array
+    {
+        if ($arrangement === null) {
+            return $quote;
+        }
+
+        if (isset($quote['duration_ms'])) {
+            $quote['duration_ms'] = min($quote['duration_ms'], $arrangement['ms']);
+        }
+
+        if (isset($quote['cost_cents'])) {
+            $quote['cost_cents'] = max(0, $quote['cost_cents'] - $arrangement['covers_cents']);
+        }
+
+        return $quote;
+    }
+
+    /**
+     * The car that the exchange offers this driver besides its own listings, or null: the step that waits asks for a bought car, the script has the listing of
+     * the tutorial, and the driver has not bought it yet.
+     *
+     * @return array{vehicle: string, age_years: int, mileage_km: int, condition_ppm: int, price_cents: int}|null
+     */
+    public function exchangeListing(int $userId): ?array
+    {
+        $listing = $this->steps->script()['exchange_listing'] ?? null;
+
+        if ($listing === null || LedgerEntry::query()->where('idem_key', "listing:{$userId}:".self::LISTING_KEY)->exists()) {
+            return null;
+        }
+
+        foreach (TutorialProgress::query()->where('user_id', $userId)->where('state', TutorialProgress::STATE_ACTIVE)->pluck('step_key') as $key) {
+            if (in_array('car_bought', TutorialSteps::conditions($this->steps->find($key)['completion'] ?? []), true)) {
+                return $listing;
+            }
+        }
+
+        return null;
     }
 
     /** @return Collection<string, TutorialProgress> */

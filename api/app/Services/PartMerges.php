@@ -31,6 +31,7 @@ final class PartMerges
         private readonly Rules $rules,
         private readonly Catalog $catalog,
         private readonly PartAffixes $affixes,
+        private readonly TutorialScript $script,
     ) {}
 
     /**
@@ -43,7 +44,8 @@ final class PartMerges
         $other = Part::query()->lockForUpdate()->findOrFail($job->merge_part_id);
         $to = Rarity::from($base->rarity + 1);
 
-        $chance = $this->rules->mergeChancePpm($to, $this->failuresSince($job->user_id, $base->slot, $to));
+        // The first merge of the tutorial cannot fail: the job was queued under the arrangement of the step.
+        $chance = $job->scripted ? Ppm::ONE : $this->rules->mergeChancePpm($to, $this->failuresSince($job->user_id, $base->slot, $to));
         $seed = hash_hmac('sha256', "merge|{$job->user_id}|".MergeAttempt::query()->where('user_id', $job->user_id)->count(), (string) config('app.key'));
         $roll = Rng::roll($seed, 'merge', 0);
         $success = $roll < $chance;
@@ -108,6 +110,7 @@ final class PartMerges
             ->groupBy(fn (Part $part): string => $part->slot.'|'.($this->catalog->part($part->part_slug)['tier'] ?? 0).'|'.$part->rarity);
 
         $quotes = [];
+        $arranged = $this->script->arrangements($userId)[WorkshopJob::KIND_MERGE] ?? null;
 
         foreach ($inventory as $part) {
             $quotes[$part->id] = null;
@@ -124,8 +127,9 @@ final class PartMerges
 
             $to = Rarity::from($rarity->value + 1);
             $failures = $this->failuresSince($userId, $first->slot, $to);
-            $chance = $this->rules->mergeChancePpm($to, $failures);
-            $withoutPity = $this->rules->mergeChancePpm($to, 0);
+            // The step of the tutorial that arranges a merge makes it sure.
+            $chance = $arranged === null ? $this->rules->mergeChancePpm($to, $failures) : Ppm::ONE;
+            $withoutPity = $arranged === null ? $this->rules->mergeChancePpm($to, 0) : Ppm::ONE;
 
             foreach ($parts as $part) {
                 $definition = $this->catalog->part($part->part_slug);
@@ -138,8 +142,7 @@ final class PartMerges
                     'to' => $to->key(),
                     'chance_ppm' => $chance,
                     'pity_ppm' => $chance - $withoutPity,
-                    'cost_cents' => $this->rules->mergeCostCents($definition['price_cents']),
-                    'duration_ms' => $this->rules->mergeJobMs($part->slot, $definition['tier'], $gear),
+                    ...$this->script->arrange(['cost_cents' => $this->rules->mergeCostCents($definition['price_cents']), 'duration_ms' => $this->rules->mergeJobMs($part->slot, $definition['tier'], $gear)], $arranged),
                     'scrap_cents' => $this->rules->mergeScrapCents($definition['price_cents']),
                     'with' => $parts->where('id', '!=', $part->id)->pluck('id')->values()->all(),
                 ];

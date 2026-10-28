@@ -145,15 +145,17 @@ final class Workshop
             // The first mounting of a driver is short while the tutorial teaches it, so that the journey of the step after it does not wait for the mechanic, and
             // the vulcanizer does not ask a fee of it.
             $firstMountMs = $kind === WorkshopJob::KIND_MOUNT ? $this->script->firstMountMs($userId) : null;
+            // The step that waits may make jobs of a kind short and, up to a sum, free (and a merge sure).
+            $arranged = $this->script->arrangements($userId);
 
             foreach ($plan as [$jobKind, $jobPart]) {
                 $definition = $jobPart === null ? null : $this->catalog->part($jobPart->part_slug);
                 $quote = match ($jobKind) {
-                    WorkshopJob::KIND_UPGRADE => $this->upgradeQuote($jobPart, $car, $gear),
-                    WorkshopJob::KIND_MERGE => ['cost_cents' => $this->rules->mergeCostCents($definition['price_cents']), 'duration_ms' => $this->rules->mergeJobMs($jobPart->slot, $definition['tier'], $gear)],
+                    WorkshopJob::KIND_UPGRADE => $this->upgradeQuote($jobPart, $car, $gear, $arranged),
+                    WorkshopJob::KIND_MERGE => $this->script->arrange(['cost_cents' => $this->rules->mergeCostCents($definition['price_cents']), 'duration_ms' => $this->rules->mergeJobMs($jobPart->slot, $definition['tier'], $gear)], $arranged[WorkshopJob::KIND_MERGE] ?? null),
                     WorkshopJob::KIND_REPAIR => $this->repairQuote($jobPart, $gear),
-                    WorkshopJob::KIND_SERVICE => $this->serviceQuote($car, $gear),
-                    default => $this->slotJobQuote($jobKind, $jobPart, $gear, $firstMountMs),
+                    WorkshopJob::KIND_SERVICE => $this->serviceQuote($car, $gear, $arranged),
+                    default => $this->slotJobQuote($jobKind, $jobPart, $gear, $firstMountMs, $arranged[$jobKind] ?? null),
                 };
                 $duration = $quote['duration_ms'];
 
@@ -177,6 +179,7 @@ final class Workshop
                     'cost_cents' => $quote['cost_cents'] ?? 0,
                     'upgrade_to' => $quote['to'] ?? null,
                     'status' => WorkshopJob::STATUS_QUEUED,
+                    'scripted' => $jobKind === WorkshopJob::KIND_MERGE && isset($arranged[WorkshopJob::KIND_MERGE]),
                     'start_ms' => $start,
                     'finish_ms' => $start + $duration,
                 ]);
@@ -330,17 +333,18 @@ final class Workshop
      * While the tutorial arranges the first mounting of the driver (`$firstMountMs`, see `TutorialScript`) the putting on is short and the fee is not asked.
      *
      * @param  string  $kind  WorkshopJob::KIND_MOUNT or KIND_UNMOUNT
+     * @param  array{ms: int, covers_cents: int}|null  $arrangement  what the step that waits makes of a job of this kind (see `TutorialScript::arrangements`)
      * @return array{cost_cents: int, duration_ms: int}
      */
-    private function slotJobQuote(string $kind, Part $part, WorkshopGear $gear, ?int $firstMountMs): array
+    private function slotJobQuote(string $kind, Part $part, WorkshopGear $gear, ?int $firstMountMs, ?array $arrangement = null): array
     {
         $tier = $this->catalog->part($part->part_slug)['tier'];
         $duration = $this->rules->workshopJobMs($part->slot, $tier, removal: $kind === WorkshopJob::KIND_UNMOUNT, gear: $gear);
 
-        return [
+        return $this->script->arrange([
             'cost_cents' => $firstMountMs === null ? $this->rules->gearFeeCents($gear, $part->slot) : 0,
             'duration_ms' => $kind === WorkshopJob::KIND_MOUNT && $firstMountMs !== null ? min($duration, $firstMountMs) : $duration,
-        ];
+        ], $arrangement);
     }
 
     /**
@@ -356,6 +360,7 @@ final class Workshop
     public function mountQuotes(Car $car, Collection $inventory, Collection $pending, WorkshopGear $gear): array
     {
         $firstMountMs = $this->script->firstMountMs((int) $car->user_id);
+        $arranged = $this->script->arrangements((int) $car->user_id);
         $occupants = Part::query()->where('car_id', $car->id)->whereNotNull('mounted_slot')->get()->keyBy('mounted_slot');
         $leaving = $pending->where('kind', WorkshopJob::KIND_UNMOUNT)->where('car_id', $car->id)->pluck('part_id');
         $state = $this->requirements->stateOf($car);
@@ -370,11 +375,11 @@ final class Workshop
                 continue;
             }
 
-            $quote = $this->slotJobQuote(WorkshopJob::KIND_MOUNT, $part, $gear, $firstMountMs);
+            $quote = $this->slotJobQuote(WorkshopJob::KIND_MOUNT, $part, $gear, $firstMountMs, $arranged[WorkshopJob::KIND_MOUNT] ?? null);
             $occupant = $occupants->get($part->slot);
 
             if ($occupant !== null && ! $leaving->contains($occupant->id) && $this->catalog->part($occupant->part_slug) !== null) {
-                $removal = $this->slotJobQuote(WorkshopJob::KIND_UNMOUNT, $occupant, $gear, $firstMountMs);
+                $removal = $this->slotJobQuote(WorkshopJob::KIND_UNMOUNT, $occupant, $gear, $firstMountMs, $arranged[WorkshopJob::KIND_UNMOUNT] ?? null);
                 $quote = ['cost_cents' => $quote['cost_cents'] + $removal['cost_cents'], 'duration_ms' => $quote['duration_ms'] + $removal['duration_ms']];
             }
 
@@ -396,7 +401,7 @@ final class Workshop
             return null;
         }
 
-        $quote = $this->slotJobQuote(WorkshopJob::KIND_UNMOUNT, $part, $gear, null);
+        $quote = $this->slotJobQuote(WorkshopJob::KIND_UNMOUNT, $part, $gear, null, $this->script->arrangements((int) $part->user_id)[WorkshopJob::KIND_UNMOUNT] ?? null);
         $car = $part->slot === 'engine' && $part->car_id !== null ? Car::query()->find($part->car_id) : null;
 
         return $car === null ? $quote : [...$quote, 'locked' => $this->requirements->lackWithoutEngine($car)];
@@ -555,18 +560,20 @@ final class Workshop
      * What a service of the car costs and takes: 4% of what the car earns in the kilometres between two services (a four wheel drive pays a fifth more),
      * and a quarter of an hour of the mechanic (less with the toolkit of the workshop). A car with no run earns nothing, so a service costs the least it can.
      *
+     * @param  array<string, array{ms: int, covers_cents: int}>|null  $arranged  what the step that waits makes of the jobs (`TutorialScript::arrangements`), or null to ask
      * @return array{cost_cents: int, duration_ms: int}
      */
-    public function serviceQuote(Car $car, ?WorkshopGear $gear = null): array
+    public function serviceQuote(Car $car, ?WorkshopGear $gear = null, ?array $arranged = null): array
     {
         $gear ??= $this->gearOfCar($car);
+        $arranged ??= $this->script->arrangements((int) $car->user_id);
         $run = $this->garage->runOf($car);
         $lapCash = (int) ($run?->config['lap_cash_cents']['dry'] ?? 0);
         $lengthM = $run === null ? $this->rules->trackLengthM($this->rules->tracksOf($this->rules->homeRegion())[0]) : $this->rules->trackLengthM($run->track_slug);
 
         $drivetrain = $this->catalog->vehicle($car->vehicle_slug)['drivetrain'] ?? null;
 
-        return ['cost_cents' => $this->rules->serviceCostCents($lapCash, $lengthM, $drivetrain), 'duration_ms' => $this->rules->serviceJobMs($gear)];
+        return $this->script->arrange(['cost_cents' => $this->rules->serviceCostCents($lapCash, $lengthM, $drivetrain), 'duration_ms' => $this->rules->serviceJobMs($gear)], $arranged[WorkshopJob::KIND_SERVICE] ?? null);
     }
 
     /**
@@ -630,11 +637,13 @@ final class Workshop
      * What the next step of the upgrade of a part is on this car: the level it takes the part to, the price, the time, and what stops it (the part is
      * at the most its rarity allows, or the car is not of the level that the step takes).
      *
+     * @param  array<string, array{ms: int, covers_cents: int}>|null  $arranged  what the step that waits makes of the jobs (`TutorialScript::arrangements`), or null to ask
      * @return array{to: int|null, cost_cents: int|null, duration_ms: int|null, locked: array{reason: string, required?: int, current?: int}|null}
      */
-    public function upgradeQuote(Part $part, Car $car, ?WorkshopGear $gear = null): array
+    public function upgradeQuote(Part $part, Car $car, ?WorkshopGear $gear = null, ?array $arranged = null): array
     {
         $gear ??= $this->gearOfCar($car);
+        $arranged ??= $this->script->arrangements((int) $part->user_id);
         $rarity = Rarity::tryFrom((int) $part->rarity) ?? Rarity::Common;
         $level = (int) $part->upgrade_level;
         $price = $this->catalog->part($part->part_slug)['price_cents'] ?? null;
@@ -651,9 +660,11 @@ final class Workshop
 
         return [
             'to' => $to,
-            // The fee of the vulcanizer is part of the price, like the one of a repair.
-            'cost_cents' => $this->rules->upgradeCostCents($price, $level) + $this->rules->gearFeeCents($gear, $part->slot),
-            'duration_ms' => $this->rules->upgradeJobMs($level, $gear, $part->slot),
+            ...$this->script->arrange([
+                // The fee of the vulcanizer is part of the price, like the one of a repair.
+                'cost_cents' => $this->rules->upgradeCostCents($price, $level) + $this->rules->gearFeeCents($gear, $part->slot),
+                'duration_ms' => $this->rules->upgradeJobMs($level, $gear, $part->slot),
+            ], $arranged[WorkshopJob::KIND_UPGRADE] ?? null),
             'locked' => $level >= $this->rules->upgradeCap($rarity, $car->level)
                 ? ['reason' => 'car_level', 'required' => $this->rules->requiredCarLevelForUpgrade($to), 'current' => $car->level]
                 : null,

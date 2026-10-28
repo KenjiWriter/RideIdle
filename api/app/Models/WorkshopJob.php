@@ -53,6 +53,7 @@ class WorkshopJob extends Model
             'upgrade_to' => 'integer',
             'start_ms' => 'integer',
             'finish_ms' => 'integer',
+            'scripted' => 'boolean',
         ];
     }
 
