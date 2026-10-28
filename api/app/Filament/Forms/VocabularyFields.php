@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Forms;
 
 use App\Content\Definitions\DefinitionForm;
-use App\Content\Vocabulary\WebMessages;
+use App\Content\Vocabulary\MessageCatalog;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 
@@ -20,7 +20,7 @@ final class VocabularyFields
      * @param  array<string, mixed>  $document  the document being worked on
      * @return list<mixed>
      */
-    public static function schema(array $keys, WebMessages $catalog, array $document): array
+    public static function schema(array $keys, MessageCatalog $catalog, array $document): array
     {
         $changed = (array) ($document['messages'] ?? []);
         $language = (string) config('ride.admin_locale');

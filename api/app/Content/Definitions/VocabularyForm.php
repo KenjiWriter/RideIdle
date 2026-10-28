@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Content\Definitions;
 
-use App\Content\Vocabulary\WebMessages;
+use App\Content\Vocabulary\MessageCatalog;
 use stdClass;
 
 /**
@@ -20,7 +20,7 @@ final class VocabularyForm
     /** The value of the choice of an area that means all of them. */
     public const ALL = '*';
 
-    public function __construct(private readonly WebMessages $catalog) {}
+    public function __construct(private readonly MessageCatalog $catalog) {}
 
     /**
      * The messages that can be changed, in the order of the app, and the ones the document has that the app does not (a text for a message that was taken out of
@@ -54,7 +54,7 @@ final class VocabularyForm
         $changed = self::messagesOf($document);
 
         foreach ($this->keys($document) as $key) {
-            $area = WebMessages::area($key);
+            $area = MessageCatalog::area($key);
             $areas[$area] ??= ['total' => 0, 'changed' => 0];
             $areas[$area]['total']++;
             $areas[$area]['changed'] += isset($changed[$key]) ? 1 : 0;
@@ -77,7 +77,7 @@ final class VocabularyForm
         $matching = [];
 
         foreach ($this->keys($document) as $key) {
-            if ($area !== self::ALL && WebMessages::area($key) !== $area) {
+            if ($area !== self::ALL && MessageCatalog::area($key) !== $area) {
                 continue;
             }
 

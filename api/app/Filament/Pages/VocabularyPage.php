@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Content\Definitions\VocabularyForm;
-use App\Content\Vocabulary\WebMessages;
+use App\Content\Vocabulary\MessageCatalog;
 use App\Filament\Forms\VocabularyFields;
 use App\Models\ContentDefinition;
 use Filament\Forms\Components\Select;
@@ -56,7 +56,7 @@ class VocabularyPage extends RulesDocumentPage
 
     protected function fields(array $document): array
     {
-        $catalog = WebMessages::fromConfig();
+        $catalog = MessageCatalog::fromConfig();
         $areas = $this->vocabulary()->areas($document);
         $shown = $this->vocabulary()->visible($document, $this->area($document), $this->search(), $this->onlyChanged());
 
@@ -140,6 +140,6 @@ class VocabularyPage extends RulesDocumentPage
 
     private function vocabulary(): VocabularyForm
     {
-        return $this->vocabularyForm ??= new VocabularyForm(WebMessages::fromConfig());
+        return $this->vocabularyForm ??= new VocabularyForm(MessageCatalog::fromConfig());
     }
 }

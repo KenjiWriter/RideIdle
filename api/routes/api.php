@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\StarterCarController;
 use App\Http\Controllers\Api\V1\TutorialController;
 use App\Http\Controllers\Api\V1\VocabularyController;
 use App\Http\Controllers\Api\V1\WorldController;
+use App\Http\Middleware\ApplyVocabulary;
 use App\Http\Middleware\TouchLastSeen;
 use App\Models\AccountIdentity;
 use Illuminate\Support\Facades\Route;
@@ -50,7 +51,7 @@ Route::prefix('v1')->group(function (): void {
     // Use the link of an e-mail: it secures an account or signs a driver in. The secret in it cannot be guessed.
     Route::post('/account/email/confirm', [AccountEmailController::class, 'confirm'])->middleware('throttle:account-confirm');
 
-    Route::middleware(['auth:sanctum', TouchLastSeen::class])->group(function (): void {
+    Route::middleware(['auth:sanctum', TouchLastSeen::class, ApplyVocabulary::class])->group(function (): void {
         Route::get('/me', [MeController::class, 'show']);
         Route::patch('/me/locale', [MeController::class, 'updateLocale']);
         // A copy of the data of the account, and, in the same place, having the account deleted.

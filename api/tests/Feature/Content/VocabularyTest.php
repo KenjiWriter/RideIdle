@@ -5,11 +5,14 @@ declare(strict_types=1);
 use App\Content\Definitions\JsonDocument;
 use App\Content\Definitions\VocabularyForm;
 use App\Content\PackValidator;
+use App\Content\Vocabulary\MessageCatalog;
+use App\Content\Vocabulary\ServerMessages;
 use App\Content\Vocabulary\Vocabulary;
 use App\Content\Vocabulary\WebMessages;
 use App\Filament\Pages\VocabularyPage;
 use App\Models\Admin;
 use App\Models\ContentDefinition;
+use App\Models\User;
 use App\Services\ContentDrafts;
 use App\Services\ContentPublisher;
 use Livewire\Livewire;
@@ -122,7 +125,7 @@ describe('the document', function () {
 describe('the words that a language says', function () {
     it('are the ones of the pack, and the English ones of the pack where a language has none', function () {
         $source = contentWith(['rules/vocabulary' => packSaying(['slot.tires' => ['en' => 'Hull', 'pl' => 'Kadłub', 'fr' => 'Coque']])]);
-        $words = Vocabulary::fromSource($source)->byLocale();
+        $words = Vocabulary::fromSource($source)->web();
 
         expect($words['pl']['slot.tires'])->toBe('Kadłub')
             ->and($words['fr']['slot.tires'])->toBe('Coque')
@@ -163,17 +166,17 @@ describe('the endpoint', function () {
 
 describe('what the form shows', function () {
     it('lists the messages of the app by area, and the ones of the pack that the app has not', function () {
-        $form = new VocabularyForm(WebMessages::fromConfig());
+        $form = new VocabularyForm(MessageCatalog::fromConfig());
         $document = ['messages' => ['slot.tires' => ['en' => 'Hull', 'pl' => 'Kadłub'], 'gone.message' => ['en' => 'x', 'pl' => 'x']]];
         $areas = $form->areas($document);
 
         expect($areas['slot']['changed'])->toBe(1)
             ->and($areas['gone']['total'])->toBe(1)
-            ->and(array_sum(array_column($areas, 'total')))->toBe(count(WebMessages::fromConfig()->all()) + 1);
+            ->and(array_sum(array_column($areas, 'total')))->toBe(count(MessageCatalog::fromConfig()->all()) + 1);
     });
 
     it('shows an area, what a search finds, or only what is changed, and no more than a page', function () {
-        $form = new VocabularyForm(WebMessages::fromConfig());
+        $form = new VocabularyForm(MessageCatalog::fromConfig());
         $document = ['messages' => ['slot.tires' => ['en' => 'Hull', 'pl' => 'Kadłub']]];
 
         $slots = $form->visible($document, 'slot', '', false);
@@ -189,7 +192,7 @@ describe('what the form shows', function () {
     });
 
     it('puts the words of the pack in the boxes of the messages it shows, and leaves the rest empty', function () {
-        $form = new VocabularyForm(WebMessages::fromConfig());
+        $form = new VocabularyForm(MessageCatalog::fromConfig());
         $state = $form->toState(['messages' => ['slot.tires' => ['en' => 'Hull', 'pl' => 'Kadłub']]], ['slot.tires', 'slot.engine']);
 
         expect($state['values']['m0'])->toBe(['en' => 'Hull', 'pl' => 'Kadłub', 'fr' => null, 'de' => null, 'pt-BR' => null])
@@ -197,7 +200,7 @@ describe('what the form shows', function () {
     });
 
     it('keeps what was written, fills English and Polish from the app, and drops a message with nothing in it', function () {
-        $form = new VocabularyForm(WebMessages::fromConfig());
+        $form = new VocabularyForm(MessageCatalog::fromConfig());
         $document = ['schema' => 0, 'version' => '2026.10.3', 'messages' => ['slot.engine' => ['en' => 'Reactor', 'pl' => 'Reaktor']]];
 
         $applied = $form->apply($document, ['slot.tires', 'slot.engine'], ['values' => [
@@ -296,5 +299,66 @@ describe('the way to the game', function () {
             ->assertJsonPath('messages.pl', ['slot.tires' => 'Kadłub'])
             ->assertJsonPath('messages.en', ['slot.tires' => 'Hull'])
             ->assertJsonPath('number', $publication->number);
+    });
+});
+
+describe('the texts of the server', function () {
+    it('are known by the key they have in the language files, in every language', function () {
+        $server = ServerMessages::fromConfig();
+
+        expect($server->all())->toHaveKey('server.game.errors.no_run')->toHaveKey('server.game.rarity.common')
+            ->and($server->text('server.game.rarity.common', 'pl'))->toBe(trans('game.rarity.common', [], 'pl'))
+            ->and($server->text('server.game.errors.no_run', 'pt-BR'))->toBe(trans('game.errors.no_run', [], 'pt_BR'))
+            ->and(ServerMessages::placeholders('Requires level :required (you have :Current)'))->toBe(['current', 'required'])
+            ->and(MessageCatalog::area('server.game.errors.no_run'))->toBe('server.game')
+            ->and(MessageCatalog::area('slot.tires'))->toBe('slot');
+    });
+
+    it('may be said in the words of a pack, with the same names filled in', function () {
+        $ok = vocabularyResult(['server.game.errors.player_level_required' => ['en' => 'Captains of rank :required only (you are :current).', 'pl' => 'Tylko kapitanowie rangi :required (jesteś :current).']]);
+        $unknown = vocabularyResult(['server.game.errors.nothing_like_it' => ['en' => 'x', 'pl' => 'x']]);
+        $left = vocabularyResult(['server.game.errors.player_level_required' => ['en' => 'Captains of rank :required only.', 'pl' => 'Tylko kapitanowie rangi :required.']]);
+
+        expect($ok['valid'])->toBeTrue()
+            ->and($unknown['valid'])->toBeFalse()
+            ->and($unknown['errors'][0]['message'])->toContain('server.game.errors.nothing_like_it')
+            ->and($left['valid'])->toBeFalse()
+            ->and($left['errors'][0]['message'])->toContain(':current, :required');
+    });
+
+    it('are lines for the translator, apart from the words of the web app', function () {
+        $source = contentWith(['rules/vocabulary' => packSaying([
+            'server.game.errors.no_run' => ['en' => 'You have no ship at sea yet.', 'pl' => 'Nie masz jeszcze statku na morzu.'],
+            'slot.tires' => ['en' => 'Hull', 'pl' => 'Kadłub'],
+        ])]);
+        $vocabulary = Vocabulary::fromSource($source);
+
+        expect($vocabulary->serverLines('pl'))->toBe(['game.errors.no_run' => 'Nie masz jeszcze statku na morzu.'])
+            ->and($vocabulary->serverLines('de'))->toBe(['game.errors.no_run' => 'You have no ship at sea yet.'])
+            ->and($vocabulary->web()['pl'])->toBe(['slot.tires' => 'Kadłub']);
+    });
+
+    it('are not sent to the web app', function () {
+        contentPacks()->import(contentWith(['rules/vocabulary' => packSaying(['server.game.errors.no_run' => ['en' => 'x', 'pl' => 'y']])]), activate: true, checkTables: false);
+        readFromDatabase();
+
+        $this->getJson('/api/v1/meta/vocabulary')->assertOk()->assertExactJson(['number' => '2026.10.0', 'messages' => []]);
+    });
+
+    it('are said to a driver in the words of the pack, in the language of the driver, and the rest of the texts stay as they were', function () {
+        $driver = User::factory()->guest()->create();
+        $default = trans('game.errors.no_run', [], 'pl');
+
+        $this->getJson('/api/v1/runs/current', [...bearerFor($driver), 'X-Locale' => 'pl'])->assertNotFound()->assertJsonPath('message', $default);
+
+        contentPacks()->import(contentWith(['rules/vocabulary' => packSaying(['server.game.errors.no_run' => ['en' => 'You have no ship at sea yet.', 'pl' => 'Nie masz jeszcze statku na morzu.']])]), activate: true, checkTables: false);
+        readFromDatabase();
+
+        $this->getJson('/api/v1/runs/current', [...bearerFor($driver), 'X-Locale' => 'pl'])->assertNotFound()->assertJsonPath('message', 'Nie masz jeszcze statku na morzu.');
+
+        // The group was loaded before the lines were added to it, so the texts that the pack leaves alone are the ones of the language file.
+        expect(trans('game.errors.run_exists', [], 'pl'))->toBe((include lang_path('pl/game.php'))['errors']['run_exists']);
+
+        $this->getJson('/api/v1/runs/current', [...bearerFor($driver), 'X-Locale' => 'de'])->assertNotFound()->assertJsonPath('message', 'You have no ship at sea yet.');
     });
 });

@@ -65,28 +65,6 @@ final class WebMessages
         return $names;
     }
 
-    /**
-     * The areas of the app, the first word of the key (`slot`, `nav`, `workshop`), with the number of messages of each.
-     *
-     * @return array<string, int>
-     */
-    public function areas(): array
-    {
-        $areas = [];
-
-        foreach (array_keys($this->texts('en')) as $key) {
-            $area = self::area($key);
-            $areas[$area] = ($areas[$area] ?? 0) + 1;
-        }
-
-        return $areas;
-    }
-
-    public static function area(string $key): string
-    {
-        return explode('.', $key, 2)[0];
-    }
-
     /** @return array<string, string> key => text */
     private function texts(string $locale): array
     {

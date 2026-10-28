@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Content;
 
-use App\Content\Vocabulary\WebMessages;
+use App\Content\Vocabulary\MessageCatalog;
 use App\Support\Locale;
 use InvalidArgumentException;
 use JsonException;
@@ -595,40 +595,47 @@ final class PackValidator
     }
 
     /**
-     * The words of a pack against the app that speaks them: a message of the vocabulary has to be one that the web app has, and its text has to fill in the same
-     * {names} (the app gives the value, a text that leaves one out shows nothing, one that adds one shows an empty place), keep the forms of a plural that the
-     * message has (the number of | in it), and not use the syntax of a link to another message. Without the texts of the app to ask nothing of this is checked.
+     * The words of a pack against what speaks them: a message of the vocabulary has to be one that the web app or the server has, and its text has to fill in the
+     * same names (the program gives the value, a text that leaves one out shows nothing, one that adds one shows an empty place), keep the forms of a plural that the
+     * message has (the number of | in it), and in the web app not use a brace that is not a name or the syntax of a link to another message. Without the texts of the
+     * web app to ask, its messages are not checked; the texts of the server always can be.
      *
      * @param  array<string, mixed>  $data
      */
     private function checkVocabulary(string $relative, string $name, array $data, PackValidationResult $result): void
     {
-        $catalog = WebMessages::fromConfig();
-
-        if ($name !== 'vocabulary' || ! $catalog->available()) {
+        if ($name !== 'vocabulary') {
             return;
         }
 
+        $catalog = MessageCatalog::fromConfig();
+
         foreach ($data['messages'] ?? [] as $key => $texts) {
+            if (! $catalog->canJudge($key)) {
+                continue;
+            }
+
             $original = $catalog->all()[$key] ?? null;
 
             if ($original === null) {
-                $result->addError($relative, "/messages/{$key}", "The web app has no message {$key}.");
+                $result->addError($relative, "/messages/{$key}", MessageCatalog::isServer($key) ? "The server has no text {$key}." : "The web app has no message {$key}.");
 
                 continue;
             }
 
-            $expected = WebMessages::placeholders($original);
+            $expected = MessageCatalog::placeholders($key, $original);
+            $isServer = MessageCatalog::isServer($key);
 
             foreach ($texts as $locale => $text) {
                 $pointer = "/messages/{$key}/{$locale}";
                 $left = preg_replace('/\{[A-Za-z0-9_]+\}/', '', $text) ?? $text;
 
-                if (WebMessages::placeholders($text) !== $expected) {
-                    $result->addError($relative, $pointer, 'The text must fill in the same {names} as the message of the app: '.($expected === [] ? 'none' : '{'.implode('}, {', $expected).'}').'.');
-                } elseif (str_contains($left, '{') || str_contains($left, '}')) {
+                if (MessageCatalog::placeholders($key, $text) !== $expected) {
+                    $written = implode(', ', array_map(static fn (string $placeholder): string => MessageCatalog::written($key, $placeholder), $expected));
+                    $result->addError($relative, $pointer, 'The text must fill in the same names as the original: '.($expected === [] ? 'none' : $written).'.');
+                } elseif (! $isServer && (str_contains($left, '{') || str_contains($left, '}'))) {
                     $result->addError($relative, $pointer, 'A brace that is not a {name} cannot be shown: the app reads it as a part of a message.');
-                } elseif (str_contains($text, '@:') || str_contains($text, '@.')) {
+                } elseif (! $isServer && (str_contains($text, '@:') || str_contains($text, '@.'))) {
                     $result->addError($relative, $pointer, 'A link to another message (@:key) is not allowed in the vocabulary.');
                 } elseif (substr_count($text, '|') !== substr_count($original, '|')) {
                     $result->addError($relative, $pointer, 'The message has '.(substr_count($original, '|') + 1).' form(s) of a plural, separated by |: the text must have the same number.');
