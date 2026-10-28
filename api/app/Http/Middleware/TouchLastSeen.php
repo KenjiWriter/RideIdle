@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace App\Http\Middleware;
 
 use App\Models\User;
+use App\Models\UserVisit;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Remembers when a driver was last active, so abandoned guest accounts can expire.
+ * Remembers when a driver was last active, so abandoned guest accounts can expire, and writes down every visit (the first request after a break of ten minutes).
  * The write happens at most once every ten minutes per account.
  */
 final class TouchLastSeen
@@ -28,6 +29,9 @@ final class TouchLastSeen
             User::query()->whereKey($user->getKey())->update(['previous_seen_at' => $user->last_seen_at, 'last_seen_at' => $now]);
             $user->setAttribute('previous_seen_at', $user->last_seen_at);
             $user->setAttribute('last_seen_at', $now);
+
+            // The visit is written down for the numbers of the alpha (`Metrics`): when the drivers come back, and for how long.
+            UserVisit::query()->create(['user_id' => $user->getKey(), 'at' => $now, 'gap_minutes' => $user->previous_seen_at === null ? null : (int) $user->previous_seen_at->diffInMinutes($now, true)]);
         }
 
         return $next($request);

@@ -20,6 +20,7 @@ use App\Models\StorageOpening;
 use App\Models\Travel;
 use App\Models\TutorialProgress;
 use App\Models\User;
+use App\Models\UserVisit;
 use App\Models\Wallet;
 use App\Models\WorkshopJob;
 use Illuminate\Support\Carbon;
@@ -130,6 +131,8 @@ final class AccountExport
                         ->map(fn (Settlement $settlement): array => $settlement->makeHidden(['race_run_id'])->toArray())->all(),
                 ],
             )->all(),
+            'visits' => UserVisit::query()->where('user_id', $user->id)->orderBy('id')->get()
+                ->map(fn (UserVisit $visit): array => ['at' => $this->day($visit->at), 'gap_minutes' => $visit->gap_minutes])->all(),
             'purchases' => Purchase::query()->where('user_id', $user->id)->orderBy('id')->get()
                 ->map(fn (Purchase $purchase): array => $purchase->makeHidden(['id', 'user_id'])->toArray())->all(),
             'ledger' => LedgerEntry::query()->where('user_id', $user->id)->orderBy('id')->get()

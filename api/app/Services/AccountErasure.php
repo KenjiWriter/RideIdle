@@ -21,6 +21,7 @@ use App\Models\StorageOpening;
 use App\Models\Travel;
 use App\Models\TutorialProgress;
 use App\Models\User;
+use App\Models\UserVisit;
 use App\Models\Wallet;
 use App\Models\WorkshopJob;
 use Illuminate\Support\Facades\DB;
@@ -74,6 +75,7 @@ final class AccountErasure
             'settlements' => $settlements->count(),
             'settlement events' => SettlementEvent::query()->whereIn('settlement_id', $settlements)->count(),
             'ledger entries' => LedgerEntry::query()->where('user_id', $user->id)->count(),
+            'visits' => UserVisit::query()->where('user_id', $user->id)->count(),
             'queued e-mails' => count($this->mailsTo($user, 'jobs')),
             'failed e-mails' => count($this->mailsTo($user, 'failed_jobs')),
         ];
@@ -100,6 +102,7 @@ final class AccountErasure
 
             SettlementEvent::query()->whereIn('settlement_id', $settlements)->delete();
             LedgerEntry::query()->where('user_id', $user->id)->delete();
+            UserVisit::query()->where('user_id', $user->id)->delete();
             Settlement::query()->whereIn('race_run_id', $runs)->delete();
             Travel::query()->where('user_id', $user->id)->delete();
             RaceRun::query()->withoutGlobalScopes()->where('user_id', $user->id)->delete();
