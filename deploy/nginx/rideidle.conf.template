@@ -1,6 +1,6 @@
 # RideIdle: one domain for the web app and the API.
 #
-#   /          the web app (Vue, built to web/dist), with the pages of the app answered by index.html
+#   /          the web app (Vue, built to web/dist), with the pages of the app answered by index.html (to a robot that makes the preview of a link: by the API, with the tags of the game)
 #   /api/      the Laravel API, through PHP-FPM
 #   /up        the health check of Laravel
 #
@@ -119,9 +119,45 @@ server {
         try_files $uri =404;
     }
 
-    # Every other address is a page of the app (/garage, /terms, /account/confirm, /auth/callback ...): the app routes it.
+    # Every other address is a page of the app (/garage, /terms, /account/confirm, /auth/callback ...): the app routes it. A file that is there is served as it is
+    # (a robots.txt, say); what is not a file is the page of the app, which @rideidle_app chooses.
     location / {
-        try_files $uri /index.html;
+        try_files $uri @rideidle_app;
+    }
+
+    # The page of the app: index.html for a person, as ever. For a robot that makes the preview of a link or reads a page ($rideidle_app_page is set in
+    # rideidle-global.conf from the name the robot gives itself) it is the internal address below.
+    location @rideidle_app {
+        rewrite ^ $rideidle_app_page last;
+    }
+
+    # The same page of the app with the tags of the game in its head (its title, description and picture), made by the API: a robot does not run the app, so
+    # it could not read them there. Only reached from @rideidle_app (internal: a request for this address from outside is a 404). The host is passed on as it
+    # came, and the API finds the game by it. The REQUEST_URI is the one of the API, because Laravel reads the route from it and not from the address that was asked
+    # for; a later fastcgi_param of the same name replaces the one that fastcgi_params has. This goes to PHP, so it has the limit of the API as well.
+    location = /__rideidle_preview {
+        internal;
+        root __APP_DIR__/current/api/public;
+
+        limit_req zone=rideidle_api burst=40 nodelay;
+
+        # The page depends on who asks (a person is given the app itself at this address), so a copy of it kept for one is not for the other. This sets a header of
+        # its own, so the headers of the site are included again.
+        include /etc/nginx/snippets/rideidle-security.conf;
+        add_header Vary "User-Agent" always;
+
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_param REQUEST_URI /api/v1/meta/share;
+        fastcgi_param QUERY_STRING "";
+        fastcgi_pass unix:/run/php/php__PHP_VERSION__-fpm.sock;
+        fastcgi_read_timeout 30s;
+
+        # If PHP does not answer or fails, the robot is given the page of the app as it was before: a preview without the tags of the game is better than no page.
+        fastcgi_intercept_errors on;
+        error_page 500 502 503 504 = /index.html;
     }
 
     # Nothing that starts with a dot is for the world, but the proof for Let's Encrypt.
