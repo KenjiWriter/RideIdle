@@ -11,7 +11,7 @@ import GameShell from '@/components/GameShell.vue'
 import GarageTabs from '@/components/GarageTabs.vue'
 import CarSilhouette from '@/components/CarSilhouette.vue'
 import MediaPicture from '@/components/MediaPicture.vue'
-import { carPicture } from '@/features/art'
+import { stageArt } from '@/features/art'
 import { useCarClass } from '@/features/car/useCarClass'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -49,6 +49,9 @@ const garages = computed(() => store.fleet?.garages ?? [])
 const owned = computed(() => garages.value.filter((garage) => garage.owned))
 const unowned = computed(() => garages.value.filter((garage) => !garage.owned))
 const cash = computed(() => store.cash?.cash_cents ?? 0)
+
+/** What a thumb of the strip shows, the same as the stage would for the car. */
+const thumbArt = (car: FleetCar) => stageArt(car.vehicle.image_url, car.vehicle.slug)
 
 /** The car on the stage: the one the driver tapped in the strip while it is still in the fleet, else the one that is played. */
 const focusId = ref<number | null>(null)
@@ -184,7 +187,7 @@ const buyGarage = (garage: FleetGarage) =>
 
       <template v-if="focused">
         <!-- The car that is looked at, on its stage, and the strip of all the cars under it: a tap puts another one on the stage. -->
-        <CarStage :key="focused.id" :name="focused.vehicle.name" :src="focused.vehicle.image_url" :fallback="carPicture(focused.vehicle.slug)">
+        <CarStage :key="focused.id" :name="focused.vehicle.name" :src="focused.vehicle.image_url" :slug="focused.vehicle.slug">
           <span class="chip chip-am">{{ t('garage.carLevel', { level: focused.level }) }}</span>
           <span class="chip" :class="chipClass(focused)" data-test="car-status">{{ t(`run.status.${statusKey(focused)}`) }}</span>
         </CarStage>
@@ -200,8 +203,8 @@ const buyGarage = (garage: FleetGarage) =>
             :data-test="`thumb-${car.id}`"
             @click="focusId = car.id"
           >
-            <span class="thumb-pic">
-              <MediaPicture :src="car.vehicle.image_url" :fallback="carPicture(car.vehicle.slug)" alt="">
+            <span class="thumb-pic" :class="{ 'thumb-light': thumbArt(car).cutout }">
+              <MediaPicture :src="car.vehicle.image_url" :fallback="thumbArt(car).picture" alt="">
                 <template #placeholder><span class="stage-empty" data-test="thumb-empty" aria-hidden="true"><CarSilhouette /></span></template>
               </MediaPicture>
               <span v-if="car.selected" class="thumb-tag" data-test="thumb-selected">{{ t('fleet.selected') }}</span>

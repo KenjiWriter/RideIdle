@@ -473,7 +473,7 @@ async function finish(jobId: number): Promise<void> {
       <p v-if="finished" class="card card-cy text-sm" role="status" data-test="finished">{{ finished }}</p>
 
       <!-- The car on its stage, as in the garage: its parts are on it, and the ones the mechanic is at have a ring with the progress. -->
-      <CarStage :name="car.vehicle.name" :src="car.vehicle.image_url" :fallback="carPicture(car.vehicle.slug)">
+      <CarStage :name="car.vehicle.name" :src="car.vehicle.image_url" :slug="car.vehicle.slug">
         <template #spots>
           <CarHotspots v-if="parts.placed.length > 0" :placed="parts.placed" :picked="pickedSlot" :engine="car.vehicle.engine" :marks="marks" @pick="pick" />
         </template>

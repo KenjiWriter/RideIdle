@@ -68,6 +68,14 @@
   --stage-lit: color-mix(in srgb, var(--color-cyan) 10%, var(--color-surface-2));
   --stage-floor: color-mix(in srgb, var(--color-cyan) 34%, transparent);
   --stage-line: color-mix(in srgb, var(--color-ink) 62%, transparent);
+
+  /* The light variant of it, for a car cut out of its ground: a grey-blue studio that does not follow the ink of the theme (a theme with dark ink would get a dark stage and
+     the dark cars would be lost on it), only tinted with the blue of the theme. */
+  --stage-light-top: color-mix(in srgb, var(--color-cyan) 14%, #bccbd6);
+  --stage-light-bottom: color-mix(in srgb, var(--color-cyan) 20%, #90b2c0);
+  --stage-light-lit: #eef2f6;
+  --stage-light-floor: color-mix(in srgb, #0a1018 62%, transparent);
+  --stage-light-line: color-mix(in srgb, #0a1018 28%, transparent);
 }
 
 html,
@@ -761,6 +769,32 @@ body {
     background: radial-gradient(closest-side, var(--stage-floor), transparent);
   }
 
+  /* The light stage: the studio of the board, for a car that stands on it cut out of its ground. The ground and the shadow are the stage's own, so the car
+     is not faded into the stage; it has a shadow on the floor, and the name behind it is drawn in a darker line. */
+  .stage-light {
+    background:
+      radial-gradient(70% 58% at 50% 62%, var(--stage-light-lit), transparent 78%),
+      linear-gradient(var(--stage-light-top), var(--stage-light-bottom));
+  }
+
+  .stage-light::before {
+    left: 8%;
+    right: 8%;
+    bottom: 9%;
+    height: 15%;
+    background: radial-gradient(closest-side, var(--stage-light-floor), transparent);
+  }
+
+  .stage-light .stage-name {
+    -webkit-text-stroke-color: var(--stage-light-line);
+  }
+
+  .stage-light .stage-car {
+    -webkit-mask-image: none;
+    mask-image: none;
+    filter: drop-shadow(0 6px 5px var(--stage-light-floor));
+  }
+
   /* The name of the car, drawn in outline behind it. */
   .stage-name {
     @apply pointer-events-none absolute z-0 font-display font-bold uppercase italic;
@@ -910,6 +944,17 @@ body {
     @apply absolute inset-0 h-full w-full object-contain;
     -webkit-mask-image: radial-gradient(ellipse 62% 60% at 50% 56%, #000 54%, transparent 100%);
     mask-image: radial-gradient(ellipse 62% 60% at 50% 56%, #000 54%, transparent 100%);
+  }
+
+  /* A car cut out of its ground stands on the light floor, as on the stage. */
+  .thumb-light {
+    background: linear-gradient(var(--stage-light-top), var(--stage-light-bottom));
+  }
+
+  .thumb-light img {
+    -webkit-mask-image: none;
+    mask-image: none;
+    filter: drop-shadow(0 3px 3px var(--stage-light-floor));
   }
 
   .thumb-body {

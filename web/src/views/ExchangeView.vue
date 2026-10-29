@@ -5,7 +5,6 @@ import type { ExchangeListing, YardCar } from '@/api/types'
 import CarStage from '@/components/CarStage.vue'
 import CityTabs from '@/components/CityTabs.vue'
 import GameShell from '@/components/GameShell.vue'
-import { carPicture } from '@/features/art'
 import { useMarketScreen } from '@/features/market/useMarketScreen'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
@@ -107,7 +106,7 @@ const buyWreck = (wreck: YardCar) =>
       <p v-if="listings.length === 0" class="text-muted" data-test="empty">{{ t('market.exchangeEmpty') }}</p>
 
       <article v-for="(listing, index) in listings" :key="listing.key" class="card flex flex-col gap-2 !p-3" :data-tutorial="listing.key === 'tutorial' ? 'exchange' : undefined" :data-test="`listing-${index}`" data-listing>
-        <CarStage compact :name="listing.vehicle.name" :src="listing.vehicle.image_url" :fallback="carPicture(listing.vehicle.slug)" />
+        <CarStage compact :name="listing.vehicle.name" :src="listing.vehicle.image_url" :slug="listing.vehicle.slug" />
 
         <div class="flex items-center justify-between gap-2">
           <div class="flex min-w-0 items-center gap-2">

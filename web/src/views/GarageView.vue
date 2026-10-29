@@ -224,7 +224,7 @@ async function useCode(): Promise<void> {
 
       <section class="flex flex-col gap-3" aria-labelledby="run-title" data-test="run">
         <!-- The car on its stage, as the showroom of the canvas has it: the name in outline behind it, the level and the state of the run on the floor. -->
-        <CarStage :name="run.run.car.name" :src="pictureUrl" :fallback="carPicture(run.run.car.slug)">
+        <CarStage :name="run.run.car.name" :src="pictureUrl" :slug="run.run.car.slug">
           <template #spots>
             <CarHotspots v-if="car && parts.placed.length > 0" :placed="parts.placed" :picked="pickedSlot" :engine="car.vehicle.engine" @pick="pick" />
           </template>

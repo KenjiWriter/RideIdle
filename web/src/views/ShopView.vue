@@ -250,7 +250,7 @@ async function openCrate(kind: CrateOffer): Promise<void> {
       <p v-if="error" class="text-danger" role="alert" data-test="error">{{ error }}</p>
 
       <!-- The car of the driver on its stage: a tap on a part of it shows what is for sale for that part, and what is on the car now. -->
-      <CarStage v-if="stageCar" :name="stageCar.vehicle.name" :src="stageCar.vehicle.image_url" :fallback="carPicture(stageCar.vehicle.slug)">
+      <CarStage v-if="stageCar" :name="stageCar.vehicle.name" :src="stageCar.vehicle.image_url" :slug="stageCar.vehicle.slug">
         <template #spots>
           <CarHotspots v-if="parts.placed.length > 0" :placed="parts.placed" :picked="pickedSlot" :engine="stageCar.vehicle.engine" @pick="pickSpot" />
         </template>
