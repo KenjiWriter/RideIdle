@@ -100,8 +100,8 @@ export async function setLocale(locale: AppLocale): Promise<void> {
   }
 }
 
-/** Język na starcie aplikacji: zapisany wybór albo język przeglądarki. */
-export async function initLocale(): Promise<AppLocale> {
+/** Język na starcie aplikacji: zapisany wybór albo język przeglądarki, a gdy żaden nie pasuje, język domyślny gry (`fallback`). */
+export async function initLocale(fallback?: string | null): Promise<AppLocale> {
   let stored: string | null = null
 
   try {
@@ -110,7 +110,7 @@ export async function initLocale(): Promise<AppLocale> {
     stored = null
   }
 
-  const locale = detectLocale(stored, navigator.languages ?? [navigator.language])
+  const locale = detectLocale(stored, navigator.languages ?? [navigator.language], fallback)
   await setLocale(locale)
 
   return locale

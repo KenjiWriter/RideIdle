@@ -3,20 +3,20 @@ import { resolve } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-// What a browser needs to offer the app for the home screen: a manifest with the icons it names, and the page that points to it.
+import { DEFAULT_GAME } from '@/game'
+
+// What a browser needs to offer the app for the home screen: the page points at the manifest of the game (the server makes it from the game of the host, see
+// GET /api/v1/meta/manifest), and the icons that the manifest of the car game names are there, each of the size it says.
 
 const publicDir = resolve(__dirname, '../public')
-const manifest = JSON.parse(readFileSync(resolve(publicDir, 'manifest.webmanifest'), 'utf-8')) as {
-  name: string
-  short_name: string
-  start_url: string
-  scope: string
-  display: string
-  background_color: string
-  theme_color: string
-  icons: { src: string; sizes: string; type: string; purpose: string }[]
-}
 const page = readFileSync(resolve(__dirname, '../index.html'), 'utf-8')
+
+/** The icons that the manifest of the car game has, and what each is (the server names them in its manifest: public/icons is where they are). */
+const DEFAULT_ICONS = [
+  { src: 'icons/icon-192.png', sizes: '192x192' },
+  { src: 'icons/icon-512.png', sizes: '512x512' },
+  { src: 'icons/icon-maskable-512.png', sizes: '512x512' },
+]
 
 /** The size of a PNG, from its header. */
 function sizeOf(path: string): string {
@@ -28,28 +28,26 @@ function sizeOf(path: string): string {
 }
 
 describe('the manifest of the app', () => {
-  it('says what the installed app is: it opens the garage, full screen, in the colours of the app', () => {
-    expect(manifest).toMatchObject({ name: 'RideIdle', short_name: 'RideIdle', start_url: '/garage', scope: '/', display: 'standalone', background_color: '#0e1013', theme_color: '#0e1013' })
-    // The bar of the browser has the colour of the app too.
-    expect(page).toContain(`<meta name="theme-color" content="${manifest.theme_color}" />`)
+  it('is the server’s: the page points at the endpoint of the game of its host, and there is no manifest file of the app', () => {
+    expect(page).toContain('<link rel="manifest" href="/api/v1/meta/manifest" />')
+    expect(page).not.toContain('manifest.webmanifest')
+    expect(existsSync(resolve(publicDir, 'manifest.webmanifest'))).toBe(false)
   })
 
-  it('has the icons that a browser asks for, each a file of the size it says', () => {
-    const purposes = manifest.icons.map((icon) => `${icon.sizes} ${icon.purpose}`)
+  it('has the colour of the car game on the bar of the browser until a game says its own', () => {
+    expect(page).toContain(`<meta name="theme-color" content="${DEFAULT_GAME.theme_color}" />`)
+  })
 
-    expect(purposes).toEqual(expect.arrayContaining(['192x192 any', '512x512 any', '512x512 maskable']))
+  it('has the icons of the car game that the manifest names, each a file of the size it says', () => {
+    for (const icon of DEFAULT_ICONS) {
+      const path = resolve(publicDir, icon.src)
 
-    for (const icon of manifest.icons) {
-      const path = resolve(publicDir, icon.src.slice(1))
-
-      expect(icon.type).toBe('image/png')
       expect(existsSync(path), icon.src).toBe(true)
       expect(sizeOf(path), icon.src).toBe(icon.sizes)
     }
   })
 
-  it('is linked from the page, together with the icons of the tab and of the home screen of an iPhone', () => {
-    expect(page).toContain('<link rel="manifest" href="/manifest.webmanifest" />')
+  it('has the icons of the tab and of the home screen of an iPhone, which a game with an icon of its own puts its picture in the place of', () => {
     expect(page).toContain('rel="apple-touch-icon" href="/icons/apple-touch-icon.png"')
     expect(sizeOf(resolve(publicDir, 'icons/apple-touch-icon.png'))).toBe('180x180')
     expect(sizeOf(resolve(publicDir, 'icons/favicon-48.png'))).toBe('48x48')

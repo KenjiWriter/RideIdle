@@ -53,9 +53,11 @@ export function normalizeLocale(input: string | null | undefined): AppLocale | n
 
 /**
  * Wybór języka na starcie: zapisany wybór gracza, potem języki przeglądarki
- * w kolejności preferencji, na końcu język domyślny.
+ * w kolejności preferencji, na końcu język domyślny. Gra może mieć własny język
+ * domyślny (`fallback`): dostaje go odwiedzający, którego żaden język nie pasuje
+ * do obsługiwanych; gdy go nie ma albo nie jest obsługiwany, jest nim angielski.
  */
-export function detectLocale(stored: string | null, browserLanguages: readonly string[]): AppLocale {
+export function detectLocale(stored: string | null, browserLanguages: readonly string[], fallback?: string | null): AppLocale {
   const fromStorage = normalizeLocale(stored)
   if (fromStorage) {
     return fromStorage
@@ -68,5 +70,5 @@ export function detectLocale(stored: string | null, browserLanguages: readonly s
     }
   }
 
-  return DEFAULT_LOCALE
+  return normalizeLocale(fallback) ?? DEFAULT_LOCALE
 }

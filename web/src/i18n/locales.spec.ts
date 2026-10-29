@@ -42,6 +42,20 @@ describe('detectLocale', () => {
   it('falls back to the default language', () => {
     expect(detectLocale(null, ['es', 'it'])).toBe(DEFAULT_LOCALE)
   })
+
+  it('falls back to the language of the game when no language of the visitor is one of the app, and only then', () => {
+    expect(detectLocale(null, ['es', 'it'], 'pl')).toBe('pl')
+    expect(detectLocale(null, ['es', 'pt-BR'], 'pl')).toBe('pt-BR')
+    expect(detectLocale('de', ['es'], 'pl')).toBe('de')
+    expect(detectLocale('xx', ['es'], 'fr')).toBe('fr')
+  })
+
+  it('takes the language of the game in any spelling, and the default when it is not one of the app or there is none', () => {
+    expect(detectLocale(null, [], 'PT_br')).toBe('pt-BR')
+    expect(detectLocale(null, [], 'xx')).toBe(DEFAULT_LOCALE)
+    expect(detectLocale(null, [], '')).toBe(DEFAULT_LOCALE)
+    expect(detectLocale(null, [], null)).toBe(DEFAULT_LOCALE)
+  })
 })
 
 describe('supported languages', () => {
