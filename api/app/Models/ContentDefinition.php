@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Content\Definitions\JsonDocument;
+use App\Models\Concerns\BelongsToGame;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
  */
 class ContentDefinition extends Model
 {
+    use BelongsToGame;
+
     public const KIND_VEHICLE = 'vehicle';
 
     public const KIND_PART = 'part';

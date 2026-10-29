@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsInAGame;
 use App\Models\ContentActivation;
 use App\Models\ContentPack;
 use App\Services\ContentPacks;
@@ -12,7 +13,10 @@ use Illuminate\Console\Command;
 /** Says where the game reads its content from, and lists the packs of the database with the live one marked. */
 final class ContentStatus extends Command
 {
-    protected $signature = 'content:status';
+    use RunsInAGame;
+
+    protected $signature = 'content:status
+        {--game= : The slug of the game (the default game when left out)}';
 
     protected $description = 'Show where the game reads its content from and the packs in the database';
 

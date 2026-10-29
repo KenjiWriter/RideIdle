@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsInAGame;
 use App\Domain\Run\Rarity;
 use App\Models\Part;
 use App\Services\PartAffixes;
@@ -16,8 +17,11 @@ use Illuminate\Console\Command;
  */
 final class RollPartAffixes extends Command
 {
+    use RunsInAGame;
+
     protected $signature = 'parts:roll-affixes
-        {--dry-run : Only report how many parts would get affixes}';
+        {--dry-run : Only report how many parts would get affixes}
+        {--game= : The slug of the game (the default game when left out)}';
 
     protected $description = 'Give the parts of a rarity above common that have no affixes their affixes (once)';
 

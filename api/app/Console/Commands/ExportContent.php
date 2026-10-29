@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsInAGame;
 use App\Content\ContentException;
 use App\Models\ContentPack;
 use App\Services\ContentExporter;
@@ -13,10 +14,13 @@ use Illuminate\Console\Command;
 /** Writes a pack of the database as the `content/` tree, with its number and the checksum of its content in pack.json. */
 final class ExportContent extends Command
 {
+    use RunsInAGame;
+
     protected $signature = 'content:export
         {path : The folder to write (it has to be empty)}
         {--number= : The pack to write (default: the live one)}
-        {--force : Write over what is in the folder}';
+        {--force : Write over what is in the folder}
+        {--game= : The slug of the game (the default game when left out)}';
 
     protected $description = 'Write a pack of the database as the content/ tree, to keep in the repository or to import on another machine';
 

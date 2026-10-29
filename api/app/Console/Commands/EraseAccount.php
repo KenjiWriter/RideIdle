@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\ChoosesAnAccount;
+use App\Console\Commands\Concerns\RunsInAGame;
 use App\Services\AccountErasure;
 use App\Services\AccountLookup;
 use Illuminate\Console\Command;
@@ -12,13 +13,15 @@ use Illuminate\Console\Command;
 final class EraseAccount extends Command
 {
     use ChoosesAnAccount;
+    use RunsInAGame;
 
     protected $signature = 'accounts:delete
         {--id= : The id of the account}
         {--email= : An e-mail address of the account (as its e-mail, or as a sign-in)}
         {--name= : The driver name}
         {--dry-run : Say what would be removed and remove nothing}
-        {--force : Do not ask for confirmation}';
+        {--force : Do not ask for confirmation}
+        {--game= : The slug of the game (the default game when left out)}';
 
     protected $description = 'Delete an account and everything about it, for a person who asked to be forgotten (this cannot be undone)';
 

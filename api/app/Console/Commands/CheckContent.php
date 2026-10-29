@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsInAGame;
 use App\Content\ContentException;
 use App\Content\ContentPackInvalid;
 use App\Content\FileContentSource;
@@ -18,8 +19,11 @@ use Illuminate\Console\Command;
  */
 final class CheckContent extends Command
 {
+    use RunsInAGame;
+
     protected $signature = 'content:check
-        {--install : When the game reads from the database and no pack is live, make the pack of the content folder live}';
+        {--install : When the game reads from the database and no pack is live, make the pack of the content folder live}
+        {--game= : The slug of the game (the default game when left out)}';
 
     protected $description = 'Check that the content the game reads is whole and fits this version of the code (a deploy runs it)';
 

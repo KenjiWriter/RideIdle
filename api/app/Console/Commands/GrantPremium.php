@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\ChoosesAnAccount;
+use App\Console\Commands\Concerns\RunsInAGame;
 use App\Services\AccountLookup;
 use App\Services\Premium;
 use Illuminate\Console\Command;
@@ -14,6 +15,7 @@ use Illuminate\Support\Str;
 final class GrantPremium extends Command
 {
     use ChoosesAnAccount;
+    use RunsInAGame;
 
     protected $signature = 'premium:grant
         {coins : How many coins to give}
@@ -21,7 +23,8 @@ final class GrantPremium extends Command
         {--email= : An e-mail address of the account (as its e-mail, or as a sign-in)}
         {--name= : The driver name}
         {--reason=gift : What it is for, one word for the ledger (gift, support, promotion)}
-        {--key= : Makes the gift happen once: run it again with the same key and nothing more is given (default: a new one every time)}';
+        {--key= : Makes the gift happen once: run it again with the same key and nothing more is given (default: a new one every time)}
+        {--game= : The slug of the game (the default game when left out)}';
 
     protected $description = 'Give premium coins to an account, without a payment';
 

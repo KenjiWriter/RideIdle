@@ -8,6 +8,8 @@ use App\Content\ContentSource;
 use App\Content\Rules;
 use App\Content\TutorialSteps;
 use App\Content\Vocabulary\Vocabulary;
+use App\Games\CurrentGame;
+use App\Games\Games;
 use App\Listeners\AuditAdminSignIn;
 use App\Services\Accounts;
 use App\Services\ContentPacks;
@@ -29,6 +31,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // The game that the work is for, and the games it may be: a request, a command or a job is for one of them (see CurrentGame).
+        $this->app->scoped(CurrentGame::class);
+        $this->app->scoped(Games::class);
         // The content is read once per request, and again for every job of a queue worker, which lives for hours: the pack that is live can change in between.
         $this->app->scoped(ContentSource::class, fn ($app) => $app->make(ContentPacks::class)->configured());
         $this->app->scoped(Catalog::class, fn () => Catalog::fromConfig());

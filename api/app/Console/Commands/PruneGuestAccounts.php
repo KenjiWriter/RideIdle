@@ -24,8 +24,8 @@ final class PruneGuestAccounts extends Command
         $days = (int) ($this->option('days') ?: config('ride.guest_expiry_days'));
         $threshold = now()->subDays($days);
 
-        // Accounts that never made a request after creation expire by their creation date.
-        $expired = User::query()
+        // Accounts that never made a request after creation expire by their creation date. The guests of every game expire alike, so it looks across the games.
+        $expired = User::query()->withoutGlobalScopes()
             ->whereNull('claimed_at')
             ->where(function ($query) use ($threshold): void {
                 $query->where('last_seen_at', '<', $threshold)

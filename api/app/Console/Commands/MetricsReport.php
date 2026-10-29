@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsInAGame;
 use App\Services\Metrics;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
@@ -11,9 +12,12 @@ use Illuminate\Console\Command;
 /** The numbers of the alpha: do the drivers come back, how long do they stay, and do they get to what the first minutes lead to. Worked out from the game's own data. */
 final class MetricsReport extends Command
 {
+    use RunsInAGame;
+
     protected $signature = 'metrics:report
         {--days=30 : The accounts made in this many last days make the cohort}
-        {--json : Print the report as JSON}';
+        {--json : Print the report as JSON}
+        {--game= : The slug of the game (the default game when left out)}';
 
     protected $description = 'Tell whether the drivers come back (D1, D2, D3, D7), how long they stay and how far the first minutes take them';
 

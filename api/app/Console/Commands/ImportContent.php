@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsInAGame;
 use App\Content\ContentException;
 use App\Content\ContentPackInvalid;
 use App\Content\FileContentSource;
@@ -14,6 +15,8 @@ use Illuminate\Console\Command;
 /** Makes a pack in the database of the content of a folder (the `content/` tree), and with --activate makes it the pack the game reads. */
 final class ImportContent extends Command
 {
+    use RunsInAGame;
+
     protected $signature = 'content:import
         {path? : The content folder (default: the one of the configuration)}
         {--pack=core : The pack inside packs/ of the folder}
@@ -21,7 +24,8 @@ final class ImportContent extends Command
         {--activate : Make it the pack the game reads}
         {--reason= : Why, kept with the activation}
         {--dry-run : Only check that the content can go in}
-        {--if-none-active : Do nothing when a pack is live already (a deploy uses it to install the first one)}';
+        {--if-none-active : Do nothing when a pack is live already (a deploy uses it to install the first one)}
+        {--game= : The slug of the game (the default game when left out)}';
 
     protected $description = 'Make a pack of the content of a folder, and (with --activate) make it live';
 

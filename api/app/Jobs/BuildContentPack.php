@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
+use App\Games\CurrentGame;
 use App\Models\ContentPublication;
 use App\Services\ContentPublisher;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -22,18 +23,21 @@ class BuildContentPack implements ShouldQueue
 
     public function __construct(public readonly int $publicationId) {}
 
-    public function handle(ContentPublisher $publisher): void
+    /** The pack is built in the game that it was asked for in: the worker is for no game, and the content that it reads is that game's. */
+    public function handle(CurrentGame $current): void
     {
-        $publisher->build(ContentPublication::query()->findOrFail($this->publicationId));
+        $publication = ContentPublication::query()->withoutGlobalScopes()->findOrFail($this->publicationId);
+
+        $current->within($publication->game_id, fn () => app(ContentPublisher::class)->build($publication));
     }
 
     /** The worker was stopped or ran out of time, so the publisher did not get to say what happened. */
     public function failed(Throwable $problem): void
     {
-        $publication = ContentPublication::query()->find($this->publicationId);
+        $publication = ContentPublication::query()->withoutGlobalScopes()->find($this->publicationId);
 
         if ($publication?->isOpen()) {
-            app(ContentPublisher::class)->fail($publication, 'job', $problem->getMessage());
+            app(CurrentGame::class)->within($publication->game_id, fn () => app(ContentPublisher::class)->fail($publication, 'job', $problem->getMessage()));
         }
     }
 }

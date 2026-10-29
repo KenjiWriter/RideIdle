@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\RunsInAGame;
 use App\Content\ContentException;
 use App\Content\ContentPackInvalid;
 use App\Models\ContentPack;
@@ -13,9 +14,12 @@ use Illuminate\Console\Command;
 /** Makes a pack of the database the one the game reads. Going back to an earlier pack is the same: the number of the earlier pack. */
 final class ActivateContent extends Command
 {
+    use RunsInAGame;
+
     protected $signature = 'content:activate
         {number : The number of the pack}
-        {--reason= : Why, kept with the activation}';
+        {--reason= : Why, kept with the activation}
+        {--game= : The slug of the game (the default game when left out)}';
 
     protected $description = 'Make a pack of the database the one the game reads (also how to go back to an earlier one)';
 

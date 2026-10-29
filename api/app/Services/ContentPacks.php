@@ -15,6 +15,7 @@ use App\Content\PackValidationResult;
 use App\Content\PackValidator;
 use App\Content\Rules;
 use App\Content\RunInputsFactory;
+use App\Games\CurrentGame;
 use App\Models\ContentActivation;
 use App\Models\ContentDefinition;
 use App\Models\ContentPack;
@@ -37,14 +38,17 @@ final class ContentPacks
 
     private const NUMBER = '/^[0-9]{4}\.[0-9]{1,2}\.[0-9]+$/';
 
-    /** The source the game reads from, by the configuration: the files of the repository, or the pack that is live. */
+    /**
+     * The source the game reads from, by the configuration: the files of the repository, or the pack that is live. The files are the content of the default game; any
+     * other game has its pack in the database only.
+     */
     public function configured(): ContentSource
     {
-        if (config('ride.content_source') !== 'database') {
+        if (config('ride.content_source') !== 'database' && app(CurrentGame::class)->isDefault()) {
             return new FileContentSource((string) config('ride.content_path'));
         }
 
-        return $this->activeSource() ?? throw new ContentException('No content pack is live. Import one with php artisan content:import --activate (a deploy does it the first time, with content:check --install).');
+        return $this->activeSource() ?? throw new ContentException('No content pack is live in this game. Import one with php artisan content:import --activate (a deploy does it the first time, with content:check --install), and for another game than the first give --game.');
     }
 
     public function active(): ?ContentPack

@@ -6,6 +6,7 @@ use App\Exceptions\InsufficientFundsException;
 use App\Exceptions\ProviderAlreadyLinkedException;
 use App\Exceptions\RuleRefusedException;
 use App\Exceptions\RunAlreadyExistsException;
+use App\Http\Middleware\ResolveGame;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -20,7 +21,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->api(append: [
+        // The game comes first: the accounts that the guard looks for and the content that is read are those of the game of the host.
+        $middleware->api(prepend: [
+            ResolveGame::class,
+        ], append: [
             SetLocale::class,
         ]);
     })
