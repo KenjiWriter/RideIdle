@@ -159,4 +159,60 @@ return [
         'provider' => env('PREMIUM_PROVIDER'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Studio parametrów: tryb prosty
+    |--------------------------------------------------------------------------
+    |
+    | Liczby reguł, które studio pokazuje w trybie prostym: te, które ustawiają
+    | tempo i pieniądze gry. To wskazania w dokumencie (gwiazdka to jedna
+    | nazwa: tor, produkt, szczebel), a wybór jest moją decyzją roboczą do
+    | poprawienia. W trybie zaawansowanym są wszystkie liczby.
+    |
+    */
+
+    'studio' => [
+        'simple' => [
+            '/fuel/price_cents_per_liter',
+            '/repair/cost_cents',
+            '/breakdown/chance_per_lap_ppm',
+            '/tow/delay_ms',
+            '/start/head_start_ms',
+            '/clock/night_lap_ppm',
+            '/player/other_cars_xp_ppm',
+            '/player/max_level',
+            '/car/xp_per_lap',
+            '/car/xp_per_level',
+            '/car/reward_ppm_from_tier/*',
+            '/garage/capacity',
+            '/garage/price_cents',
+            '/travel/speed_share_ppm',
+            '/travel/fuel_ml_per_km',
+            '/wear/service/every_km',
+            '/wear/repair_cost_ppm_of_price',
+            '/bots/reward_ppm_by_position/*',
+            '/market/resale_ppm',
+            '/market/scrap_cents_per_kg',
+            '/market/exchange/listings',
+            '/market/exchange/refresh_ms',
+            '/market/storage/units/*/price_cents',
+            '/workshop/max_queue',
+            '/workshop/time_cut_ppm_per_level',
+            '/workshop/upgrade/base_time_ms',
+            '/workshop/upgrade/cost_ppm_of_price',
+            '/workshop/merge/base_ppm/*',
+            '/workshop/bays/price_cents/*',
+            '/workshop/mechanics/price_cents/*',
+            '/tracks/*/min_player_level',
+            '/tracks/*/base_lap_ms',
+            '/tracks/*/fuel_per_lap_ml',
+            '/tracks/*/reward_cents_per_lap',
+            '/tracks/*/xp_per_lap',
+            '/shop/crates/odds/standard/*',
+            '/premium/speedup/minutes_per_coin',
+            '/premium/products/*/coins',
+            '/premium/products/*/price_minor',
+        ],
+    ],
+
 ];
