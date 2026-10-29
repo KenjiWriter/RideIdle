@@ -34,9 +34,6 @@ use Illuminate\Validation\Rule;
  */
 final class GarageController extends Controller
 {
-    /** The slots of a car, in the order the garage shows them. The engine is the one of the body for now. */
-    private const SLOTS = ['tires', 'suspension', 'brakes', 'engine', 'boost', 'gearbox', 'exhaust', 'cooling', 'tank'];
-
     public function __construct(
         private readonly Garage $garage,
         private readonly Workshop $workshop,
@@ -217,8 +214,11 @@ final class GarageController extends Controller
                     // What taking it off costs and takes (the fee of the vulcanizer for tires, where the workshop has no tire machine).
                     'unmount_next' => $this->workshop->unmountQuote($part, $gear),
                 ],
-                'built_in' => $slot === 'engine',
-            ], self::SLOTS),
+                // What the slot is to the formulas of the game (`tires`, `engine`, ...), or null for one that has no role: the client asks the role, not the key.
+                'role' => $this->rules->model()->roleOf($slot),
+                // The engine is the one of the body until a part replaces it.
+                'built_in' => $this->rules->model()->is($slot, 'engine'),
+            ], $this->rules->model()->visibleSlotKeys()),
             'lap_ms' => $run?->config['lap_ms'] ?? null,
             'run' => $run === null ? null : ['id' => $run->id, 'status' => $run->status, 'stop_reason' => $run->stop_reason],
         ];

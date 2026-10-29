@@ -39,7 +39,8 @@ final class BotProfileTable
         foreach (array_keys($this->rules->tracks()) as $track) {
             $byTier = [];
             $tires = $this->rules->trackReferenceTires($track);
-            $mounted = $tires === null ? [] : ['tires' => $tires];
+            $tiresSlot = $this->rules->model()->slotOf('tires');
+            $mounted = $tires === null || $tiresSlot === null ? [] : [$tiresSlot => $tires];
 
             foreach ($this->catalog->vehicles() as $slug => $vehicle) {
                 if (($vehicle['powertrain'] ?? null) !== 'ice') {

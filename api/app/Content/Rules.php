@@ -20,8 +20,11 @@ final class Rules
 {
     private ?PlayerXpCurve $playerCurve = null;
 
-    /** @param array<string, mixed> $data */
-    private function __construct(private readonly array $data) {}
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  GameModel|null  $model  the slots and statistics of the game; the model of the car game when none is given
+     */
+    private function __construct(private readonly array $data, private readonly ?GameModel $model = null) {}
 
     public static function fromConfig(): self
     {
@@ -37,7 +40,7 @@ final class Rules
             $data['shop']['parts'] = array_values(array_diff($data['shop']['parts'], $source->withdrawn()));
         }
 
-        return new self($data);
+        return new self($data, GameModel::fromSource($source));
     }
 
     public static function fromFile(string $path): self
@@ -54,6 +57,12 @@ final class Rules
     public function version(): string
     {
         return $this->data['version'];
+    }
+
+    /** The slots and the statistics of the game (rules/model): what the code asks the roles of, instead of the names of the slots. */
+    public function model(): GameModel
+    {
+        return $this->model ?? GameModel::default();
     }
 
     public function fuelPriceCentsPerLiter(): int
@@ -141,7 +150,7 @@ final class Rules
         $factor = ($surface === 'gravel' ? ($wear['rough_ppm'][$slot] ?? Ppm::ONE) : Ppm::ONE) / Ppm::ONE;
         $factor *= max(0.8, min(2.0, ($powerKw / $this->data['fuel']['reference_power_kw']) ** ($wear['power_exponent_ppm'] / Ppm::ONE)));
 
-        if ($engineLoad > 0 && in_array($slot, ['engine', 'boost', 'gearbox', 'cooling'], true)) {
+        if ($engineLoad > 0 && in_array($this->model()->roleOf($slot), ['engine', 'boost', 'gearbox', 'cooling'], true)) {
             $factor *= 1 + $engineLoad * $wear['load_ppm_per_point'] / Ppm::ONE;
         }
 

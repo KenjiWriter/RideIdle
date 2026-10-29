@@ -33,12 +33,12 @@ describe('making a pack', function () {
         expect($import->created)->toBeTrue()
             ->and($import->pack->number)->toBe('2026.10.0')
             ->and($import->pack->checksum)->toBe(repositoryContent()->checksum())
-            ->and($import->newVersions)->toBe(105)
-            ->and(ContentDefinition::query()->count())->toBe(105)
-            ->and(ContentVersion::query()->count())->toBe(105)
-            ->and($import->pack->versions()->count())->toBe(105)
+            ->and($import->newVersions)->toBe(106)
+            ->and(ContentDefinition::query()->count())->toBe(106)
+            ->and(ContentVersion::query()->count())->toBe(106)
+            ->and($import->pack->versions()->count())->toBe(106)
             ->and(ContentDefinition::query()->where('kind', 'vehicle')->count())->toBe(23)
-            ->and(ContentDefinition::query()->where('kind', 'rules')->pluck('slug')->all())->toEqualCanonicalizing(['economy', 'starter', 'tutorial', 'vocabulary'])
+            ->and(ContentDefinition::query()->where('kind', 'rules')->pluck('slug')->all())->toEqualCanonicalizing(['economy', 'model', 'starter', 'tutorial', 'vocabulary'])
             ->and(ContentDefinition::query()->first()->uid)->toMatch('/^[0-9A-HJKMNP-TV-Z]{26}$/i')
             ->and(json_decode($import->pack->manifest, true)['name'])->toBe('core');
     });
@@ -67,9 +67,9 @@ describe('making a pack', function () {
 
         expect($second->created)->toBeTrue()
             ->and($second->newVersions)->toBe(1)
-            ->and(ContentVersion::query()->count())->toBe(106)
-            ->and(ContentDefinition::query()->count())->toBe(105)
-            ->and($second->pack->versions()->count())->toBe(105)
+            ->and(ContentVersion::query()->count())->toBe(107)
+            ->and(ContentDefinition::query()->count())->toBe(106)
+            ->and($second->pack->versions()->count())->toBe(106)
             ->and(ContentVersion::query()->whereHas('definition', fn ($query) => $query->where('slug', 'rdzak-gt-4'))->orderBy('number')->pluck('number')->all())->toBe([1, 2]);
     });
 
@@ -80,7 +80,7 @@ describe('making a pack', function () {
 
         expect($third->created)->toBeTrue()
             ->and($third->newVersions)->toBe(0)
-            ->and(ContentVersion::query()->count())->toBe(106)
+            ->and(ContentVersion::query()->count())->toBe(107)
             // The same content under another number is another pack with the same checksum.
             ->and($third->pack->checksum)->toBe(ContentPack::query()->where('number', '2026.10.0')->value('checksum'));
     });
@@ -328,7 +328,7 @@ describe('writing a pack out and taking it in', function () {
 
             $manifest = json_decode((string) file_get_contents("{$directory}/packs/core/pack.json"), true);
 
-            expect($files)->toBe(106)
+            expect($files)->toBe(107)
                 ->and($manifest['version'])->toBe('2026.10.0')
                 ->and($manifest['checksum'])->toBe($pack->checksum)
                 ->and(file_get_contents("{$directory}/packs/core/vehicles/rdzak-gt-4.json"))->toBe(file_get_contents(config('ride.content_path').'/packs/core/vehicles/rdzak-gt-4.json'))
@@ -374,7 +374,7 @@ describe('writing a pack out and taking it in', function () {
 
         try {
             expect(fn () => app(ContentExporter::class)->write(contentPacks()->sourceOf($pack), $directory, $pack->number))->toThrow(ContentException::class, 'is not empty')
-                ->and(app(ContentExporter::class)->write(contentPacks()->sourceOf($pack), $directory, $pack->number, overwrite: true))->toBe(106)
+                ->and(app(ContentExporter::class)->write(contentPacks()->sourceOf($pack), $directory, $pack->number, overwrite: true))->toBe(107)
                 ->and(file_get_contents("{$directory}/keep.txt"))->toBe('mine');
         } finally {
             File::deleteDirectory($directory);

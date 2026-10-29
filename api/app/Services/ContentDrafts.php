@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Content\ContentPackInvalid;
 use App\Content\Definitions\DefinitionRefused;
 use App\Content\Definitions\JsonDocument;
+use App\Content\GameModel;
 use App\Content\PackValidationResult;
 use App\Content\PackValidator;
 use App\Models\Admin;
@@ -35,7 +36,9 @@ final class ContentDrafts
     {
         $validator = PackValidator::fromConfig();
         $json = self::encode($document);
-        $result = $validator->validateDefinition($this->folder($kind), $json, $slug);
+        // The model that the document is judged with: the one the draft is, when it is the model, and else the one of the content as it is being worked on.
+        $model = $kind === ContentDefinition::KIND_RULES && $slug === 'model' ? GameModel::fromArray($document) : $this->workingModel();
+        $result = $validator->validateDefinition($this->folder($kind), $json, $slug, $model);
 
         // The rules and the tutorial point at the rest of the content, which is as it is being worked on: that is what they are asked against.
         if ($kind === ContentDefinition::KIND_RULES && $result->isValid()) {
@@ -43,6 +46,15 @@ final class ContentDrafts
         }
 
         return $result;
+    }
+
+    /** The model of the game as it is being worked on (its draft, or what was published last), or the one of the car game when the content has none. */
+    private function workingModel(): GameModel
+    {
+        $definition = ContentDefinition::query()->where('kind', ContentDefinition::KIND_RULES)->where('slug', 'model')->with('latestVersion')->first();
+        $text = $definition?->draft ?? $definition?->latestVersion?->document;
+
+        return $text === null ? GameModel::default() : GameModel::fromArray(json_decode($text, true, 512, JSON_THROW_ON_ERROR));
     }
 
     /**

@@ -1,0 +1,17 @@
+{
+  "schema": 0,
+  "version": "2026.10.4",
+  "slots": [
+    { "key": "tires", "role": "tires" },
+    { "key": "suspension", "role": "suspension" },
+    { "key": "brakes", "role": "brakes" },
+    { "key": "engine", "role": "engine" },
+    { "key": "boost", "role": "boost" },
+    { "key": "gearbox", "role": "gearbox" },
+    { "key": "exhaust" },
+    { "key": "cooling", "role": "cooling" },
+    { "key": "tank", "role": "tank" },
+    { "key": "ecu", "hidden": true }
+  ],
+  "stats": ["accel", "top_speed", "grip", "handling", "braking", "clearance"]
+}

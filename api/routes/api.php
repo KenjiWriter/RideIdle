@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MarketController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MediaController;
+use App\Http\Controllers\Api\V1\ModelController;
 use App\Http\Controllers\Api\V1\PlayerController;
 use App\Http\Controllers\Api\V1\PremiumController;
 use App\Http\Controllers\Api\V1\RunController;
@@ -33,6 +34,7 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/meta/locales', [LocaleController::class, 'index']);
     Route::get('/meta/legal', [LegalController::class, 'show']);
     Route::get('/meta/vocabulary', [VocabularyController::class, 'show']);
+    Route::get('/meta/model', [ModelController::class, 'show']);
 
     // The pictures of the cars and the parts, by the checksum of their bytes.
     Route::get('/media/{name}', [MediaController::class, 'show'])->where('name', ContentImages::ROUTE)->name('media');

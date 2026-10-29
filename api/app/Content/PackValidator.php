@@ -38,6 +38,7 @@ final class PackValidator
         'starter' => 'rules.schema.json',
         'tutorial' => 'tutorial.schema.json',
         'vocabulary' => 'vocabulary.schema.json',
+        'model' => 'model.schema.json',
     ];
 
     private readonly Validator $validator;
@@ -126,12 +127,12 @@ final class PackValidator
 
         $this->warnAboutMissingPictures($pictures, $result);
 
-        foreach (['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json', 'economy' => 'economy.schema.json', 'vocabulary' => 'vocabulary.schema.json'] as $name => $schemaFile) {
+        foreach (['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json', 'economy' => 'economy.schema.json', 'vocabulary' => 'vocabulary.schema.json', 'model' => 'model.schema.json'] as $name => $schemaFile) {
             if (! $source->has("rules/{$name}")) {
-                // A pack with no vocabulary is a pack that does not change the words of the app.
+                // A pack with no vocabulary is a pack that does not change the words of the app, and one with no model is a game of the cars of the first pack.
                 match ($name) {
                     'economy' => $result->addWarning("rules/{$name}.json", '', 'The anchors of the economy are missing: the simulators cannot be run on this content.'),
-                    'vocabulary' => null,
+                    'vocabulary', 'model' => null,
                     default => $result->addError("rules/{$name}.json", '', 'The document is missing.'),
                 };
 
@@ -142,7 +143,8 @@ final class PackValidator
 
             if ($data !== null) {
                 $this->warnAboutMissingRulesTranslations("rules/{$name}.json", $name, $data, $result);
-                $this->checkVocabulary("rules/{$name}.json", $name, $data, $result);
+                $this->checkVocabulary("rules/{$name}.json", $name, $data, $result, GameModel::fromSource($source));
+                $this->checkModelDocument("rules/{$name}.json", $name, $data, $result);
             }
         }
 
@@ -168,8 +170,9 @@ final class PackValidator
      *
      * @param  string  $folder  vehicles or parts
      * @param  string|null  $slug  what the slug of the document has to be, when it is already known
+     * @param  GameModel|null  $model  the model of the content that the draft is made in: the slots a part may be in, and the words that may name a slot
      */
-    public function validateDefinition(string $folder, string $json, ?string $slug = null): PackValidationResult
+    public function validateDefinition(string $folder, string $json, ?string $slug = null, ?GameModel $model = null): PackValidationResult
     {
         $result = new PackValidationResult;
         $relative = rtrim($folder, 's').($slug === null ? '' : " {$slug}");
@@ -184,7 +187,8 @@ final class PackValidator
 
         if ($folder === 'rules') {
             $this->warnAboutMissingRulesTranslations($relative, (string) $slug, $data, $result);
-            $this->checkVocabulary($relative, (string) $slug, $data, $result);
+            $this->checkVocabulary($relative, (string) $slug, $data, $result, $model);
+            $this->checkModelDocument($relative, (string) $slug, $data, $result);
 
             return $result;
         }
@@ -197,6 +201,10 @@ final class PackValidator
 
         if ($folder === 'vehicles') {
             $this->checkVehicleRules($relative, $data, $result);
+        }
+
+        if ($folder === 'parts' && $model !== null) {
+            $this->checkPartAgainstModel($relative, $data, $model, $result);
         }
 
         return $result;
@@ -288,6 +296,7 @@ final class PackValidator
             }
         }
 
+        $this->checkModel($source, $rules, $result);
         $this->checkWorld($rules, $result);
         $this->checkTutorial($source, $parts, $vehicles, $regions, $result);
         $this->checkWithdrawn($source, $parts, $vehicles, $result);
@@ -511,6 +520,11 @@ final class PackValidator
             if ($folder === 'vehicles') {
                 $this->checkVehicleRules($relative, $data, $result);
             }
+
+            // A folder of a pack has no model of its own: the parts are judged against the one of the car game.
+            if ($folder === 'parts') {
+                $this->checkPartAgainstModel($relative, $data, GameModel::default(), $result);
+            }
         }
     }
 
@@ -629,7 +643,7 @@ final class PackValidator
      *
      * @param  array<string, mixed>  $data
      */
-    private function checkVocabulary(string $relative, string $name, array $data, PackValidationResult $result): void
+    private function checkVocabulary(string $relative, string $name, array $data, PackValidationResult $result, ?GameModel $model = null): void
     {
         if ($name !== 'vocabulary') {
             return;
@@ -643,6 +657,11 @@ final class PackValidator
             }
 
             $original = $catalog->all()[$key] ?? null;
+
+            // The name of a slot of the model that the app does not know (a game that has a sail where the car game has tires) is a message of the pack: it has no names to fill in.
+            if ($original === null && $model !== null && preg_match('/^slot\.([a-z][a-z0-9_]*)$/', $key, $slot) === 1 && $model->has($slot[1])) {
+                $original = '';
+            }
 
             if ($original === null) {
                 $result->addError($relative, "/messages/{$key}", MessageCatalog::isServer($key) ? "The server has no text {$key}." : "The web app has no message {$key}.");
@@ -669,6 +688,160 @@ final class PackValidator
                     $forms = substr_count($catalog->text($key, $locale) ?? $original, '|') + 1;
                     $result->addError($relative, $pointer, "The message has {$forms} form(s) of a plural in this language, separated by |: the text must have the same number.");
                 }
+            }
+        }
+    }
+
+    /**
+     * What the schema cannot say about the model: a slot is listed once, a role belongs to one slot, and the game has tires, because the matrix of the tires decides
+     * how a car grips on a surface.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function checkModelDocument(string $relative, string $name, array $data, PackValidationResult $result): void
+    {
+        if ($name !== 'model') {
+            return;
+        }
+
+        $keys = [];
+        $roles = [];
+
+        foreach ($data['slots'] ?? [] as $index => $slot) {
+            if (isset($keys[$slot['key']])) {
+                $result->addError($relative, "/slots/{$index}/key", "The slot {$slot['key']} is listed twice.");
+            }
+
+            $keys[$slot['key']] = true;
+
+            if (isset($slot['role'])) {
+                if (isset($roles[$slot['role']])) {
+                    $result->addError($relative, "/slots/{$index}/role", "The role {$slot['role']} is the one of the slot {$roles[$slot['role']]} already: a role belongs to one slot.");
+                }
+
+                $roles[$slot['role']] ??= $slot['key'];
+            }
+        }
+
+        if (! isset($roles['tires'])) {
+            $result->addError($relative, '/slots', 'A game needs a slot with the role tires: how a car grips on a surface is decided by its tires.');
+        }
+    }
+
+    /**
+     * A part against the model of the game: its slot is one of the model, the parts of the slot that is the tires have a kind of tires, and the parts of the engine
+     * slot an engine; no other part has either. (The schema cannot say it: which slot is which is the model's to say.)
+     *
+     * @param  array<string, mixed>  $part
+     */
+    public function checkPartAgainstModel(string $relative, array $part, GameModel $model, PackValidationResult $result): void
+    {
+        $slot = (string) ($part['slot'] ?? '');
+
+        if (! $model->has($slot)) {
+            $result->addError($relative, '/slot', "The slot {$slot} is not one of the slots of the game: ".implode(', ', $model->slotKeys()).'.');
+
+            return;
+        }
+
+        foreach (['tires' => 'tire_kind', 'engine' => 'engine'] as $role => $field) {
+            $has = array_key_exists($field, $part);
+
+            if ($model->is($slot, $role) && ! $has) {
+                $result->addError($relative, '', "A part of the slot {$slot}, which is the {$role} of the game, needs {$field}.");
+            } elseif (! $model->is($slot, $role) && $has) {
+                $result->addError($relative, "/{$field}", "Only the parts of the slot that has the role {$role} have {$field}: {$slot} is not that slot.");
+            }
+        }
+    }
+
+    /**
+     * The model against the rest of the content: every part is in a slot of the model (and has what its role asks), the rules that are by slot (the life, the time of
+     * a job, the effects of the legendary parts, the crates, the equipment, the affixes, the shares of the economy) name slots of the model, the life and the time of
+     * a job are given for every slot (a part of one that has none would divide by nothing), the stock tires are the tires of the game, and a slot that the app has no
+     * word for is named in the vocabulary.
+     *
+     * @param  array<string, mixed>  $rules
+     */
+    private function checkModel(ContentSource $source, array $rules, PackValidationResult $result): void
+    {
+        $model = GameModel::fromSource($source);
+        $slots = $model->slotKeys();
+
+        foreach ($source->documents('parts') as $slug => $part) {
+            $this->checkPartAgainstModel("parts/{$slug}.json", $part, $model, $result);
+        }
+
+        // A stock pair that is not a part of the pack is said by the references already.
+        $stock = $source->has('parts/'.$rules['stock_tires']) ? ($source->document('parts/'.$rules['stock_tires'])['slot'] ?? null) : null;
+
+        if ($stock !== null && ! $model->is((string) $stock, 'tires')) {
+            $result->addError('rules/starter.json', '/stock_tires', "The stock tires {$rules['stock_tires']} are in the slot {$stock}, which is not the slot with the role tires ({$model->slotOf('tires')}).");
+        }
+
+        $byKey = [
+            '/wear/life_km' => $rules['wear']['life_km'] ?? [],
+            '/wear/rough_ppm' => $rules['wear']['rough_ppm'] ?? [],
+            '/affixes/unique' => $rules['affixes']['unique'] ?? [],
+            '/workshop/base_time_ms' => $rules['workshop']['base_time_ms'] ?? [],
+        ];
+
+        if ($source->has('rules/economy')) {
+            $byKey['/anchors/parts/slot_share'] = $source->document('rules/economy')['anchors']['parts']['slot_share'] ?? [];
+        }
+
+        foreach ($byKey as $pointer => $map) {
+            $file = str_starts_with($pointer, '/anchors') ? 'rules/economy.json' : 'rules/starter.json';
+
+            foreach (array_keys($map) as $slot) {
+                if (! in_array($slot, $slots, true)) {
+                    $result->addError($file, "{$pointer}/{$slot}", "The slot {$slot} is not one of the slots of the game: ".implode(', ', $slots).'.');
+                }
+            }
+        }
+
+        foreach (['/wear/life_km' => 'life of the parts in km', '/workshop/base_time_ms' => 'time of a job'] as $pointer => $what) {
+            foreach (array_diff($slots, array_keys($byKey[$pointer])) as $slot) {
+                $result->addError('rules/starter.json', $pointer, "The slot {$slot} has no {$what}: the rules give it for every slot of the game.");
+            }
+        }
+
+        $lists = ['/shop/crates/slots' => $rules['shop']['crates']['slots'] ?? []];
+
+        foreach ($rules['affixes']['definitions'] ?? [] as $key => $definition) {
+            $lists["/affixes/definitions/{$key}/slots"] = $definition['slots'] ?? [];
+        }
+
+        foreach ($rules['workshop']['equipment'] ?? [] as $key => $item) {
+            $lists["/workshop/equipment/{$key}/slots"] = $item['slots'] ?? [];
+        }
+
+        foreach ($lists as $pointer => $named) {
+            foreach ($named as $index => $slot) {
+                if (! in_array($slot, $slots, true)) {
+                    $result->addError('rules/starter.json', "{$pointer}/{$index}", "The slot {$slot} is not one of the slots of the game: ".implode(', ', $slots).'.');
+                }
+            }
+        }
+
+        $this->warnAboutUnnamedSlots($source, $model, $result);
+    }
+
+    /** A slot that neither the app nor the vocabulary of the pack has a name for would be shown as its key in the texts of the game (a hidden one is not shown). */
+    private function warnAboutUnnamedSlots(ContentSource $source, GameModel $model, PackValidationResult $result): void
+    {
+        $catalog = MessageCatalog::fromConfig();
+
+        if (! $catalog->available()) {
+            return;
+        }
+
+        $named = $source->has('rules/vocabulary') ? array_keys($source->document('rules/vocabulary')['messages'] ?? []) : [];
+
+        foreach ($model->slots() as $index => ['key' => $slot, 'hidden' => $hidden]) {
+            // A hidden slot is not shown, so it needs no name.
+            if (! $hidden && ! $catalog->has("slot.{$slot}") && ! in_array("slot.{$slot}", $named, true)) {
+                $result->addWarning('rules/model.json', "/slots/{$index}/key", "The slot {$slot} has no name: the app knows the names of the slots of the car game only. Add slot.{$slot} to the vocabulary.");
             }
         }
     }

@@ -400,7 +400,8 @@ final class Tutorial
     private function tiresMounted(int $userId, string $kind): bool
     {
         $car = $this->garage->carOf($userId);
-        $slug = $car?->mountedSlugs()['tires'] ?? null;
+        $tiresSlot = $this->rules->model()->slotOf('tires');
+        $slug = $tiresSlot === null ? null : ($car?->mountedSlugs()[$tiresSlot] ?? null);
 
         return $slug !== null && ($this->catalog->part($slug)['tire_kind'] ?? null) === $kind;
     }

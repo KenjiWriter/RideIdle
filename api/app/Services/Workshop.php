@@ -461,7 +461,7 @@ final class Workshop
         }
 
         $quote = $this->slotJobQuote(WorkshopJob::KIND_UNMOUNT, $part, $gear, null, $this->script->arrangements((int) $part->user_id)[WorkshopJob::KIND_UNMOUNT] ?? null);
-        $car = $part->slot === 'engine' && $part->car_id !== null ? Car::query()->find($part->car_id) : null;
+        $car = $this->rules->model()->is($part->slot, 'engine') && $part->car_id !== null ? Car::query()->find($part->car_id) : null;
 
         return $car === null ? $quote : [...$quote, 'locked' => $this->requirements->lackWithoutEngine($car)];
     }
@@ -526,7 +526,7 @@ final class Workshop
         }
 
         // The booster on the car may need more cylinders than the factory engine that the car goes back to has.
-        $lack = $part->slot === 'engine' ? $this->requirements->lackWithoutEngine($car) : null;
+        $lack = $this->rules->model()->is($part->slot, 'engine') ? $this->requirements->lackWithoutEngine($car) : null;
 
         if ($lack !== null) {
             throw new RuleRefusedException($this->lackCode($lack['reason']), $this->lackParams($lack));

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rideidle.local/schema/model.schema.json",
+  "title": "The model of the game (content/rules/model.json, schema v0)",
+  "description": "What a car is made of and what the garage shows of it: the slots that parts go into, and the statistics of a car in the order the screens list them. A slot has a key (the name that the parts, the rules and the cars of the players use for it; its words, such as 'hull' where the car game says 'tires', are in the vocabulary as slot.<key>), and may have a role: the roles are what the formulas of the game know (the tires decide how the car grips, the engine what it weighs and how fast it is, the booster how it starts, the cooling what the booster loses, the gearbox its top speed and launch, the tank its range, the suspension its handling and clearance, the brakes its braking), so a slot is the tires of the game whatever it is called. A slot without a role holds parts whose statistics the formulas already read (the power_mult of an exhaust). A hidden slot can hold parts and has its place in the rules, but the garage does not list it. The statistics are the ones that the formulas make; a pack may leave some out of the screens and put the others in another order, but cannot add one (that is the formulas, which are not data yet).",
+  "type": "object",
+  "properties": {
+    "schema": { "const": 0 },
+    "version": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$" },
+    "slots": {
+      "description": "The slots in the order that the garage and the shop list them.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 24,
+      "items": { "$ref": "#/$defs/slot" }
+    },
+    "stats": {
+      "description": "The statistics of a car that the screens show, in their order.",
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "enum": ["accel", "top_speed", "grip", "handling", "braking", "clearance"] }
+    }
+  },
+  "required": ["schema", "version", "slots", "stats"],
+  "additionalProperties": false,
+  "$defs": {
+    "slot": {
+      "type": "object",
+      "properties": {
+        "key": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,31}$" },
+        "role": { "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "cooling", "tank"] },
+        "hidden": { "type": "boolean" }
+      },
+      "required": ["key"],
+      "additionalProperties": false
+    }
+  }
+}

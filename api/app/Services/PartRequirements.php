@@ -30,7 +30,8 @@ final class PartRequirements
 
     /**
      * What is on the car, or on its way onto it, that the requirements ask about: the engine part (null for the factory engine) and the booster (null for none),
-     * as definitions. The shop and the garage ask once for a car and check every part against it.
+     * as definitions, by the role of their slots (`engine` and `boost`, whatever the slots are called in the game). The shop and the garage ask once for a car and
+     * check every part against it.
      *
      * @return array{engine: array<string, mixed>|null, boost: array<string, mixed>|null}
      */
@@ -42,11 +43,12 @@ final class PartRequirements
             ->whereIn('kind', [WorkshopJob::KIND_MOUNT, WorkshopJob::KIND_UNMOUNT])
             ->with('part')
             ->get();
-        $mounted = Part::query()->where('car_id', $car->id)->whereIn('mounted_slot', ['engine', 'boost'])->get()->keyBy('mounted_slot');
+        $slots = array_filter(['engine' => $this->rules->model()->slotOf('engine'), 'boost' => $this->rules->model()->slotOf('boost')]);
+        $mounted = Part::query()->where('car_id', $car->id)->whereIn('mounted_slot', array_values($slots))->get()->keyBy('mounted_slot');
 
-        $state = [];
+        $state = ['engine' => null, 'boost' => null];
 
-        foreach (['engine', 'boost'] as $slot) {
+        foreach ($slots as $role => $slot) {
             $incoming = $jobs->first(fn (WorkshopJob $job): bool => $job->kind === WorkshopJob::KIND_MOUNT && $job->part?->slot === $slot);
             $part = $incoming?->part;
 
@@ -55,7 +57,7 @@ final class PartRequirements
                 $part = $onCar;
             }
 
-            $state[$slot] = $part === null ? null : $this->catalog->part($part->part_slug);
+            $state[$role] = $part === null ? null : $this->catalog->part($part->part_slug);
         }
 
         return $state;

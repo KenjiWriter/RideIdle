@@ -64,7 +64,8 @@ final class RunInputsFactory
         }
 
         $tireKind = $this->tireKind($mounted);
-        $tiresEntry = $mounted['tires'] ?? null;
+        $tiresSlot = $this->slotOf('tires');
+        $tiresEntry = $tiresSlot === null ? null : ($mounted[$tiresSlot] ?? null);
         $tireAffixes = is_array($tiresEntry) ? (array) ($tiresEntry['affixes'] ?? []) : [];
         $tireCondition = $this->rules->conditionStatPpm($this->rules->stagedConditionPpm(is_array($tiresEntry) ? (int) ($tiresEntry['wear'] ?? 0) : 0));
         $surfaceLossPpm = $this->uniquePpm($mounted, 'tires', 'surface_loss');
@@ -131,13 +132,15 @@ final class RunInputsFactory
     }
 
     /**
-     * The amount of the special unique effect of the part in the slot of the car, in ppm, when it is a legendary part of a slot with that effect: 0 otherwise.
+     * The amount of the special unique effect of the part in the slot of the car that has the role, in ppm, when it is a legendary part of a slot with that effect: 0
+     * otherwise.
      *
      * @param  array<string, string|array{slug: string, rarity: int, upgrade?: int, wear?: int, affixes?: array<string, int>}>  $mounted  the parts on the car, by slot
      */
-    private function uniquePpm(array $mounted, string $slot, string $special): int
+    private function uniquePpm(array $mounted, string $role, string $special): int
     {
-        $entry = $mounted[$slot] ?? null;
+        $slot = $this->slotOf($role);
+        $entry = $slot === null ? null : ($mounted[$slot] ?? null);
 
         return is_array($entry) ? $this->rules->uniqueSpecialPpm($slot, Rarity::tryFrom((int) $entry['rarity']) ?? Rarity::Common, $special) : 0;
     }
@@ -254,7 +257,7 @@ final class RunInputsFactory
      */
     private function enginePower(array $vehicle, array $parts): float
     {
-        return (float) ($parts['engine']['stats']['power_kw'] ?? $vehicle['power_kw']);
+        return (float) ($this->partOf($parts, 'engine')['stats']['power_kw'] ?? $vehicle['power_kw']);
     }
 
     /**
@@ -266,11 +269,13 @@ final class RunInputsFactory
      */
     private function engineMassChange(array $vehicle, array $parts): float
     {
-        if (! isset($parts['engine'])) {
+        $engine = $this->partOf($parts, 'engine');
+
+        if ($engine === null) {
             return 0.0;
         }
 
-        return (float) $parts['engine']['stats']['engine_mass_kg'] - $this->rules->engineMassKg($vehicle['engine']['layout'], (float) $vehicle['engine']['displacement_l']);
+        return (float) $engine['stats']['engine_mass_kg'] - $this->rules->engineMassKg($vehicle['engine']['layout'], (float) $vehicle['engine']['displacement_l']);
     }
 
     /**
@@ -283,12 +288,13 @@ final class RunInputsFactory
     private function powerMultiplier(array $parts, bool $withBooster = true): float
     {
         $multiplier = 1.0;
-        $intercooler = isset($parts['boost']) ? (float) ($parts['cooling']['stats']['boost_gain'] ?? 0.0) : 0.0;
+        $boostSlot = $this->slotOf('boost');
+        $intercooler = $this->partOf($parts, 'boost') !== null ? (float) ($this->partOf($parts, 'cooling')['stats']['boost_gain'] ?? 0.0) : 0.0;
 
         foreach ($parts as $slot => $part) {
             $value = (float) ($part['stats']['power_mult'] ?? 1.0);
 
-            if ($slot === 'boost') {
+            if ($slot === $boostSlot) {
                 $multiplier *= $withBooster ? 1.0 + ($value - 1.0) * (1.0 + $intercooler) : 1.0;
             } else {
                 $multiplier *= $value;
@@ -308,9 +314,10 @@ final class RunInputsFactory
     private function engineLoad(array $parts): int
     {
         $load = 0.0;
+        $boosted = $this->partOf($parts, 'boost') !== null;
 
         foreach ($parts as $part) {
-            if (isset($part['stats']['boost_gain']) && ! isset($parts['boost'])) {
+            if (isset($part['stats']['boost_gain']) && ! $boosted) {
                 continue;
             }
 
@@ -360,7 +367,7 @@ final class RunInputsFactory
      */
     public function tankMl(string $carSlug, array $mounted = []): int
     {
-        $tank = $this->parts($mounted)['tank']['stats']['capacity_l'] ?? $this->vehicle($carSlug)['tank_l'];
+        $tank = $this->partOf($this->parts($mounted), 'tank')['stats']['capacity_l'] ?? $this->vehicle($carSlug)['tank_l'];
 
         return (int) round($tank * 1000);
     }
@@ -408,7 +415,10 @@ final class RunInputsFactory
     {
         $vehicle = $this->vehicle($carSlug);
         $parts = $this->parts($mounted);
-        $tires = $parts['tires'] ?? $this->stockTires();
+        $tires = $this->partOf($parts, 'tires') ?? $this->stockTires();
+        $suspension = $this->partOf($parts, 'suspension');
+        $gearbox = $this->partOf($parts, 'gearbox');
+        $boost = $this->partOf($parts, 'boost');
 
         $powerMultiplier = $this->powerMultiplier($parts);
         $enginePower = $this->enginePower($vehicle, $parts);
@@ -416,8 +426,8 @@ final class RunInputsFactory
         // The top speed of the body grows with the cube root of the power gained over the factory engine, by the engine and by the booster alike.
         $topSpeed = $vehicle['top_speed_kmh'] * ($power / $vehicle['power_kw']) ** (1 / 3);
 
-        if (isset($parts['gearbox']['stats']['top_speed_cap_kmh'])) {
-            $topSpeed = min($topSpeed, (float) $parts['gearbox']['stats']['top_speed_cap_kmh']);
+        if (isset($gearbox['stats']['top_speed_cap_kmh'])) {
+            $topSpeed = min($topSpeed, (float) $gearbox['stats']['top_speed_cap_kmh']);
         }
 
         // The parts that weigh something (the intercoolers and the radiators, in kilograms, which may be less than nothing) are added to the body, and an engine
@@ -428,7 +438,7 @@ final class RunInputsFactory
         // The dampers of a legendary suspension take a share off what a heavy body costs the handling.
         $handlingMassFactor = $massFactor < 1.0 ? 1.0 - (1.0 - $massFactor) * (1.0 - $this->uniquePpm($mounted, 'suspension', 'mass_penalty') / Ppm::ONE) : $massFactor;
         // What the booster takes off the acceleration for its lag, and the launch of the gearbox adds to it or takes off (in percent).
-        $startFactor = $this->rules->lagFactor((float) ($parts['boost']['stats']['lag'] ?? 0.0) * (1.0 - $this->uniquePpm($mounted, 'boost', 'lag_cut') / Ppm::ONE)) * (1.0 + (float) ($parts['gearbox']['stats']['launch'] ?? 0.0) / 100.0);
+        $startFactor = $this->rules->lagFactor((float) ($boost['stats']['lag'] ?? 0.0) * (1.0 - $this->uniquePpm($mounted, 'boost', 'lag_cut') / Ppm::ONE)) * (1.0 + (float) ($gearbox['stats']['launch'] ?? 0.0) / 100.0);
         // The booster burns more through its own `fuel_mult`, so its gain is not counted again in the power that fuel use grows with.
         $fuelPower = $enginePower * $this->powerMultiplier($parts, withBooster: false);
         $fuelMultiplier = array_product(array_map(fn (array $part): float => (float) ($part['stats']['fuel_mult'] ?? 1.0) * (Ppm::ONE - $this->rules->affixCutPpm($part['affixes'] ?? [], 'fuel')) / Ppm::ONE, $parts));
@@ -447,9 +457,9 @@ final class RunInputsFactory
                 'accel' => $power / ($mass / 1000) * $startFactor * $driveStart * $kept,
                 'top_speed' => $topSpeed * $kept,
                 'grip' => (float) $tires['stats']['grip'] * $kept,
-                'handling' => $this->average($tires['stats']['handling'], $parts['suspension']['stats']['handling'] ?? null) * $handlingMassFactor * $driveHandling * $kept,
-                'braking' => $this->average($tires['stats']['braking'], $parts['brakes']['stats']['braking'] ?? null) * $massFactor * $kept,
-                'clearance' => $this->average($vehicle['clearance'], $parts['suspension']['stats']['clearance'] ?? null),
+                'handling' => $this->average($tires['stats']['handling'], $suspension['stats']['handling'] ?? null) * $handlingMassFactor * $driveHandling * $kept,
+                'braking' => $this->average($tires['stats']['braking'], $this->partOf($parts, 'brakes')['stats']['braking'] ?? null) * $massFactor * $kept,
+                'clearance' => $this->average($vehicle['clearance'], $suspension['stats']['clearance'] ?? null),
             ],
             fuelUseMultiplier: (1.0 + self::FUEL_USE_POWER_SHARE * $fuelPower / $this->rules->fuelReferencePowerKw()) / self::FUEL_USE_BASE * $fuelMultiplier * $drivetrain['fuel'],
         );
@@ -494,9 +504,28 @@ final class RunInputsFactory
      */
     private function tireKind(array $mounted): string
     {
-        $tires = $this->parts($mounted)['tires'] ?? $this->stockTires();
+        $tires = $this->partOf($this->parts($mounted), 'tires') ?? $this->stockTires();
 
         return $tires['tire_kind'] ?? throw new InvalidArgumentException("The tires {$tires['slug']} have no kind, and the matrix cannot say how they grip.");
+    }
+
+    /** The key of the slot that has the role in this game: what the formulas ask for, so that a slot is the tires of the game whatever it is called. Null when the game has none. */
+    private function slotOf(string $role): ?string
+    {
+        return $this->rules->model()->slotOf($role);
+    }
+
+    /**
+     * The definition of the part that is in the slot that has the role, or null when there is none (or the game has no such slot).
+     *
+     * @param  array<string, array<string, mixed>>  $parts  the definitions of the mounted parts, by slot
+     * @return array<string, mixed>|null
+     */
+    private function partOf(array $parts, string $role): ?array
+    {
+        $slot = $this->slotOf($role);
+
+        return $slot === null ? null : ($parts[$slot] ?? null);
     }
 
     /** @return array<string, mixed> */

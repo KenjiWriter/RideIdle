@@ -11,7 +11,9 @@
       "$ref": "common.schema.json#/$defs/image"
     },
     "slot": {
-      "enum": ["tires", "suspension", "brakes", "engine", "boost", "gearbox", "exhaust", "cooling", "tank", "ecu"]
+      "description": "The key of a slot of the model of the game (rules/model): which ones there are is the model's to say, so the pack checks it, not this schema. The role of the slot decides the rest: the parts of the slot that is the tires have a tire_kind, and the parts of the engine slot an engine; no other part has either.",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{0,31}$"
     },
     "tire_kind": {
       "description": "Which column of the tire matrix of the rules the tires use: how well they grip on each surface. Only tires have it, and every tire has it.",
@@ -64,17 +66,5 @@
     }
   },
   "required": ["slug", "name", "slot", "tier", "price_cents", "stats"],
-  "additionalProperties": false,
-  "allOf": [
-    {
-      "if": { "properties": { "slot": { "const": "tires" } }, "required": ["slot"] },
-      "then": { "required": ["tire_kind"] },
-      "else": { "not": { "required": ["tire_kind"] } }
-    },
-    {
-      "if": { "properties": { "slot": { "const": "engine" } }, "required": ["slot"] },
-      "then": { "required": ["engine"] },
-      "else": { "not": { "required": ["engine"] } }
-    }
-  ]
+  "additionalProperties": false
 }
