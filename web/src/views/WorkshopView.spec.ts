@@ -5,6 +5,7 @@ import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { NOTHING_TO_REPAIR, NOW, aCar, aGarage, aGear, aJob, aMergeOffer, aMergeResult, aMountedPart, aPart, aRepairStep, aService, anUpgradeStep } from '@/test/garageFixtures'
+import { setModel } from '@/model'
 import { mountView } from '@/test/mountView'
 import { useRunStore } from '@/stores/run'
 import { aGoal, aTutorial } from '@/test/tutorialFixtures'
@@ -1635,5 +1636,74 @@ describe('WorkshopView', () => {
       expect(wrapper.find('[data-test="put-on-info-21"]').exists()).toBe(false)
       expect(wrapper.find('[data-test="take-off-info-11"]').exists()).toBe(false)
     })
+  })
+})
+
+describe('WorkshopView in a game with another model', () => {
+  const hull = aPart({ id: 41, slug: 'offroad-hull-t2', name: 'Off-road hull', slot: 'hull', tier: 2, tire_kind: 'offroad' })
+  const frame = aPart({ id: 30, slug: 'light-frame-t1', name: 'Light frame', slot: 'frame', tier: 1 })
+  const street = aPart({ id: 42, slug: 'street-hull-t2', name: 'Street hull', slot: 'hull', tier: 2, tire_kind: 'street' })
+
+  beforeEach(async () => {
+    localStorage.clear()
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval', 'setTimeout', 'clearTimeout'] })
+    vi.setSystemTime(new Date(NOW))
+    await setLocale('en')
+    storeToken('device-token')
+    // The tires are the hull, and the game lists two of the statistics.
+    setModel({
+      slots: [
+        { key: 'hull', role: 'tires', hidden: false },
+        { key: 'frame', role: 'suspension', hidden: false },
+      ],
+      stats: ['grip', 'accel'],
+    })
+  })
+
+  afterEach(() => {
+    setModel()
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
+
+  function open(inventory: ReturnType<typeof aPart>[], tireKind: string | null) {
+    serve({
+      'GET /api/v1/garage': () => respond(200, aGarage({ inventory })),
+      'GET /api/v1/tutorial': () => respond(200, aTutorial(null, { goal: aGoal({ target: 'mount', tire_kind: tireKind }) })),
+      'GET /api/v1/runs/current': noRun,
+    })
+
+    return mountView(WorkshopView, '/workshop')
+  }
+
+  it('points the tutorial at the first part of the slot that has the role of the tires, not at the first part, and not at a slot that is only called tires', async () => {
+    const wrongTires = aPart({ id: 50, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2 })
+
+    const { wrapper } = await open([frame, wrongTires, hull], null)
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-tutorial="mount"]')).toHaveLength(1)
+    expect(wrapper.get('[data-tutorial="mount"]').attributes('data-test')).toBe('put-on-41')
+  })
+
+  it('points a step that names a kind of tires at the part of that kind in the slot of the tires, and at nothing when there is none', async () => {
+    const found = await open([street, frame, hull], 'offroad')
+    await flushPromises()
+
+    expect(found.wrapper.get('[data-tutorial="mount"]').attributes('data-test')).toBe('put-on-41')
+
+    const none = await open([street, frame], 'offroad')
+    await flushPromises()
+
+    expect(none.wrapper.find('[data-tutorial="mount"]').exists()).toBe(false)
+  })
+
+  it('shows the statistics that the model lists, in its order', async () => {
+    const { wrapper } = await open([hull], null)
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-test^="stat-"]').map((row) => row.attributes('data-test'))).toEqual(['stat-grip', 'stat-accel'])
   })
 })

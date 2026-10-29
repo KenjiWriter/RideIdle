@@ -12,17 +12,23 @@ import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
+import { useModel } from '@/model'
 import { useGarageStore } from '@/stores/garage'
 import { useTutorialStore } from '@/stores/tutorial'
 
-/** The slots in the order of the board: the parts that wear out first, then the engine group and the tank. */
-const SLOT_ORDER = ['tires', 'suspension', 'brakes', 'exhaust', 'engine', 'boost', 'gearbox', 'cooling', 'tank']
+/**
+ * Where a slot stands on the board, by what it is to the formulas: the parts that wear out first (the tires, the suspension, the brakes), then the slots that have no
+ * role (the exhaust), then the engine group and the tank. Slots of the same rank stay in the order of the model.
+ */
+const BOARD_RANK: Record<string, number> = { tires: 0, suspension: 1, brakes: 2, engine: 4, boost: 5, gearbox: 6, cooling: 7, tank: 8 }
+const NO_ROLE_RANK = 3
 
 /** Under this much of its life a part is marked as needing a repair: it gives a fifth less than a new one (0.6 + 0.4 x 0.5 = 80%). */
 const NEEDS_REPAIR_PERCENT = 50
 
 const { t } = useI18n()
 const { number, money } = useFormat()
+const { roleOf } = useModel()
 const store = useGarageStore()
 const tutorial = useTutorialStore()
 const { serviceLine, breakdownLine } = useServiceLine()
@@ -42,9 +48,12 @@ const servicing = computed(() => jobs.value.some((job) => job.kind === 'service'
 
 /** The slots of the car in the order of the board. */
 const rows = computed<GarageSlot[]>(() => {
-  const slots = car.value?.slots ?? []
+  const rank = (row: GarageSlot): number => BOARD_RANK[row.role ?? roleOf(row.slot) ?? ''] ?? NO_ROLE_RANK
 
-  return SLOT_ORDER.map((slot) => slots.find((row) => row.slot === slot)).filter((row): row is GarageSlot => row !== undefined)
+  return (car.value?.slots ?? [])
+    .map((row, index) => ({ row, index }))
+    .sort((a, b) => rank(a.row) - rank(b.row) || a.index - b.index)
+    .map(({ row }) => row)
 })
 
 /** The parts that have worn, the most worn first. */

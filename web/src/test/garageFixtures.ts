@@ -81,7 +81,7 @@ export function aCar(overrides: Partial<GarageCar> = {}, mounted: Record<string,
     // One breakdown in about 1 000 laps (about 21 hours of laps of 75 s).
     breakdown: { chance_ppm: 1_000 },
     // A part that sits on the car comes with the next step of its upgrade and of its repair, as the server sends it.
-    slots: SLOTS.map((slot) => ({ slot, part: mounted[slot] ? { upgrade_next: anUpgradeStep(), repair_next: NOTHING_TO_REPAIR, ...mounted[slot] } : null, built_in: slot === 'engine' })),
+    slots: SLOTS.map((slot) => ({ slot, role: slot === 'exhaust' ? null : slot, part: mounted[slot] ? { upgrade_next: anUpgradeStep(), repair_next: NOTHING_TO_REPAIR, ...mounted[slot] } : null, built_in: slot === 'engine' })),
     lap_ms: { dry: 75_000 },
     run: { id: 7, status: 'running', stop_reason: null },
     ...overrides,

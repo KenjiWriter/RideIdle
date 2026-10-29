@@ -8,6 +8,7 @@ import { readSeen, storeSeen } from '@/features/run/seen'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { aCar, aGarage, aMountedPart, aPart, aService } from '@/test/garageFixtures'
+import { setModel } from '@/model'
 import { mountView } from '@/test/mountView'
 import { aStep, aTutorial } from '@/test/tutorialFixtures'
 
@@ -996,5 +997,36 @@ describe('GarageView', () => {
     expect(wrapper.get('[data-test="slot-tires"] [data-test="rarity"]').text()).toBe('Epic')
     expect(wrapper.get('[data-test="slot-brakes"]').classes().filter((name) => /^r\d$/.test(name))).toEqual([])
     expect(wrapper.find('[data-test="slot-brakes"] [data-test="rarity"]').exists()).toBe(false)
+  })
+})
+
+describe('GarageView in a game with another model', () => {
+  beforeEach(async () => {
+    localStorage.clear()
+    localStorage.setItem('ride.linkPrompt', '1')
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+    await setLocale('en')
+    storeToken('device-token')
+    setModel({ slots: [{ key: 'drive', role: 'gearbox', hidden: false }], stats: ['grip', 'accel'] })
+  })
+
+  afterEach(() => {
+    setModel()
+    mountedScreens.splice(0).forEach((screen) => screen.unmount())
+    vi.unstubAllGlobals()
+  })
+
+  it('shows only the statistics that the model lists, in its order, and finds the limit of the gearbox in the slot that has the role', async () => {
+    const drive = aMountedPart({ id: 31, slug: 'drive-1', name: 'Drive', slot: 'drive', stats: { top_speed_cap_kmh: 190 } })
+    serve(() => respond(200, runAnswer(aRun())), undefined, {
+      'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ slots: [{ slot: 'drive', role: 'gearbox', part: drive, built_in: false }] }) })),
+    })
+
+    const { wrapper } = await show()
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-test^="stat-"]').map((row) => row.attributes('data-test'))).toEqual(['stat-grip', 'stat-accel'])
+    expect(wrapper.get('[data-test="gearbox-limit"]').text()).toBe('Gearbox limit: 190 km/h')
   })
 })

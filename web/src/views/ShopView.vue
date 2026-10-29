@@ -17,6 +17,7 @@ import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { useFormat } from '@/i18n/useFormat'
+import { useModel } from '@/model'
 import { useGarageStore } from '@/stores/garage'
 import { useTutorialStore } from '@/stores/tutorial'
 
@@ -59,14 +60,14 @@ async function open(): Promise<void> {
 
 onMounted(open)
 
-/** The slots in the order the garage shows them: the parts of the shop are listed under their slot. */
-const SLOT_ORDER = ['tires', 'suspension', 'brakes', 'engine', 'boost', 'gearbox', 'exhaust', 'cooling', 'tank', 'ecu']
+/** The slots in the order of the model of the game (the garage shows them in it): the parts of the shop are listed under their slot. */
+const { slotKeys } = useModel()
 
 /** The slot the driver narrows the list of parts to, or all of them. */
 const slotFilter = ref<string>('all')
 
 /** The slots that have a part for sale, in order. */
-const partSlots = computed(() => SLOT_ORDER.filter((slot) => store.offers.some((offer) => offer.slot === slot)))
+const partSlots = computed(() => slotKeys.value.filter((slot) => store.offers.some((offer) => offer.slot === slot)))
 
 /** The parts for sale by slot: the shop grows as the car rises, so the list is told apart by what the parts are. */
 const offerGroups = computed(() =>

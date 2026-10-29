@@ -5,6 +5,7 @@ import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { NOTHING_TO_REPAIR, NOW, aCar, aGarage, aGear, aJob, aMountedPart, aRepairStep, aService } from '@/test/garageFixtures'
+import { setModel } from '@/model'
 import { mountView } from '@/test/mountView'
 import { aTutorial } from '@/test/tutorialFixtures'
 
@@ -190,5 +191,40 @@ describe('ConditionView', () => {
     await flushPromises()
 
     expect(wrapper.get('[data-test="back"]').attributes('href')).toBe('/garage')
+  })
+})
+
+describe('ConditionView in a game with another model', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+    setModel({
+      slots: [
+        { key: 'reactor', role: 'engine', hidden: false },
+        { key: 'sails', role: null, hidden: false },
+        { key: 'hull', role: 'tires', hidden: false },
+      ],
+      stats: ['grip'],
+    })
+  })
+
+  afterEach(() => {
+    setModel()
+    vi.unstubAllGlobals()
+  })
+
+  it('lists the slots of the car by what they are to the game: the parts that wear out first, the slots without a role, then the engine group', async () => {
+    const slots = [
+      { slot: 'reactor', role: 'engine', part: null, built_in: true },
+      { slot: 'sails', role: null, part: null, built_in: false },
+      { slot: 'hull', role: 'tires', part: null, built_in: false },
+    ]
+    serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: wornCar({ slots }) })), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(ConditionView, '/garage/condition')
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-test^="row-"]').map((row) => row.attributes('data-test'))).toEqual(['row-hull', 'row-sails', 'row-reactor'])
   })
 })

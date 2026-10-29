@@ -12,6 +12,7 @@ import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
+import { useModel } from '@/model'
 import { useFleetStore } from '@/stores/fleet'
 import { useMapStore } from '@/stores/map'
 import { useRunStore } from '@/stores/run'
@@ -26,8 +27,8 @@ const MIN_ASK_MS = 3_000
 /** The part of the board of the map that is drawn: the cities lie between these rows, and the names are under them. */
 const BOARD = { width: 390, top: 60, height: 300 }
 
-/** The order the statistics are listed in. */
-const STATS = ['accel', 'top_speed', 'grip', 'handling', 'braking', 'clearance']
+/** The statistics that the screens show, in the order of the model of the game. */
+const { stats: STATS } = useModel()
 
 /** The icons are the ones of the design canvas (24 x 24, drawn with a line). */
 const ICONS = {
@@ -140,7 +141,7 @@ const demands = computed(() => {
   const demand = selected.value?.track.demand ?? {}
   const most = Math.max(1, ...Object.values(demand))
 
-  return STATS.filter((stat) => demand[stat]).map((stat) => ({ stat, value: demand[stat] ?? 0, fill: Math.round(((demand[stat] ?? 0) / most) * 100) }))
+  return STATS.value.filter((stat) => demand[stat]).map((stat) => ({ stat, value: demand[stat] ?? 0, fill: Math.round(((demand[stat] ?? 0) / most) * 100) }))
 })
 
 /** Why the car cannot go to the selected city, or null when it can. The server says it again, with the same words, when asked. */

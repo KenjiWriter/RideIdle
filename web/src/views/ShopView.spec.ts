@@ -5,6 +5,7 @@ import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { aCrates, anOpenedCrate, aPart, anOffer } from '@/test/garageFixtures'
+import { setModel } from '@/model'
 import { mountView } from '@/test/mountView'
 import { aTutorial } from '@/test/tutorialFixtures'
 
@@ -643,5 +644,51 @@ describe('ShopView', () => {
       expect(offer.get('[data-test="needs-level"]').text()).toContain('Needs car level 15')
       expect(offer.get('[data-test="blocked"]').text()).toBe('This car has 4 cylinders, the part needs 6')
     })
+  })
+})
+
+describe('ShopView in a game with another model', () => {
+  beforeEach(async () => {
+    localStorage.clear()
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+    await setLocale('en')
+    storeToken('device-token')
+    setModel({
+      slots: [
+        { key: 'sails', role: null, hidden: false },
+        { key: 'hull', role: 'tires', hidden: false },
+      ],
+      stats: ['grip'],
+    })
+  })
+
+  afterEach(() => {
+    setModel()
+    vi.unstubAllGlobals()
+  })
+
+  it('lists the parts under the slots of the model, in its order, and leaves out a slot that the game does not have', async () => {
+    serve({
+      'GET /api/v1/shop': () =>
+        respond(200, {
+          data: {
+            crates: aCrates(),
+            parts: [
+              anOffer({ slug: 'plain-hull-t1', name: 'Plain hull', slot: 'hull', tier: 1 }),
+              anOffer({ slug: 'old-exhaust-t1', name: 'Old exhaust', slot: 'exhaust', tier: 1 }),
+              anOffer({ slug: 'square-sail-t1', name: 'Square sail', slot: 'sails', tier: 1 }),
+            ],
+            car: { id: 5, level: 3 },
+          },
+          wallet: { cash_cents: 90_000, xp: 0 },
+        }),
+    })
+
+    const { wrapper } = await mountView(ShopView, '/shop')
+    await flushPromises()
+
+    expect(wrapper.findAll('section[data-test^="group-"]').map((group) => group.attributes('data-test'))).toEqual(['group-sails', 'group-hull'])
+    expect(wrapper.find('[data-test="offer-old-exhaust-t1"]').exists()).toBe(false)
   })
 })

@@ -504,6 +504,8 @@ export interface ServiceState {
 
 export interface GarageSlot {
   slot: string
+  /** What the slot is to the formulas of the game (`tires`, `engine`, ...), or null for a slot that has no role; the garage of an older server does not say. */
+  role?: string | null
   part: MountedPart | null
   /** The slot holds a part of the body when it is empty (the factory engine): with an engine part on it, that part is in `part`. */
   built_in: boolean

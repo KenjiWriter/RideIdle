@@ -5,6 +5,7 @@ import type { MapCity, MapResponse, Run, RunResponse } from '@/api/types'
 import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
+import { setModel } from '@/model'
 import { mountView } from '@/test/mountView'
 import { liveFields } from '@/test/runFixtures'
 import { aTutorial } from '@/test/tutorialFixtures'
@@ -513,5 +514,30 @@ describe('MapView', () => {
     expect(wrapper.get('h1').text()).toBe('Mapa')
     expect(wrapper.get('[data-test="reason"]').text()).toBe('Wymaga poziomu gracza 12 (masz 3). Zdobywasz XP, jeżdżąc.')
     expect(wrapper.get('[data-test="go"]').text()).toBe('Jedź tutaj')
+  })
+})
+
+describe('MapView in a game with another model', () => {
+  beforeEach(async () => {
+    localStorage.clear()
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+    await setLocale('en')
+    storeToken('device-token')
+    setModel({ slots: [{ key: 'hull', role: 'tires', hidden: false }], stats: ['braking', 'grip'] })
+  })
+
+  afterEach(() => {
+    setModel()
+    vi.unstubAllGlobals()
+  })
+
+  it('shows what the track asks only of the statistics that the model lists, in its order', async () => {
+    serve({ 'GET /api/v1/map': () => respond(200, aMap()), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(MapView, '/map')
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-test="demands"] > div').map((row) => row.text())).toEqual(['Braking15', 'Grip25'])
   })
 })

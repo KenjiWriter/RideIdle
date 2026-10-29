@@ -23,6 +23,7 @@ import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { lockText } from '@/features/parts/lock'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
+import { useModel } from '@/model'
 import { useGarageStore } from '@/stores/garage'
 import { useRunStore } from '@/stores/run'
 import { useTutorialStore } from '@/stores/tutorial'
@@ -33,7 +34,8 @@ const WORKSHOP_POLL_MS = 15_000
 /** The garage is asked again at the earliest this long after the last answer, so a job that is late cannot cause a storm of requests. */
 const MIN_ASK_MS = 3_000
 
-const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking', 'clearance']
+/** The statistics that the screens show, in the order of the model of the game, and what a slot is to the formulas. */
+const { stats: STATS, roleOf } = useModel()
 
 const { t } = useI18n()
 const { number, money, percent, fixed } = useFormat()
@@ -78,7 +80,7 @@ const cash = computed(() => {
 const waiting = computed(() => jobs.value.filter((job) => job.status === 'queued'))
 const inventory = computed(() => store.garage?.inventory ?? [])
 /**
- * The part that the tutorial points at when it asks for the tires to be put on. A step that names a kind of tires (the off-road ones) points at the tires of that
+ * The part that the tutorial points at when it asks for the tires to be put on (the tires are the slot with the role, whatever it is called). A step that names a kind of tires (the off-road ones) points at the tires of that
  * kind, and at nothing when there are none in the inventory, so that it never points at the wrong pair; a step that names none points at the first pair of tires in
  * the inventory, or the first part.
  */
@@ -86,10 +88,10 @@ const mountTarget = computed(() => {
   const kind = tutorial.goal?.tire_kind ?? tutorial.current?.tire_kind ?? null
 
   if (kind !== null) {
-    return inventory.value.find((part) => part.slot === 'tires' && part.tire_kind === kind)?.id ?? null
+    return inventory.value.find((part) => roleOf(part.slot) === 'tires' && part.tire_kind === kind)?.id ?? null
   }
 
-  return (inventory.value.find((part) => part.slot === 'tires') ?? inventory.value[0])?.id ?? null
+  return (inventory.value.find((part) => roleOf(part.slot) === 'tires') ?? inventory.value[0])?.id ?? null
 })
 /** The card of the mechanic, which a job that is queued is shown on: the page is taken to it, because the parts are far below it. */
 const mechanicCard = ref<HTMLElement | null>(null)

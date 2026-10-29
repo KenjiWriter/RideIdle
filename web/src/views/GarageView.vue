@@ -29,6 +29,7 @@ import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { formatLapTime } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
+import { useModel } from '@/model'
 import { useGarageStore } from '@/stores/garage'
 import { useAwayStore } from '@/stores/away'
 import { useRunStore } from '@/stores/run'
@@ -119,10 +120,11 @@ const pictureUrl = computed(() => run.run?.car.image_url ?? car.value?.vehicle.i
 const xpInto = computed(() => (car.value ? car.value.xp.total - car.value.xp.level_start : 0))
 const xpNeeded = computed(() => (car.value && car.value.xp.next_level_at !== null ? car.value.xp.next_level_at - car.value.xp.level_start : null))
 const xpFill = computed(() => (xpNeeded.value ? Math.min(100, Math.round((xpInto.value / xpNeeded.value) * 100)) : 100))
-const STATS: CarStatKey[] = ['accel', 'top_speed', 'grip', 'handling', 'braking', 'clearance']
+/** The statistics that the screens show, in the order of the model of the game, and what a slot is to the formulas. */
+const { stats: STATS, roleOf } = useModel()
 
-/** The top speed the gearbox on the car allows, in km/h, or null when there is no gearbox with a limit on it. */
-const gearboxLimit = computed(() => car.value?.slots.find((slot) => slot.slot === 'gearbox')?.part?.stats.top_speed_cap_kmh ?? null)
+/** The top speed the gearbox on the car allows, in km/h, or null when there is no gearbox with a limit on it. The gearbox is the slot with the role, whatever it is called. */
+const gearboxLimit = computed(() => car.value?.slots.find((slot) => (slot.role ?? roleOf(slot.slot)) === 'gearbox')?.part?.stats.top_speed_cap_kmh ?? null)
 
 function delta(stat: CarStatKey): number {
   const value = (car.value?.stats[stat] ?? 0) - (car.value?.base_stats[stat] ?? 0)
