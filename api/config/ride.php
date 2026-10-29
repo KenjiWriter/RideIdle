@@ -142,4 +142,21 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Płatności za prawdziwe pieniądze
+    |--------------------------------------------------------------------------
+    |
+    | Dostawca płatności, który sprzedaje paczki monet i przepustkę nieskończonego
+    | tankowania. Żadnego jeszcze nie ma (krok P3 planu płatnych funkcji, potrzebny
+    | jest użytkownik), więc `provider` jest pusty, a gra nie pokazuje przycisku
+    | kupna przepustki (`purchasable: false` w GET /premium). Przepustkę może dać
+    | obsługa poleceniem `premium:pass`.
+    |
+    */
+
+    'premium' => [
+        'provider' => env('PREMIUM_PROVIDER'),
+    ],
+
 ];

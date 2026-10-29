@@ -106,6 +106,9 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/tutorial/skip', [TutorialController::class, 'skip']);
 
         Route::get('/premium', [PremiumController::class, 'show']);
+        Route::post('/premium/autorefill', [PremiumController::class, 'buyAutoRefill']);
+        Route::patch('/premium/autorefill', [PremiumController::class, 'setAutoRefill']);
+        Route::post('/premium/vip', [PremiumController::class, 'buyVip']);
 
         Route::get('/away', [AwayController::class, 'show']);
         Route::post('/away/seen', [AwayController::class, 'seen']);

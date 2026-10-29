@@ -97,6 +97,10 @@ final class AccountExport
                 'cash_cents' => $wallet->cash_cents,
                 'xp' => $wallet->xp,
                 'premium_coins' => $wallet->premium_coins,
+                'auto_refills' => $wallet->auto_refills,
+                'auto_refill_enabled' => $wallet->auto_refill_enabled,
+                'vip_until' => $this->day($wallet->vip_until),
+                'infinity_until' => $this->day($wallet->infinity_until),
                 'updated_at' => $this->day($wallet->updated_at),
             ],
             'cars' => Car::query()->withoutGlobalScopes()->where('user_id', $user->id)->orderBy('id')->get()->map(
