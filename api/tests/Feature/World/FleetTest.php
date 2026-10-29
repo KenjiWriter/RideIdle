@@ -79,6 +79,8 @@ describe('the cars and the garages', function () {
             ->assertJsonPath('data.cars.0.city', ['slug' => 'zlomowo', 'name' => 'Złomowo'])
             ->assertJsonPath('data.cars.0.selected', true)
             ->assertJsonPath('data.cars.0.run.status', 'running')
+            // What the carousel of the fleet shows of a body: its kind, its tier, and the picture the pack gives it (none, in the car game).
+            ->assertJsonPath('data.cars.0.vehicle', ['slug' => 'rdzak-gt-4', 'name' => 'Rdzak GT-4', 'image_url' => null, 'class' => 'hatchback', 'tier' => 2])
             ->assertJsonPath('data.cars.0.travel', null);
 
         $garages = collect($response->json('data.garages'))->keyBy('city');

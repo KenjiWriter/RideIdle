@@ -447,6 +447,9 @@ final class Market
             'slug' => $slug,
             'name' => I18nText::from($vehicle['name'])->for(),
             'class' => $vehicle['class'],
+            'tier' => $vehicle['tier'],
+            // The picture the pack gives the body, or null where the app brings its own (or none).
+            'image_url' => ContentImages::urlOf($vehicle),
             'drivetrain' => $vehicle['drivetrain'],
             'engine' => "{$vehicle['engine']['layout']} ".number_format($vehicle['engine']['displacement_l'], 1, '.', ''),
             'power_kw' => $vehicle['power_kw'],

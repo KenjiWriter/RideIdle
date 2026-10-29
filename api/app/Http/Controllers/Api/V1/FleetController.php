@@ -12,6 +12,7 @@ use App\Models\Car;
 use App\Models\RaceRun;
 use App\Services\CarSales;
 use App\Services\CityGarages;
+use App\Services\ContentImages;
 use App\Services\Garage;
 use App\Services\Ledger;
 use App\Services\RunService;
@@ -176,6 +177,9 @@ final class FleetController extends Controller
             'vehicle' => [
                 'slug' => $car->vehicle_slug,
                 'name' => $vehicle !== null ? I18nText::from($vehicle['name'])->for() : $car->vehicle_slug,
+                'image_url' => $vehicle !== null ? ContentImages::urlOf($vehicle) : null,
+                'class' => $vehicle['class'] ?? null,
+                'tier' => $vehicle['tier'] ?? null,
             ],
             'city' => ['slug' => $city, 'name' => $this->rules->cityName($city)],
             'run' => $run === null ? null : [

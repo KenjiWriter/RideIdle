@@ -218,7 +218,11 @@ describe('the pictures in a pack', function () {
 
         [$driver, $run] = driverWithRun();
 
-        $this->getJson('/api/v1/garage', bearerFor($driver))->assertOk()->assertJsonPath('data.car.vehicle.image_url', "/api/v1/media/{$name}");
+        $this->getJson('/api/v1/garage', bearerFor($driver))->assertOk()
+            ->assertJsonPath('data.car.vehicle.image_url', "/api/v1/media/{$name}")
+            ->assertJsonPath('data.car.vehicle.class', 'hatchback')
+            ->assertJsonPath('data.car.vehicle.tier', 2);
+        $this->getJson('/api/v1/cars', bearerFor($driver))->assertOk()->assertJsonPath('data.cars.0.vehicle.image_url', "/api/v1/media/{$name}");
         $this->getJson('/api/v1/runs/current', bearerFor($driver))->assertOk()->assertJsonPath('data.car.image_url', "/api/v1/media/{$name}");
 
         expect(PartResource::describe(app(Catalog::class)->part('street-tires-t2'))['image_url'])->toBe("/api/v1/media/{$part}");

@@ -89,7 +89,7 @@ describe('the market', function () {
         ])
             ->and($dealer->pluck('open')->all())->toBe([true, true, true, ...array_fill(0, 17, false)])
             ->and($dealer->firstWhere('vehicle.slug', 'kornet-v6'))->toMatchArray(['price_cents' => 3_000_000, 'level_required' => 9])
-            ->and($dealer->first()['vehicle'])->toMatchArray(['name' => 'Rdzak GT-2', 'class' => 'hatchback', 'drivetrain' => 'fwd', 'engine' => 'R4 1.3', 'power_kw' => 65, 'top_speed_kmh' => 150, 'mass_kg' => 880]);
+            ->and($dealer->first()['vehicle'])->toMatchArray(['name' => 'Rdzak GT-2', 'class' => 'hatchback', 'tier' => 1, 'image_url' => null, 'drivetrain' => 'fwd', 'engine' => 'R4 1.3', 'power_kw' => 65, 'top_speed_kmh' => 150, 'mass_kg' => 880]);
     });
 
     it('lists only the cars the level of the driver opens, and none of the condition', function () {

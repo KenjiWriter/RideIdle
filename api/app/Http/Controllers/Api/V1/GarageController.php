@@ -187,6 +187,9 @@ final class GarageController extends Controller
                 'slug' => $car->vehicle_slug,
                 'name' => $vehicle !== null ? I18nText::from($vehicle['name'])->for() : $car->vehicle_slug,
                 'image_url' => $vehicle !== null ? ContentImages::urlOf($vehicle) : null,
+                // The kind of body and the tier of the car, for the card of its specification.
+                'class' => $vehicle['class'] ?? null,
+                'tier' => $vehicle['tier'] ?? null,
                 // The engine that is in the car: the engine part on it, else the factory engine of the body, and what it makes (no booster counted).
                 'engine' => $vehicle !== null ? $this->engineLabel($this->catalog->part($mounted->get('engine')?->part_slug ?? '')['engine'] ?? $vehicle['engine']) : null,
                 'power_kw' => $vehicle !== null ? (int) round($this->inputs->enginePowerKw($car->vehicle_slug, $slugs)) : null,
