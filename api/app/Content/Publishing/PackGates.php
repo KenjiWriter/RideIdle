@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Content\Publishing;
 
 use App\Content\PackContent;
+use App\Games\CurrentGame;
 use App\Services\ContentExporter;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Artisan;
@@ -93,6 +94,9 @@ final class PackGates
     {
         $directory = sys_get_temp_dir().DIRECTORY_SEPARATOR.'ride-gates-'.Str::lower(Str::random(12));
         $before = config('ride');
+        // The game that asked for the pack: forgetting what the container holds drops it too, and the work after the gates (the pack is made, and made for a game)
+        // would be done for the default game. The gates themselves read the candidate from files, which only the default game has, so they run as it.
+        $current = $this->app->make(CurrentGame::class);
 
         try {
             $this->exporter->write($candidate, $directory, $candidate->number());
@@ -105,6 +109,9 @@ final class PackGates
         } finally {
             config(['ride' => $before]);
             $this->app->forgetScopedInstances();
+            // The very object, put back: whoever holds it (the job that is making the pack) is still talking to the game that is in force. It is still a scoped
+            // binding, so the end of the request or of the job forgets it as it does any other.
+            $this->app->instance(CurrentGame::class, $current);
             File::deleteDirectory($directory);
         }
     }

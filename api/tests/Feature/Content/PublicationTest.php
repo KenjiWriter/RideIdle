@@ -7,11 +7,14 @@ use App\Content\Definitions\JsonDocument;
 use App\Content\Publishing\DerivedTables;
 use App\Content\Publishing\PublicationRefused;
 use App\Content\Rules;
+use App\Games\CurrentGame;
 use App\Jobs\BuildContentPack;
 use App\Models\Admin;
 use App\Models\AdminAuditLog;
 use App\Models\ContentDefinition;
+use App\Models\ContentPack;
 use App\Models\ContentPublication;
+use App\Models\Game;
 use App\Models\Part;
 use App\Models\User;
 use App\Services\ContentDrafts;
@@ -274,5 +277,27 @@ describe('the derived tables', function () {
         $made = app(DerivedTables::class)->make($stronger);
 
         expect(json_decode($made['tables/bot-profiles'], true))->not->toEqual(repositoryDocument('tables/bot-profiles'));
+    });
+});
+
+describe('a game other than the first', function () {
+    it('has its pack made, and made live, in that game: the gates run on files, which only the first game has, and the game is not lost after them', function () {
+        $ships = Game::query()->create(['slug' => 'ships', 'name' => 'Star Ships', 'domain' => 'ships.test', 'status' => Game::STATUS_LIVE]);
+        $current = app(CurrentGame::class);
+        $first = contentPacks()->active();
+
+        $publication = $current->within($ships, function () {
+            contentPacks()->import(repositoryContent(), '2026.10.1', activate: true, checkTables: false);
+            draftOf('vehicles/rdzak-gt-4', fn (array $car): array => [...$car, 'price_cents' => $car['price_cents'] + 100_000]);
+
+            return publisher()->queue(aPublisher())->refresh();
+        });
+
+        expect($publication->status)->toBe(ContentPublication::STATUS_READY)
+            ->and($publication->game_id)->toBe($ships->id)
+            ->and(ContentPack::query()->withoutGlobalScopes()->findOrFail($publication->content_pack_id)->game_id)->toBe($ships->id)
+            ->and(ContentPack::query()->withoutGlobalScopes()->where('game_id', $ships->id)->pluck('number')->all())->toContain($publication->number)
+            ->and(contentPacks()->active()->id)->toBe($first->id)
+            ->and($current->id())->not->toBe($ships->id);
     });
 });
