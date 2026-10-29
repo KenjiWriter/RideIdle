@@ -207,6 +207,19 @@ describe('GameHud', () => {
       expect(usePremiumStore().balance).toBe(12)
     })
 
+    it('are asked for once, not on every screen, when the server cannot say them', async () => {
+      const calls = serveApi(fetchMock, {})
+      const pinia = createPinia()
+      setActivePinia(pinia)
+
+      for (let screen = 0; screen < 3; screen++) {
+        mount(GameHud, { global: { plugins: [pinia, i18n, aRouter()] } })
+        await flushPromises()
+      }
+
+      expect(calls.filter((call) => call.url.endsWith('/v1/premium'))).toHaveLength(1)
+    })
+
     it('are not asked for when an answer has said it', async () => {
       const calls = serveApi(fetchMock, {})
       const pinia = createPinia()

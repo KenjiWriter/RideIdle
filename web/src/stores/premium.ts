@@ -13,13 +13,17 @@ export const usePremiumStore = defineStore('premium', () => {
   const balance = ref(0)
   /** When the balance was read (the time of this device), 0 until it was. */
   const seenAt = ref(0)
+  /** Whether the balance was asked for: once is enough, so a server that has no such call is not asked on every screen. */
+  const asked = ref(false)
 
   async function load(): Promise<void> {
+    asked.value = true
+
     const response = await api<PremiumResponse>('/v1/premium')
 
     balance.value = response.data.balance
     seenAt.value = Date.now()
   }
 
-  return { balance, seenAt, load }
+  return { balance, seenAt, asked, load }
 })

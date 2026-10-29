@@ -24,7 +24,7 @@ export function usePremiumCoins() {
   })
 
   async function ensure(): Promise<void> {
-    if (coins.value === null) {
+    if (coins.value === null && !premium.asked) {
       await premium.load().catch(() => undefined)
     }
   }
