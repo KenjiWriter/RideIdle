@@ -37,6 +37,8 @@ export const useGarageStore = defineStore('garage', () => {
   const finishIds = intentionIds(PURCHASE_ID_LIFETIME_MS)
   /** The premium coins of the driver as the last answer said (0 until one did). */
   const premiumCoins = ref(0)
+  /** When an answer last said it (the time of this device), 0 until one did: the HUD shows the balance of the newest answer of all the stores. */
+  const premiumSeenAt = ref(0)
   /** The cash of the driver as the shop last saw it. */
   const cash = ref<Wallet | null>(null)
 
@@ -59,6 +61,7 @@ export const useGarageStore = defineStore('garage', () => {
     garage.value = response.data
     cash.value = response.wallet
     premiumCoins.value = response.premium_coins ?? premiumCoins.value
+    premiumSeenAt.value = response.premium_coins === undefined ? premiumSeenAt.value : Date.now()
     clockOffsetMs.value = response.now_ms - Date.now()
     loaded.value = true
   }
@@ -200,5 +203,5 @@ export const useGarageStore = defineStore('garage', () => {
     levelUp.value = null
   }
 
-  return { garage, loaded, offers, shopCar, shopLoaded, crates, cash, premiumCoins, levelUp, serverNow, loadGarage, loadShop, buy, openCrate, queue, cancelJob, finishJob, buyEquipment, acknowledgeLevelUp }
+  return { garage, loaded, offers, shopCar, shopLoaded, crates, cash, premiumCoins, premiumSeenAt, levelUp, serverNow, loadGarage, loadShop, buy, openCrate, queue, cancelJob, finishJob, buyEquipment, acknowledgeLevelUp }
 })

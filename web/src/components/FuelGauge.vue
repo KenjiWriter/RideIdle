@@ -28,7 +28,7 @@ function liters(ml: number): string {
 </script>
 
 <template>
-  <section class="card flex flex-col gap-3" aria-labelledby="fuel-title" data-test="fuel">
+  <section id="fuel" class="card flex flex-col gap-3" aria-labelledby="fuel-title" data-test="fuel">
     <div class="flex items-baseline justify-between gap-3">
       <h2 id="fuel-title" class="ttl text-2xl">{{ t('run.fuel.title') }}</h2>
       <span class="font-semibold" data-test="fuel-level">

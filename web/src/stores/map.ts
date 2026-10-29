@@ -18,6 +18,8 @@ export const useMapStore = defineStore('map', () => {
   const clockOffsetMs = ref(0)
   /** The premium coins of the driver as the last answer said (0 until one did). */
   const premiumCoins = ref(0)
+  /** When an answer last said it (the time of this device), 0 until one did. */
+  const premiumSeenAt = ref(0)
   const finishIds = intentionIds(10 * 60_000)
 
   /** What time it is for the server now. */
@@ -28,6 +30,7 @@ export const useMapStore = defineStore('map', () => {
   function apply(response: MapResponse): void {
     map.value = response.data
     premiumCoins.value = response.premium_coins ?? premiumCoins.value
+    premiumSeenAt.value = response.premium_coins === undefined ? premiumSeenAt.value : Date.now()
     clockOffsetMs.value = response.now_ms - Date.now()
     loaded.value = true
   }
@@ -68,5 +71,5 @@ export const useMapStore = defineStore('map', () => {
     return response.police
   }
 
-  return { map, loaded, premiumCoins, serverNow, load, travel, finishTravel, decidePolice }
+  return { map, loaded, premiumCoins, premiumSeenAt, serverNow, load, travel, finishTravel, decidePolice }
 })
