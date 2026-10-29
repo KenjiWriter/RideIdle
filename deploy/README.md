@@ -253,6 +253,53 @@ Jedna instalacja prowadzi kilka gier (L4a): każda ma własną treść, własnyc
 
 **Co sprawdzono:** skrypt przechodzi `bash -n` i został uruchomiony od początku do końca na atrapach `nginx`, `certbot`, `systemctl`, `curl` i `getent` w folderze tymczasowym (zmienne `NGINX_DIR`, `LETSENCRYPT_DIR` i `SKIP_ROOT_CHECK=1` są dla takich prób), w 74 sprawdzeniach (53 z L4b i 21 z L4d, o robotach i starych ustawieniach nginx): pierwsze uruchomienie (strona z domeną i folderami instalacji, certbot z osobną nazwą certyfikatu i hookiem, strony pierwszej gry i panelu bez zmian), ponowne (nic nie zmienione, certbot nie pytany drugi raz), małe litery, odmowy (domena pierwszej gry, panelu, cudza, zła nazwa, brak adresu e-mail), nginx odrzucający stronę (wycofanie, przywrócenie poprzedniej wersji) i sprawdzenie DNS (inny adres, brak rekordu, `SKIP_DNS_CHECK`). Skrypt przechodzi `shellcheck` bez uwag. **Nie sprawdzono** go na prawdziwym nginx, certbocie i DNS.
 
+## Domeny gier z panelu: zlecenia, worker i SSL
+
+Domenę nowej gry można postawić z panelu, bez wchodzenia na serwer. Panel **niczego nie uruchamia na serwerze** (proces www nie ma do tego uprawnień i nie powinien ich mieć): zapisuje **zlecenie** w tabeli `domain_jobs` (postaw tę domenę albo sprawdź jej certyfikat), a na serwerze **co minutę budzi się worker jako root** i je wykonuje. To ten sam `game-site.sh` co przy ręcznym stawianiu domeny (sekcja wyżej), tylko uruchamiany przez timer.
+
+```
+panel (przycisk)  ->  tabela domain_jobs  ->  timer rideidle-domains.timer (co minutę)
+   ->  /usr/local/sbin/rideidle-domains  ->  game-site.sh (nginx, certbot)
+   ->  status, log i data końca certyfikatu wracają do bazy  ->  widać je w panelu
+```
+
+**Co instaluje `provision.sh`** (można go uruchomić ponownie, zostawia to, co jest):
+
+- `/usr/local/sbin/rideidle-domains`: worker (`deploy/bin/rideidle-domains`).
+- `/usr/local/lib/rideidle/deploy/game-site.sh` i `nginx/rideidle.conf.template`: **kopia, która należy do roota**. Worker uruchamia jako root właśnie ją, a nie skrypt z wydania: do wydania pisze użytkownik, który wdraża (`deploy`), więc skrypt stamtąd pozwalałby mu zostać rootem przez zlecenie. Worker sam odmawia uruchomienia skryptu (i folderu, w którym leży), którego nie ma na wyłączność root.
+- `rideidle-domains.service` (oneshot, root) i `rideidle-domains.timer` (2 minuty po starcie, potem co minutę); `systemctl enable --now rideidle-domains.timer`. Przed pierwszym wydaniem worker nie znajduje aplikacji i nic nie robi (to nie jest błąd).
+- w `.env` (z `env.production.example`, tylko przy nowym `.env`): **`ACME_EMAIL`** (adres, na który Let's Encrypt pisze o certyfikacie; panel podaje go workerowi; `provision.sh` wpisuje `ADMIN_EMAIL`) i **`SERVER_IPS`** (publiczne adresy tego serwera po przecinku, z którymi panel porównuje rekord A domeny gry; puste: porównuje z adresem, jaki ma teraz host z `WEB_URL`). Na serwerze, który już ma `.env`, dopisz te dwie linie ręcznie.
+- **Nowa wersja workera albo `game-site.sh` w wydaniu nie działa sama**: kopie są w `/usr/local`, więc po zmianie uruchom `provision.sh` ponownie (jak przy skryptach kopii zapasowych).
+
+**Najpierw rekord A.** Rekord A domeny musi wskazywać na serwer, zanim poprosisz o zlecenie. Panel to sprawdza i mówi, co ustawić, a `game-site.sh` sprawdza to jeszcze raz i bez tego kończy zlecenie błędem (bez ruszania nginx).
+
+**Jak to wypróbować bezpiecznie:**
+
+1. **Na sucho.** `sudo systemctl edit rideidle-domains` i wpisz `[Service]` oraz `Environment=DOMAIN_WORKER_DRY_RUN=1`. Worker bierze zlecenia i zgłasza je jako wykonane, ale **nic nie uruchamia i nie rusza certyfikatów**: w logu jest, co by uruchomił. Zleć z panelu, poczekaj minutę (albo `sudo systemctl start rideidle-domains`) i zobacz `journalctl -u rideidle-domains` oraz log w panelu.
+2. **Z certyfikatem próbnym.** Zamień linię na `Environment=CERTBOT_STAGING=1` (Let's Encrypt wystawia wtedy certyfikat testowy i nie zużywa limitów). Gdy działa, `sudo systemctl revert rideidle-domains` wraca do ustawień z `provision.sh`; certyfikat próbny zamienia się na prawdziwy, gdy zlecisz domenę drugi raz bez `CERTBOT_STAGING`.
+3. Dopiero potem prawdziwy certyfikat.
+
+**Jak zobaczyć, co się stało:** `systemctl list-timers rideidle-domains.timer` (kiedy następny), `journalctl -u rideidle-domains` (każde zlecenie: numer, domena, kod wyniku) i **log zlecenia w panelu** (ostatnie 20 KB wyjścia `game-site.sh`, razem z końcem certyfikatu). Certyfikaty odnawia timer certbota, a worker tylko odczytuje datę końca (akcja `check`).
+
+**Umowa z aplikacją** (komendy artisan, które worker wywołuje jako użytkownik serwera WWW, `runuser -u www-data`, nigdy jako root, więc żaden plik roota nie trafia do `storage/`):
+
+- `php artisan domains:claim` bierze najstarsze zlecenie i wypisuje **jedną linię** z czterema polami rozdzielonymi tabulatorem: `id`, `akcja` (`provision` albo `check`), `domena` i `e-mail`. Gdy zlecenia nie ma, nie wypisuje nic.
+- `php artisan domains:report ID --exit-code=N [--log-file=PLIK] [--expires=RRRR-MM-DD]`: kod 0 to wykonane, inny to błąd; do bazy trafia koniec logu i data końca certyfikatu.
+
+**Co worker nigdy nie robi:**
+
+- **Nie uruchamia wartości, której nie sprawdził.** Domena i e-mail zlecenia to rzeczy, które wpisał administrator panelu, a trafiają do skryptu roota, więc worker sprawdza **każde pole jeszcze raz**: domena to małe litery, cyfry i myślniki w etykietach po 1–63 znaki, minimum dwie etykiety, najwyżej 253 znaki, bez myślnika na końcach etykiety; e-mail ma konserwatywny wzór i nie zaczyna się od myślnika; akcja to `provision` albo `check`. Zlecenie z błędnym polem jest **odrzucane i zgłaszane z kodem 2** (w logu stoi, które pole), a skrypt się nie uruchamia. Linia, w której nie ma czterech pól albo `id` nie jest liczbą, zatrzymuje cały przebieg (kod 1): bez numeru nie ma zlecenia, o którym można cokolwiek powiedzieć.
+- **Nie przekazuje dalej niczego poza domeną, adresem** i, gdy są ustawione u samego workera, `CERTBOT_STAGING` i `SKIP_DNS_CHECK` z wartością 0 albo 1 (inna wartość jest wycinana ze środowiska).
+- **Nie rusza `.env` gry, strony pierwszej gry ani strony panelu** (to gwarantuje `game-site.sh`), nie dotyka niczego w PHP, bazie i innych stronach.
+- **Nie robi dwóch rzeczy naraz:** `flock` na `/run/rideidle-domains.lock`; drugi przebieg mówi, że poprzedni trwa, i kończy się kodem 0.
+- **Nie zajmuje się jednym zleceniem dłużej niż `DOMAIN_WORKER_TIMEOUT`** (900 s; po tym czasie `game-site.sh` jest zatrzymywany, a zlecenie zgłoszone z kodem 124) i **nie bierze więcej niż `DOMAIN_WORKER_MAX_JOBS`** (5) zleceń na przebieg; reszta czeka na następną minutę.
+- Nie wypisuje sekretów (nie ma żadnych w zleceniu).
+
+**Kody wyjścia.** Worker kończy z **0, gdy działał, także gdy zlecenie się nie udało** (jego wynik jest w bazie, z logiem). Inny kod to znak, że nie mógł pracować: 1 (brak `php`, `flock` lub `runuser`, nie root, `domains:claim` zawiodło, odpowiedź aplikacji, której nie rozumie), 3 (nie udało się zgłosić wyniku zlecenia aplikacji: w panelu zlecenie wisi jako trwające, dopóki aplikacja nie uzna go za zgubione). Kody zlecenia w bazie: 0 wykonane, 2 odrzucone albo brak skryptu, 124 przekroczony czas, inne to kod `game-site.sh`.
+
+**Co sprawdzono:** oba skrypty przechodzą `bash -n`, a worker został uruchomiony na atrapach (`bash deploy/test/test-rideidle-domains.sh`, 111 sprawdzeń w Git Bash na Windows): brak zleceń; dobre zlecenie (dokładnie `GAME_DOMAIN` i `GAME_EMAIL`, raport z kodem 0, logiem i datą końca prawdziwego certyfikatu zrobionego `openssl`, bez pliku logu po przebiegu, `artisan` w folderze aplikacji, `APP_DIR` workera niepodawany dalej); błąd `game-site.sh` (jego kod w raporcie); 21 błędnych domen (spacja, `;`, `&&`, `$(...)`, odwrotny apostrof, ścieżka, wielkie litery, jedna etykieta, etykieta 64 znaki, całość ponad 253, pusta, myślnik na końcach etykiety, podwójna, początkowa i końcowa kropka, podkreślnik, gwiazdka, druga opcja po spacji) i 14 błędnych zleceń (e-mail ze spacją, ze średnikiem, od myślnika, pusty, bez `@`, z dwiema `@`, bez kropki; akcja `rm`, pusta, wielkimi literami, ze średnikiem), **żadne nie dochodzi do `game-site.sh`**, każde jest zgłoszone z kodem 2; błędny `id` (`1;ls`, pusty, litery, spacja, za długi) i linia z trzema, pięcioma polami albo ze spacjami zamiast tabulatorów zatrzymują przebieg z kodem 1; `check` z certyfikatem i bez; przebieg na sucho; przekroczenie czasu (kod 124 po sekundzie, a nie po trzydziestu); limit zleceń (trzy z siedmiu, pięć domyślnie); dwa przebiegi naraz; wywołania `artisan` przez `runuser -u` z podanym użytkownikiem; awaria `domains:claim` (kod 1) i `domains:report` (przebieg idzie dalej, kod 3); brak wydania; brak skryptu; błędne ustawienia i brak roota. Po celowym zepsuciu sprawdzania domeny albo e-maila testy to wykrywają.
+**Czego nie sprawdzono:** **prawdziwego Ubuntu i systemd** (jednostki nie były wczytane przez systemd, `systemd-analyze verify` nie był uruchamiany), **prawdziwych `flock` i `runuser`** (w testach są atrapy, które robią to samo dla workera), **prawdziwego certbota, nginx i prawdziwej domeny** (`game-site.sh` w testach jest atrapą; jego własne 74 sprawdzenia są opisane wyżej), **kontroli, że skrypt roota należy do roota** (wymaga roota; na Windows jest pomijana), `shellcheck` (nie jest tu zainstalowany) i wpływu ograniczeń jednostki (`NoNewPrivileges`, `PrivateTmp`, `ProtectHome` i kilka innych, celowo łagodnych, żeby nie przeszkadzały certbotowi i nginx) na prawdziwy przebieg `game-site.sh`.
+
 ## Podglądy linków: roboty dostają stronę z tagami gry (L4d)
 
 Czat (Messenger, WhatsApp, Telegram, Slack, Discord), sieć społecznościowa albo wyszukiwarka robi podgląd linku z tagów w nagłówku strony (`og:title`, `og:description`, `og:image`) i **nie uruchamia aplikacji**. Aplikacja ustawia tytuł i kolor dopiero po starcie, więc robot widziałby w każdej grze to, co jest w `index.html` z budowy: „RideIdle” bez opisu i obrazka. Dlatego nginx odróżnia roboty od ludzi i robotom oddaje tę samą stronę aplikacji **z tagami gry hosta**, zrobioną przez API (`GET /api/v1/meta/share`; tytuł, opis w języku gry, obrazek podglądu, kolor; co gra o sobie mówi, ustawia się w panelu).
