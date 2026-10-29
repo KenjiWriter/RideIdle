@@ -4,7 +4,11 @@ declare(strict_types=1);
 
 namespace App\Domain\Settlement;
 
-/** What one settlement produced: the new state, the ordered log and the totals to credit. */
+/**
+ * What one settlement produced: the new state, the ordered log and the totals to credit. `cashCents` and `xp` are what was paid, the bonus of the VIP account
+ * included (`bonusCashCents` and `bonusXp` say how much of it that was, so the pay of the track alone is the difference). `refills` is how many times the tank was
+ * filled for the driver, and `chargesUsed` how many of those took a charge (the others were free: the pass).
+ */
 final readonly class SettlementResult
 {
     /** @param list<SettlementEvent> $events ordered by time, then priority */
@@ -14,6 +18,10 @@ final readonly class SettlementResult
         public int $laps,
         public int $cashCents,
         public int $xp,
+        public int $bonusCashCents = 0,
+        public int $bonusXp = 0,
+        public int $refills = 0,
+        public int $chargesUsed = 0,
     ) {}
 
     /** Why the car stopped during this settlement: a breakdown wins over an empty tank. */

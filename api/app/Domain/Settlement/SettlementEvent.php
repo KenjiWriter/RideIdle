@@ -14,8 +14,11 @@ final readonly class SettlementEvent
         public array $payload = [],
     ) {}
 
-    /** Laps finished within one weather segment, aggregated. */
-    public static function lapBatch(int $segment, string $weather, int $laps, int $cashCents, int $xp, int $fromMs, int $toMs): self
+    /**
+     * Laps finished within one weather segment, aggregated. `$cashCents` and `$xp` are what the batch paid, the bonus of the VIP account included; when there
+     * was a bonus the payload says how much of it was (`bonus_cash_cents`, `bonus_xp`), and when there was none it has no such keys.
+     */
+    public static function lapBatch(int $segment, string $weather, int $laps, int $cashCents, int $xp, int $fromMs, int $toMs, int $bonusCashCents = 0, int $bonusXp = 0): self
     {
         return new self(EventType::LapBatch, $toMs, [
             'segment' => $segment,
@@ -25,6 +28,7 @@ final readonly class SettlementEvent
             'xp' => $xp,
             'from_ms' => $fromMs,
             'to_ms' => $toMs,
+            ...($bonusCashCents > 0 || $bonusXp > 0 ? ['bonus_cash_cents' => $bonusCashCents, 'bonus_xp' => $bonusXp] : []),
         ]);
     }
 
@@ -36,6 +40,12 @@ final readonly class SettlementEvent
     public static function fuelEmpty(int $atMs): self
     {
         return new self(EventType::FuelEmpty, $atMs);
+    }
+
+    /** The tank was filled for the driver at `$atMs`, with `$addedMl` of fuel; `$free` when the pass paid for it and no charge was used. */
+    public static function autoRefill(int $atMs, int $addedMl, bool $free): self
+    {
+        return new self(EventType::AutoRefill, $atMs, ['added_ml' => $addedMl, 'free' => $free ? 1 : 0]);
     }
 
     /** The settlement stopped where the frozen configuration has to be made again. */

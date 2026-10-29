@@ -7,7 +7,7 @@ namespace App\Domain\Settlement;
 /**
  * Kinds of settlement events. At the same moment events are ordered by priority:
  * a lap is paid before the car breaks down, and a breakdown is reported before
- * an empty tank (it is then the reason the car stopped). The end of a stretch that needs the configuration again
+ * an empty tank (it is then the reason the car stopped). A refill of the tank done for the driver takes the place of the empty tank, so it has its priority. The end of a stretch that needs the configuration again
  * comes after them, and the service is due last (the specification: priority 7).
  */
 enum EventType: string
@@ -15,6 +15,9 @@ enum EventType: string
     case LapBatch = 'lap_batch';
     case Breakdown = 'breakdown';
     case FuelEmpty = 'fuel_empty';
+
+    /** The tank was filled for the driver (the auto-refill) where the fuel would have run out; the car did not stop. */
+    case AutoRefill = 'auto_refill';
 
     /** The frozen configuration has to be made again at this moment: a part wore to its next stage, or the service moved on. Not a stop. */
     case Recompute = 'recompute';
@@ -27,7 +30,7 @@ enum EventType: string
         return match ($this) {
             self::LapBatch => 2,
             self::Breakdown => 3,
-            self::FuelEmpty => 4,
+            self::FuelEmpty, self::AutoRefill => 4,
             self::Recompute => 5,
             self::ServiceDue => 7,
         };
