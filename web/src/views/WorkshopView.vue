@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
 
 import { ApiError } from '@/api/client'
 import type { CarStatKey, EquipmentItem, EquipmentKey, JobKind, MergeResult, OwnedPart, RepairNext, SlotJobNext, UpgradeNext, WorkshopJob } from '@/api/types'
+import CarHotspots from '@/components/CarHotspots.vue'
+import CarStage from '@/components/CarStage.vue'
 import GameShell from '@/components/GameShell.vue'
 import JobCancel from '@/components/JobCancel.vue'
 import PartCondition from '@/components/PartCondition.vue'
@@ -11,11 +14,19 @@ import PartMerge from '@/components/PartMerge.vue'
 import PartAffixes from '@/components/PartAffixes.vue'
 import MediaPicture from '@/components/MediaPicture.vue'
 import PartStats from '@/components/PartStats.vue'
+import SlotChips from '@/components/SlotChips.vue'
+import SlotDetail from '@/components/SlotDetail.vue'
+import SpecCard from '@/components/SpecCard.vue'
 import SpeedupButton from '@/components/SpeedupButton.vue'
 import RarityMark from '@/components/RarityMark.vue'
 import UpgradeMark from '@/components/UpgradeMark.vue'
+import { carPicture } from '@/features/art'
+import { overallScore } from '@/features/car/score'
 import { useServiceLine } from '@/features/car/serviceLine'
 import { statFill } from '@/features/car/statFill'
+import { useCarClass } from '@/features/car/useCarClass'
+import { useCarSpots } from '@/features/car/useCarSpots'
+import { useSlotText } from '@/features/car/useSlotText'
 import { rankOf } from '@/features/parts/rarity'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -43,6 +54,8 @@ const store = useGarageStore()
 const run = useRunStore()
 const tutorial = useTutorialStore()
 const { serviceLine, breakdownLine } = useServiceLine()
+const { className } = useCarClass()
+const { slotName } = useSlotText()
 
 useLeaveOnSignOut()
 
@@ -104,6 +117,63 @@ const merges = computed(() => store.garage?.merges ?? [])
 /** The part of the inventory whose chooser of a merge is open. */
 const merging = ref<number | null>(null)
 const cut = computed(() => Math.round((store.garage?.workshop.mechanic.time_cut_ppm ?? 0) / 10_000))
+
+/** How good the car is as a whole, for the card of its specification. */
+const score = computed(() => overallScore(car.value, STATS.value))
+
+/**
+ * The car stands on a stage with its parts on it, as in the garage: a tap on a part says what is fitted and what can be done with it, and the inventory below shows the
+ * parts that fit that slot. A car with no picture has the outline of a body, and its slots are a row under the stage.
+ */
+const hasPicture = computed(() => !!(car.value && (car.value.vehicle.image_url || carPicture(car.value.vehicle.slug))))
+const { pickedSlot, picked, mounted, parts, pick, clear: clearPick } = useCarSpots(() => (car.value ? { slots: car.value.slots, slug: car.value.vehicle.slug, hasPicture: hasPicture.value } : null))
+const pickedPart = computed(() => picked.value?.part ?? null)
+
+/** What the workshop is doing on each slot, for the spots on the car: how far the job is while the mechanic is at it, null while it waits (a service is on no slot). */
+const marks = computed(() => {
+  const byslot: Record<string, number | null> = {}
+
+  for (const job of jobs.value) {
+    const slot = job.part?.slot
+
+    if (!slot) {
+      continue
+    }
+
+    if (job.status === 'working') {
+      byslot[slot] = progress(job)
+    } else if (!(slot in byslot)) {
+      byslot[slot] = null
+    }
+  }
+
+  return byslot
+})
+
+/** What the tutorial points at on this screen, if it does: the step that waits, else the goal in front of the driver. */
+const tutorialTarget = computed(() => tutorial.current?.target ?? tutorial.goal?.target ?? null)
+
+/**
+ * The slot whose parts the inventory shows: the one that was tapped on the car, and none (all of them) while the tutorial points at a part of the inventory (the tires to
+ * put on, the two parts to merge), so that it never points at something that the filter has hidden.
+ */
+const inventoryFilter = computed(() => (tutorialTarget.value === 'mount' || tutorialTarget.value === 'merge' ? null : pickedSlot.value))
+const shownParts = computed(() => (inventoryFilter.value === null ? inventory.value : inventory.value.filter((part) => part.slot === inventoryFilter.value)))
+
+// The step of the tutorial that points at the upgrade points at a button on the card of a part, so the slot of a part that can be upgraded is looked at when it comes.
+watch(
+  () => [tutorialTarget.value, car.value?.id] as const,
+  ([target]) => {
+    if (target === 'upgrade' && pickedSlot.value === null) {
+      const slot = car.value?.slots.find((candidate) => candidate.part && candidate.part.upgrade_next.to !== null) ?? car.value?.slots.find((candidate) => candidate.part)
+
+      if (slot) {
+        pick(slot.slot)
+      }
+    }
+  },
+  { immediate: true },
+)
 
 async function load(): Promise<void> {
   lastAsk = Date.now()
@@ -401,6 +471,16 @@ async function finish(jobId: number): Promise<void> {
       <p v-if="cancelled" class="card card-cy text-sm" role="status" data-test="cancelled">{{ cancelled }}</p>
       <p v-if="finished" class="card card-cy text-sm" role="status" data-test="finished">{{ finished }}</p>
 
+      <!-- The car on its stage, as in the garage: its parts are on it, and the ones the mechanic is at have a ring with the progress. -->
+      <CarStage :name="car.vehicle.name" :src="car.vehicle.image_url" :fallback="carPicture(car.vehicle.slug)" data-test="workshop-stage">
+        <template #spots>
+          <CarHotspots v-if="parts.placed.length > 0" :placed="parts.placed" :picked="pickedSlot" :engine="car.vehicle.engine" :marks="marks" @pick="pick" />
+        </template>
+        <span class="chip chip-am !h-6 !text-[11px]" data-test="car-level">{{ t('workshop.level', { level: car.level }) }}</span>
+      </CarStage>
+
+      <SlotChips :slots="parts.unplaced" :picked="pickedSlot" @pick="pick" />
+
       <section ref="mechanicCard" class="card flex scroll-mt-32 flex-col gap-1.5 !p-3" aria-labelledby="mechanic-title" data-test="mechanic-card">
         <div class="flex items-center justify-between gap-2">
           <p id="mechanic-title" class="text-[15px] font-bold text-ink">
@@ -466,6 +546,197 @@ async function finish(jobId: number): Promise<void> {
             <JobCancel :job="job" :dependents="dependents(job)" :disabled="busy" @cancel="cancel" />
           </li>
         </ol>
+      </section>
+
+      <!-- What is fitted on the slot that was tapped, and what the workshop can do with it. A part that waits in a job cannot be touched again. -->
+      <SlotDetail :slot="picked" :engine="car.vehicle.engine" :mounted="mounted" :total="car.slots.length" :link="false" @close="clearPick">
+        <div v-if="pickedPart" class="flex flex-wrap items-start gap-2" data-test="slot-actions">
+          <!-- Putting a worn part right: paid now, and the car stands while the mechanic is at it. A part that is worn out has to be replaced, and says so. -->
+          <div v-if="canRepair(pickedPart.repair_next) || pickedPart.repair_next.locked?.reason === 'worn_out'" class="flex min-w-[9rem] flex-1 flex-col gap-1">
+            <button
+              v-if="canRepair(pickedPart.repair_next)"
+              type="button"
+              class="btn btn-primary btn-sm"
+              :disabled="busy || busyPartIds.has(pickedPart.id)"
+              :data-test="`repair-${pickedPart.id}`"
+              @click="act('repair', pickedPart)"
+            >
+              {{ t('workshop.repairAction') }}
+            </button>
+            <p class="sub" :data-test="`repair-info-${pickedPart.id}`">{{ repairInfo(pickedPart.repair_next) }}</p>
+          </div>
+
+          <!-- The next step of the upgrade: paid now, and the car stands while the mechanic is at it. A part that is as far as it goes says so instead of offering it. -->
+          <div v-if="pickedPart.upgrade_next.locked?.reason !== 'unavailable'" class="flex min-w-[9rem] flex-1 flex-col gap-1">
+            <button
+              v-if="pickedPart.upgrade_next.to !== null"
+              type="button"
+              class="btn btn-primary btn-sm"
+              :disabled="busy || busyPartIds.has(pickedPart.id) || pickedPart.upgrade_next.locked !== null"
+              data-tutorial="upgrade"
+              :data-test="`upgrade-${pickedPart.id}`"
+              @click="act('upgrade', pickedPart)"
+            >
+              {{ t('workshop.upgradeTo', { to: pickedPart.upgrade_next.to }) }}
+            </button>
+            <p class="sub" :data-test="`upgrade-info-${pickedPart.id}`">{{ upgradeInfo(pickedPart.upgrade_next) }}</p>
+          </div>
+
+          <div class="flex min-w-[9rem] flex-1 flex-col gap-1">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              :disabled="busy || busyPartIds.has(pickedPart.id) || !!pickedPart.unmount_next?.locked"
+              :data-test="`take-off-${pickedPart.id}`"
+              @click="act('unmount', pickedPart)"
+            >
+              {{ t('workshop.takeOff') }}
+            </button>
+            <!-- An engine that the booster on the car needs cannot come out: the factory engine has too few cylinders for it. -->
+            <p v-if="pickedPart.unmount_next?.locked" class="sub text-danger" :data-test="`take-off-lock-${pickedPart.id}`">{{ lockText(t, pickedPart.unmount_next.locked, fixed) }}</p>
+            <p v-else-if="pickedPart.unmount_next" class="sub" :data-test="`take-off-info-${pickedPart.id}`">{{ slotJobInfo(pickedPart.unmount_next) }}</p>
+          </div>
+        </div>
+      </SlotDetail>
+
+      <section class="flex flex-col gap-2" aria-labelledby="inventory-title" data-test="inventory">
+        <div class="flex items-center justify-between gap-2">
+          <h2 id="inventory-title" class="kick !mb-0">{{ t('workshop.inventory') }}</h2>
+          <!-- The inventory shows the parts that fit the slot that was tapped: one tap puts all of them back. -->
+          <button v-if="inventoryFilter !== null" type="button" class="chip chip-am cursor-pointer" data-test="inventory-filter" @click="clearPick">
+            {{ t('workshop.filteredBy', { slot: slotName(inventoryFilter) }) }}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
+          </button>
+        </div>
+
+        <p v-if="inventory.length === 0" class="sub" data-test="inventory-empty">{{ t('workshop.inventoryEmpty') }}</p>
+
+        <div v-else-if="shownParts.length === 0" class="card flex flex-wrap items-center justify-between gap-2.5 !p-3" data-test="inventory-none">
+          <p class="sub">{{ t('workshop.noneForSlot', { slot: slotName(inventoryFilter ?? '') }) }}</p>
+          <RouterLink :to="{ name: 'shop' }" class="btn btn-secondary btn-sm no-underline" data-test="inventory-shop">{{ t('workshop.toShop') }}</RouterLink>
+        </div>
+
+        <ul v-else class="flex flex-col gap-2">
+          <li v-for="part in shownParts" :key="part.id" class="card flex flex-wrap items-start justify-between gap-2.5 !p-3" :data-test="`part-${part.id}`">
+            <div class="flex min-w-0 gap-2.5">
+              <MediaPicture :src="part.image_url" :alt="part.name" class="h-14 w-14 flex-none rounded-md border border-line-2 object-cover" data-test="part-picture" />
+              <div class="min-w-0">
+              <p class="flex items-center gap-2 text-[15px] font-bold text-ink">
+                {{ part.name }}
+                <span class="tag">{{ t('part.tier', { tier: part.tier ?? 0 }) }}</span>
+              </p>
+              <p class="sub">{{ t(`slot.${part.slot}`) }}</p>
+              <p class="my-1 flex flex-wrap items-center gap-2">
+                <RarityMark :rarity="part.rarity" />
+                <UpgradeMark :level="part.upgrade" />
+              </p>
+              <PartStats :part="part" />
+              <PartAffixes :part="part" />
+              <PartCondition :percent="part.condition_percent" class="mt-1.5" />
+              <p v-if="part.repair_next?.locked?.reason === 'worn_out'" class="sub mt-1" :data-test="`repair-info-${part.id}`">{{ t('workshop.repairWornOut') }}</p>
+              </div>
+            </div>
+            <!-- A long reason (the engine bay says what it does not take) wraps inside the card instead of pushing it out of the screen. -->
+            <div class="flex max-w-full shrink-0 flex-col gap-1.5">
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                :disabled="busy || busyPartIds.has(part.id) || !!part.mount_next?.locked"
+                :data-tutorial="part.id === mountTarget ? 'mount' : undefined"
+                :data-test="`put-on-${part.id}`"
+                @click="act('mount', part)"
+              >
+                {{ t('workshop.putOn') }}
+              </button>
+              <!-- A part the car cannot take (too few cylinders, no booster for an intercooler) says why instead of the price: the job would be refused. -->
+              <p v-if="part.mount_next?.locked" class="sub text-danger" :data-test="`put-on-lock-${part.id}`">{{ lockText(t, part.mount_next.locked, fixed) }}</p>
+              <p v-else-if="part.mount_next" class="sub" :data-test="`put-on-info-${part.id}`">{{ slotJobInfo(part.mount_next) }}</p>
+              <!-- A worn part of the inventory is put right without the car: the repair costs and takes what its condition says. -->
+              <button
+                v-if="canRepair(part.repair_next)"
+                type="button"
+                class="btn btn-secondary btn-sm"
+                :disabled="busy || busyPartIds.has(part.id)"
+                :data-test="`repair-${part.id}`"
+                @click="act('repair', part)"
+              >
+                {{ t('workshop.repairAction') }}
+              </button>
+              <p v-if="canRepair(part.repair_next)" class="sub" :data-test="`repair-info-${part.id}`">{{ repairInfo(part.repair_next) }}</p>
+              <!-- Merging two parts of one slot, tier and rarity into one of the next rarity: the server says what a part can be merged with. -->
+              <button
+                v-if="part.merge"
+                type="button"
+                class="btn btn-secondary btn-sm"
+                :disabled="busy || busyPartIds.has(part.id)"
+                :aria-expanded="merging === part.id"
+                data-tutorial="merge"
+                :data-test="`merge-open-${part.id}`"
+                @click="merging = merging === part.id ? null : part.id"
+              >
+                {{ t('workshop.mergeOpen') }}
+              </button>
+            </div>
+            <PartMerge
+              v-if="part.merge && merging === part.id"
+              :part="part"
+              :offer="part.merge"
+              :partners="partnersOf(part)"
+              :disabled="busy"
+              @merge="(other) => act('merge', part, other)"
+              @close="merging = null"
+            />
+          </li>
+        </ul>
+      </section>
+      <SpecCard :name="car.vehicle.name" :kicker="className(car.vehicle.class)" :tier="car.vehicle.tier ?? null" :score="score" level="h2" heading-id="car-title">
+      <div class="flex flex-col gap-1" :aria-label="t('workshop.stats')">
+        <div v-for="stat in STATS" :key="stat" class="st" :data-test="`stat-${stat}`">
+          <span>{{ t(`carStat.${stat}`) }}</span>
+          <div class="bar"><i :style="{ width: `${statFill(car, stat)}%` }" /></div>
+          <span>
+            {{ number(car.stats[stat], 1) }}
+            <em v-if="delta(stat) !== 0" :class="{ dn: delta(stat) < 0 }" :data-test="`delta-${stat}`">{{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 1) }}</em>
+          </span>
+        </div>
+      </div>
+
+      <!-- The odometer, the service and how often the car breaks down; the service is a job on the car, paid when it is queued. -->
+      <h3 class="kick !mb-0 mt-1">{{ t('workshop.conditionTitle') }}</h3>
+      <div class="card flex flex-col gap-1.5 !p-3" data-test="condition">
+        <p class="text-[13px] text-ink" data-test="mileage">{{ t('workshop.mileage', { km: number(car.mileage_km) }) }}</p>
+        <p class="text-[13px]" :class="car.service.due_in_km < 0 ? 'text-danger' : 'text-ink'" data-test="service-line">{{ serviceLine(car.service) }}</p>
+        <p v-if="breakdownLine(car)" class="sub" data-test="breakdown-line">{{ breakdownLine(car) }}</p>
+        <div class="flex flex-wrap items-center gap-2">
+          <button type="button" class="btn btn-secondary btn-sm" :disabled="busy || servicing" data-tutorial="service" data-test="service" @click="act('service', null)">
+            {{ t('workshop.serviceButton') }}
+          </button>
+          <span class="sub" data-test="service-info">{{ servicing ? t('workshop.serviceWaits') : t('workshop.serviceCost', { price: money(car.service.cost_cents, 2), time: formatDuration(car.service.duration_ms) }) }}</span>
+        </div>
+      </div>
+      </SpecCard>
+
+      <section v-if="merges.length > 0" class="flex flex-col gap-2" aria-labelledby="merges-title" data-test="merges">
+        <h2 id="merges-title" class="kick !mb-0">{{ t('workshop.mergesTitle') }}</h2>
+        <ul class="flex flex-col gap-2">
+          <li
+            v-for="result in merges"
+            :key="result.id"
+            class="card flex flex-col gap-1 !p-3"
+            :style="result.success ? { borderColor: `var(--color-r${rankOf(result.to)})` } : undefined"
+            :data-success="result.success"
+            :data-test="`merge-result-${result.id}`"
+          >
+            <p class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] font-semibold" :class="result.success ? 'text-ink' : 'text-danger'">
+              {{ resultText(result) }}
+              <RarityMark :rarity="result.to" />
+              <span class="tag">{{ t('part.tier', { tier: result.tier }) }}</span>
+            </p>
+            <p class="sub">{{ t(`slot.${result.slot}`) }} · {{ t('workshop.mergeChance', { chance: percent(result.chance_ppm / 10_000) }) }}</p>
+            <p v-if="!result.success" class="sub" data-test="merge-result-scrap">{{ t('workshop.mergeScrap', { scrap: money(result.scrap_cents, 2) }) }}</p>
+            <PartAffixes v-if="result.success && result.part" :part="result.part" />
+          </li>
+        </ul>
       </section>
 
       <!-- The equipment of the workshop of this city: what is bought here speeds up the jobs queued after it. There is no board for this card; it uses the cards of the screen. -->
@@ -555,207 +826,6 @@ async function finish(jobId: number): Promise<void> {
         </div>
       </section>
 
-      <section v-if="merges.length > 0" class="flex flex-col gap-2" aria-labelledby="merges-title" data-test="merges">
-        <h2 id="merges-title" class="kick !mb-0">{{ t('workshop.mergesTitle') }}</h2>
-        <ul class="flex flex-col gap-2">
-          <li
-            v-for="result in merges"
-            :key="result.id"
-            class="card flex flex-col gap-1 !p-3"
-            :style="result.success ? { borderColor: `var(--color-r${rankOf(result.to)})` } : undefined"
-            :data-success="result.success"
-            :data-test="`merge-result-${result.id}`"
-          >
-            <p class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[13px] font-semibold" :class="result.success ? 'text-ink' : 'text-danger'">
-              {{ resultText(result) }}
-              <RarityMark :rarity="result.to" />
-              <span class="tag">{{ t('part.tier', { tier: result.tier }) }}</span>
-            </p>
-            <p class="sub">{{ t(`slot.${result.slot}`) }} · {{ t('workshop.mergeChance', { chance: percent(result.chance_ppm / 10_000) }) }}</p>
-            <p v-if="!result.success" class="sub" data-test="merge-result-scrap">{{ t('workshop.mergeScrap', { scrap: money(result.scrap_cents, 2) }) }}</p>
-            <PartAffixes v-if="result.success && result.part" :part="result.part" />
-          </li>
-        </ul>
-      </section>
-
-      <section class="flex flex-col gap-3" aria-labelledby="car-title" data-test="car">
-        <div class="flex items-start justify-between gap-3">
-          <h2 id="car-title" class="ttl text-2xl">{{ car.vehicle.name }}</h2>
-          <span class="chip chip-am" data-test="car-level">{{ t('workshop.level', { level: car.level }) }}</span>
-        </div>
-
-        <div class="flex flex-col gap-1" :aria-label="t('workshop.stats')">
-          <div v-for="stat in STATS" :key="stat" class="st" :data-test="`stat-${stat}`">
-            <span>{{ t(`carStat.${stat}`) }}</span>
-            <div class="bar"><i :style="{ width: `${statFill(car, stat)}%` }" /></div>
-            <span>
-              {{ number(car.stats[stat], 1) }}
-              <em v-if="delta(stat) !== 0" :class="{ dn: delta(stat) < 0 }" :data-test="`delta-${stat}`">{{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 1) }}</em>
-            </span>
-          </div>
-        </div>
-
-        <!-- The odometer, the service and how often the car breaks down; the service is a job on the car, paid when it is queued. -->
-        <h3 class="kick !mb-0 mt-1">{{ t('workshop.conditionTitle') }}</h3>
-        <div class="card flex flex-col gap-1.5 !p-3" data-test="condition">
-          <p class="text-[13px] text-ink" data-test="mileage">{{ t('workshop.mileage', { km: number(car.mileage_km) }) }}</p>
-          <p class="text-[13px]" :class="car.service.due_in_km < 0 ? 'text-danger' : 'text-ink'" data-test="service-line">{{ serviceLine(car.service) }}</p>
-          <p v-if="breakdownLine(car)" class="sub" data-test="breakdown-line">{{ breakdownLine(car) }}</p>
-          <div class="flex flex-wrap items-center gap-2">
-            <button type="button" class="btn btn-secondary btn-sm" :disabled="busy || servicing" data-tutorial="service" data-test="service" @click="act('service', null)">
-              {{ t('workshop.serviceButton') }}
-            </button>
-            <span class="sub" data-test="service-info">{{ servicing ? t('workshop.serviceWaits') : t('workshop.serviceCost', { price: money(car.service.cost_cents, 2), time: formatDuration(car.service.duration_ms) }) }}</span>
-          </div>
-        </div>
-
-        <h3 class="kick !mb-0 mt-1">{{ t('workshop.slots') }}</h3>
-        <ul class="grid grid-cols-2 gap-2">
-          <li
-            v-for="slot in car.slots"
-            :key="slot.slot"
-            class="tile"
-            :class="[slot.part ? 'on' : '', slot.part && slot.part.rarity_rank > 1 ? `r${slot.part.rarity_rank}` : '']"
-            :data-test="`slot-${slot.slot}`"
-          >
-            <span class="sl">{{ t(`slot.${slot.slot}`) }}</span>
-            <template v-if="slot.part">
-              <span class="nm">
-                {{ slot.part.name }}
-                <span class="mono ml-1 text-[10px] text-faint">{{ t('part.tier', { tier: slot.part.tier ?? 0 }) }}</span>
-              </span>
-              <span v-if="slot.part.rarity_rank > 1 || slot.part.upgrade > 0" class="flex flex-wrap items-center gap-1.5">
-                <RarityMark v-if="slot.part.rarity_rank > 1" :rarity="slot.part.rarity" />
-                <UpgradeMark :level="slot.part.upgrade" />
-              </span>
-              <PartAffixes :part="slot.part" compact />
-              <PartCondition :percent="slot.part.condition_percent" />
-              <!-- Putting a worn part right: paid now, and the car stands while the mechanic is at it. A part that is worn out has to be replaced, and says so. -->
-              <template v-if="canRepair(slot.part.repair_next) || slot.part.repair_next.locked?.reason === 'worn_out'">
-                <button
-                  v-if="canRepair(slot.part.repair_next)"
-                  type="button"
-                  class="btn btn-primary btn-sm mt-1.5 !min-h-9 !text-base"
-                  :disabled="busy || busyPartIds.has(slot.part.id)"
-                  :data-test="`repair-${slot.part.id}`"
-                  @click="act('repair', slot.part)"
-                >
-                  {{ t('workshop.repairAction') }}
-                </button>
-                <p class="sub mt-1" :data-test="`repair-info-${slot.part.id}`">{{ repairInfo(slot.part.repair_next) }}</p>
-              </template>
-              <!-- The next step of the upgrade: paid now, and the car stands while the mechanic is at it. A part that is as far as it goes says so instead of offering it. -->
-              <template v-if="slot.part.upgrade_next.locked?.reason !== 'unavailable'">
-                <button
-                  v-if="slot.part.upgrade_next.to !== null"
-                  type="button"
-                  class="btn btn-primary btn-sm mt-1.5 !min-h-9 !text-base"
-                  :disabled="busy || busyPartIds.has(slot.part.id) || slot.part.upgrade_next.locked !== null"
-                  data-tutorial="upgrade"
-                  :data-test="`upgrade-${slot.part.id}`"
-                  @click="act('upgrade', slot.part)"
-                >
-                  {{ t('workshop.upgradeTo', { to: slot.part.upgrade_next.to }) }}
-                </button>
-                <p class="sub mt-1" :data-test="`upgrade-info-${slot.part.id}`">{{ upgradeInfo(slot.part.upgrade_next) }}</p>
-              </template>
-              <button
-                type="button"
-                class="btn btn-secondary btn-sm mt-1.5 !min-h-9 !text-base"
-                :disabled="busy || busyPartIds.has(slot.part.id) || !!slot.part.unmount_next?.locked"
-                :data-test="`take-off-${slot.part.id}`"
-                @click="act('unmount', slot.part)"
-              >
-                {{ t('workshop.takeOff') }}
-              </button>
-              <!-- An engine that the booster on the car needs cannot come out: the factory engine has too few cylinders for it. -->
-              <p v-if="slot.part.unmount_next?.locked" class="sub mt-1 text-danger" :data-test="`take-off-lock-${slot.part.id}`">{{ lockText(t, slot.part.unmount_next.locked, fixed) }}</p>
-              <p v-else-if="slot.part.unmount_next" class="sub mt-1" :data-test="`take-off-info-${slot.part.id}`">{{ slotJobInfo(slot.part.unmount_next) }}</p>
-            </template>
-            <span v-else-if="slot.built_in" class="nm">{{ car.vehicle.engine ?? t('workshop.builtIn') }}</span>
-            <span v-else class="nm text-faint">{{ t('workshop.empty') }}</span>
-          </li>
-        </ul>
-      </section>
-
-      <section class="flex flex-col gap-2" aria-labelledby="inventory-title" data-test="inventory">
-        <h2 id="inventory-title" class="kick !mb-0">{{ t('workshop.inventory') }}</h2>
-
-        <p v-if="inventory.length === 0" class="sub" data-test="inventory-empty">{{ t('workshop.inventoryEmpty') }}</p>
-
-        <ul v-else class="flex flex-col gap-2">
-          <li v-for="part in inventory" :key="part.id" class="card flex flex-wrap items-start justify-between gap-2.5 !p-3" :data-test="`part-${part.id}`">
-            <div class="flex min-w-0 gap-2.5">
-              <MediaPicture :src="part.image_url" :alt="part.name" class="h-14 w-14 flex-none rounded-md border border-line-2 object-cover" data-test="part-picture" />
-              <div class="min-w-0">
-              <p class="flex items-center gap-2 text-[15px] font-bold text-ink">
-                {{ part.name }}
-                <span class="tag">{{ t('part.tier', { tier: part.tier ?? 0 }) }}</span>
-              </p>
-              <p class="sub">{{ t(`slot.${part.slot}`) }}</p>
-              <p class="my-1 flex flex-wrap items-center gap-2">
-                <RarityMark :rarity="part.rarity" />
-                <UpgradeMark :level="part.upgrade" />
-              </p>
-              <PartStats :part="part" />
-              <PartAffixes :part="part" />
-              <PartCondition :percent="part.condition_percent" class="mt-1.5" />
-              <p v-if="part.repair_next?.locked?.reason === 'worn_out'" class="sub mt-1" :data-test="`repair-info-${part.id}`">{{ t('workshop.repairWornOut') }}</p>
-              </div>
-            </div>
-            <!-- A long reason (the engine bay says what it does not take) wraps inside the card instead of pushing it out of the screen. -->
-            <div class="flex max-w-full shrink-0 flex-col gap-1.5">
-              <button
-                type="button"
-                class="btn btn-primary btn-sm"
-                :disabled="busy || busyPartIds.has(part.id) || !!part.mount_next?.locked"
-                :data-tutorial="part.id === mountTarget ? 'mount' : undefined"
-                :data-test="`put-on-${part.id}`"
-                @click="act('mount', part)"
-              >
-                {{ t('workshop.putOn') }}
-              </button>
-              <!-- A part the car cannot take (too few cylinders, no booster for an intercooler) says why instead of the price: the job would be refused. -->
-              <p v-if="part.mount_next?.locked" class="sub text-danger" :data-test="`put-on-lock-${part.id}`">{{ lockText(t, part.mount_next.locked, fixed) }}</p>
-              <p v-else-if="part.mount_next" class="sub" :data-test="`put-on-info-${part.id}`">{{ slotJobInfo(part.mount_next) }}</p>
-              <!-- A worn part of the inventory is put right without the car: the repair costs and takes what its condition says. -->
-              <button
-                v-if="canRepair(part.repair_next)"
-                type="button"
-                class="btn btn-secondary btn-sm"
-                :disabled="busy || busyPartIds.has(part.id)"
-                :data-test="`repair-${part.id}`"
-                @click="act('repair', part)"
-              >
-                {{ t('workshop.repairAction') }}
-              </button>
-              <p v-if="canRepair(part.repair_next)" class="sub" :data-test="`repair-info-${part.id}`">{{ repairInfo(part.repair_next) }}</p>
-              <!-- Merging two parts of one slot, tier and rarity into one of the next rarity: the server says what a part can be merged with. -->
-              <button
-                v-if="part.merge"
-                type="button"
-                class="btn btn-secondary btn-sm"
-                :disabled="busy || busyPartIds.has(part.id)"
-                :aria-expanded="merging === part.id"
-                data-tutorial="merge"
-                :data-test="`merge-open-${part.id}`"
-                @click="merging = merging === part.id ? null : part.id"
-              >
-                {{ t('workshop.mergeOpen') }}
-              </button>
-            </div>
-            <PartMerge
-              v-if="part.merge && merging === part.id"
-              :part="part"
-              :offer="part.merge"
-              :partners="partnersOf(part)"
-              :disabled="busy"
-              @merge="(other) => act('merge', part, other)"
-              @close="merging = null"
-            />
-          </li>
-        </ul>
-      </section>
     </template>
   </GameShell>
 </template>
