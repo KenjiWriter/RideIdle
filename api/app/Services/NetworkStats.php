@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Games\CurrentGame;
+use App\Models\DomainJob;
 use App\Models\Game;
 use App\Models\Purchase;
 use App\Models\User;
@@ -30,7 +31,7 @@ final class NetworkStats
      * The numbers of some games, by the id of the game (a game with nothing in it has zeros).
      *
      * @param  Collection<int, Game>  $games
-     * @return array<int, array{accounts: int, guests: int, secured: int, new_week: int, active_day: int, active_week: int, revenue_total: array<string, int>, revenue_month: array<string, int>, pack: string|null, from_files: bool}>
+     * @return array<int, array{accounts: int, guests: int, secured: int, new_week: int, active_day: int, active_week: int, revenue_total: array<string, int>, revenue_month: array<string, int>, pack: string|null, from_files: bool, ssl: array{state: string, expires: string|null}}>
      */
     public function for(Collection $games, ?CarbonImmutable $now = null): array
     {
@@ -43,7 +44,7 @@ final class NetworkStats
         $stats = [];
 
         foreach ($ids as $id) {
-            $stats[$id] = ['accounts' => 0, 'guests' => 0, 'secured' => 0, 'new_week' => 0, 'active_day' => 0, 'active_week' => 0, 'revenue_total' => [], 'revenue_month' => [], 'pack' => null, 'from_files' => false];
+            $stats[$id] = ['accounts' => 0, 'guests' => 0, 'secured' => 0, 'new_week' => 0, 'active_day' => 0, 'active_week' => 0, 'revenue_total' => [], 'revenue_month' => [], 'pack' => null, 'from_files' => false, 'ssl' => ['state' => 'none', 'expires' => null]];
         }
 
         if ($ids === []) {
@@ -81,6 +82,13 @@ final class NetworkStats
             $stats[(int) $row->game_id]['revenue_month'][(string) $row->currency] = (int) $row->month;
         }
 
+        // The certificate of the domain of each game, as the last things asked of the server say.
+        $jobs = DomainJob::query()->whereIn('game_id', $ids)->orderBy('id')->get(['id', 'game_id', 'status', 'certificate_expires_at'])->groupBy('game_id');
+
+        foreach ($jobs as $gameId => $rows) {
+            $stats[(int) $gameId]['ssl'] = $this->sslOf($rows, $now);
+        }
+
         foreach ($games as $game) {
             $stats[$game->id]['pack'] = $this->current->within($game, fn (): ?string => $this->packs->active()?->number);
             // The files of the repository are the content of the default game, when the installation reads files: no pack in the database is not "no content" there.
@@ -91,9 +99,43 @@ final class NetworkStats
     }
 
     /**
+     * Where the certificate of a game stands: nothing was asked yet (`none`), the server is at it (`pending`), the last thing asked failed (`failed`), or it was done, and then the
+     * end date that the last report of a certificate gave says whether it holds (`ok`), ends within two weeks (`soon`) or has ended (`expired`).
+     *
+     * @param  Collection<int, DomainJob>  $rows  the jobs of one game, the oldest first
+     * @return array{state: string, expires: string|null}
+     */
+    private function sslOf(Collection $rows, CarbonImmutable $now): array
+    {
+        $last = $rows->last();
+
+        if ($last === null) {
+            return ['state' => 'none', 'expires' => null];
+        }
+
+        if ($last->isActive()) {
+            return ['state' => 'pending', 'expires' => null];
+        }
+
+        if ($last->status === DomainJob::STATUS_FAILED) {
+            return ['state' => 'failed', 'expires' => null];
+        }
+
+        $expires = $rows->filter(fn (DomainJob $job): bool => $job->status === DomainJob::STATUS_DONE && $job->certificate_expires_at !== null)->last()?->certificate_expires_at;
+
+        if ($expires === null) {
+            return ['state' => 'ok', 'expires' => null];
+        }
+
+        $days = (int) floor($now->startOfDay()->diffInDays($expires->startOfDay(), false));
+
+        return ['state' => $days < 0 ? 'expired' : ($days <= 14 ? 'soon' : 'ok'), 'expires' => $expires->format('Y-m-d')];
+    }
+
+    /**
      * The numbers of all the games added up (the money is added up per currency).
      *
-     * @param  array<int, array{accounts: int, guests: int, secured: int, new_week: int, active_day: int, active_week: int, revenue_total: array<string, int>, revenue_month: array<string, int>, pack: string|null, from_files: bool}>  $stats
+     * @param  array<int, array{accounts: int, guests: int, secured: int, new_week: int, active_day: int, active_week: int, revenue_total: array<string, int>, revenue_month: array<string, int>, pack: string|null, from_files: bool, ssl: array{state: string, expires: string|null}}>  $stats
      * @return array{accounts: int, guests: int, secured: int, new_week: int, active_day: int, active_week: int, revenue_total: array<string, int>, revenue_month: array<string, int>}
      */
     public static function totals(array $stats): array

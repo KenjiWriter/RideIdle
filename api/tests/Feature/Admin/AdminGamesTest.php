@@ -267,7 +267,9 @@ describe('the page of the games', function () {
         Livewire::test(CreateGame::class)->fillForm([...$form, 'slug' => 'Bad Slug'])->call('create')->assertHasFormErrors(['slug' => 'regex']);
         Livewire::test(CreateGame::class)->fillForm([...$form, 'slug' => 'statki'])->call('create')->assertHasFormErrors(['slug' => 'unique']);
         Livewire::test(CreateGame::class)->fillForm([...$form, 'domain' => 'statki.example.test'])->call('create')->assertHasFormErrors(['domain' => 'unique']);
-        Livewire::test(CreateGame::class)->fillForm([...$form, 'domain' => 'Kosmos.Example.test'])->call('create')->assertHasFormErrors(['domain' => 'regex']);
+        Livewire::test(CreateGame::class)->fillForm([...$form, 'domain' => 'kosmos'])->call('create')->assertHasFormErrors(['domain' => 'regex']);
+        // A domain with capitals is not refused: the form writes it in lower case when it is left.
+        Livewire::test(CreateGame::class)->fillForm([...$form, 'domain' => 'Kosmos.Example.test'])->assertFormSet(['domain' => 'kosmos.example.test']);
         Livewire::test(CreateGame::class)->fillForm([...$form, 'theme_color' => 'blue'])->call('create')->assertHasFormErrors(['theme_color' => 'regex']);
 
         expect(Game::query()->where('slug', 'kosmos')->exists())->toBeFalse();

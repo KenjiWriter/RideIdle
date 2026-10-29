@@ -22,9 +22,17 @@
                     @endif
                 </x-slot>
                 <x-slot name="afterHeader">
-                    <x-filament::badge :color="$tile['live'] ? 'success' : 'warning'" data-test="game-status">
-                        {{ __('admin.games.status_'.($tile['live'] ? 'live' : 'draft')) }}
-                    </x-filament::badge>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                        <x-filament::badge :color="$tile['live'] ? 'success' : 'warning'" data-test="game-status">
+                            {{ __('admin.games.status_'.($tile['live'] ? 'live' : 'draft')) }}
+                        </x-filament::badge>
+                        @if ($tile['domain'])
+                            @php($ssl = $tile['stats']['ssl'])
+                            <x-filament::badge :color="['none' => 'gray', 'pending' => 'info', 'ok' => 'success', 'soon' => 'warning', 'expired' => 'danger', 'failed' => 'danger'][$ssl['state']]" data-test="tile-ssl" data-state="{{ $ssl['state'] }}">
+                                {{ __('admin.network.tile.ssl.'.($ssl['state'] === 'ok' && $ssl['expires'] === null ? 'ok_unknown' : $ssl['state']), ['date' => $ssl['expires']]) }}
+                            </x-filament::badge>
+                        @endif
+                    </div>
                 </x-slot>
 
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">

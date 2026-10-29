@@ -149,7 +149,7 @@ describe('what a game has in it, for the home of the panel', function () {
     it('is zeros for a game with nothing in it, and for no games at all', function () {
         $empty = networkGame();
 
-        expect(networkStatsOf($empty))->toBe(['accounts' => 0, 'guests' => 0, 'secured' => 0, 'new_week' => 0, 'active_day' => 0, 'active_week' => 0, 'revenue_total' => [], 'revenue_month' => [], 'pack' => null, 'from_files' => false])
+        expect(networkStatsOf($empty))->toBe(['accounts' => 0, 'guests' => 0, 'secured' => 0, 'new_week' => 0, 'active_day' => 0, 'active_week' => 0, 'revenue_total' => [], 'revenue_month' => [], 'pack' => null, 'from_files' => false, 'ssl' => ['state' => 'none', 'expires' => null]])
             ->and(app(NetworkStats::class)->for(collect()))->toBe([]);
     });
 

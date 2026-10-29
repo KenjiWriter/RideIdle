@@ -82,6 +82,13 @@ return [
     'admin_domain' => env('ADMIN_DOMAIN') ?: null,
     'admin_locale' => env('ADMIN_LOCALE', 'pl'),
 
+    // The network of games: the address that Let's Encrypt writes to about the certificates of the domains of the games (it is given to the worker on the server that sets a
+    // domain up), and the public addresses of this server, comma separated, which the domain of a game has to point to (empty: the address that the host of WEB_URL resolves to).
+    'network' => [
+        'acme_email' => env('ACME_EMAIL') ?: null,
+        'server_ips' => array_values(array_filter(array_map('trim', explode(',', (string) env('SERVER_IPS', ''))))),
+    ],
+
     // Where the game reads its content from: `files` (the content/ folder, which is what a development machine and the tests use) or `database` (the pack that
     // was made live with content:activate; a deploy installs the one of the release the first time, with content:check --install).
     'content_source' => env('CONTENT_SOURCE', 'files'),
