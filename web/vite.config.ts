@@ -24,7 +24,8 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // The API of the development machine. Another project may already use port 8000:
         // set DEV_API_TARGET (for example in web/.env.local) to point at your php artisan serve.
-        '/api': env.DEV_API_TARGET || 'http://127.0.0.1:8000',
+        // The host of the page is kept (no changeOrigin): the API tells the games apart by it, so ships.localhost:5173 is another game than localhost:5173.
+        '/api': { target: env.DEV_API_TARGET || 'http://127.0.0.1:8000', changeOrigin: false },
       },
     },
     test: {
