@@ -300,3 +300,15 @@ describe('a game with other slots', function () {
             ->and(array_filter($kept->errors(), fn (array $issue): bool => $issue['file'] === 'rules/model.json'))->toHaveCount(0);
     });
 });
+
+describe('the model as the clients get it', function () {
+    it('is the model of the car game for a game that has no document of its own, the same for everyone and cached for a minute', function () {
+        $response = $this->getJson('/api/v1/meta/model')->assertOk();
+
+        expect($response->json())->toBe(GameModel::default()->toArray())
+            ->and($response->headers->get('Cache-Control'))->toContain('public')->toContain('max-age=60')
+            ->and($response->headers->get('ETag'))->not->toBeNull();
+
+        $this->getJson('/api/v1/meta/model', ['If-None-Match' => $response->headers->get('ETag')])->assertStatus(304);
+    });
+});
