@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Content\Publishing\PartPreview;
+use App\Filament\Concerns\ForAGame;
 use App\Filament\Forms\ContentOptions;
 use App\Models\ContentDefinition;
 use Filament\Actions\Action;
@@ -27,6 +28,7 @@ use InvalidArgumentException;
  */
 class EffectPreviewPage extends Page implements HasSchemas
 {
+    use ForAGame;
     use InteractsWithSchemas;
 
     protected static ?string $slug = 'preview';

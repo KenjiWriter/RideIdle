@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Definitions;
 
+use App\Filament\Concerns\ForAGame;
 use App\Models\ContentDefinition;
 use Filament\Actions\EditAction;
 use Filament\Resources\Resource;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class DefinitionResource extends Resource
 {
+    use ForAGame;
+
     protected static ?string $model = ContentDefinition::class;
 
     /** The kind of definition that the resource is for (`ContentDefinition::KIND_*`). */

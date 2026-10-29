@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Filament\Livewire;
 
+use App\Filament\Pages\GameOverview;
 use App\Games\CurrentGame;
 use App\Http\Middleware\SetAdminGame;
 use App\Models\Admin;
 use App\Models\Game;
-use Filament\Facades\Filament;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +16,7 @@ use Livewire\Component;
 
 /**
  * The game that the panel works in, in the top bar: the games that the admin may enter, the one in play chosen. Changing it keeps the slug in the session (see
- * `SetAdminGame`) and takes the admin to the home of the panel, which is then the home of that game. An admin who may enter one game sees its name and no choice.
+ * `SetAdminGame`) and takes the admin to the overview of that game. An admin who may enter one game sees its name and no choice.
  */
 class GameSwitcher extends Component
 {
@@ -36,7 +36,8 @@ class GameSwitcher extends Component
 
         session()->put(SetAdminGame::SESSION_KEY, $game->slug);
 
-        $this->redirect(Filament::getCurrentPanel()?->getUrl() ?? url('/'));
+        // A game that is chosen is a game that is entered: what is shown first is its overview.
+        $this->redirect(GameOverview::getUrl());
     }
 
     /** @return Collection<int, Game> the games that the admin may enter, the first one first */

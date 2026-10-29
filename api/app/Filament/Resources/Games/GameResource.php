@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Games;
 
+use App\Filament\Concerns\ForTheNetwork;
 use App\Filament\Resources\Games\Pages\CreateGame;
 use App\Filament\Resources\Games\Pages\EditGame;
 use App\Filament\Resources\Games\Pages\ListGames;
@@ -34,6 +35,8 @@ use Illuminate\Support\Facades\Auth;
  */
 class GameResource extends Resource
 {
+    use ForTheNetwork;
+
     /** What a slug looks like: lower case words joined by dashes, the first one a letter. */
     public const SLUG = '/^[a-z][a-z0-9-]{1,31}$/';
 

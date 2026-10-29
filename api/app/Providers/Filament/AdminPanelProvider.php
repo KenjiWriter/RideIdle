@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Providers\Filament;
 
 use App\Filament\Livewire\GameSwitcher;
+use App\Filament\Pages\NetworkDashboard;
+use App\Filament\Support\AdminLevel;
 use App\Filament\Widgets\LivePackWidget;
 use App\Http\Middleware\SetAdminGame;
 use App\Support\Locale;
@@ -14,12 +16,11 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
+use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -66,13 +67,18 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                AccountWidget::class,
                 LivePackWidget::class,
+            ])
+            // The way back from a game to the network, where there is a network to go back to.
+            ->navigationItems([
+                NavigationItem::make()
+                    ->label(fn (): string => __('admin.network.back'))
+                    ->icon('heroicon-o-arrow-left-circle')
+                    ->url(fn (): string => NetworkDashboard::getUrl())
+                    ->visible(fn (): bool => AdminLevel::hasNetwork() && ! AdminLevel::isNetwork())
+                    ->sort(-10),
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -93,6 +99,8 @@ class AdminPanelProvider extends PanelProvider
                 SetAdminGame::class,
             ], isPersistent: true)
             // The game that the panel works in is chosen at the top of every page.
-            ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn (): string => Blade::render("@livewire('game-switcher')"));
+            ->renderHook(PanelsRenderHook::USER_MENU_BEFORE, fn (): string => Blade::render("@livewire('game-switcher')"))
+            // Where the admin is, on top of the menu: the network, or the game that the menu is about.
+            ->renderHook(PanelsRenderHook::SIDEBAR_NAV_START, fn (): string => view('filament.games.sidebar-head')->render());
     }
 }

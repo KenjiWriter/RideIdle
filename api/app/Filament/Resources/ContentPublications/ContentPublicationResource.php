@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\ContentPublications;
 
 use App\Content\ContentPackInvalid;
+use App\Filament\Concerns\ForAGame;
 use App\Filament\Resources\ContentPublications\Pages\ManageContentPublications;
 use App\Models\Admin;
 use App\Models\ContentPack;
@@ -28,6 +29,8 @@ use Illuminate\Support\Facades\Auth;
  */
 class ContentPublicationResource extends Resource
 {
+    use ForAGame;
+
     protected static ?string $model = ContentPublication::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRocketLaunch;

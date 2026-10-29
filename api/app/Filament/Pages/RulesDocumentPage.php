@@ -7,6 +7,7 @@ namespace App\Filament\Pages;
 use App\Content\ContentPackInvalid;
 use App\Content\Definitions\DefinitionForm;
 use App\Content\Definitions\DefinitionRefused;
+use App\Filament\Concerns\ForAGame;
 use App\Models\Admin;
 use App\Models\ContentDefinition;
 use App\Services\ContentDrafts;
@@ -29,6 +30,7 @@ use Illuminate\Support\Facades\Auth;
  */
 abstract class RulesDocumentPage extends Page implements HasSchemas
 {
+    use ForAGame;
     use InteractsWithSchemas;
 
     /** @var array<string, mixed>|null */

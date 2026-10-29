@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\ContentPacks;
 
 use App\Content\ContentPackInvalid;
+use App\Filament\Concerns\ForAGame;
 use App\Filament\Resources\ContentPacks\Pages\ManageContentPacks;
 use App\Models\Admin;
 use App\Models\ContentPack;
@@ -27,6 +28,8 @@ use Illuminate\Support\Facades\Auth;
  */
 class ContentPackResource extends Resource
 {
+    use ForAGame;
+
     protected static ?string $model = ContentPack::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

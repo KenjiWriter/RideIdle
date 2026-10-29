@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Filament\Livewire\GameSwitcher;
+use App\Filament\Pages\GameOverview;
 use App\Filament\Resources\AdminAuditLogs\Pages\ManageAdminAuditLogs;
 use App\Filament\Resources\Games\GameResource;
 use App\Filament\Resources\Games\Pages\CreateGame;
@@ -163,7 +164,8 @@ describe('the game that a request of the panel is in', function () {
         $second = theSecondGame();
         anAdminOf(['statki' => null]);
 
-        $this->withSession([SetAdminGame::SESSION_KEY => 'raceidle'])->get('/admin')->assertOk();
+        // An admin of one game has no network, so the home of the panel is the overview of that game.
+        $this->withSession([SetAdminGame::SESSION_KEY => 'raceidle'])->get('/admin')->assertRedirect(GameOverview::getUrl());
 
         expect(app(CurrentGame::class)->id())->toBe($second->id);
     });
