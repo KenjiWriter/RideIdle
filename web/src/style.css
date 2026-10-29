@@ -1355,6 +1355,12 @@ body {
   }
 
   /* ---------- the shop ---------- */
+  /* The scrollbar of a strip that goes sideways (the crates, the fleet, the row of slots) is thin and dark, as the rest of the skin, and not the white bar of the browser. */
+  .rail {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-line-2) transparent;
+  }
+
   /* A crate in the strip: a card that is as wide as most of the strip, so that the next one peeks out from the edge and a driver sees that the strip is swiped. */
   .crate {
     @apply flex flex-none flex-col gap-2;
