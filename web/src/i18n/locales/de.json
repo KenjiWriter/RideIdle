@@ -573,7 +573,10 @@
       "note": "Ein Kauf beschleunigt die Aufträge, die danach eingereiht werden.",
       "needBay": "Ein Mechaniker ohne Stellplatz arbeitet nicht: kaufe einen Stellplatz.",
       "needMechanic": "Ein Stellplatz ohne Mechaniker bleibt leer: kaufe einen Mechaniker."
-    }
+    },
+    "filteredBy": "Nur: {slot}",
+    "noneForSlot": "Kein Teil im Inventar passt auf diesen Platz ({slot}).",
+    "toShop": "Im Shop kaufen"
   },
   "condition": {
     "title": "Technischer Zustand",

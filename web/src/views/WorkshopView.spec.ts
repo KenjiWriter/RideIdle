@@ -1,4 +1,4 @@
-import { flushPromises } from '@vue/test-utils'
+import { flushPromises, type VueWrapper } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { storeToken } from '@/auth/token'
@@ -15,6 +15,9 @@ import WorkshopView from './WorkshopView.vue'
 const fetchMock = vi.fn()
 const serve = (routes: Record<string, () => Response | Promise<Response>>) => serveApi(fetchMock, routes)
 const noRun = () => respond(404, { message: 'No run', code: 'no_run' })
+
+/** Taps the spot of a slot on the car, as the driver does to look at the part on it and to ask the workshop for something. */
+const pick = (wrapper: Pick<VueWrapper, 'get'>, slot: string) => wrapper.get(`[data-test="spot-${slot}"]`).trigger('click')
 
 const tires = aPart({ id: 21, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, stats: { grip: 100, handling: 98, braking: 100 } })
 const exhaust = aPart({ id: 11, mounted: true, car_id: 5 })
@@ -53,7 +56,7 @@ describe('WorkshopView', () => {
     expect(wrapper.get('h1').text()).toBe('Workshop')
     expect(wrapper.get('[data-test="city"]').text()).toBe('Workshop in Złomowo')
     expect(wrapper.get('[data-test="mechanic"]').text()).toBe('Mechanic of level 1: jobs take 2% less time.')
-    expect(wrapper.get('[data-test="car"] h2').text()).toBe('Rdzak GT-4')
+    expect(wrapper.get('[data-test="car"]').text()).toBe('Rdzak GT-4')
     expect(wrapper.get('[data-test="car-level"]').text()).toBe('Level 3')
 
     expect(wrapper.get('[data-test="stat-accel"] > span:first-child').text()).toBe('Acceleration')
@@ -64,9 +67,14 @@ describe('WorkshopView', () => {
     expect(wrapper.get('[data-test="stat-clearance"] > span:last-child').text()).toBe('20')
     expect(wrapper.find('[data-test="delta-grip"]').exists()).toBe(false)
 
-    expect(wrapper.get('[data-test="slot-exhaust"]').text()).toContain('Sport exhaust')
-    expect(wrapper.get('[data-test="slot-tires"]').text()).toContain('Factory')
-    expect(wrapper.get('[data-test="slot-engine"]').text()).toContain('R4 1.8')
+    // The parts are on the car, where they are on its picture: each says what the slot is and what is on it.
+    expect(wrapper.get('[data-test="spot-exhaust"]').attributes('aria-label')).toBe('Exhaust: Sport exhaust')
+    expect(wrapper.get('[data-test="spot-tires"]').attributes('aria-label')).toBe('Tires: Factory')
+    expect(wrapper.get('[data-test="spot-engine"]').attributes('aria-label')).toBe('Engine: R4 1.8')
+
+    await pick(wrapper, 'exhaust')
+    expect(wrapper.get('[data-test="slot-part"]').text()).toBe('Sport exhaust')
+    await pick(wrapper, 'exhaust')
 
     expect(wrapper.get('[data-test="part-21"]').text()).toContain('Street tires T2')
     expect(wrapper.findAll('[data-test="part-21"] [data-test="part-stats"] li').map((line) => line.text())).toEqual(['Grip 100', 'Handling 98', 'Braking 100'])
@@ -233,6 +241,7 @@ describe('WorkshopView', () => {
 
     const { wrapper } = await mountView(WorkshopView, '/workshop')
     await flushPromises()
+    await pick(wrapper, 'exhaust')
     await wrapper.get('[data-test="take-off-11"]').trigger('click')
     await flushPromises()
 
@@ -294,7 +303,7 @@ describe('WorkshopView', () => {
 
     expect(asked).toBe(2)
     expect(wrapper.find('[data-test="job-1"]').exists()).toBe(false)
-    expect(wrapper.get('[data-test="slot-exhaust"]').text()).toContain('Sport exhaust')
+    expect(wrapper.get('[data-test="spot-exhaust"]').attributes('aria-label')).toBe('Exhaust: Sport exhaust')
   })
 
   it('does not ask over and over when the server still says a job is not done', async () => {
@@ -578,7 +587,7 @@ describe('WorkshopView', () => {
     expect(wrapper.get('h1').text()).toBe('Warsztat')
     expect(wrapper.get('[data-test="city"]').text()).toBe('Warsztat w mieście Złomowo')
     expect(wrapper.get('[data-test="mechanic"]').text()).toBe('Mechanik poziomu 1: zlecenia trwają o 2% krócej.')
-    expect(wrapper.get('[data-test="slot-tires"]').text()).toContain('Fabryczne')
+    expect(wrapper.get('[data-test="spot-tires"]').attributes('aria-label')).toBe('Opony: Fabryczne')
     expect(wrapper.get('[data-test="put-on-21"]').text()).toBe('Załóż')
   })
 
@@ -599,6 +608,7 @@ describe('WorkshopView', () => {
 
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
+      await pick(wrapper, 'tires')
 
       expect(wrapper.get('[data-test="upgrade-21"]').text()).toBe('Upgrade to +1')
       expect(wrapper.get('[data-test="upgrade-21"]').attributes('disabled')).toBeUndefined()
@@ -617,7 +627,7 @@ describe('WorkshopView', () => {
       expect(wrapper.get('[data-test="take-off-21"]').attributes('disabled')).toBeDefined()
     })
 
-    it('shows the level of an upgraded part on its tile and in the inventory, and says nothing for a part that is not upgraded', async () => {
+    it('shows the level of an upgraded part on its spot, on its card and in the inventory, and says nothing for a part that is not upgraded', async () => {
       const spare = aPart({ id: 22, slug: 'street-tires-t2', name: 'Spare tires', slot: 'tires', tier: 2, upgrade: 2, upgrade_max: 3, stats: { grip: 106 } })
       const brakes = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', upgrade: 0 })
       serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: mountedTires({ upgrade: 1 }), brakes }), inventory: [spare] })) })
@@ -625,10 +635,16 @@ describe('WorkshopView', () => {
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
 
-      expect(wrapper.get('[data-test="slot-tires"] [data-test="upgrade-mark"]').text()).toBe('+1')
-      expect(wrapper.get('[data-test="slot-tires"] [data-test="upgrade-mark"]').attributes('aria-label')).toBe('Upgrade +1')
+      expect(wrapper.get('[data-test="spot-tires"] .spot-up').text()).toBe('+1')
+      expect(wrapper.find('[data-test="spot-brakes"] .spot-up').exists()).toBe(false)
       expect(wrapper.get('[data-test="part-22"] [data-test="upgrade-mark"]').text()).toBe('+2')
-      expect(wrapper.find('[data-test="slot-brakes"] [data-test="upgrade-mark"]').exists()).toBe(false)
+
+      await pick(wrapper, 'tires')
+      expect(wrapper.get('[data-test="slot-detail"] [data-test="upgrade-mark"]').text()).toBe('+1')
+      expect(wrapper.get('[data-test="slot-detail"] [data-test="upgrade-mark"]').attributes('aria-label')).toBe('Upgrade +1')
+
+      await pick(wrapper, 'brakes')
+      expect(wrapper.find('[data-test="slot-detail"] [data-test="upgrade-mark"]').exists()).toBe(false)
     })
 
     it('says why a step is locked and offers no button that works: the level of the car, or a part that is as far as it goes', async () => {
@@ -641,17 +657,21 @@ describe('WorkshopView', () => {
       await flushPromises()
 
       // The level 3 of the car allows +2: the step to +3 waits for the level 4, and the button is there but cannot be pressed.
+      await pick(wrapper, 'tires')
       expect(wrapper.get('[data-test="upgrade-21"]').text()).toBe('Upgrade to +3')
       expect(wrapper.get('[data-test="upgrade-21"]').attributes('disabled')).toBeDefined()
       expect(wrapper.get('[data-test="upgrade-info-21"]').text()).toBe('Needs car level 4 (you have 3)')
 
+      await pick(wrapper, 'brakes')
       expect(wrapper.find('[data-test="upgrade-12"]').exists()).toBe(false)
       expect(wrapper.get('[data-test="upgrade-info-12"]').text()).toBe('Fully upgraded')
 
       // A part with nothing to upgrade by says nothing and offers nothing.
+      await pick(wrapper, 'exhaust')
       expect(wrapper.find('[data-test="upgrade-11"]').exists()).toBe(false)
       expect(wrapper.find('[data-test="upgrade-info-11"]').exists()).toBe(false)
 
+      await pick(wrapper, 'tires')
       await wrapper.get('[data-test="upgrade-21"]').trigger('click')
       await flushPromises()
 
@@ -666,6 +686,7 @@ describe('WorkshopView', () => {
 
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
+      await pick(wrapper, 'tires')
       await wrapper.get('[data-test="upgrade-21"]').trigger('click')
       await flushPromises()
 
@@ -728,9 +749,12 @@ describe('WorkshopView', () => {
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
 
+      await pick(wrapper, 'tires')
       expect(wrapper.get('[data-test="upgrade-21"]').text()).toBe('Ulepsz do +3')
       expect(wrapper.get('[data-test="upgrade-info-21"]').text()).toBe('Wymaga poziomu auta 4 (masz 3)')
+      await pick(wrapper, 'brakes')
       expect(wrapper.get('[data-test="upgrade-info-12"]').text()).toBe('Pełne ulepszenie')
+      await pick(wrapper, 'exhaust')
       expect(wrapper.get('[data-test="upgrade-info-11"]').text()).toBe('199,50 $ · 4 min 54 s')
       expect(wrapper.get('[data-test="job-4"]').text()).toContain('Ulepszanie do +1: Sport exhaust')
     })
@@ -762,7 +786,9 @@ describe('WorkshopView', () => {
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
 
-      const slot = wrapper.get('[data-test="slot-tires"]')
+      await pick(wrapper, 'tires')
+
+      const slot = wrapper.get('[data-test="slot-detail"]')
 
       expect(slot.get('[data-test="part-affixes"]').text()).toBe('✦ Grip +3.5%')
       expect(slot.get('[data-test="part-unique"]').text()).toContain('Adaptive compound')
@@ -1113,7 +1139,7 @@ describe('WorkshopView', () => {
       expect(wrapper.find('[data-test="job-5"]').exists()).toBe(false)
     })
 
-    it('shows the condition of a worn part on its tile and in the inventory, in red when it is unserviceable, and nothing for a part as good as new', async () => {
+    it('shows the condition of a worn part on its card and in the inventory, in red when it is unserviceable, and nothing for a part as good as new', async () => {
       const brakes = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', condition_percent: 12 })
       const exhaust = aMountedPart({ id: 11 })
       const spare = aPart({ id: 22, slug: 'street-tires-t2', name: 'Spare tires', slot: 'tires', tier: 2, condition_percent: 80, repair_next: aRepairStep() })
@@ -1122,18 +1148,23 @@ describe('WorkshopView', () => {
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
 
-      expect(wrapper.get('[data-test="slot-tires"] [data-test="part-condition-value"]').text()).toBe('Condition: 50%')
-      expect(wrapper.find('[data-test="slot-tires"] [data-test="part-unserviceable"]').exists()).toBe(false)
-      expect(wrapper.get('[data-test="slot-tires"] [role="progressbar"]').attributes('aria-valuenow')).toBe('50')
-      expect(wrapper.get('[data-test="slot-tires"] .bar > i').attributes('style')).toContain('width: 50%')
-
-      // Under a fifth of its life a part is unserviceable.
-      expect(wrapper.get('[data-test="slot-brakes"] [data-test="part-unserviceable"]').text()).toBe('Unserviceable')
-      expect(wrapper.get('[data-test="slot-brakes"] .bar').classes()).toContain('bar-bad')
-
-      expect(wrapper.find('[data-test="slot-exhaust"] [data-test="part-condition"]').exists()).toBe(false)
+      // The inventory is shown whole until a slot is tapped.
       expect(wrapper.get('[data-test="part-22"] [data-test="part-condition-value"]').text()).toBe('Condition: 80%')
       expect(wrapper.find('[data-test="part-21"] [data-test="part-condition"]').exists()).toBe(false)
+
+      await pick(wrapper, 'tires')
+      expect(wrapper.get('[data-test="slot-detail"] [data-test="part-condition-value"]').text()).toBe('Condition: 50%')
+      expect(wrapper.find('[data-test="slot-detail"] [data-test="part-unserviceable"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="slot-detail"] [role="progressbar"]').attributes('aria-valuenow')).toBe('50')
+      expect(wrapper.get('[data-test="slot-detail"] .bar > i').attributes('style')).toContain('width: 50%')
+
+      // Under a fifth of its life a part is unserviceable.
+      await pick(wrapper, 'brakes')
+      expect(wrapper.get('[data-test="slot-detail"] [data-test="part-unserviceable"]').text()).toBe('Unserviceable')
+      expect(wrapper.get('[data-test="slot-detail"] .bar').classes()).toContain('bar-bad')
+
+      await pick(wrapper, 'exhaust')
+      expect(wrapper.find('[data-test="slot-detail"] [data-test="part-condition"]').exists()).toBe(false)
     })
 
     it('offers the repair of a worn part on the car with its price and time, and queues it when asked', async () => {
@@ -1146,6 +1177,8 @@ describe('WorkshopView', () => {
 
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
+
+      await pick(wrapper, 'tires')
 
       expect(wrapper.get('[data-test="repair-21"]').text()).toBe('Repair')
       expect(wrapper.get('[data-test="repair-info-21"]').text()).toBe('$142.50 · 1 min 57 s')
@@ -1190,11 +1223,13 @@ describe('WorkshopView', () => {
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
 
-      expect(wrapper.get('[data-test="repair-info-12"]').text()).toBe('Worn out: it has to be replaced')
-      expect(wrapper.find('[data-test="repair-12"]').exists()).toBe(false)
       expect(wrapper.get('[data-test="repair-info-22"]').text()).toBe('Worn out: it has to be replaced')
       expect(wrapper.find('[data-test="repair-22"]').exists()).toBe(false)
-      expect(wrapper.find('[data-test="slot-brakes"] [data-test="part-unserviceable"]').exists()).toBe(true)
+
+      await pick(wrapper, 'brakes')
+      expect(wrapper.get('[data-test="repair-info-12"]').text()).toBe('Worn out: it has to be replaced')
+      expect(wrapper.find('[data-test="repair-12"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="slot-detail"] [data-test="part-unserviceable"]').exists()).toBe(true)
     })
 
     it('asks first about a repair that the mechanic is at, and says that its price is lost with the work', async () => {
@@ -1280,15 +1315,17 @@ describe('WorkshopView', () => {
       expect(wrapper.get('[data-test="service"]').text()).toBe('Serwis')
       expect(wrapper.get('[data-test="service-info"]').text()).toBe('Serwis czeka w kolejce.')
       expect(wrapper.get('[data-test="breakdown-line"]').text()).toBe('Awaria średnio co ok. 21 h')
+      await pick(wrapper, 'tires')
       expect(wrapper.get('[data-test="repair-21"]').text()).toBe('Napraw')
-      expect(wrapper.get('[data-test="slot-tires"] [data-test="part-condition-value"]').text()).toBe('Stan: 50%')
+      expect(wrapper.get('[data-test="slot-detail"] [data-test="part-condition-value"]').text()).toBe('Stan: 50%')
+      await pick(wrapper, 'brakes')
       expect(wrapper.get('[data-test="repair-info-12"]').text()).toBe('Zużyta do końca: trzeba wymienić')
-      expect(wrapper.get('[data-test="slot-brakes"] [data-test="part-unserviceable"]').text()).toBe('Niesprawna')
+      expect(wrapper.get('[data-test="slot-detail"] [data-test="part-unserviceable"]').text()).toBe('Niesprawna')
       expect(wrapper.get('[data-test="job-5"]').text()).toContain('Serwis auta')
     })
   })
 
-  it('names the rarity of the parts in the inventory, and on the tiles of the parts that are rarer than common', async () => {
+  it('names the rarity of the parts in the inventory, and shows it on the spot and on the card of the parts that are rarer than common', async () => {
     const epicTires = aPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, stats: { grip: 138 }, rarity: 'epic', rarity_rank: 4 })
     const rareExhaust = aPart({ id: 11, mounted: true, car_id: 5, rarity: 'rare', rarity_rank: 3 })
     const commonBrakes = aPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', mounted: true, car_id: 5 })
@@ -1301,11 +1338,16 @@ describe('WorkshopView', () => {
     expect(wrapper.findAll('[data-test="part-31"] .pips b.on')).toHaveLength(4)
     expect(wrapper.get('[data-test="part-21"] [data-test="rarity"]').text()).toBe('Common')
 
-    // A rare part on the car shows its rarity and has a border in its color, and a common one has neither.
-    expect(wrapper.get('[data-test="slot-exhaust"]').classes()).toContain('r3')
-    expect(wrapper.get('[data-test="slot-exhaust"] [data-test="rarity"]').text()).toBe('Rare')
-    expect(wrapper.get('[data-test="slot-brakes"]').classes().filter((name) => /^r\d$/.test(name))).toEqual([])
-    expect(wrapper.find('[data-test="slot-brakes"] [data-test="rarity"]').exists()).toBe(false)
+    // A rare part on the car shows its rarity and has a ring in its color, and a common one has neither.
+    expect(wrapper.get('[data-test="spot-exhaust"]').classes()).toContain('r3')
+    expect(wrapper.get('[data-test="spot-brakes"]').classes().filter((name) => /^r\d$/.test(name))).toEqual([])
+
+    await pick(wrapper, 'exhaust')
+    expect(wrapper.get('[data-test="slot-detail"] [data-test="rarity"]').text()).toBe('Rare')
+    expect(wrapper.get('[data-test="slot-detail"]').classes()).toContain('card-r3')
+
+    await pick(wrapper, 'brakes')
+    expect(wrapper.find('[data-test="slot-detail"] [data-test="rarity"]').exists()).toBe(false)
   })
 
   describe('the equipment of the workshop', () => {
@@ -1500,6 +1542,221 @@ describe('WorkshopView', () => {
     })
   })
 
+  describe('the car on its stage', () => {
+    const mountedTires = aMountedPart({ id: 21, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2 })
+    const exhaustStock = aPart({ id: 22, slug: 'sport-exhaust-t2', name: 'Sport exhaust', slot: 'exhaust', tier: 2 })
+    const workshopOf = (jobs: ReturnType<typeof aJob>[]) => ({ city: { slug: 'zlomowo', name: 'Złomowo' }, queue_max: 4, mechanic: { level: 1, time_cut_ppm: 20_000 }, gear: aGear(), jobs })
+
+    it('shows the car on a stage with its parts on it, the level of the car on the floor, and the card that says how many parts are fitted', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust, tires: mountedTires }) })), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="stage"] .stage-name').text()).toBe('Rdzak GT-4')
+      expect(wrapper.get('[data-test="stage"] [data-test="car-level"]').text()).toBe('Level 3')
+      expect(wrapper.findAll('[data-test="spots"] .spot')).toHaveLength(9)
+      expect(wrapper.get('[data-test="slot-summary"]').text()).toBe('Parts fitted: 2 of 9')
+      // The card of the specification: the kind of body, the tier, the score of the bars.
+      expect(wrapper.get('[data-test="spec"] [data-test="car-kind"]').text()).toBe('Hatchback')
+      expect(wrapper.get('[data-test="spec"] [data-test="car-tier"]').text()).toBe('T2')
+      expect(wrapper.get('[data-test="spec"] [data-test="score"] b').text()).toBe('301')
+    })
+
+    it('draws how far the job of the mechanic has got as a ring on the spot of its slot, and a clock on the spot of a job that waits', async () => {
+      const upgrade = aJob({ id: 1, kind: 'upgrade', part: mountedTires, upgrade_to: 1 })
+      const repair = aJob({ id: 2, kind: 'repair', status: 'queued', part: exhaust, start_ms: NOW + 175_000, finish_ms: NOW + 300_000 })
+      const service = aJob({ id: 3, kind: 'service', status: 'queued', part: null, start_ms: NOW + 300_000, finish_ms: NOW + 400_000 })
+      serve({
+        'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust, tires: mountedTires }), workshop: workshopOf([upgrade, repair, service]) })),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      // 60 s of the 235 s that the job takes.
+      expect(wrapper.get('[data-test="spot-tires"] [data-test="spot-working"]').attributes('style')).toContain('--p: 26')
+      expect(wrapper.get('[data-test="spot-tires"]').attributes('aria-label')).toBe('Tires: Street tires T2 (being worked on)')
+      expect(wrapper.find('[data-test="spot-exhaust"] [data-test="spot-working"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="spot-exhaust"] [data-test="spot-queued"]').exists()).toBe(true)
+      expect(wrapper.get('[data-test="spot-exhaust"]').attributes('aria-label')).toBe('Exhaust: Sport exhaust (waiting in the queue)')
+      // A service is a job on the car and on no slot.
+      expect(wrapper.findAll('.spot-ring')).toHaveLength(1)
+      expect(wrapper.findAll('.spot-queued')).toHaveLength(1)
+
+      // Before the workshop asks again (the server of the test always says the same time): the ring moves on with the clock, 70 s of the 235 s.
+      await vi.advanceTimersByTimeAsync(10_000)
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="spot-tires"] [data-test="spot-working"]').attributes('style')).toContain('--p: 30')
+    })
+
+    describe('the inventory', () => {
+      const open = async (inventory = [tires, exhaustStock]) => {
+        serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust }), inventory })), 'GET /api/v1/runs/current': noRun })
+
+        const { wrapper } = await mountView(WorkshopView, '/workshop')
+        await flushPromises()
+
+        return wrapper
+      }
+
+      it('shows the parts that fit the slot that was tapped, and all of them again when the chip is pressed or the slot is tapped again', async () => {
+        const wrapper = await open()
+
+        expect(wrapper.find('[data-test="part-21"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="part-22"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="inventory-filter"]').exists()).toBe(false)
+
+        await pick(wrapper, 'tires')
+
+        expect(wrapper.find('[data-test="part-21"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="part-22"]').exists()).toBe(false)
+        expect(wrapper.get('[data-test="inventory-filter"]').text()).toBe('Only: Tires')
+
+        await wrapper.get('[data-test="inventory-filter"]').trigger('click')
+
+        expect(wrapper.find('[data-test="part-22"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="inventory-filter"]').exists()).toBe(false)
+        // The card of the slot goes with the filter.
+        expect(wrapper.find('[data-test="slot-detail"]').exists()).toBe(false)
+
+        await pick(wrapper, 'exhaust')
+        expect(wrapper.find('[data-test="part-21"]').exists()).toBe(false)
+        expect(wrapper.find('[data-test="part-22"]').exists()).toBe(true)
+
+        await pick(wrapper, 'exhaust')
+        expect(wrapper.find('[data-test="part-21"]').exists()).toBe(true)
+      })
+
+      it('says that none of the parts fits the slot, and leads to the shop', async () => {
+        const wrapper = await open()
+
+        await pick(wrapper, 'brakes')
+
+        expect(wrapper.find('[data-test="part-21"]').exists()).toBe(false)
+        expect(wrapper.get('[data-test="inventory-none"]').text()).toContain('No part in the inventory fits this slot (Brakes).')
+        expect(wrapper.get('[data-test="inventory-shop"]').attributes('href')).toBe('/shop')
+        expect(wrapper.get('[data-test="inventory-shop"]').text()).toBe('Buy in the shop')
+      })
+
+      it('has the message of an empty inventory, and not that of an empty slot, when there are no spare parts at all', async () => {
+        const wrapper = await open([])
+
+        await pick(wrapper, 'tires')
+
+        expect(wrapper.find('[data-test="inventory-empty"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="inventory-none"]').exists()).toBe(false)
+      })
+
+      it('puts the part on from the list that is shown, and the slot stays looked at', async () => {
+        const calls = serve({
+          'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { exhaust }), inventory: [tires, exhaustStock] })),
+          'POST /api/v1/garage/jobs': () => respond(201, aGarage({ car: aCar({}, { exhaust }), inventory: [tires, exhaustStock] })),
+          'GET /api/v1/tutorial': () => respond(200, aTutorial(null)),
+          'GET /api/v1/runs/current': noRun,
+        })
+        const { wrapper } = await mountView(WorkshopView, '/workshop')
+        await flushPromises()
+
+        await pick(wrapper, 'tires')
+        await wrapper.get('[data-test="put-on-21"]').trigger('click')
+        await flushPromises()
+
+        expect(calls.find((call) => call.method === 'POST')?.body).toEqual({ kind: 'mount', part: 21 })
+        expect(wrapper.get('[data-test="slot-detail"]').attributes('data-slot')).toBe('tires')
+      })
+    })
+
+    describe('the tutorial', () => {
+      const withGoal = (target: 'mount' | 'merge' | 'upgrade', car = aCar({}, { exhaust })) =>
+        serve({
+          'GET /api/v1/garage': () => respond(200, aGarage({ car, inventory: [tires, exhaustStock] })),
+          'GET /api/v1/tutorial': () => respond(200, aTutorial(null, { goal: aGoal({ key: target, title: 'A step', target }) })),
+          'GET /api/v1/runs/current': noRun,
+        })
+
+      it.each(['mount', 'merge'] as const)('does not hide the parts of the inventory that it points at (%s), whatever slot was tapped', async (target) => {
+        withGoal(target)
+
+        const { wrapper } = await mountView(WorkshopView, '/workshop')
+        await flushPromises()
+        await pick(wrapper, 'brakes')
+
+        expect(wrapper.find('[data-test="part-21"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="part-22"]').exists()).toBe(true)
+        expect(wrapper.find('[data-test="inventory-filter"]').exists()).toBe(false)
+        // The card of the slot is still there.
+        expect(wrapper.get('[data-test="slot-detail"]').attributes('data-slot')).toBe('brakes')
+      })
+
+      it('looks at the slot of a part that can be upgraded when it points at the upgrade, so that the button is on the screen', async () => {
+        withGoal('upgrade', aCar({}, { exhaust, tires: aMountedPart({ id: 21, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2 }) }))
+
+        const { wrapper } = await mountView(WorkshopView, '/workshop')
+        await flushPromises()
+
+        expect(wrapper.get('[data-test="slot-detail"]').attributes('data-slot')).not.toBeNull()
+        expect(wrapper.findAll('[data-tutorial="upgrade"]')).toHaveLength(1)
+        expect(wrapper.get('[data-tutorial="upgrade"]').attributes('data-test')).toMatch(/^upgrade-\d+$/)
+      })
+
+      it('leaves the slot alone when the driver has put it away, for as long as the step is the same', async () => {
+        withGoal('upgrade')
+
+        const { wrapper } = await mountView(WorkshopView, '/workshop')
+        await flushPromises()
+        await wrapper.get('[data-test="slot-close"]').trigger('click')
+        await vi.advanceTimersByTimeAsync(20_000)
+        await flushPromises()
+
+        expect(wrapper.find('[data-test="slot-detail"]').exists()).toBe(false)
+      })
+    })
+
+    it('puts the slots in a row under the stage for a car that has no picture, and the actions are there when one is tapped', async () => {
+      const car = aCar({ vehicle: { ...aCar().vehicle, slug: 'zubr-v8', name: 'Zubr V8', image_url: null } }, { exhaust })
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car })), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="spots"]').exists()).toBe(false)
+      expect(wrapper.findAll('[data-test="slots"] button')).toHaveLength(9)
+
+      await wrapper.get('[data-test="chip-exhaust"]').trigger('click')
+
+      expect(wrapper.get('[data-test="slot-detail"]').attributes('data-slot')).toBe('exhaust')
+      expect(wrapper.find('[data-test="take-off-11"]').exists()).toBe(true)
+    })
+
+    it('puts the picture of a pack on the stage, with the parts on it', async () => {
+      const car = aCar({ vehicle: { ...aCar().vehicle, slug: 'zubr-v8', name: 'Zubr V8', image_url: '/api/v1/media/aaaaaaaa.png' } })
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car })), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="stage"] [data-test="picture"]').attributes('src')).toBe('/api/v1/media/aaaaaaaa.png')
+      expect(wrapper.findAll('[data-test="spots"] .spot')).toHaveLength(9)
+    })
+
+    it('has the equipment at the bottom of the screen, after the card of the car and the inventory', async () => {
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage()), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      const order = ['[data-test="stage"]', '[data-test="mechanic-card"]', '[data-test="inventory"]', '[data-test="spec"]', '[data-test="gear"]']
+      const html = wrapper.html()
+      const places = order.map((selector) => html.indexOf(selector.slice(1, -1)))
+
+      expect(places.every((place) => place >= 0)).toBe(true)
+      expect([...places].sort((a, b) => a - b)).toEqual(places)
+    })
+  })
+
   describe('what putting on and taking off cost and take', () => {
     it('shows the fee of the vulcanizer and the time at the button of a part that goes on, and only the time where there is no fee', async () => {
       const exhaustStock = aPart({ id: 22, slug: 'sport-exhaust-t2', name: 'Sport exhaust', slot: 'exhaust', tier: 2 })
@@ -1524,6 +1781,8 @@ describe('WorkshopView', () => {
 
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
+
+      await pick(wrapper, 'exhaust')
 
       expect(wrapper.get('[data-test="take-off-info-11"]').text()).toBe('Vulcanizer $30.00 · 1 min 10 s')
     })
@@ -1613,15 +1872,18 @@ describe('WorkshopView', () => {
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
 
-      const tile = wrapper.get('[data-test="slot-engine"]')
+      await pick(wrapper, 'engine')
 
-      expect(tile.text()).toContain('V6 2.5 engine')
-      expect(tile.get('[data-test="part-condition-value"]').text()).toBe('Condition: 80%')
-      expect(tile.get('[data-test="take-off-44"]').attributes('disabled')).toBeDefined()
-      expect(tile.get('[data-test="take-off-lock-44"]').text()).toBe('The booster on the car needs an engine with at least 6 cylinders (this one has 4)')
-      expect(tile.find('[data-test="take-off-info-44"]').exists()).toBe(false)
+      const card = wrapper.get('[data-test="slot-detail"]')
+
+      expect(card.text()).toContain('V6 2.5 engine')
+      expect(card.get('[data-test="part-condition-value"]').text()).toBe('Condition: 80%')
+      expect(card.get('[data-test="take-off-44"]').attributes('disabled')).toBeDefined()
+      expect(card.get('[data-test="take-off-lock-44"]').text()).toBe('The booster on the car needs an engine with at least 6 cylinders (this one has 4)')
+      expect(card.find('[data-test="take-off-info-44"]').exists()).toBe(false)
 
       // A part that can come off still says what it costs and takes.
+      await pick(wrapper, 'exhaust')
       expect(wrapper.get('[data-test="take-off-11"]').attributes('disabled')).toBeUndefined()
       expect(wrapper.find('[data-test="take-off-lock-11"]').exists()).toBe(false)
       expect(wrapper.get('[data-test="take-off-info-11"]').text()).toBe('Time: 3 min 55 s')
@@ -1632,6 +1894,8 @@ describe('WorkshopView', () => {
 
       const { wrapper } = await mountView(WorkshopView, '/workshop')
       await flushPromises()
+
+      await pick(wrapper, 'exhaust')
 
       expect(wrapper.find('[data-test="put-on-info-21"]').exists()).toBe(false)
       expect(wrapper.find('[data-test="take-off-info-11"]').exists()).toBe(false)

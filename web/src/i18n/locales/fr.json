@@ -573,7 +573,10 @@
       "note": "Un achat accélère les travaux ajoutés après lui.",
       "needBay": "Un mécanicien sans poste ne travaille pas : achetez un poste.",
       "needMechanic": "Un poste sans mécanicien reste vide : achetez un mécanicien."
-    }
+    },
+    "filteredBy": "Seulement : {slot}",
+    "noneForSlot": "Aucune pièce de l’inventaire ne va à cet emplacement ({slot}).",
+    "toShop": "Acheter à la boutique"
   },
   "condition": {
     "title": "État technique",

@@ -573,7 +573,10 @@
       "note": "Uma compra acelera os serviços colocados na fila depois dela.",
       "needBay": "Um mecânico sem baia não trabalha: compre uma baia.",
       "needMechanic": "Uma baia sem mecânico fica vazia: compre um mecânico."
-    }
+    },
+    "filteredBy": "Só: {slot}",
+    "noneForSlot": "Nenhuma peça do inventário serve para este lugar ({slot}).",
+    "toShop": "Comprar na loja"
   },
   "condition": {
     "title": "Estado técnico",

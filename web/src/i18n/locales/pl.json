@@ -573,7 +573,10 @@
       "note": "Zakup przyspiesza zlecenia dodane po nim.",
       "needBay": "Mechanik bez stanowiska nie pracuje: kup stanowisko.",
       "needMechanic": "Stanowisko bez mechanika stoi puste: kup mechanika."
-    }
+    },
+    "filteredBy": "Tylko: {slot}",
+    "noneForSlot": "Żadna część z inwentarza nie pasuje do tego miejsca ({slot}).",
+    "toShop": "Kup w sklepie"
   },
   "condition": {
     "title": "Stan techniczny",

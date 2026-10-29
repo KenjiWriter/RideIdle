@@ -573,7 +573,10 @@
       "note": "A purchase speeds up the jobs queued after it.",
       "needBay": "A mechanic without a bay does not work: buy a bay.",
       "needMechanic": "A bay without a mechanic stands empty: buy a mechanic."
-    }
+    },
+    "filteredBy": "Only: {slot}",
+    "noneForSlot": "No part in the inventory fits this slot ({slot}).",
+    "toShop": "Buy in the shop"
   },
   "condition": {
     "title": "Technical condition",

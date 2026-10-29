@@ -161,8 +161,9 @@ const inventoryFilter = computed(() => (tutorialTarget.value === 'mount' || tuto
 const shownParts = computed(() => (inventoryFilter.value === null ? inventory.value : inventory.value.filter((part) => part.slot === inventoryFilter.value)))
 
 // The step of the tutorial that points at the upgrade points at a button on the card of a part, so the slot of a part that can be upgraded is looked at when it comes.
+// It is looked at when the step or the car changes, and not whenever the garage is asked again, so a slot that the driver put away stays away.
 watch(
-  () => [tutorialTarget.value, car.value?.id] as const,
+  [tutorialTarget, () => car.value?.id],
   ([target]) => {
     if (target === 'upgrade' && pickedSlot.value === null) {
       const slot = car.value?.slots.find((candidate) => candidate.part && candidate.part.upgrade_next.to !== null) ?? car.value?.slots.find((candidate) => candidate.part)
@@ -472,7 +473,7 @@ async function finish(jobId: number): Promise<void> {
       <p v-if="finished" class="card card-cy text-sm" role="status" data-test="finished">{{ finished }}</p>
 
       <!-- The car on its stage, as in the garage: its parts are on it, and the ones the mechanic is at have a ring with the progress. -->
-      <CarStage :name="car.vehicle.name" :src="car.vehicle.image_url" :fallback="carPicture(car.vehicle.slug)" data-test="workshop-stage">
+      <CarStage :name="car.vehicle.name" :src="car.vehicle.image_url" :fallback="carPicture(car.vehicle.slug)">
         <template #spots>
           <CarHotspots v-if="parts.placed.length > 0" :placed="parts.placed" :picked="pickedSlot" :engine="car.vehicle.engine" :marks="marks" @pick="pick" />
         </template>
