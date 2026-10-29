@@ -1,0 +1,303 @@
+#!/usr/bin/env bash
+# The domains and the certificates that the panel asked for. provision.sh installs this as /usr/local/sbin/rideidle-domains and a systemd timer runs it every minute
+# (rideidle-domains.timer), as root, because putting a game on a domain of its own means writing to /etc/nginx and getting a certificate, which the web server must not be
+# able to do.
+#
+# The panel does not run anything on the server. It writes a JOB (a row of the table domain_jobs: put this domain on the server, or look at its certificate) and this script
+# does the rest: it asks the application for the oldest job (`artisan domains:claim`), runs deploy/game-site.sh for it, and tells the application how it went, with the
+# log and the end date of the certificate (`artisan domains:report`), which is what the panel shows. Every call of artisan is made as the user of the web server (WEB_USER)
+# and never as root, so that no file owned by root lands in storage/.
+#
+# What reaches a script that runs as root is the DOMAIN and the E-MAIL of a job, which an admin of the panel typed. So every field is checked here again, in the
+# shape that a host name and an address have, before it is used, and a job with a field that is not right is refused and never run. The script that is run is checked too:
+# it has to belong to root and nobody else may write to it or to the folder it is in, or whoever can write to a release could become root.
+#
+# Settings (environment variables; the unit gives them)
+#   APP_DIR                      the release that the web app runs from (the link `current`). Default: /var/www/rideidle/current
+#   WEB_USER                     the user the web server runs as, which artisan is run as. Default: www-data
+#   PHP_BIN                      Default: php
+#   GAME_SITE                    the script that puts a domain on the server. Default: $APP_DIR/deploy/game-site.sh (the unit gives the copy that belongs to root)
+#   LETSENCRYPT_DIR              where the certificates are. Default: /etc/letsencrypt
+#   DOMAIN_WORKER_TIMEOUT        seconds that one job may take before it is stopped and reported as failed (124). Default: 900
+#   DOMAIN_WORKER_MAX_JOBS       jobs taken in one run. Default: 5 (the timer comes again after a minute)
+#   DOMAIN_WORKER_DRY_RUN=1      take the jobs and report them done, but run nothing and touch no certificate: the log says what would have been run
+#   DOMAIN_WORKER_LOCK           the lock file. Default: /run/rideidle-domains.lock
+#   CERTBOT_STAGING, SKIP_DNS_CHECK   (0 or 1) are given on to game-site.sh when they are set here: a test certificate, no check of the DNS
+#
+# For the tests of this script only (see deploy/test/test-rideidle-domains.sh):
+#   SKIP_ROOT_CHECK=1            do not insist on being root (and do not check who owns the script that is run)
+#   RUN_AS_NONE=1                do not switch to WEB_USER for artisan
+#
+# The script exits 0 when it ran, even when a job failed: the failure is in the database, with its log. It exits with another code only when it could not work at all
+# (no php, a call of artisan that fails, an answer of the application that makes no sense, not root).
+
+set -Eeuo pipefail
+# The checks of the shape of a name below are made with the letters of ASCII, whatever the language of the system is (a range like a-z must not take in capitals).
+export LC_ALL=C
+trap 'echo "rideidle-domains: failed at line ${LINENO} (exit code $?)" >&2' ERR
+# Bash 5.2 turns a & in the replacement of ${var//a/b} into the text that was found: a value must go in as it is.
+shopt -u patsub_replacement 2>/dev/null || true
+
+# This is the release dir of the web app. It is not the APP_DIR of game-site.sh (the folder that holds releases/, shared/ and current), which that script reads from
+# /etc/rideidle/deploy.env: it is not given on.
+RELEASE_DIR="${APP_DIR:-/var/www/rideidle/current}"
+WEB_USER="${WEB_USER:-www-data}"
+PHP_BIN="${PHP_BIN:-php}"
+GAME_SITE="${GAME_SITE:-$RELEASE_DIR/deploy/game-site.sh}"
+LETSENCRYPT_DIR="${LETSENCRYPT_DIR:-/etc/letsencrypt}"
+JOB_TIMEOUT="${DOMAIN_WORKER_TIMEOUT:-900}"
+MAX_JOBS="${DOMAIN_WORKER_MAX_JOBS:-5}"
+DRY_RUN="${DOMAIN_WORKER_DRY_RUN:-0}"
+LOCK="${DOMAIN_WORKER_LOCK:-/run/rideidle-domains.lock}"
+SKIP_ROOT_CHECK="${SKIP_ROOT_CHECK:-0}"
+RUN_AS_NONE="${RUN_AS_NONE:-0}"
+# Whether the run already holds the lock (the script runs itself again under flock, below).
+LOCKED="${RIDEIDLE_DOMAINS_LOCKED:-0}"
+
+# The only things that game-site.sh is told besides the domain and the address; a value that is not 0 or 1 is not given on.
+PASS_ON=()
+
+TAB=$'\t'
+LOG=""
+REPORT_FAILED=0
+
+say() { printf 'rideidle-domains: %s\n' "$*"; }
+fail() { printf 'rideidle-domains: %s\n' "$*" >&2; exit 1; }
+
+cleanup() {
+    [[ -z "$LOG" ]] || rm -f "$LOG"
+}
+trap cleanup EXIT
+
+check_settings() {
+    [[ "$JOB_TIMEOUT" =~ ^[0-9]+$ && "$JOB_TIMEOUT" -ge 1 ]] || fail "DOMAIN_WORKER_TIMEOUT is a number of seconds (1 or more): $JOB_TIMEOUT"
+    [[ "$MAX_JOBS" =~ ^[0-9]+$ && "$MAX_JOBS" -ge 1 ]] || fail "DOMAIN_WORKER_MAX_JOBS is a whole number (1 or more): $MAX_JOBS"
+    [[ "$DRY_RUN" == "0" || "$DRY_RUN" == "1" ]] || fail "DOMAIN_WORKER_DRY_RUN is 0 or 1: $DRY_RUN"
+    [[ "$WEB_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] || fail "WEB_USER does not look like a user name: $WEB_USER"
+
+    [[ $EUID -eq 0 || "$SKIP_ROOT_CHECK" == "1" ]] || fail "Run this as root (the timer does)."
+    command -v "$PHP_BIN" >/dev/null 2>&1 || fail "php is missing ($PHP_BIN)."
+    if [[ "$RUN_AS_NONE" != "1" ]]; then
+        command -v runuser >/dev/null 2>&1 || fail "runuser is missing (the package util-linux)."
+    fi
+
+    local name
+    for name in CERTBOT_STAGING SKIP_DNS_CHECK; do
+        if [[ -n "${!name:-}" ]]; then
+            [[ "${!name}" == "0" || "${!name}" == "1" ]] && PASS_ON+=("$name=${!name}")
+        fi
+    done
+}
+
+# Runs this script again with the lock, so that two runs (the timer is late, and somebody runs it by hand) never work at the same time. flock gives 75 when the lock is
+# taken: then there is nothing to do, because the run that has it will take the jobs.
+take_lock() {
+    [[ "$LOCKED" == "1" ]] && return
+
+    command -v flock >/dev/null 2>&1 || fail "flock is missing (the package util-linux)."
+
+    local code=0
+    flock -n -E 75 "$LOCK" env RIDEIDLE_DOMAINS_LOCKED=1 bash "${BASH_SOURCE[0]}" "$@" || code=$?
+    if [[ $code -eq 75 ]]; then
+        say "another run is at it; nothing to do."
+        exit 0
+    fi
+    # The run that held the lock has said what it had to say.
+    trap - EXIT
+    exit "$code"
+}
+
+# artisan, as the user of the web server, from the folder of the application.
+artisan() {
+    if [[ "$RUN_AS_NONE" == "1" ]]; then
+        (cd "$RELEASE_DIR/api" && "$PHP_BIN" artisan "$@")
+    else
+        (cd "$RELEASE_DIR/api" && runuser -u "$WEB_USER" -- "$PHP_BIN" artisan "$@")
+    fi
+}
+
+# A host name: letters, digits and hyphens in labels of 1 to 63 characters (no hyphen at the ends of a label), at least two labels, 253 characters at most, in lower case.
+valid_domain() {
+    local domain="$1" label
+    local -a labels
+
+    [[ -n "$domain" && ${#domain} -le 253 ]] || return 1
+    [[ "$domain" =~ ^[a-z0-9.-]+$ ]] || return 1
+    [[ "$domain" == *.* && "$domain" != .* && "$domain" != *. && "$domain" != *..* ]] || return 1
+
+    IFS=. read -r -a labels <<<"$domain"
+    [[ ${#labels[@]} -ge 2 ]] || return 1
+    for label in "${labels[@]}"; do
+        [[ "$label" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]] || return 1
+    done
+}
+
+# An address to write to: a name of letters, digits and . _ + - (not starting with a hyphen, which a program could take for an option), an @ and a host name.
+valid_email() {
+    local email="$1"
+    [[ ${#email} -le 254 ]] || return 1
+    [[ "$email" =~ ^[A-Za-z0-9._+][A-Za-z0-9._+-]{0,63}@[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)+$ ]]
+}
+
+# The end of the certificate of a domain as YYYY-MM-DD, or nothing when there is none (or it cannot be read). The domain was checked: it is a name of a folder.
+certificate_end() {
+    local pem="$LETSENCRYPT_DIR/live/$1/cert.pem" raw
+    [[ -r "$pem" ]] || return 0
+    raw="$(openssl x509 -enddate -noout -in "$pem" 2>/dev/null)" || return 0
+    raw="${raw#notAfter=}"
+    date -u -d "$raw" +%Y-%m-%d 2>/dev/null || true
+}
+
+# game-site.sh runs as root, so it has to be a file that only root can change, in a folder that only root can change: otherwise whoever may write to a release (the user
+# that deploys) could have a script of their own run as root by asking for a job. Not asked in the tests.
+script_is_safe() {
+    [[ $EUID -eq 0 && "$SKIP_ROOT_CHECK" != "1" ]] || return 0
+
+    local path owner mode
+    for path in "$GAME_SITE" "$(dirname "$GAME_SITE")"; do
+        read -r owner mode < <(stat -c '%u %a' "$path" 2>/dev/null || echo "x x")
+        [[ "$owner" == "0" ]] || return 1
+        # No write for the group or for others.
+        [[ "$mode" =~ ^[0-7]*[0-7][0145][0145]$ ]] || return 1
+    done
+}
+
+# Tells the application how a job went. The log is the text of the run; the end of the certificate is given when there is one.
+report() {
+    local id="$1" code="$2" expires="$3"
+    local -a args=(domains:report "$id" "--exit-code=$code" "--log-file=$LOG")
+    [[ -z "$expires" ]] || args+=("--expires=$expires")
+
+    if ! artisan "${args[@]}"; then
+        # The job stays "running" in the panel until the application takes it for lost. That is worth a non-zero exit of the unit.
+        echo "rideidle-domains: could not report job $id to the application (exit code $code)." >&2
+        REPORT_FAILED=1
+    fi
+}
+
+# Puts the domain on the server: game-site.sh, with what it needs, under the timeout. Everything it says goes to the log.
+provision() {
+    local domain="$1" email="$2"
+
+    if [[ "$DRY_RUN" == "1" ]]; then
+        {
+            echo "dry run: nothing was run and no certificate was touched. This is what would have been run:"
+            echo "  GAME_DOMAIN=$domain GAME_EMAIL=$email ${PASS_ON[*]:-} bash $GAME_SITE"
+        } >>"$LOG"
+        return 0
+    fi
+
+    if [[ ! -f "$GAME_SITE" ]]; then
+        echo "$GAME_SITE does not exist." >>"$LOG"
+        return 2
+    fi
+    if ! script_is_safe; then
+        echo "$GAME_SITE (or the folder it is in) is not owned by root alone, so it is not run as root. Install the copy that provision.sh puts in /usr/local/lib/rideidle/deploy." >>"$LOG"
+        return 2
+    fi
+
+    local code=0
+    # APP_DIR is the one of this script (a release); game-site.sh reads its own from /etc/rideidle/deploy.env. The two switches are taken out of the environment, and put
+    # back only when they were 0 or 1.
+    timeout --kill-after=10 "$JOB_TIMEOUT" env -u APP_DIR -u CERTBOT_STAGING -u SKIP_DNS_CHECK GAME_DOMAIN="$domain" GAME_EMAIL="$email" "${PASS_ON[@]}" bash "$GAME_SITE" >>"$LOG" 2>&1 || code=$?
+    if [[ $code -eq 124 || $code -eq 137 ]]; then
+        echo "game-site.sh did not finish in ${JOB_TIMEOUT} seconds and was stopped." >>"$LOG"
+    fi
+    return "$code"
+}
+
+# A look at the certificate of a domain, without changing anything.
+check() {
+    local domain="$1" end
+    end="$(certificate_end "$domain")"
+
+    if [[ -n "$end" ]]; then
+        echo "The certificate of $domain is there; it ends on $end." >>"$LOG"
+        return 0
+    fi
+
+    echo "There is no certificate for $domain." >>"$LOG"
+    return 1
+}
+
+# One job, from the line that `domains:claim` printed: id, action, domain and e-mail, with a tab between them.
+handle_line() {
+    local line="$1"
+    local id action domain email rest tabs
+
+    # The application prints one line with four fields. Anything else is not understood, and nothing is done with it.
+    [[ "$line" != *$'\n'* ]] || fail "domains:claim printed more than one line."
+    tabs="${line//[^$TAB]/}"
+    [[ ${#tabs} -eq 3 ]] || fail "domains:claim printed a line that does not have four fields."
+
+    id="${line%%"$TAB"*}"
+    rest="${line#*"$TAB"}"
+    action="${rest%%"$TAB"*}"
+    rest="${rest#*"$TAB"}"
+    domain="${rest%%"$TAB"*}"
+    email="${rest#*"$TAB"}"
+
+    # Without an id there is no job to say anything about: the answer of the application is wrong, and the run stops (the job stays where it is).
+    [[ "$id" =~ ^[0-9]{1,18}$ ]] || fail "domains:claim printed an id that is not a number; nothing was run."
+
+    LOG="$(mktemp "${TMPDIR:-/tmp}/rideidle-domains.XXXXXX")"
+    chmod 600 "$LOG"
+    # artisan runs as the user of the web server, and reads the log.
+    if [[ $EUID -eq 0 && "$RUN_AS_NONE" != "1" ]]; then
+        chown "$WEB_USER" "$LOG"
+    fi
+
+    local code=0 expires="" refused=""
+    if [[ "$action" != "provision" && "$action" != "check" ]]; then
+        refused="action"
+    elif ! valid_domain "$domain"; then
+        refused="domain"
+    elif [[ "$action" == "provision" ]] && ! valid_email "$email"; then
+        refused="e-mail"
+    elif [[ -n "$email" ]] && ! valid_email "$email"; then
+        refused="e-mail"
+    fi
+
+    if [[ -n "$refused" ]]; then
+        echo "The $refused of this job is not in a shape that is run, so the job was refused and nothing was run." >>"$LOG"
+        code=2
+    else
+        say "job $id: $action $domain"
+        case "$action" in
+            provision) provision "$domain" "$email" || code=$? ;;
+            check) check "$domain" || code=$? ;;
+        esac
+        # A dry run touches no certificate, so it says no end date.
+        [[ "$DRY_RUN" == "1" && "$action" == "provision" ]] || expires="$(certificate_end "$domain")"
+    fi
+
+    report "$id" "$code" "$expires"
+    say "job $id: reported with exit code $code"
+    rm -f "$LOG"
+    LOG=""
+}
+
+main() {
+    check_settings
+    take_lock "$@"
+
+    if [[ ! -d "$RELEASE_DIR/api" ]]; then
+        # Before the first deploy there is nothing to ask. That is no failure: the timer is there from the day the server was set up.
+        say "no release is live yet ($RELEASE_DIR/api); nothing to do."
+        return 0
+    fi
+
+    local handled=0 line
+    while [[ $handled -lt $MAX_JOBS ]]; do
+        line="$(artisan domains:claim)" || fail "domains:claim failed."
+        [[ -n "$line" ]] || break
+        handled=$((handled + 1))
+        handle_line "$line"
+    done
+
+    say "$handled job(s) handled."
+    [[ $REPORT_FAILED -eq 0 ]] || return 3
+}
+
+# `||` keeps the error trap from adding a line about the code that main gives back on purpose.
+main "$@" || exit $?
