@@ -28,6 +28,12 @@ final class Ledger
 
     public const PREMIUM = 'premium';
 
+    /** The stock of charges of the auto-refill: a pack adds them, a refill of the tank done for the driver takes one. */
+    public const REFILL = 'refill';
+
+    /** The column of the wallet that holds the balance of each currency. */
+    private const COLUMNS = [self::CASH => 'cash_cents', self::PREMIUM => 'premium_coins', self::REFILL => 'auto_refills'];
+
     /** A transaction that lost a deadlock is retried this many times in all (only the outermost one is retried). */
     public const DEADLOCK_ATTEMPTS = 3;
 
@@ -60,6 +66,20 @@ final class Ledger
         return $this->apply($userId, self::PREMIUM, $delta, $reason, $idemKey, null, $allowDebt);
     }
 
+    /**
+     * Posts a change of the stock of charges of the auto-refill: a pack (or a gift) adds them, a refill of the tank takes them. The stock never goes below zero.
+     *
+     * @param  string  $reason  what the charges were for, for example purchase, gift, autorefill
+     * @param  string  $idemKey  identifies this posting, for example autorefill:{run}:{version}
+     *
+     * @throws RuleRefusedException `insufficient_refills` when the stock would go below zero
+     * @throws IdempotencyConflictException when the key was used for a different posting
+     */
+    public function postRefills(int $userId, int $delta, string $reason, string $idemKey, ?int $settlementId = null): LedgerEntry
+    {
+        return $this->apply($userId, self::REFILL, $delta, $reason, $idemKey, $settlementId);
+    }
+
     private function apply(int $userId, string $currency, int $delta, string $reason, string $idemKey, ?int $settlementId, bool $allowDebt = false): LedgerEntry
     {
         if ($delta === 0) {
@@ -71,7 +91,7 @@ final class Ledger
         }
 
         $this->ensureWallet($userId);
-        $column = $currency === self::CASH ? 'cash_cents' : 'premium_coins';
+        $column = self::COLUMNS[$currency];
 
         return DB::transaction(function () use ($userId, $currency, $column, $delta, $reason, $idemKey, $settlementId, $allowDebt): LedgerEntry {
             $wallet = $this->lockWallet($userId);
@@ -91,9 +111,11 @@ final class Ledger
             $balance = $current + $delta;
 
             if ($balance < 0 && ! ($allowDebt && $delta < 0)) {
-                throw $currency === self::CASH
-                    ? new InsufficientFundsException($current, -$delta)
-                    : new RuleRefusedException('insufficient_premium', ['available' => $current, 'required' => -$delta]);
+                throw match ($currency) {
+                    self::CASH => new InsufficientFundsException($current, -$delta),
+                    self::REFILL => new RuleRefusedException('insufficient_refills', ['available' => $current, 'required' => -$delta]),
+                    default => new RuleRefusedException('insufficient_premium', ['available' => $current, 'required' => -$delta]),
+                };
             }
 
             $entry = LedgerEntry::query()->create([
@@ -142,16 +164,22 @@ final class Ledger
         return (int) (Wallet::query()->whereKey($userId)->value('premium_coins') ?? 0);
     }
 
+    /** The charges of the auto-refill the driver has in stock. */
+    public function refillBalance(int $userId): int
+    {
+        return (int) (Wallet::query()->whereKey($userId)->value('auto_refills') ?? 0);
+    }
+
     /** The experience of the driver: it gives the level that opens the tracks. */
     public function xp(int $userId): int
     {
         return (int) (Wallet::query()->whereKey($userId)->value('xp') ?? 0);
     }
 
-    /** The balance of a currency (the cash, or the premium coins) equals the sum of its entries of the ledger and the last entry agrees with it. */
+    /** The balance of a currency (the cash, the premium coins or the charges of the auto-refill) equals the sum of its entries of the ledger and the last entry agrees with it. */
     public function isConsistent(int $userId, string $currency = self::CASH): bool
     {
-        $balance = $currency === self::CASH ? $this->balance($userId) : $this->premiumBalance($userId);
+        $balance = (int) (Wallet::query()->whereKey($userId)->value(self::COLUMNS[$currency]) ?? 0);
         $sum = (int) LedgerEntry::query()->where('user_id', $userId)->where('currency', $currency)->sum('delta');
         $last = LedgerEntry::query()->where('user_id', $userId)->where('currency', $currency)->orderByDesc('id')->first();
 

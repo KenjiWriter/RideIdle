@@ -756,6 +756,46 @@ it('sells packs of premium coins that name the currency and the packs in all fiv
     expect(rulesSchemaErrors($rules))->toBe([]);
 });
 
+it('sells the paid extras with a switch each, the defaults of the plan, and a schema that explains every number and refuses nonsense', function () {
+    $premium = starterRules()['premium'];
+
+    expect($premium['autorefill'])->toMatchArray(['enabled' => true, 'stock_cap' => 100])
+        ->and($premium['autorefill']['packs'])->toBe(['refill-1' => ['charges' => 1, 'coins' => 2], 'refill-5' => ['charges' => 5, 'coins' => 9], 'refill-20' => ['charges' => 20, 'coins' => 32]])
+        ->and($premium['vip'])->toBe(['enabled' => true, 'days' => 30, 'coins' => 150, 'cash_bonus_ppm' => 200_000, 'xp_bonus_ppm' => 200_000])
+        ->and($premium['infinity'])->toBe(['enabled' => true, 'days' => 30, 'price_minor' => 1_999]);
+
+    foreach (['autorefill' => ['stock_cap' => 0], 'vip' => ['days' => 0], 'infinity' => ['price_minor' => 0]] as $extra => $change) {
+        $rules = starterRules();
+        $rules['premium'][$extra] = [...$rules['premium'][$extra], ...$change];
+        expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+        // The switch is not optional, so that a game states whether it sells the extra.
+        $rules = starterRules();
+        unset($rules['premium'][$extra]['enabled']);
+        expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+        // An extra the rules do not mention is not sold, which is a valid game.
+        $rules = starterRules();
+        unset($rules['premium'][$extra]);
+        expect(rulesSchemaErrors($rules))->toBe([]);
+    }
+
+    $rules = starterRules();
+    $rules['premium']['autorefill']['packs'] = [];
+    expect(rulesSchemaErrors($rules))->not->toBe([]);
+
+    // The studio takes the label of every number from its description in the schema.
+    $schema = json_decode((string) file_get_contents(config('ride.content_path').'/schema/rules.schema.json'), true, 512, JSON_THROW_ON_ERROR)['properties']['premium']['properties'];
+
+    foreach (['autorefill', 'vip', 'infinity'] as $extra) {
+        expect($schema[$extra]['description'])->toBeString();
+
+        foreach ($schema[$extra]['properties'] as $property) {
+            expect($property['description'])->toBeString();
+        }
+    }
+});
+
 it('has a boost of the journey that is faster, thirstier and risky, with the police stopping it somewhere on the way, and it is optional', function () {
     $boost = starterRules()['travel']['boost'];
 

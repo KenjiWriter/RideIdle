@@ -466,6 +466,73 @@ final class Rules
         return $this->premiumProducts()[$slug] ?? null;
     }
 
+    /**
+     * The auto-refill as the rules give it (the tank is filled for the driver when the fuel would run out, for a charge): the switch, the cap of the stock and
+     * the packs of charges with their price in premium coins. Null when the rules do not mention it, which is the same as off.
+     *
+     * @return array{enabled: bool, stock_cap: int, packs: array<string, array{charges: int, coins: int}>}|null
+     */
+    public function autoRefill(): ?array
+    {
+        $refill = $this->data['premium']['autorefill'] ?? null;
+
+        return $refill === null ? null : [
+            'enabled' => (bool) $refill['enabled'],
+            'stock_cap' => (int) $refill['stock_cap'],
+            'packs' => array_map(static fn (array $pack): array => ['charges' => (int) $pack['charges'], 'coins' => (int) $pack['coins']], $refill['packs']),
+        ];
+    }
+
+    /** Whether the game sells the auto-refill and does it: it is in the rules and switched on. */
+    public function autoRefillOn(): bool
+    {
+        return ($this->autoRefill()['enabled'] ?? false) === true;
+    }
+
+    /**
+     * The VIP account as the rules give it: the switch, how long one purchase lasts, what it costs in premium coins and the two bonuses of a lap in ppm. Null when
+     * the rules do not mention it.
+     *
+     * @return array{enabled: bool, days: int, coins: int, cash_bonus_ppm: int, xp_bonus_ppm: int}|null
+     */
+    public function vip(): ?array
+    {
+        $vip = $this->data['premium']['vip'] ?? null;
+
+        return $vip === null ? null : [
+            'enabled' => (bool) $vip['enabled'],
+            'days' => (int) $vip['days'],
+            'coins' => (int) $vip['coins'],
+            'cash_bonus_ppm' => (int) $vip['cash_bonus_ppm'],
+            'xp_bonus_ppm' => (int) $vip['xp_bonus_ppm'],
+        ];
+    }
+
+    /** Whether the game sells the VIP account and pays its bonus: it is in the rules and switched on. */
+    public function vipOn(): bool
+    {
+        return ($this->vip()['enabled'] ?? false) === true;
+    }
+
+    /**
+     * The pass of the endless refill as the rules give it: the switch, how long one purchase lasts and its price in the smallest unit of the price currency. Null
+     * when the rules do not mention it.
+     *
+     * @return array{enabled: bool, days: int, price_minor: int}|null
+     */
+    public function infinity(): ?array
+    {
+        $pass = $this->data['premium']['infinity'] ?? null;
+
+        return $pass === null ? null : ['enabled' => (bool) $pass['enabled'], 'days' => (int) $pass['days'], 'price_minor' => (int) $pass['price_minor']];
+    }
+
+    /** Whether the game sells the pass of the endless refill and honours it: it is in the rules and switched on. */
+    public function infinityOn(): bool
+    {
+        return ($this->infinity()['enabled'] ?? false) === true;
+    }
+
     /** How many cars a garage holds. */
     public function garageCapacity(): int
     {

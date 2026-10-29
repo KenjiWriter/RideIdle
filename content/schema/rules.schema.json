@@ -542,6 +542,55 @@
           "required": ["minutes_per_coin"],
           "additionalProperties": false
         },
+        "autorefill": {
+          "description": "The auto-refill: when the fuel of a car would run out, the server fills the tank by itself, also while the driver is away, and pays for it with a charge instead of cash. A charge is one full refill of the tank. Charges are bought in packs for premium coins; a driver with the pass of the endless refill uses none. Without this section the game does not sell it.",
+          "type": "object",
+          "properties": {
+            "enabled": { "description": "Whether the game sells it and does it. When it is off nothing is offered, no tank is filled for the driver and no charge is used; what the drivers have is kept.", "type": "boolean" },
+            "stock_cap": { "description": "The most charges a driver keeps in stock: a pack that would take the stock over it is refused.", "type": "integer", "minimum": 1, "maximum": 100000 },
+            "packs": {
+              "description": "The packs of charges, from the smallest. The slug is what a purchase names.",
+              "type": "object",
+              "minProperties": 1,
+              "propertyNames": { "pattern": "^[a-z][a-z0-9-]{1,63}$" },
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "charges": { "description": "How many charges the pack gives.", "type": "integer", "minimum": 1, "maximum": 100000 },
+                  "coins": { "description": "What the pack costs in premium coins.", "type": "integer", "minimum": 1, "maximum": 1000000 }
+                },
+                "required": ["charges", "coins"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["enabled", "stock_cap", "packs"],
+          "additionalProperties": false
+        },
+        "vip": {
+          "description": "The VIP account: for a time it pays more cash and more XP for every lap. The bonus is on top of the payout of the track and does not count in the economy of the game; it is given per lap, by the moment the lap is finished, so a VIP that ends while the driver is away pays the laps before its end and not after it. Buying it again extends it from its end. Without this section the game does not sell it.",
+          "type": "object",
+          "properties": {
+            "enabled": { "description": "Whether the game sells it and pays the bonus. When it is off nothing is offered and no bonus is paid; the time the drivers have is kept, and runs out.", "type": "boolean" },
+            "days": { "description": "How many days one purchase lasts.", "type": "integer", "minimum": 1, "maximum": 3650 },
+            "coins": { "description": "What one purchase costs in premium coins.", "type": "integer", "minimum": 1, "maximum": 1000000 },
+            "cash_bonus_ppm": { "description": "How much more cash a lap pays (200000 is 20%).", "type": "integer", "minimum": 0, "maximum": 5000000 },
+            "xp_bonus_ppm": { "description": "How much more XP a lap gives the driver (200000 is 20%).", "type": "integer", "minimum": 0, "maximum": 5000000 }
+          },
+          "required": ["enabled", "days", "coins", "cash_bonus_ppm", "xp_bonus_ppm"],
+          "additionalProperties": false
+        },
+        "infinity": {
+          "description": "The pass of the endless refill, sold for real money: while it lasts the auto-refill fills the tank for nothing, without a charge. One purchase, no renewal by itself. Buying it again extends it from its end. Without this section the game does not sell it.",
+          "type": "object",
+          "properties": {
+            "enabled": { "description": "Whether the game sells it and honours it. When it is off nothing is offered and the tank is not filled for free; the time the drivers have is kept, and runs out.", "type": "boolean" },
+            "days": { "description": "How many days one purchase lasts.", "type": "integer", "minimum": 1, "maximum": 3650 },
+            "price_minor": { "description": "The price in the smallest unit of price_currency (grosze).", "type": "integer", "minimum": 1, "maximum": 100000000 }
+          },
+          "required": ["enabled", "days", "price_minor"],
+          "additionalProperties": false
+        },
         "products": {
           "description": "The packs of coins, from the cheapest per coin. The slug is what a payment names.",
           "type": "object",

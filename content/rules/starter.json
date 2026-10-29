@@ -380,6 +380,17 @@
     },
     "price_currency": "PLN",
     "speedup": { "minutes_per_coin": 5 },
+    "autorefill": {
+      "enabled": true,
+      "stock_cap": 100,
+      "packs": {
+        "refill-1": { "charges": 1, "coins": 2 },
+        "refill-5": { "charges": 5, "coins": 9 },
+        "refill-20": { "charges": 20, "coins": 32 }
+      }
+    },
+    "vip": { "enabled": true, "days": 30, "coins": 150, "cash_bonus_ppm": 200000, "xp_bonus_ppm": 200000 },
+    "infinity": { "enabled": true, "days": 30, "price_minor": 1999 },
     "products": {
       "coins-small": { "name": { "en": "Small pack", "pl": "Mała paczka", "fr": "Petit pack", "de": "Kleines Paket", "pt-BR": "Pacote pequeno" }, "coins": 50, "price_minor": 499 },
       "coins-medium": { "name": { "en": "Medium pack", "pl": "Średnia paczka", "fr": "Pack moyen", "de": "Mittleres Paket", "pt-BR": "Pacote médio" }, "coins": 220, "price_minor": 1999 },
