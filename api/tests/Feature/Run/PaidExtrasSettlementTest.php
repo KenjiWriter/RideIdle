@@ -370,3 +370,23 @@ describe('the economy of the game', function () {
         expect($run->refresh()->config)->toBe($before);
     });
 });
+
+describe('what the answer of a run says of them', function () {
+    it('says in the summary and in each settlement how much the VIP account added and how many times the tank was filled', function () {
+        [$driver, $run] = paidDriver(2);
+        onWallet($driver, ['vip_until' => momentAt(86_400_000)]);
+        clockAt(PAID_HOUR_MS);
+
+        $response = getRun($driver)->assertOk();
+
+        expect($response->json('summary.laps'))->toBe(48)
+            ->and($response->json('summary.bonus_cash_cents'))->toBe(48 * 310)
+            ->and($response->json('summary.bonus_xp'))->toBe(48 * 5)
+            ->and($response->json('summary.auto_refills'))->toBe(1)
+            ->and($response->json('summary.refill_charges'))->toBe(1)
+            ->and($response->json('summary.cash_cents'))->toBe(48 * 1_860)
+            ->and($response->json('settlements.0.bonus_cash_cents'))->toBe(48 * 310)
+            ->and($response->json('settlements.0.auto_refills'))->toBe(1)
+            ->and(collect($response->json('settlements.0.events'))->pluck('type')->contains('auto_refill'))->toBeTrue();
+    });
+});

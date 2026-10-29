@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Models\RaceRun;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 
@@ -51,6 +50,7 @@ it('W1 over HTTP: settles the run up to now and tells what happened', function (
         ->assertJsonPath('settlements.0.events.2.type', 'fuel_empty')
         ->assertJsonPath('summary', [
             'laps' => 30, 'cash_cents' => 46_500, 'xp' => 750,
+            'bonus_cash_cents' => 0, 'bonus_xp' => 0, 'auto_refills' => 0, 'refill_charges' => 0,
             'from_ms' => RUN_T0, 'to_ms' => RUN_T0 + 2_250_000, 'stop_reason' => 'fuel_empty',
         ]);
 });
@@ -74,7 +74,7 @@ it('settles nothing the second time at the same moment', function () {
         ->assertJsonPath('data.state_version', 1)
         ->assertJsonPath('wallet.cash_cents', 46_500)
         ->assertJsonCount(0, 'settlements')
-        ->assertJsonPath('summary', ['laps' => 0, 'cash_cents' => 0, 'xp' => 0, 'from_ms' => null, 'to_ms' => null, 'stop_reason' => null]);
+        ->assertJsonPath('summary', ['laps' => 0, 'cash_cents' => 0, 'xp' => 0, 'bonus_cash_cents' => 0, 'bonus_xp' => 0, 'auto_refills' => 0, 'refill_charges' => 0, 'from_ms' => null, 'to_ms' => null, 'stop_reason' => null]);
 });
 
 it('gives the settlements made since a version, so an answer that did not arrive is not lost', function () {

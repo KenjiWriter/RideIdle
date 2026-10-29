@@ -28,6 +28,11 @@ final class SettlementResource extends JsonResource
             'laps' => $this->laps,
             'cash_cents' => $this->cash_cents,
             'xp' => $this->xp,
+            // What the paid extras did in it: how much of the cash and the XP above the VIP account added, and how many times the tank was filled for the driver.
+            'bonus_cash_cents' => $this->bonus_cash_cents,
+            'bonus_xp' => $this->bonus_xp,
+            'auto_refills' => $this->auto_refills,
+            'refill_charges' => $this->refill_charges,
             'stop_reason' => $this->stop_reason,
             'events' => $this->events->map(static fn ($event): array => [
                 'type' => $event->type,
