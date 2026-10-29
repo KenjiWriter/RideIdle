@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Widgets;
 
+use App\Games\CurrentGame;
 use App\Models\ContentActivation;
 use App\Models\ContentDefinition;
 use App\Models\ContentPack;
@@ -20,7 +21,8 @@ class LivePackWidget extends StatsOverviewWidget
     {
         $pack = app(ContentPacks::class)->active();
         $since = $pack === null ? null : ContentActivation::query()->where('content_pack_id', $pack->id)->latest('id')->value('created_at');
-        $fromDatabase = config('ride.content_source') === 'database';
+        // The files of the repository are the content of the default game: any other game reads its pack from the database, whatever the configuration says.
+        $fromDatabase = config('ride.content_source') === 'database' || ! app(CurrentGame::class)->isDefault();
 
         return [
             Stat::make(__('admin.widget.live_pack'), $pack?->number ?? __('admin.widget.none'))

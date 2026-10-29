@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\GivesAccessToGames;
 use App\Models\Admin;
 use App\Services\AdminAudit;
 use Illuminate\Console\Command;
@@ -15,13 +16,17 @@ use Illuminate\Support\Str;
  */
 final class UpdateAdmin extends Command
 {
+    use GivesAccessToGames;
+
     protected $signature = 'admin:update
         {email : The address of the admin}
         {--role= : editor or publisher}
         {--activate : Let the admin sign in}
         {--deactivate : Do not let the admin sign in}
         {--reset-password : Make a new password, shown once}
-        {--reset-mfa : Take the authenticator app and the recovery codes off}';
+        {--reset-mfa : Take the authenticator app and the recovery codes off}
+        {--all-games : Let the admin work in every game (and take the games they were given off)}
+        {--game=* : Let the admin work in these games only (the slug, and after a colon the role in it: statki:publisher); the games that were given before are replaced}';
 
     protected $description = 'Change the role of an admin of the content panel, switch them off or on, give them a new password or reset their authenticator app';
 
@@ -39,6 +44,12 @@ final class UpdateAdmin extends Command
         if ($this->option('activate') && $this->option('deactivate')) {
             $this->error('An admin cannot be switched on and off at once.');
 
+            return self::FAILURE;
+        }
+
+        $games = $this->chosenGames();
+
+        if ($games === null) {
             return self::FAILURE;
         }
 
@@ -75,8 +86,12 @@ final class UpdateAdmin extends Command
             $changes[] = 'authenticator app taken off';
         }
 
+        if ($this->option('all-games') || $games !== []) {
+            $changes[] = 'games: '.($this->giveAccess($admin, $games) ?? 'every game');
+        }
+
         if ($changes === []) {
-            $this->line('Nothing to change: give --role, --activate, --deactivate, --reset-password or --reset-mfa.');
+            $this->line('Nothing to change: give --role, --activate, --deactivate, --reset-password, --reset-mfa, --all-games or --game.');
 
             return self::SUCCESS;
         }

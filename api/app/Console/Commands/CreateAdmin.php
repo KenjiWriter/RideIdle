@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Console\Commands\Concerns\GivesAccessToGames;
 use App\Models\Admin;
 use App\Services\AdminAudit;
 use Illuminate\Console\Command;
@@ -12,10 +13,14 @@ use Illuminate\Support\Str;
 /** Makes somebody an admin of the panel. The password is made here and shown once; the authenticator app is set up at the first sign-in. */
 final class CreateAdmin extends Command
 {
+    use GivesAccessToGames;
+
     protected $signature = 'admin:create
         {email : The address the admin signs in with}
         {--name= : The name shown in the panel (default: the part of the address before the @)}
-        {--role=editor : editor (looks and prepares) or publisher (also makes a pack live)}';
+        {--role=editor : editor (looks and prepares) or publisher (also makes a pack live)}
+        {--all-games : Let the admin work in every game, and manage the games and the admins (the default)}
+        {--game=* : Let the admin work in this game only (its slug, and after a colon the role in it: statki:publisher); give it for every game}';
 
     protected $description = 'Make somebody an admin of the content panel, with a password that is shown once';
 
@@ -36,6 +41,12 @@ final class CreateAdmin extends Command
             return self::FAILURE;
         }
 
+        $games = $this->chosenGames();
+
+        if ($games === null) {
+            return self::FAILURE;
+        }
+
         if (Admin::query()->where('email', $email)->exists()) {
             $this->error("{$email} is an admin already. admin:update changes one.");
 
@@ -44,16 +55,19 @@ final class CreateAdmin extends Command
 
         $password = Str::password(20, symbols: false);
 
-        Admin::query()->create([
+        $admin = Admin::query()->create([
             'name' => (string) ($this->option('name') ?: Str::before($email, '@')),
             'email' => $email,
             'password' => $password,
             'role' => $role,
         ]);
-        $audit->record('admin_created', subject: "admin:{$email}", context: ['role' => $role, 'by' => 'cli']);
+        $given = $this->giveAccess($admin, $games);
+        $access = $given ?? 'every game';
+        $audit->record('admin_created', subject: "admin:{$email}", context: ['role' => $role, ...($given === null ? [] : ['games' => $given]), 'by' => 'cli']);
 
         $this->info("{$email} is a {$role} now. The password, which is not kept anywhere, is:");
         $this->line($password);
+        $this->line("They may work in: {$access}.");
         $this->line('The authenticator app is set up at the first sign-in.');
 
         return self::SUCCESS;

@@ -7,6 +7,7 @@ namespace App\Filament\Resources\AdminAuditLogs;
 use App\Filament\Resources\AdminAuditLogs\Pages\ManageAdminAuditLogs;
 use App\Models\Admin;
 use App\Models\AdminAuditLog;
+use App\Models\Game;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
@@ -62,12 +63,14 @@ class AdminAuditLogResource extends Resource
                 TextColumn::make('created_at')->label(__('admin.audit.when'))->dateTime('Y-m-d H:i:s')->sortable(),
                 TextColumn::make('email')->label(__('admin.audit.who'))->searchable()->placeholder('-'),
                 TextColumn::make('action')->label(__('admin.audit.action'))->badge()->formatStateUsing(fn (string $state): string => self::actionName($state))->searchable(),
+                TextColumn::make('game.name')->label(__('admin.audit.game'))->placeholder('-')->toggleable(),
                 TextColumn::make('subject')->label(__('admin.audit.subject'))->searchable()->placeholder('-'),
                 TextColumn::make('context')->label(__('admin.audit.context'))->state(fn (AdminAuditLog $record): string => $record->context === null ? '' : (string) json_encode($record->context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))->limit(60)->tooltip(fn (AdminAuditLog $record): ?string => $record->context === null ? null : (string) json_encode($record->context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT)),
                 TextColumn::make('ip')->label(__('admin.audit.ip'))->placeholder('-'),
             ])
             ->filters([
                 SelectFilter::make('action')->label(__('admin.audit.action'))->options(fn (): array => AdminAuditLog::query()->distinct()->orderBy('action')->pluck('action')->mapWithKeys(fn (string $action): array => [$action => self::actionName($action)])->all()),
+                SelectFilter::make('game_id')->label(__('admin.audit.game'))->options(fn (): array => Game::query()->orderBy('id')->pluck('name', 'id')->all()),
             ]);
     }
 

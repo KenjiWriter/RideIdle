@@ -25,4 +25,10 @@ class AdminAuditLog extends Model
     {
         return $this->belongsTo(Admin::class);
     }
+
+    /** @return BelongsTo<Game, $this> the game that it was done in, if one was in force */
+    public function game(): BelongsTo
+    {
+        return $this->belongsTo(Game::class);
+    }
 }
