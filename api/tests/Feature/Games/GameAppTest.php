@@ -2,7 +2,6 @@
 
 declare(strict_types=1);
 
-use App\Filament\Resources\Games\Pages\CreateGame;
 use App\Filament\Resources\Games\Pages\EditGame;
 use App\Games\CurrentGame;
 use App\Mail\AccountLinkMail;
@@ -148,13 +147,14 @@ describe('the icons of a game in the panel', function () {
 
     it('are kept when they are square and large enough: the file goes to the store of images and its name is the icon', function () {
         $png = squarePng(512);
+        $game = Game::query()->create(['slug' => 'ships', 'name' => 'Ships']);
 
-        Livewire::test(CreateGame::class)
-            ->fillForm(['slug' => 'ships', 'name' => 'Ships', 'locale' => 'en', 'theme_color' => '#0b3d5c', 'status' => 'draft', 'icon_upload' => UploadedFile::fake()->createWithContent('icon.png', $png)])
-            ->call('create')
+        Livewire::test(EditGame::class, ['record' => $game->getRouteKey()])
+            ->fillForm(['icon_upload' => UploadedFile::fake()->createWithContent('icon.png', $png)])
+            ->call('save')
             ->assertHasNoFormErrors();
 
-        $game = Game::query()->where('slug', 'ships')->firstOrFail();
+        $game = $game->fresh();
 
         expect($game->icon)->toBe(hash('sha256', $png).'.png')
             ->and(app(ContentImages::class)->find((string) $game->icon)['bytes'])->toBe($png)
@@ -162,18 +162,20 @@ describe('the icons of a game in the panel', function () {
     });
 
     it('are refused when the picture is not square or too small, and nothing is kept', function () {
+        $game = Game::query()->create(['slug' => 'ships', 'name' => 'Ships']);
+
         foreach ([squarePng(100), (function (): string {
             // 300 x 200: not square.
             $png = squarePng(300);
 
             return substr_replace($png, pack('N', 200), 20, 4);
         })()] as $bad) {
-            Livewire::test(CreateGame::class)
-                ->fillForm(['slug' => 'ships', 'name' => 'Ships', 'locale' => 'en', 'theme_color' => '#0b3d5c', 'status' => 'draft', 'icon_upload' => UploadedFile::fake()->createWithContent('icon.png', $bad)])
-                ->call('create')
+            Livewire::test(EditGame::class, ['record' => $game->getRouteKey()])
+                ->fillForm(['icon_upload' => UploadedFile::fake()->createWithContent('icon.png', $bad)])
+                ->call('save')
                 ->assertNotified();
 
-            expect(Game::query()->where('slug', 'ships')->exists())->toBeFalse();
+            expect($game->fresh()->icon)->toBeNull();
         }
     });
 
