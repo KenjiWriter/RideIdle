@@ -1,0 +1,37 @@
+# The worker for the domains of the games: the jobs that the panel asked for (put a domain on the server, look at its certificate). A timer starts it every minute
+# (rideidle-domains.timer); it asks the application for the oldest job, runs game-site.sh for it and tells the application how it went. See deploy/README.md,
+# "Domeny gier z panelu".
+# provision.sh puts the folder of the application and the version of PHP in place of __APP_DIR__ and __PHP_VERSION__ and installs this as
+# /etc/systemd/system/rideidle-domains.service.
+
+[Unit]
+Description=RideIdle domains and certificates asked for in the panel
+After=network-online.target nginx.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Root, because the job writes to /etc/nginx and asks Let's Encrypt for a certificate. artisan is run by the script as the user of the web server, never as root.
+User=root
+# `current` is a link to the release that is live. artisan is run in it. game-site.sh is the copy that belongs to root (provision.sh puts it in /usr/local/lib/rideidle):
+# a script that runs as root must not be one that the user who deploys can change.
+Environment=APP_DIR=__APP_DIR__/current
+Environment=WEB_USER=www-data
+Environment=PHP_BIN=/usr/bin/php__PHP_VERSION__
+Environment=GAME_SITE=/usr/local/lib/rideidle/deploy/game-site.sh
+Environment=LETSENCRYPT_DIR=/etc/letsencrypt
+# To try it without touching anything: Environment=DOMAIN_WORKER_DRY_RUN=1. To get a test certificate: Environment=CERTBOT_STAGING=1 (systemctl edit rideidle-domains).
+ExecStart=/usr/local/sbin/rideidle-domains
+# Five jobs of fifteen minutes at the most, and some room.
+TimeoutStartSec=2h
+
+# It has to write to /etc/nginx, /etc/letsencrypt and /var/www/certbot and reload nginx, so the file system is not closed to it. What does not get in the way of that is
+# closed.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true

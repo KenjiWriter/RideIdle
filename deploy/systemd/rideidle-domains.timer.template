@@ -1,0 +1,16 @@
+# Starts the worker of the domains of the games every minute (rideidle-domains.service). When there is no job it takes a moment to ask the application and that is all.
+# provision.sh installs this as /etc/systemd/system/rideidle-domains.timer and enables it.
+
+[Unit]
+Description=RideIdle: look every minute for the domains that the panel asked for
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+AccuracySec=10s
+# A run that was missed while the server was off is not made up: the next one finds the jobs.
+Persistent=false
+Unit=rideidle-domains.service
+
+[Install]
+WantedBy=timers.target

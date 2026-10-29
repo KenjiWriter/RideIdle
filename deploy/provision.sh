@@ -156,7 +156,8 @@ check_system() {
     esac
 
     for file in nginx/rideidle.conf.template nginx/rideidle-global.conf nginx/rideidle-security.conf \
-        systemd/rideidle-queue.service.template env.production.example bin/rideidle-backup bin/rideidle-backup-verify bin/rideidle-backup-offsite deploy.sh; do
+        systemd/rideidle-queue.service.template systemd/rideidle-domains.service.template systemd/rideidle-domains.timer.template game-site.sh bin/rideidle-domains \
+        env.production.example bin/rideidle-backup bin/rideidle-backup-verify bin/rideidle-backup-offsite deploy.sh; do
         [[ -f "$HERE/$file" ]] || fail "Run this from the deploy/ folder of the repository: $file is missing next to it."
     done
 }
@@ -562,6 +563,7 @@ write_env() {
 
     content="$(cat "$HERE/env.production.example")"
     content="${content//__DOMAIN__/$DOMAIN}"
+    content="${content//__ADMIN_EMAIL__/$(env_value "$ADMIN_EMAIL")}"
     content="${content//__APP_KEY__/$app_key}"
     content="${content//__DB_PASSWORD__/$db_password}"
     content="${content//__CACHE_STORE__/$CACHE_STORE_VALUE}"
@@ -635,6 +637,25 @@ EOF
     notifempty
 }
 EOF
+}
+
+# The worker that carries out what the panel asks for a game on a domain of its own (nginx and a certificate): a timer runs it every minute as root, and it runs
+# game-site.sh. That script runs as root, so the copy it runs from (with the template it uses) belongs to root and is put in /usr/local/lib/rideidle, and not the one in a
+# release, which the user who deploys can change. A new release with a new game-site.sh is in place after this script is run again (it can be).
+install_domain_worker() {
+    say "Installing the worker for the domains that the panel asks for"
+
+    install -m 755 "$HERE/bin/rideidle-domains" /usr/local/sbin/rideidle-domains
+    install -d -m 755 -o root -g root /usr/local/lib/rideidle /usr/local/lib/rideidle/deploy /usr/local/lib/rideidle/deploy/nginx
+    install -m 755 -o root -g root "$HERE/game-site.sh" /usr/local/lib/rideidle/deploy/game-site.sh
+    install -m 644 -o root -g root "$HERE/nginx/rideidle.conf.template" /usr/local/lib/rideidle/deploy/nginx/rideidle.conf.template
+
+    render "$HERE/systemd/rideidle-domains.service.template" > /etc/systemd/system/rideidle-domains.service
+    render "$HERE/systemd/rideidle-domains.timer.template" > /etc/systemd/system/rideidle-domains.timer
+    systemctl daemon-reload
+    # Before the first deploy it finds no release and does nothing; after it, it looks for jobs every minute.
+    systemctl enable --now rideidle-domains.timer >/dev/null
+    note "rideidle-domains.timer looks every minute for the domains that the panel asked for (journalctl -u rideidle-domains)."
 }
 
 install_nginx() {
@@ -749,6 +770,8 @@ EOF
         todo=1
     fi
     echo "   - Fill the keys of Google, Facebook and Apple in the .env when you have them (deploy/README.md says where)."
+    echo "   - The panel can put a game on a domain of its own: rideidle-domains.timer is on and looks every minute for what the panel asks. The A record of the domain has to point"
+    echo "     here first. To try it without touching anything, DOMAIN_WORKER_DRY_RUN=1 (deploy/README.md, \"Domeny gier z panelu\"). ACME_EMAIL in the .env is where Let's Encrypt writes."
     echo "   - Deploy the application from your computer:   deploy/upload.sh release ${DEPLOY_USER}@${DOMAIN}"
     echo "   - Send the copies to another place: a copy that is only on this server does not survive it. Set BACKUP_REMOTE in /etc/rideidle/backup.env (deploy/README.md, \"Kopie zapasowe\")."
     echo "   - Run  sudo rideidle-backup && sudo rideidle-backup-verify  once by hand: a copy that was never restored is a hope, not a copy."
@@ -770,6 +793,7 @@ create_users_and_folders
 write_env
 install_sudoers
 install_services
+install_domain_worker
 install_nginx
 setup_tls
 setup_firewall
