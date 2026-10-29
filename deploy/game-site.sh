@@ -115,6 +115,9 @@ check_settings() {
     [[ -f "$HERE/nginx/rideidle.conf.template" ]] || fail "Run this from the deploy/ folder of the repository: nginx/rideidle.conf.template is missing next to it."
     [[ -f "$ENV_OF_GAME" ]] || fail "$ENV_OF_GAME is missing. Make the first deploy before this."
     [[ -f "$NGINX_DIR/snippets/rideidle-security.conf" && -f "$NGINX_DIR/conf.d/rideidle-global.conf" ]] || fail "The nginx of the game is not set up (provision.sh puts its settings in $NGINX_DIR). Run provision.sh first."
+    # The site tells a robot that makes the preview of a link from a person with a map of the whole of nginx (rideidle-global.conf, which provision.sh puts in place). A
+    # server that was set up by an older release does not have it yet, and nginx would not accept a site that uses it.
+    grep -qs 'rideidle_app_page' "$NGINX_DIR/conf.d/rideidle-global.conf" || fail "The settings of nginx on this server (conf.d/rideidle-global.conf) are older than this release: they lack the list of robots that the site uses. Run provision.sh of this release again (it can be repeated; it keeps the .env and the database), then this. Nothing was changed."
     command -v nginx >/dev/null 2>&1 || fail "nginx is not installed."
     command -v certbot >/dev/null 2>&1 || fail "certbot is not installed."
     nginx -t >/dev/null 2>&1 || fail "nginx does not accept its configuration as it is (nginx -t). Fix that first. Nothing was changed."
