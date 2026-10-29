@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Content\Rules;
 use App\Content\Tracks\Build;
 use App\Content\Tracks\SurfaceOutcome;
 use App\Content\Tracks\TrackOutcome;
@@ -143,7 +144,9 @@ final class SimulateTracks extends Command
 
     private function tiresOf(Build $build): string
     {
-        return $build->vehicle.($build->mounted['tires'] ?? false ? ' on '.$build->mounted['tires'] : '');
+        $tires = $build->mounted[app(Rules::class)->model()->slotOf('tires') ?? 'tires'] ?? null;
+
+        return $build->vehicle.($tires !== null ? " on {$tires}" : '');
     }
 
     private function most(): int

@@ -27,9 +27,6 @@ use RuntimeException;
  */
 final class TrackSimulator
 {
-    /** The slots whose parts change the lap of a car. The rest (cooling, tank) change what the car holds, not how fast it goes. */
-    private const SLOTS = ['tires', 'suspension', 'brakes', 'exhaust', 'gearbox'];
-
     /** The weather in which the best build is also asked for, as the design's proof is dry against wet. */
     private const COMPARED_WEATHER = ['dry', 'rain'];
 
@@ -130,7 +127,9 @@ final class TrackSimulator
     private function surfaces(): array
     {
         $vehicle = $this->referenceVehicle();
-        $tires = array_filter($this->catalog->parts(), static fn (array $part): bool => $part['slot'] === 'tires');
+        $model = $this->rules->model();
+        $tiresSlot = $model->slotOf('tires');
+        $tires = array_filter($this->catalog->parts(), static fn (array $part): bool => $part['slot'] === $tiresSlot);
         ksort($tires);
 
         $outcomes = [];
@@ -147,7 +146,7 @@ final class TrackSimulator
             $kinds = [];
 
             foreach ($tires as $slug => $part) {
-                $laps[$slug] = $this->freeze(new Build($vehicle, ['tires' => $slug]), $track)['lap_ms'][$weather];
+                $laps[$slug] = $this->freeze(new Build($vehicle, [$tiresSlot => $slug]), $track)['lap_ms'][$weather];
                 $kinds[$slug] = $part['tire_kind'];
             }
 
@@ -202,6 +201,19 @@ final class TrackSimulator
     }
 
     /**
+     * The slots whose parts change the lap of a car: the tires, the suspension and the brakes, the slots that have no role (the exhaust), and the gearbox. The rest
+     * (the engine and the booster, which the engines of the shop are tried by, the cooling, the tank) change what the car holds, not how fast it goes.
+     *
+     * @return list<string>
+     */
+    private function slots(): array
+    {
+        $model = $this->rules->model();
+
+        return [...$model->slotsOfRoles(['tires', 'suspension', 'brakes']), ...$model->roleless(), ...$model->slotsOfRoles(['gearbox'])];
+    }
+
+    /**
      * Every combination of the parts that change the lap, up to a tier, and the car without a part in a slot among them.
      *
      * @param  array<string, mixed>  $vehicle
@@ -211,7 +223,7 @@ final class TrackSimulator
     {
         $options = [];
 
-        foreach (self::SLOTS as $slot) {
+        foreach ($this->slots() as $slot) {
             $parts = array_filter(
                 $this->catalog->parts(),
                 fn (array $part): bool => $part['slot'] === $slot && $part['tier'] <= $tierCap && $this->fits($part, $vehicle),

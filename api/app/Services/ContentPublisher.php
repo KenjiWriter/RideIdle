@@ -8,6 +8,7 @@ use App\Content\ContentException;
 use App\Content\ContentPackInvalid;
 use App\Content\ContentSource;
 use App\Content\Definitions\JsonDocument;
+use App\Content\GameModel;
 use App\Content\PackContent;
 use App\Content\PackValidationResult;
 use App\Content\Publishing\CandidatePack;
@@ -20,6 +21,7 @@ use App\Models\Admin;
 use App\Models\ContentDefinition;
 use App\Models\ContentPack;
 use App\Models\ContentPublication;
+use App\Models\Part;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -311,6 +313,15 @@ final class ContentPublisher
 
             foreach ($this->usage->removedInUse($name, JsonDocument::decode((string) $live->raw($key)), JsonDocument::decode((string) $candidate->raw($key))) as $what) {
                 $result->addError("{$key}.json", '', "It takes out what players use: {$what}.");
+            }
+        }
+
+        // A slot that players have parts in stays in the model: the parts and the cars are by the key of the slot.
+        $model = GameModel::fromSource($candidate);
+
+        foreach (Part::query()->selectRaw('slot, count(*) as total')->groupBy('slot')->get() as $row) {
+            if (! $model->has((string) $row->slot)) {
+                $result->addError('rules/model.json', '/slots', "It takes out the slot {$row->slot}, which players have parts in ({$row->total} parts).");
             }
         }
 

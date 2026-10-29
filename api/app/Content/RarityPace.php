@@ -171,8 +171,10 @@ final class RarityPace
 
         // The parts have the affixes that a part of their rarity has on average, so the table is the same on every machine (the gain of a part that has the ones that
         // are about a statistic is what the table counts: durability, fuel and reliability do not change a lap or what it pays).
-        foreach (self::PARTS as $slot => $slug) {
-            $mounted[$slot] = ['slug' => $slug, 'rarity' => $ranks[$slot], 'affixes' => $affixes->expected($slot, Rarity::from($ranks[$slot]))];
+        foreach (self::PARTS as $label => $slug) {
+            // The labels are the slots of the car game: in another game the part is in the slot that has the role (or the same key, for a slot that has none).
+            $slot = $this->rules->model()->slotOf($label) ?? $label;
+            $mounted[$slot] = ['slug' => $slug, 'rarity' => $ranks[$label], 'affixes' => $affixes->expected($slot, Rarity::from($ranks[$label]))];
         }
 
         $config = (new RunFreezer)->freeze($this->inputs->make(self::CAR, self::TRACK, $mounted), 'rarity-pace', 0)->config;

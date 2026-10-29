@@ -54,9 +54,10 @@ final class PartPreview
 
         $shop = [];
 
-        foreach (self::SHOP_SET as $slot => $slug) {
+        foreach (self::SHOP_SET as $label => $slug) {
             if ($catalog->part($slug) !== null) {
-                $shop[$slot] = ['slug' => $slug, 'rarity' => 1];
+                // The labels are the slots of the car game: in another game the part is in the slot that has the role (or the same key, for a slot that has none).
+                $shop[$rules->model()->slotOf($label) ?? $label] = ['slug' => $slug, 'rarity' => 1];
             }
         }
 

@@ -62,16 +62,6 @@ final class SimulateEconomy extends Command
 
     private const SCHEMA_BASE = 'https://rideidle.local/schema/';
 
-    /** The slots of the parts of the shop that wear: the upkeep of the shop set is counted over them. */
-    private const UPKEEP_SLOTS = ['tires', 'suspension', 'brakes', 'exhaust'];
-
-    /**
-     * The slots of the engine group and the engines. Their parts are priced by the board of the catalog (a turbo costs two to five times what the curve of the
-     * anchors gives a part of its tier, and an engine by the litre of its layout, so a V12 costs three and a R4 a third of what the tier asks), so their prices
-     * are not set against that curve; the check covers the parts the curve describes.
-     */
-    private const ENGINE_GROUP_SLOTS = ['boost', 'cooling', 'gearbox', 'engine'];
-
     protected $signature = 'economy:simulate
         {--ruleset= : The ruleset to play, a file of the shape of content/rules/economy.json (that file when left out)}
         {--player=* : Play only these kinds of players, by their keys (A, B or C)}
@@ -193,6 +183,7 @@ final class SimulateEconomy extends Command
     private function numbersOf(Rules $game, Catalog $catalog, TutorialSteps $tutorial): array
     {
         $track = $game->track($game->startingTrack()) ?? [];
+        $engineGroup = $this->engineGroupSlots($game);
 
         return [
             'lap_ms' => (int) $track['base_lap_ms'],
@@ -204,7 +195,7 @@ final class SimulateEconomy extends Command
             'tutorial' => $this->tutorialGifts($tutorial),
             'parts' => array_values(array_map(
                 static fn (array $part): array => ['slug' => (string) $part['slug'], 'tier' => (int) $part['tier'], 'slot' => (string) $part['slot'], 'price_cents' => (int) $part['price_cents']],
-                array_filter($catalog->parts(), static fn (array $part): bool => ! in_array($part['slot'], self::ENGINE_GROUP_SLOTS, true)),
+                array_filter($catalog->parts(), static fn (array $part): bool => ! in_array($part['slot'], $engineGroup, true)),
             )),
         ];
     }
@@ -311,6 +302,29 @@ final class SimulateEconomy extends Command
     }
 
     /**
+     * The slots of the parts of the shop that wear, in the order of the car game (the tires, the suspension, the brakes, and the slots that have no role: the
+     * exhaust): the upkeep of the shop set is counted over them.
+     *
+     * @return list<string>
+     */
+    private function upkeepSlots(Rules $game): array
+    {
+        return [...$game->model()->slotsOfRoles(['tires', 'suspension', 'brakes']), ...$game->model()->roleless()];
+    }
+
+    /**
+     * The slots of the engine group and the engines. Their parts are priced by the board of the catalog (a turbo costs two to five times what the curve of the
+     * anchors gives a part of its tier, and an engine by the litre of its layout, so a V12 costs three and a R4 a third of what the tier asks), so their prices
+     * are not set against that curve; the check covers the parts the curve describes.
+     *
+     * @return list<string>
+     */
+    private function engineGroupSlots(Rules $game): array
+    {
+        return $game->model()->slotsOfRoles(['boost', 'cooling', 'gearbox', 'engine']);
+    }
+
+    /**
      * The parts of the shop that a level of the driver has on a car: in each slot that wears and is sold (tires, suspension, brakes, exhaust) the
      * cheapest model of the highest tier that the level opens (a tier opens as the crates of it do), and nothing in a slot with no part open yet.
      *
@@ -323,7 +337,7 @@ final class SimulateEconomy extends Command
         foreach ($game->shopParts() as $slug) {
             $part = $catalog->part($slug);
 
-            if ($part === null || ! in_array($part['slot'], self::UPKEEP_SLOTS, true) || $crates->playerLevelOfTier($part['tier']) > $level) {
+            if ($part === null || ! in_array($part['slot'], $this->upkeepSlots($game), true) || $crates->playerLevelOfTier($part['tier']) > $level) {
                 continue;
             }
 
@@ -336,7 +350,7 @@ final class SimulateEconomy extends Command
 
         $set = [];
 
-        foreach (self::UPKEEP_SLOTS as $slot) {
+        foreach ($this->upkeepSlots($game) as $slot) {
             if (isset($best[$slot])) {
                 $set[] = ['slot' => $slot, 'model' => $best[$slot]['model'], 'price_cents' => $best[$slot]['price_cents']];
             }

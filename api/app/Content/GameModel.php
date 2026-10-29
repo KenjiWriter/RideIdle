@@ -104,6 +104,23 @@ final class GameModel
         return null;
     }
 
+    /**
+     * The keys of the slots that have these roles, in the order of the roles given (a role that no slot has is left out).
+     *
+     * @param  list<string>  $roles
+     * @return list<string>
+     */
+    public function slotsOfRoles(array $roles): array
+    {
+        return array_values(array_filter(array_map($this->slotOf(...), $roles), static fn (?string $slot): bool => $slot !== null));
+    }
+
+    /** @return list<string> the keys of the slots that have no role and are not hidden (an exhaust: the parts of it change the statistics that the formulas read), in order */
+    public function roleless(): array
+    {
+        return array_column(array_filter($this->slots, static fn (array $slot): bool => $slot['role'] === null && ! $slot['hidden']), 'key');
+    }
+
     /** The role of a slot, or null when it has none (or is not in the model). */
     public function roleOf(string $slot): ?string
     {
