@@ -6,7 +6,8 @@ import { usePremiumStore } from '@/stores/premium'
 
 /**
  * The premium coins of the driver for the bar at the top: what the newest answer says, whichever call it came from (the garage and the map carry the balance with
- * their answers, as every screen that spends coins needs it), or null until one has. `ensure` asks for it once when nothing has.
+ * their answers, as every screen that spends coins needs it), or null until one has. `ensure` asks for the premium shop once in the session: the bar at the top shows
+ * the badges of the paid extras next to the coins, and the coins when no other answer has said them.
  */
 export function usePremiumCoins() {
   const garage = useGarageStore()
@@ -24,9 +25,7 @@ export function usePremiumCoins() {
   })
 
   async function ensure(): Promise<void> {
-    if (coins.value === null && !premium.asked) {
-      await premium.load().catch(() => undefined)
-    }
+    await premium.ensure()
   }
 
   return { coins, ensure }

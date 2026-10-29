@@ -178,6 +178,9 @@
       "underway": "O carro está sendo rebocado. Ele volta a correr em cerca de {time}."
     },
     "away": {
+      "refills": "O tanque foi enchido para você {n} vez (estoque −{charges}) | O tanque foi enchido para você {n} vezes (estoque −{charges})",
+      "refillsFree": "O tanque foi enchido para você {n} vez, de graça com o passe | O tanque foi enchido para você {n} vezes, de graça com o passe",
+      "bonus": "Bônus VIP: +{amount}",
       "title": "Enquanto você estava fora",
       "duration": "Tempo fora",
       "earned": "Ganhos",
@@ -636,6 +639,10 @@
     "noCar": "Você ainda não tem um carro."
   },
   "hud": {
+    "vip": "VIP",
+    "vipTitle": "Conta VIP: mais dinheiro e XP a cada volta",
+    "pass": "∞",
+    "passTitle": "Passe de reabastecimento ilimitado: o tanque é enchido de graça",
     "level": "LV",
     "progress": "{into} / {needed} XP",
     "xp": "Experiência neste nível",
@@ -697,6 +704,56 @@
     "downpour": "temporal",
     "fog": "neblina",
     "snow": "neve"
+  },
+  "premium": {
+    "title": "Premium",
+    "intro": "O RideCoin compra extras para a sua garagem. Tudo aqui é opcional: o jogo é jogado igual sem eles.",
+    "balance": "Você tem {count} RideCoin",
+    "coinsNote": "Por enquanto, o RideCoin é dado pela equipe do jogo. A compra com cartão vem depois.",
+    "loadError": "Não foi possível carregar a loja premium.",
+    "off": "O jogo desligou isso por enquanto. O que você tem fica guardado.",
+    "nothing": "Este jogo não vende extras.",
+    "repeated": "Essa compra já foi feita.",
+    "days": "{n} dia | {n} dias",
+    "autorefill": {
+      "title": "Reabastecimento automático",
+      "text": "Quando o combustível de um carro estiver acabando, o tanque é enchido para você, também enquanto você está fora. Um reabastecimento enche o tanque inteiro.",
+      "stock": "Em estoque: {count} de {cap}",
+      "switch": "Abastecer para mim",
+      "on": "Ligado: o tanque é enchido quando o combustível acaba.",
+      "off": "Desligado: o carro para quando o combustível acaba.",
+      "passOn": "O passe está ativo: os reabastecimentos são grátis.",
+      "pack": "{n} reabastecimento | {n} reabastecimentos",
+      "each": "{price} RideCoin cada",
+      "buy": "Comprar {pack}",
+      "full": "Seu estoque não comporta este pacote: o máximo é {cap}.",
+      "bought": "Adicionado: {pack} por {coins} RideCoin."
+    },
+    "vip": {
+      "title": "Conta VIP",
+      "text": "Enquanto durar, cada volta paga {cash}% a mais de dinheiro e {xp}% a mais de XP, além do que a pista paga.",
+      "on": "Ativa: faltam {left}",
+      "off": "Inativa",
+      "buy": "Pegar VIP por {period}",
+      "extend": "Prolongar por {period}",
+      "bought": "O VIP dura mais {period}."
+    },
+    "pass": {
+      "title": "Passe de reabastecimento ilimitado",
+      "text": "Por {period}, o reabastecimento automático não gasta nenhum reabastecimento. Um pagamento só, sem renovação automática.",
+      "on": "Ativo: faltam {left}",
+      "off": "Inativo",
+      "price": "{price} por {period}",
+      "unavailable": "O passe ainda não pode ser comprado no jogo. Até lá, a equipe do jogo pode dá-lo a você."
+    }
+  },
+  "autoRefill": {
+    "label": "Abastecer para mim",
+    "stock": "{n} reabastecimento em estoque | {n} reabastecimentos em estoque",
+    "pass": "Passe: reabastecimentos grátis (faltam {left})",
+    "empty": "Estoque vazio: o carro para quando o combustível acaba.",
+    "off": "Desligado: o carro para quando o combustível acaba.",
+    "buy": "Pegar mais"
   },
   "speedup": {
     "finishNow": "Concluir agora",

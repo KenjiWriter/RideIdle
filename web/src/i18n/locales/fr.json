@@ -178,6 +178,9 @@
       "underway": "La voiture est remorquée. Elle roulera de nouveau dans environ {time}."
     },
     "away": {
+      "refills": "Le réservoir a été rempli pour vous {n} fois (réserve −{charges})",
+      "refillsFree": "Le réservoir a été rempli pour vous {n} fois, gratuitement grâce au pass",
+      "bonus": "Bonus VIP : +{amount}",
       "title": "Pendant votre absence",
       "duration": "Durée d’absence",
       "earned": "Gains",
@@ -636,6 +639,10 @@
     "noCar": "Vous n’avez pas encore de voiture."
   },
   "hud": {
+    "vip": "VIP",
+    "vipTitle": "Compte VIP : plus d’argent et d’XP à chaque tour",
+    "pass": "∞",
+    "passTitle": "Pass plein illimité : le réservoir est rempli gratuitement",
     "level": "LV",
     "progress": "{into} / {needed} XP",
     "xp": "Expérience de ce niveau",
@@ -697,6 +704,56 @@
     "downpour": "averse",
     "fog": "brouillard",
     "snow": "neige"
+  },
+  "premium": {
+    "title": "Premium",
+    "intro": "Les RideCoin achètent des extras pour votre garage. Tout est facultatif : le jeu se joue pareil sans eux.",
+    "balance": "Vous avez {count} RideCoin",
+    "coinsNote": "Pour l’instant, les RideCoin sont distribués par l’équipe du jeu. L’achat par carte viendra plus tard.",
+    "loadError": "La boutique premium n’a pas pu être chargée.",
+    "off": "Le jeu l’a désactivé pour le moment. Ce que vous avez est conservé.",
+    "nothing": "Ce jeu ne vend aucun extra.",
+    "repeated": "Cet achat a déjà été effectué.",
+    "days": "{n} jour | {n} jours",
+    "autorefill": {
+      "title": "Plein automatique",
+      "text": "Quand le carburant d’une voiture va manquer, le réservoir est rempli pour vous, même en votre absence. Un plein remplit tout le réservoir.",
+      "stock": "En réserve : {count} sur {cap}",
+      "switch": "Faire le plein pour moi",
+      "on": "Activé : le réservoir est rempli quand le carburant manque.",
+      "off": "Désactivé : la voiture s’arrête quand le carburant manque.",
+      "passOn": "Le pass est actif : les pleins sont gratuits.",
+      "pack": "{n} plein | {n} pleins",
+      "each": "{price} RideCoin le plein",
+      "buy": "Acheter {pack}",
+      "full": "Votre réserve ne peut pas accueillir ce pack : le maximum est de {cap}.",
+      "bought": "Ajouté : {pack} pour {coins} RideCoin."
+    },
+    "vip": {
+      "title": "Compte VIP",
+      "text": "Tant qu’il dure, chaque tour rapporte {cash} % d’argent et {xp} % d’XP en plus de ce que paie le circuit.",
+      "on": "Actif : il reste {left}",
+      "off": "Inactif",
+      "buy": "Prendre le VIP pour {period}",
+      "extend": "Prolonger de {period}",
+      "bought": "Le VIP dure {period} de plus."
+    },
+    "pass": {
+      "title": "Pass plein illimité",
+      "text": "Pendant {period}, le plein automatique ne consomme aucun plein. Un seul paiement, sans renouvellement automatique.",
+      "on": "Actif : il reste {left}",
+      "off": "Inactif",
+      "price": "{price} pour {period}",
+      "unavailable": "Le pass ne peut pas encore être acheté dans le jeu. D’ici là, l’équipe du jeu peut vous le donner."
+    }
+  },
+  "autoRefill": {
+    "label": "Faire le plein pour moi",
+    "stock": "{n} plein en réserve | {n} pleins en réserve",
+    "pass": "Pass : pleins gratuits (il reste {left})",
+    "empty": "Plus de pleins en réserve : la voiture s’arrête quand le carburant manque.",
+    "off": "Désactivé : la voiture s’arrête quand le carburant manque.",
+    "buy": "En obtenir plus"
   },
   "speedup": {
     "finishNow": "Terminer maintenant",

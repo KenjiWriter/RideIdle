@@ -6,7 +6,7 @@ const named = (name: string) => routes.find((route) => route.name === name)
 
 describe('the routes', () => {
   it('mark the screens of the game, whose top bar is the HUD and which need a driver, and no other', () => {
-    expect(routes.filter((route) => route.meta?.game).map((route) => route.name)).toEqual(['map', 'race', 'garage', 'fleet', 'condition', 'workshop', 'shop', 'exchange', 'dealer', 'storage'])
+    expect(routes.filter((route) => route.meta?.game).map((route) => route.name)).toEqual(['map', 'race', 'garage', 'fleet', 'condition', 'workshop', 'shop', 'exchange', 'dealer', 'premium', 'storage'])
 
     for (const route of routes.filter((candidate) => candidate.meta?.game)) {
       expect(route.meta?.requiresAuth, String(route.name)).toBe(true)

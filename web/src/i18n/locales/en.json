@@ -178,6 +178,9 @@
       "underway": "The car is being towed. It drives again in about {time}."
     },
     "away": {
+      "refills": "The tank was filled for you {n} time (stock −{charges}) | The tank was filled for you {n} times (stock −{charges})",
+      "refillsFree": "The tank was filled for you {n} time, free with the pass | The tank was filled for you {n} times, free with the pass",
+      "bonus": "VIP bonus: +{amount}",
       "title": "While you were away",
       "duration": "Time away",
       "earned": "Earned",
@@ -636,6 +639,10 @@
     "noCar": "You have no car yet."
   },
   "hud": {
+    "vip": "VIP",
+    "vipTitle": "VIP account: more cash and XP for every lap",
+    "pass": "∞",
+    "passTitle": "Endless refill pass: the tank is filled for free",
     "level": "LV",
     "progress": "{into} / {needed} XP",
     "xp": "Experience in this level",
@@ -697,6 +704,56 @@
     "downpour": "downpour",
     "fog": "fog",
     "snow": "snow"
+  },
+  "premium": {
+    "title": "Premium",
+    "intro": "RideCoin buys extras for your garage. All of it is optional: the game plays the same without it.",
+    "balance": "You have {count} RideCoin",
+    "coinsNote": "For now RideCoin is given out by the people who run the game. Buying it with a card comes later.",
+    "loadError": "The premium shop could not be loaded.",
+    "off": "The game has switched this off for now. What you have is kept.",
+    "nothing": "This game sells no extras.",
+    "repeated": "That purchase was already made.",
+    "days": "{n} day | {n} days",
+    "autorefill": {
+      "title": "Auto-refill",
+      "text": "When the fuel of a car would run out, the tank is filled for you, also while you are away. One refill fills the whole tank.",
+      "stock": "In stock: {count} of {cap}",
+      "switch": "Fill the tank for me",
+      "on": "On: the tank is filled when the fuel runs out.",
+      "off": "Off: the car stops when the fuel runs out.",
+      "passOn": "The pass is on: the refills are free.",
+      "pack": "{n} refill | {n} refills",
+      "each": "{price} RideCoin each",
+      "buy": "Buy {pack}",
+      "full": "Your stock cannot take this pack: the most you can keep is {cap}.",
+      "bought": "Added {pack} for {coins} RideCoin."
+    },
+    "vip": {
+      "title": "VIP account",
+      "text": "While it lasts every lap pays {cash}% more cash and {xp}% more XP, on top of what the track pays.",
+      "on": "On: {left} left",
+      "off": "Not on",
+      "buy": "Get VIP for {period}",
+      "extend": "Extend by {period}",
+      "bought": "VIP lasts {period} longer."
+    },
+    "pass": {
+      "title": "Endless refill pass",
+      "text": "For {period} the auto-refill uses up no refills. One payment, no renewal by itself.",
+      "on": "On: {left} left",
+      "off": "Not on",
+      "price": "{price} for {period}",
+      "unavailable": "The pass cannot be bought in the game yet. Until it can, the people who run the game can give it to you."
+    }
+  },
+  "autoRefill": {
+    "label": "Fill the tank for me",
+    "stock": "{n} refill in stock | {n} refills in stock",
+    "pass": "Pass: the refills are free ({left} left)",
+    "empty": "No refills in stock: the car stops when the fuel runs out.",
+    "off": "Off: the car stops when the fuel runs out.",
+    "buy": "Get more"
   },
   "speedup": {
     "finishNow": "Finish now",

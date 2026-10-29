@@ -178,6 +178,9 @@
       "underway": "Das Auto wird abgeschleppt. Es fährt in etwa {time} wieder."
     },
     "away": {
+      "refills": "Der Tank wurde {n} Mal für dich gefüllt (Vorrat −{charges})",
+      "refillsFree": "Der Tank wurde {n} Mal für dich gefüllt, gratis mit dem Pass",
+      "bonus": "VIP-Bonus: +{amount}",
       "title": "Während du weg warst",
       "duration": "Abwesenheit",
       "earned": "Verdient",
@@ -636,6 +639,10 @@
     "noCar": "Du hast noch kein Auto."
   },
   "hud": {
+    "vip": "VIP",
+    "vipTitle": "VIP-Konto: mehr Geld und XP für jede Runde",
+    "pass": "∞",
+    "passTitle": "Pass für unbegrenztes Tanken: Der Tank wird gratis gefüllt",
     "level": "LV",
     "progress": "{into} / {needed} XP",
     "xp": "Erfahrung in dieser Stufe",
@@ -697,6 +704,56 @@
     "downpour": "Starkregen",
     "fog": "Nebel",
     "snow": "Schnee"
+  },
+  "premium": {
+    "title": "Premium",
+    "intro": "Mit RideCoin kaufst du Extras für deine Garage. Alles hier ist freiwillig: Das Spiel spielt sich ohne genauso.",
+    "balance": "Du hast {count} RideCoin",
+    "coinsNote": "RideCoin vergibt vorerst das Spielteam. Der Kauf per Karte kommt später.",
+    "loadError": "Der Premium-Shop konnte nicht geladen werden.",
+    "off": "Das Spiel hat das vorerst abgeschaltet. Was du hast, bleibt erhalten.",
+    "nothing": "Dieses Spiel verkauft keine Extras.",
+    "repeated": "Dieser Kauf wurde schon getätigt.",
+    "days": "{n} Tag | {n} Tage",
+    "autorefill": {
+      "title": "Automatisches Tanken",
+      "text": "Wenn der Sprit eines Autos zur Neige geht, wird der Tank für dich gefüllt, auch während du weg bist. Eine Tankfüllung füllt den ganzen Tank.",
+      "stock": "Auf Vorrat: {count} von {cap}",
+      "switch": "Für mich tanken",
+      "on": "An: Der Tank wird gefüllt, wenn der Sprit ausgeht.",
+      "off": "Aus: Das Auto bleibt stehen, wenn der Sprit ausgeht.",
+      "passOn": "Der Pass ist aktiv: Die Tankfüllungen sind gratis.",
+      "pack": "{n} Tankfüllung | {n} Tankfüllungen",
+      "each": "{price} RideCoin pro Tankfüllung",
+      "buy": "{pack} kaufen",
+      "full": "Dein Vorrat nimmt dieses Paket nicht auf: Höchstens {cap} passen hinein.",
+      "bought": "Hinzugefügt: {pack} für {coins} RideCoin."
+    },
+    "vip": {
+      "title": "VIP-Konto",
+      "text": "Solange es läuft, zahlt jede Runde {cash} % mehr Geld und {xp} % mehr XP, zusätzlich zu dem, was die Strecke zahlt.",
+      "on": "Aktiv: noch {left}",
+      "off": "Nicht aktiv",
+      "buy": "VIP für {period} holen",
+      "extend": "Um {period} verlängern",
+      "bought": "VIP läuft {period} länger."
+    },
+    "pass": {
+      "title": "Pass für unbegrenztes Tanken",
+      "text": "{period} lang verbraucht das automatische Tanken keine Tankfüllungen. Einmal zahlen, keine automatische Verlängerung.",
+      "on": "Aktiv: noch {left}",
+      "off": "Nicht aktiv",
+      "price": "{price} für {period}",
+      "unavailable": "Den Pass kann man im Spiel noch nicht kaufen. Bis dahin kann ihn dir das Spielteam geben."
+    }
+  },
+  "autoRefill": {
+    "label": "Für mich tanken",
+    "stock": "{n} Tankfüllung auf Vorrat | {n} Tankfüllungen auf Vorrat",
+    "pass": "Pass: Tankfüllungen gratis (noch {left})",
+    "empty": "Kein Vorrat mehr: Das Auto bleibt stehen, wenn der Sprit ausgeht.",
+    "off": "Aus: Das Auto bleibt stehen, wenn der Sprit ausgeht.",
+    "buy": "Mehr holen"
   },
   "speedup": {
     "finishNow": "Sofort abschließen",

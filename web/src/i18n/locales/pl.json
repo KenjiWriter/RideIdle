@@ -178,6 +178,9 @@
       "underway": "Auto jest holowane. Pojedzie za około {time}."
     },
     "away": {
+      "refills": "Bak napełniono za Ciebie {n} raz (zapas −{charges}) | Bak napełniono za Ciebie {n} razy (zapas −{charges}) | Bak napełniono za Ciebie {n} razy (zapas −{charges})",
+      "refillsFree": "Bak napełniono za Ciebie {n} raz, za darmo dzięki przepustce | Bak napełniono za Ciebie {n} razy, za darmo dzięki przepustce | Bak napełniono za Ciebie {n} razy, za darmo dzięki przepustce",
+      "bonus": "Premia VIP: +{amount}",
       "title": "Pod Twoją nieobecność",
       "duration": "Czas nieobecności",
       "earned": "Zarobione",
@@ -636,6 +639,10 @@
     "noCar": "Nie masz jeszcze auta."
   },
   "hud": {
+    "vip": "VIP",
+    "vipTitle": "Konto VIP: więcej gotówki i XP za każde okrążenie",
+    "pass": "∞",
+    "passTitle": "Przepustka nieskończonego tankowania: bak jest napełniany za darmo",
     "level": "LV",
     "progress": "{into} / {needed} XP",
     "xp": "Doświadczenie na tym poziomie",
@@ -697,6 +704,56 @@
     "downpour": "ulewa",
     "fog": "mgła",
     "snow": "śnieg"
+  },
+  "premium": {
+    "title": "Premium",
+    "intro": "RideCoin kupuje dodatki do Twojego garażu. Wszystko tutaj jest dobrowolne: gra działa tak samo bez tego.",
+    "balance": "Masz {count} RideCoin",
+    "coinsNote": "Na razie RideCoin przyznaje obsługa gry. Kupno kartą dojdzie później.",
+    "loadError": "Nie udało się wczytać sklepu premium.",
+    "off": "Gra na razie to wyłączyła. To, co masz, zostaje.",
+    "nothing": "Ta gra nie sprzedaje dodatków.",
+    "repeated": "Ten zakup już został zrobiony.",
+    "days": "{n} dzień | {n} dni | {n} dni",
+    "autorefill": {
+      "title": "Automatyczne tankowanie",
+      "text": "Gdy w aucie miałoby się skończyć paliwo, bak jest napełniany za Ciebie, także pod Twoją nieobecność. Jedno tankowanie napełnia cały bak.",
+      "stock": "W zapasie: {count} z {cap}",
+      "switch": "Tankuj za mnie",
+      "on": "Włączone: bak jest napełniany, gdy kończy się paliwo.",
+      "off": "Wyłączone: auto staje, gdy kończy się paliwo.",
+      "passOn": "Przepustka działa: tankowania są darmowe.",
+      "pack": "{n} tankowanie | {n} tankowania | {n} tankowań",
+      "each": "{price} RideCoin za tankowanie",
+      "buy": "Kup {pack}",
+      "full": "Zapas nie przyjmie tej paczki: zmieści się najwyżej {cap}.",
+      "bought": "Dodano {pack} za {coins} RideCoin."
+    },
+    "vip": {
+      "title": "Konto VIP",
+      "text": "Dopóki trwa, każde okrążenie płaci o {cash}% więcej gotówki i o {xp}% więcej XP, ponad to, co płaci tor.",
+      "on": "Aktywne: zostało {left}",
+      "off": "Nieaktywne",
+      "buy": "Kup VIP na {period}",
+      "extend": "Przedłuż o {period}",
+      "bought": "VIP trwa o {period} dłużej."
+    },
+    "pass": {
+      "title": "Przepustka nieskończonego tankowania",
+      "text": "Przez {period} automatyczne tankowanie nie zużywa tankowań. Jedna opłata, bez samoczynnego odnawiania.",
+      "on": "Aktywna: zostało {left}",
+      "off": "Nieaktywna",
+      "price": "{price} za {period}",
+      "unavailable": "Przepustki nie da się jeszcze kupić w grze. Do tego czasu może Ci ją dać obsługa gry."
+    }
+  },
+  "autoRefill": {
+    "label": "Tankuj za mnie",
+    "stock": "{n} tankowanie w zapasie | {n} tankowania w zapasie | {n} tankowań w zapasie",
+    "pass": "Przepustka: tankowania są darmowe (zostało {left})",
+    "empty": "Zapas pusty: auto stanie, gdy skończy się paliwo.",
+    "off": "Wyłączone: auto stanie, gdy skończy się paliwo.",
+    "buy": "Dokup"
   },
   "speedup": {
     "finishNow": "Skończ od razu",
