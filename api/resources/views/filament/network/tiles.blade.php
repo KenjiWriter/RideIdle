@@ -42,13 +42,19 @@
                     </div>
                     <div>
                         <div style="{{ $label }}">{{ __('admin.network.tile.revenue') }}</div>
-                        <div style="{{ $value }}" data-test="tile-revenue">{{ $tile['revenue'] }}</div>
+                        <div style="font-size: 15px; font-weight: 600; line-height: 1.6;" data-test="tile-revenue">{{ $tile['revenue'] }}</div>
                     </div>
                 </div>
 
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 16px;">
                     <span style="font-size: 12px; opacity: .6;" data-test="tile-pack">
-                        {{ $tile['stats']['pack'] === null ? __('admin.network.tile.no_pack') : __('admin.network.tile.pack', ['number' => $tile['stats']['pack']]) }}
+                        @if ($tile['stats']['pack'] !== null)
+                            {{ __('admin.network.tile.pack', ['number' => $tile['stats']['pack']]) }}
+                        @elseif ($tile['stats']['from_files'])
+                            {{ __('admin.network.tile.from_files') }}
+                        @else
+                            {{ __('admin.network.tile.no_pack') }}
+                        @endif
                     </span>
                     <x-filament::button size="sm" wire:click="enter('{{ $tile['slug'] }}')" data-test="enter-{{ $tile['slug'] }}">
                         {{ __('admin.network.tile.enter') }}

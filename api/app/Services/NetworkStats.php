@@ -30,7 +30,7 @@ final class NetworkStats
      * The numbers of some games, by the id of the game (a game with nothing in it has zeros).
      *
      * @param  Collection<int, Game>  $games
-     * @return array<int, array{accounts: int, guests: int, secured: int, new_week: int, active_day: int, active_week: int, revenue_total: array<string, int>, revenue_month: array<string, int>, pack: string|null}>
+     * @return array<int, array{accounts: int, guests: int, secured: int, new_week: int, active_day: int, active_week: int, revenue_total: array<string, int>, revenue_month: array<string, int>, pack: string|null, from_files: bool}>
      */
     public function for(Collection $games, ?CarbonImmutable $now = null): array
     {
@@ -43,7 +43,7 @@ final class NetworkStats
         $stats = [];
 
         foreach ($ids as $id) {
-            $stats[$id] = ['accounts' => 0, 'guests' => 0, 'secured' => 0, 'new_week' => 0, 'active_day' => 0, 'active_week' => 0, 'revenue_total' => [], 'revenue_month' => [], 'pack' => null];
+            $stats[$id] = ['accounts' => 0, 'guests' => 0, 'secured' => 0, 'new_week' => 0, 'active_day' => 0, 'active_week' => 0, 'revenue_total' => [], 'revenue_month' => [], 'pack' => null, 'from_files' => false];
         }
 
         if ($ids === []) {
@@ -83,6 +83,8 @@ final class NetworkStats
 
         foreach ($games as $game) {
             $stats[$game->id]['pack'] = $this->current->within($game, fn (): ?string => $this->packs->active()?->number);
+            // The files of the repository are the content of the default game, when the installation reads files: no pack in the database is not "no content" there.
+            $stats[$game->id]['from_files'] = $game->is_default && config('ride.content_source') !== 'database';
         }
 
         return $stats;
@@ -91,7 +93,7 @@ final class NetworkStats
     /**
      * The numbers of all the games added up (the money is added up per currency).
      *
-     * @param  array<int, array{accounts: int, guests: int, secured: int, new_week: int, active_day: int, active_week: int, revenue_total: array<string, int>, revenue_month: array<string, int>, pack: string|null}>  $stats
+     * @param  array<int, array{accounts: int, guests: int, secured: int, new_week: int, active_day: int, active_week: int, revenue_total: array<string, int>, revenue_month: array<string, int>, pack: string|null, from_files: bool}>  $stats
      * @return array{accounts: int, guests: int, secured: int, new_week: int, active_day: int, active_week: int, revenue_total: array<string, int>, revenue_month: array<string, int>}
      */
     public static function totals(array $stats): array

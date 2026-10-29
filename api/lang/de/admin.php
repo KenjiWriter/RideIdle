@@ -602,6 +602,7 @@ return [
             'no_domain' => 'Keine Domain',
             'pack' => 'Paket :number',
             'no_pack' => 'Kein Live-Paket',
+            'from_files' => 'Inhalt aus Dateien',
             'accounts' => 'Konten',
             'active' => 'Aktiv, 7 Tage',
             'new' => 'Neu, 7 Tage',

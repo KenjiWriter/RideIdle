@@ -628,6 +628,7 @@ return [
             'no_domain' => 'No domain',
             'pack' => 'Pack :number',
             'no_pack' => 'No live pack',
+            'from_files' => 'Content from files',
             'accounts' => 'Accounts',
             'active' => 'Active, 7 days',
             'new' => 'New, 7 days',

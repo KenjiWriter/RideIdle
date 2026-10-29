@@ -15,6 +15,8 @@ class NetworkOverviewWidget extends StatsOverviewWidget
 {
     protected int|string|array $columnSpan = 'full';
 
+    protected int|array|null $columns = ['default' => 1, 'sm' => 2, 'xl' => 5];
+
     protected function getStats(): array
     {
         $admin = Auth::guard('admin')->user();
