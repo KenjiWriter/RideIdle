@@ -6,12 +6,12 @@ Implementacja specyfikacji „Rozliczanie” z płótna projektowego. Kod jest w
 
 | Klasa | Rola |
 |---|---|
-| `Settler` | `settle(RunState, now, RunConfig)` oraz `settleInChunks(...)` (okna po 72 h) |
+| `Settler` | `settle(RunState, now, RunConfig, ?RefillPolicy, okna premii)` oraz `settleInChunks(...)` (okna po 72 h) |
 | `RunState` | Kursor (początek bieżącego okrążenia, ms UTC), liczba okrążeń, paliwo w ml, okrążenie awarii |
 | `RunConfig` | Zamrożona konfiguracja: czas okrążenia, nagroda (centy) i XP na pogodę, zużycie paliwa, harmonogram pogody |
 | `WeatherSchedule` | Pogoda w segmencie 22,5 min (`ConstantWeather`, `CallbackWeather`; prawdziwa z klimatu regionu dojdzie później) |
-| `SettlementEvent`, `EventType` | Wpisy logu: `lap_batch`, `breakdown`, `fuel_empty` z priorytetami |
-| `SettlementResult` | Nowy stan, uporządkowany log, sumy do zaksięgowania, `stopReason()` |
+| `SettlementEvent`, `EventType` | Wpisy logu: `lap_batch`, `breakdown`, `fuel_empty`, `auto_refill` z priorytetami |
+| `SettlementResult` | Nowy stan, uporządkowany log, sumy do zaksięgowania (z premią VIP, osobno `bonusCashCents`, `bonusXp`), `refills`, `chargesUsed`, `stopReason()` |
 | `Ppm` | Mnożniki w ppm, zaokrąglanie połówki od zera |
 | `TournamentPayout`, `PayoutResult` | Podział puli turnieju (rake 10%, reszta dla zwycięzcy) |
 | `EloTable`, `Rating` | Respekt: oczekiwany wynik z tablicy, K, dywizje, miękki reset sezonu |
@@ -100,6 +100,23 @@ Zasady, które kod pilnuje i które testy współbieżności sprawdzają na praw
 - `tests/Concurrency` (osobne procesy PHP na MySQL, MariaDB i PostgreSQL, pomijane na SQLite): osiem procesów księguje ten sam klucz, wydaje saldo, rozlicza ten sam bieg, tankuje tym samym żądaniem i naprawia tym samym żądaniem (płatnym i darmowym) naraz, a mieszanka rozliczeń, tankowań i napraw na jednym biegu kończy się sprawdzeniem sum: księga równa rozliczeniom i kosztom paliwa i napraw, okrążenia równe rozliczonym, paliwo równe kupionemu minus przejechane, wersja równa liczbie zmian.
 
 Punkty końcowe HTTP, które to wywołują, opisuje `docs/api-runs.md`.
+
+## Płatne dodatki w rozliczeniu: automatyczne tankowanie i premia VIP (G2, 2026-10-29)
+
+Dwie rzeczy wchodzą do `Settler` **jako dane**, nie jako część zamrożonej konfiguracji, bo zależą od tego, co kierowca kupił i kiedy; serwis buduje je z portfela w chwili rozliczenia (portfel jest wtedy zablokowany).
+
+| Klasa | Rola |
+|---|---|
+| `RefillPolicy` | `tankMl` (pojemność baku; 0 = nie tankuj), `charges` (zapas ładunków), `freeUntilMs` (koniec przepustki). `canRefillAt(chwila, paliwo na okrążenie)`: bak mieści okrążenie i płaci ładunek albo przepustka. `afterRefill` zdejmuje ładunek, o ile nie płaci przepustka |
+| `BonusWindow` | `[fromMs, toMs)` i dwa ppm (gotówka, XP). `lapsFinishingInside(start, okrążenie, ile)`: ile okrążeń partii kończy się w oknie (wzór zamknięty, bez pętli po okrążeniach) |
+| `SettlementPerks` (serwis) | Czyta portfel i reguły, zwraca politykę i okna dla biegu. **Nic nie daje**, gdy funkcja jest wyłączona albo nie ma jej w regułach; bieg, który stoi (awaria, brak paliwa, droga, warsztat), nie jest tankowany |
+
+- **Tankowanie.** Gdy po jeździe paliwo jest mniejsze niż na okrążenie, a polityka pozwala, bak jest napełniany **w chwili kursora** (tankowanie nie trwa) i auto jedzie dalej: zdarzenie `auto_refill` (`added_ml`, `free`) o priorytecie paliwa, ładunek schodzi, o ile nie płaci przepustka. Dotyczy to także auta, które zaczyna rozliczenie z pustym bakiem (po drodze), i auta, które psuje się na tym samym okrążeniu, na którym kończy mu się paliwo (przyczyną postoju zostaje awaria, ale bak jest pełny, więc po naprawie auto nie stoi dalej). Okrążenie w toku w chwili „teraz” nie jest ani płatne, ani tankowane. `SettlementResult` ma `refills` i `chargesUsed`; `settleInChunks` odejmuje zużyte ładunki między oknami.
+- **Premia VIP.** Okrążenie należy do okna po **chwili, w której się kończy** (wtedy jest płatne), okno jest otwarte z prawej strony. Premia okrążenia to `Ppm::mul(nagroda, ppm)` **zaokrąglone dla każdego okrążenia osobno**, więc podział na partie i na rozliczenia niczego nie zmienia (test: rozliczenie w kawałkach daje to samo co jedno). Partia okrążeń niesie sumę z premią (`cash_cents`, `xp`) i, tylko gdy premia była, `bonus_cash_cents` i `bonus_xp`. VIP, który kończy się w środku nieobecności, płaci okrążenia przed końcem, a po nim nie. Okno VIP to `[0, vip_until)`: początek nie jest zapisany, bo każda zmiana (kupno, życzenie, przepustka) **najpierw rozlicza wszystkie auta** (`Entitlements::settleRuns`), więc nic sprzed zakupu nie czeka na rozliczenie.
+- **Premia nie jest w ekonomii.** Zamrożona konfiguracja (`RunFreezer`), bramki (`PaceGate`, `GameLadder`, `RulesConsistency`) i symulator (`economy:simulate`, `tracks:simulate`) liczą dochód bazowy i nie czytają sekcji `premium`: test pilnuje, że raport `economy:simulate` jest bajt w bajt ten sam dla gry z dodatkami i bez nich, a zamrożona konfiguracja biegu nie zmienia się po rozliczeniu z dodatkami. **Płacący zarabiają co najmniej o 20% więcej niż niepłacący (premia gotówki i XP VIP-a) i z przepustką nie wydają gotówki na paliwo** (to oszczędność godzinowa równa kosztowi paliwa toru); to jest to, co przyszły symulator (P5) ma pokazać obok dochodu bazowego.
+- **Zapis.** `settlements` ma `bonus_cash_cents`, `bonus_xp`, `auto_refills`, `refill_charges` (migracja `add_perks_to_settlements_table`, zwykła; stare rozliczenia mają zera), a `cash_cents` i `xp` to **to, co wypłacono** (z premią). Zużyte ładunki to jeden wpis księgi (`currency: refill`, `reason: autorefill`, klucz `autorefill:{bieg}:{wersja}`, z `settlement_id`) w **tej samej transakcji** co rozliczenie: wersja biegu rośnie w tej transakcji, więc to samo rozliczenie nie może zdjąć ładunków dwa razy, a unikalny indeks klucza jest ostatnią linią obrony.
+- **Stare biegi.** Polityka i okna nie są w zamrożonej konfiguracji (`race_runs.config` się nie zmienia, nie ma migracji danych), więc **bieg zamrożony przed tą zmianą zachowuje się jak nowy**: tankowanie i premia działają od razu. Pojemność baku jest liczona przy rozliczeniu z auta, jakie jest teraz (zamontowany zbiornik albo bak nadwozia).
+- **Testy.** `tests/Unit/Settlement/SettlerExtrasTest.php` (ładunki, przepustka w całości i do połowy, brak ładunków, bak mniejszy niż okrążenie, pusty bak na starcie, awaria na tym okrążeniu, okrążenie w toku, kawałki = całość także w oknach, premia na okrążenie, koniec i początek okna, zaokrąglanie, suma = baza + premia) i `tests/Feature/Run/PaidExtrasSettlementTest.php` (długa nieobecność z ładunkami i księgą, ponowione rozliczenie, kawałki, przepustka, przepustka kończąca się w oknie, życzenie wyłączone, funkcja wyłączona, przepustka wyłączona, bieg stojący, awaria z pustym bakiem, premia VIP, VIP kończący się w nieobecności, kawałki z premią, bramki i zamrożona konfiguracja bez zmian).
 
 ## Czego jeszcze nie ma
 
