@@ -25,11 +25,15 @@ final class CurrentGame
 
     private ?int $defaultId = null;
 
-    /** Puts a game in force for what follows (null: the default game again). What was read of the content of another game is forgotten. */
+    /** Puts a game in force for what follows (null: the default game again). When the game is another one, what was read of the content of the one before is forgotten. */
     public function set(?Game $game): void
     {
+        $before = $this->id();
         $this->game = $game;
-        $this->forgetContent();
+
+        if ($this->id() !== $before) {
+            $this->forgetContent();
+        }
     }
 
     /** The game that was put in force, or null when none was (the default game is then the one in play). */

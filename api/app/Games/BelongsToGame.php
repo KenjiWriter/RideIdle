@@ -2,10 +2,8 @@
 
 declare(strict_types=1);
 
-namespace App\Models\Concerns;
+namespace App\Games;
 
-use App\Games\CurrentGame;
-use App\Games\GameScope;
 use App\Models\Game;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;

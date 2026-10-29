@@ -16,6 +16,7 @@ use App\Content\Publishing\ContentBundle;
 use App\Content\Publishing\DerivedTables;
 use App\Content\Publishing\PackGates;
 use App\Content\Publishing\PublicationRefused;
+use App\Games\CurrentGame;
 use App\Jobs\BuildContentPack;
 use App\Models\Admin;
 use App\Models\ContentDefinition;
@@ -121,7 +122,7 @@ final class ContentPublisher
             'errors' => [],
             'gates' => $this->gates->run($candidate),
             'now' => $this->gates->measure($candidate),
-            'live' => $live === null ? null : Cache::remember('studio.live-measure.'.$live->number(), 3600, fn (): array => $this->gates->measure($live)),
+            'live' => $live === null ? null : Cache::remember('studio.live-measure.'.app(CurrentGame::class)->id().'.'.$live->number(), 3600, fn (): array => $this->gates->measure($live)),
             'changes' => count($this->changes()),
         ];
     }
