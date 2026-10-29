@@ -175,7 +175,8 @@ describe('the page', function () {
     it('is for any admin to open, and starts on the first section with its numbers', function () {
         signedInAdmin(Admin::ROLE_EDITOR);
 
-        $this->get('/admin/studio')->assertOk()->assertSee('Studio parametrów')->assertSee('Paliwo (2)');
+        // The simple mode is the way in: the section that has two numbers shows the one of them that sets the money of the game.
+        $this->get('/admin/studio')->assertOk()->assertSee('Studio parametrów')->assertSee('Paliwo (1)');
     });
 
     it('keeps the number that was changed as a draft of the rules, in the whole number of the document, and nothing else', function () {
