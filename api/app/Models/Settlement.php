@@ -26,6 +26,10 @@ class Settlement extends Model
             'laps' => 'integer',
             'cash_cents' => 'integer',
             'xp' => 'integer',
+            'bonus_cash_cents' => 'integer',
+            'bonus_xp' => 'integer',
+            'auto_refills' => 'integer',
+            'refill_charges' => 'integer',
             'created_at' => 'datetime',
         ];
     }

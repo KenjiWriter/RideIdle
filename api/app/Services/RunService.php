@@ -11,6 +11,7 @@ use App\Domain\Run\FrozenRun;
 use App\Domain\Run\RunFreezer;
 use App\Domain\Run\RunInputs;
 use App\Domain\Settlement\EventType;
+use App\Domain\Settlement\RefillPolicy;
 use App\Domain\Settlement\RunState;
 use App\Domain\Settlement\SettlementEvent;
 use App\Domain\Settlement\SettlementResult;
@@ -545,7 +546,17 @@ final class RunService
         usort($events, static fn (SettlementEvent $a, SettlementEvent $b): int => [$a->atMs, $a->priority()] <=> [$b->atMs, $b->priority()]);
 
         return new Settled(
-            new SettlementResult($second->result->state, $events, $first->result->laps + $second->result->laps, $first->result->cashCents + $second->result->cashCents, $first->result->xp + $second->result->xp),
+            new SettlementResult(
+                $second->result->state,
+                $events,
+                $first->result->laps + $second->result->laps,
+                $first->result->cashCents + $second->result->cashCents,
+                $first->result->xp + $second->result->xp,
+                $first->result->bonusCashCents + $second->result->bonusCashCents,
+                $first->result->bonusXp + $second->result->bonusXp,
+                $first->result->refills + $second->result->refills,
+                $first->result->chargesUsed + $second->result->chargesUsed,
+            ),
             $second->settlement ?? $first->settlement,
             [...$first->all(), ...$second->all()],
         );
@@ -561,7 +572,10 @@ final class RunService
         // moment it leaves. (A breakdown and an empty tank stop the run inside the settlement; this stop is not an event of it.)
         $until = in_array($run->stop_reason, RaceRun::SERVICE_STOPS, true) ? $run->cursor_ms : $nowMs;
 
-        $result = $this->settler->settleInChunks($state, $until, $config);
+        // What the driver has bought (the auto-refill, the VIP account) comes from the wallet, which is locked by now; the frozen configuration knows nothing of it.
+        [$refill, $bonus] = $until > $run->cursor_ms ? $this->perks()->forRun($run) : [RefillPolicy::none(), []];
+
+        $result = $this->settler->settleInChunks($state, $until, $config, refill: $refill, bonus: $bonus);
 
         if ($result->isEmpty()) {
             return new Settled($result, null);
@@ -579,6 +593,10 @@ final class RunService
             'laps' => $result->laps,
             'cash_cents' => $result->cashCents,
             'xp' => $xp,
+            'bonus_cash_cents' => $result->bonusCashCents,
+            'bonus_xp' => $this->experienceForDriver($run, $result->bonusXp),
+            'auto_refills' => $result->refills,
+            'refill_charges' => $result->chargesUsed,
             'stop_reason' => $result->stopReason()?->value,
         ]);
 
@@ -598,6 +616,11 @@ final class RunService
 
         if ($result->cashCents > 0) {
             $this->ledger->post($run->user_id, $result->cashCents, 'settlement', "settle:{$run->id}:{$run->state_version}", $settlement->id);
+        }
+
+        // The charges the refills used go with the settlement, in the same transaction and under a key that is its own, so it cannot take them twice.
+        if ($result->chargesUsed > 0) {
+            $this->ledger->postRefills($run->user_id, -$result->chargesUsed, 'autorefill', "autorefill:{$run->id}:{$run->state_version}", $settlement->id);
         }
 
         $this->ledger->grantXp($run->user_id, $xp);
@@ -656,6 +679,11 @@ final class RunService
         }
 
         return $events;
+    }
+
+    private function perks(): SettlementPerks
+    {
+        return new SettlementPerks($this->rules ?? Rules::fromConfig(), app(RunInputsFactory::class));
     }
 
     private function wear(): CarWear
