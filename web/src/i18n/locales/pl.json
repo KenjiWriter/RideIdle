@@ -78,7 +78,19 @@
     "levelUp": "Auto awansowało na poziom {level}.",
     "tierUnlocked": "Można montować części T{tier}.",
     "gearboxLimit": "Limit skrzyni: {speed} km/h",
-    "conditionLink": "Stan techniczny: {percent}%"
+    "conditionLink": "Stan techniczny: {percent}%",
+    "parts": {
+      "label": "Części auta",
+      "hint": "Dotknij części na aucie, żeby zobaczyć, co jest założone.",
+      "summary": "Założone części: {mounted} z {total}",
+      "spot": "{slot}: {part}",
+      "close": "Zamknij",
+      "factory": "Fabryczna część auta. W warsztacie założysz lepszą.",
+      "builtIn": "To część nadwozia, z którą auto wyjechało z fabryki. W warsztacie założysz lepszą.",
+      "mount": "Załóż w warsztacie",
+      "change": "Zmień w warsztacie",
+      "other": "Pozostałe części"
+    }
   },
   "choose": {
     "title": "Wybierz swój wrak",

@@ -78,7 +78,19 @@
     "levelUp": "Das Auto ist auf Stufe {level} aufgestiegen.",
     "tierUnlocked": "Du kannst jetzt Teile T{tier} montieren.",
     "gearboxLimit": "Getriebegrenze: {speed} km/h",
-    "conditionLink": "Technischer Zustand: {percent} %"
+    "conditionLink": "Technischer Zustand: {percent} %",
+    "parts": {
+      "label": "Teile des Autos",
+      "hint": "Tippe auf ein Teil am Auto, um zu sehen, was verbaut ist.",
+      "summary": "Verbaute Teile: {mounted} von {total}",
+      "spot": "{slot}: {part}",
+      "close": "Schließen",
+      "factory": "Das Werksteil des Autos. In der Werkstatt kannst du ein besseres einbauen.",
+      "builtIn": "Das ist das Karosserieteil, mit dem das Auto aus dem Werk kam. In der Werkstatt kannst du ein besseres einbauen.",
+      "mount": "In der Werkstatt einbauen",
+      "change": "In der Werkstatt wechseln",
+      "other": "Weitere Teile"
+    }
   },
   "choose": {
     "title": "Wähle dein Wrack",

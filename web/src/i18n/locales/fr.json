@@ -78,7 +78,19 @@
     "levelUp": "La voiture passe au niveau {level}.",
     "tierUnlocked": "Vous pouvez monter des pièces T{tier}.",
     "gearboxLimit": "Limite de la boîte : {speed} km/h",
-    "conditionLink": "État technique : {percent} %"
+    "conditionLink": "État technique : {percent} %",
+    "parts": {
+      "label": "Pièces de la voiture",
+      "hint": "Touchez une pièce sur la voiture pour voir ce qui est monté.",
+      "summary": "Pièces montées : {mounted} sur {total}",
+      "spot": "{slot} : {part}",
+      "close": "Fermer",
+      "factory": "La pièce d’origine de la voiture. Vous pouvez en monter une meilleure à l’atelier.",
+      "builtIn": "C’est la pièce de la carrosserie avec laquelle la voiture est sortie d’usine. Vous pouvez en monter une meilleure à l’atelier.",
+      "mount": "Monter à l’atelier",
+      "change": "Changer à l’atelier",
+      "other": "Autres pièces"
+    }
   },
   "choose": {
     "title": "Choisissez votre épave",

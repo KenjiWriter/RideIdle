@@ -956,7 +956,7 @@ describe('GarageView', () => {
     })
   })
 
-  it('marks the tile of an upgraded part with its level, and leaves one that is not upgraded as it is', async () => {
+  it('marks the spot of an upgraded part with its level, and says it on the card of the part; a part that is not upgraded has neither', async () => {
     const upgraded = aMountedPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, upgrade: 3 })
     const plain = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes' })
     serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: upgraded, brakes: plain }) })) })
@@ -964,11 +964,17 @@ describe('GarageView', () => {
     const { wrapper } = await show()
     await flushPromises()
 
-    expect(wrapper.get('[data-test="slot-tires"] [data-test="upgrade-mark"]').text()).toBe('+3')
-    expect(wrapper.find('[data-test="slot-brakes"] [data-test="upgrade-mark"]').exists()).toBe(false)
+    expect(wrapper.get('[data-test="spot-tires"] .spot-up').text()).toBe('+3')
+    expect(wrapper.find('[data-test="spot-brakes"] .spot-up').exists()).toBe(false)
+
+    await wrapper.get('[data-test="spot-tires"]').trigger('click')
+    expect(wrapper.get('[data-test="slot-detail"] [data-test="upgrade-mark"]').text()).toBe('+3')
+
+    await wrapper.get('[data-test="spot-brakes"]').trigger('click')
+    expect(wrapper.find('[data-test="slot-detail"] [data-test="upgrade-mark"]').exists()).toBe(false)
   })
 
-  it('says how much of its life a worn part has left on its tile, in red when it is unserviceable, and leaves a part as good as new as it is', async () => {
+  it('rings the spot of a part that is worn out in red, and says how much of its life a part has left on its card, leaving a part as good as new as it is', async () => {
     const worn = aMountedPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, condition_percent: 63 })
     const dead = aMountedPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', condition_percent: 9 })
     const fresh = aMountedPart({ id: 11 })
@@ -977,11 +983,20 @@ describe('GarageView', () => {
     const { wrapper } = await show()
     await flushPromises()
 
-    expect(wrapper.get('[data-test="slot-condition-tires"]').text()).toBe('Condition: 63%')
-    expect(wrapper.get('[data-test="slot-condition-tires"]').classes()).not.toContain('text-danger')
-    expect(wrapper.get('[data-test="slot-condition-brakes"]').text()).toBe('Condition: 9%')
-    expect(wrapper.get('[data-test="slot-condition-brakes"]').classes()).toContain('text-danger')
-    expect(wrapper.find('[data-test="slot-condition-exhaust"]').exists()).toBe(false)
+    expect(wrapper.get('[data-test="spot-tires"]').classes()).toContain('spot-ok')
+    expect(wrapper.get('[data-test="spot-brakes"]').classes()).toContain('spot-worn')
+    expect(wrapper.get('[data-test="spot-exhaust"]').classes()).toContain('spot-ok')
+
+    await wrapper.get('[data-test="spot-tires"]').trigger('click')
+    expect(wrapper.get('[data-test="slot-detail"] [data-test="part-condition-value"]').text()).toBe('Condition: 63%')
+    expect(wrapper.find('[data-test="slot-detail"] [data-test="part-unserviceable"]').exists()).toBe(false)
+
+    await wrapper.get('[data-test="spot-brakes"]').trigger('click')
+    expect(wrapper.get('[data-test="slot-detail"] [data-test="part-condition-value"]').text()).toBe('Condition: 9%')
+    expect(wrapper.get('[data-test="slot-detail"] [data-test="part-unserviceable"]').text()).toBe('Unserviceable')
+
+    await wrapper.get('[data-test="spot-exhaust"]').trigger('click')
+    expect(wrapper.find('[data-test="slot-detail"] [data-test="part-condition"]').exists()).toBe(false)
   })
 
   it('shows the odometer of the car and how far its service is, and how late it is when it is overdue', async () => {
@@ -1041,7 +1056,7 @@ describe('GarageView', () => {
     expect(plain.wrapper.find('[data-test="broken-part"]').exists()).toBe(false)
   })
 
-  it('marks the tile of a rarer part with the color and the name of its rarity, and leaves a common one as it is', async () => {
+  it('marks the spot of a rarer part with the color of its rarity, and says its name on the card; a common part has neither', async () => {
     const epic = aPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, mounted: true, car_id: 5, rarity: 'epic', rarity_rank: 4 })
     const common = aPart({ id: 12, slug: 'disc-brakes-t2', name: 'Disc brakes', slot: 'brakes', mounted: true, car_id: 5 })
     serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { tires: epic, brakes: common }) })) })
@@ -1049,10 +1064,134 @@ describe('GarageView', () => {
     const { wrapper } = await show()
     await flushPromises()
 
-    expect(wrapper.get('[data-test="slot-tires"]').classes()).toContain('r4')
-    expect(wrapper.get('[data-test="slot-tires"] [data-test="rarity"]').text()).toBe('Epic')
-    expect(wrapper.get('[data-test="slot-brakes"]').classes().filter((name) => /^r\d$/.test(name))).toEqual([])
-    expect(wrapper.find('[data-test="slot-brakes"] [data-test="rarity"]').exists()).toBe(false)
+    expect(wrapper.get('[data-test="spot-tires"]').classes()).toContain('r4')
+    expect(wrapper.get('[data-test="spot-brakes"]').classes().filter((name) => /^r\d$/.test(name))).toEqual([])
+
+    await wrapper.get('[data-test="spot-tires"]').trigger('click')
+    expect(wrapper.get('[data-test="slot-detail"] [data-test="rarity"]').text()).toBe('Epic')
+    expect(wrapper.get('[data-test="slot-detail"]').classes()).toContain('card-r4')
+
+    await wrapper.get('[data-test="spot-brakes"]').trigger('click')
+    expect(wrapper.find('[data-test="slot-detail"] [data-test="rarity"]').exists()).toBe(false)
+    expect(wrapper.get('[data-test="slot-detail"]').classes().filter((name) => /^card-r\d$/.test(name))).toEqual([])
+  })
+
+  describe('the parts on the car', () => {
+    const SLOTS = ['tires', 'suspension', 'brakes', 'engine', 'boost', 'gearbox', 'exhaust', 'cooling', 'tank']
+
+    function openWithParts(mounted: Parameters<typeof aCar>[1] = {}, car = aCar({}, mounted), run: Partial<Run> = {}) {
+      serve(() => respond(200, runAnswer(aRun(run))), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage({ car })) })
+
+      return show()
+    }
+
+    it('puts a spot on the car for every slot, each saying for a reader what the slot is and what is on it', async () => {
+      const tires = aMountedPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2 })
+      const { wrapper } = await openWithParts({ tires })
+      await flushPromises()
+
+      expect(wrapper.findAll('[data-test="spots"] .spot').map((spot) => spot.attributes('data-test'))).toEqual(SLOTS.map((slot) => `spot-${slot}`))
+      expect(wrapper.get('[data-test="spot-tires"]').attributes('aria-label')).toBe('Tires: Street tires T2')
+      // The engine slot is the engine of the body until a part is on it, the others are the factory ones.
+      expect(wrapper.get('[data-test="spot-engine"]').attributes('aria-label')).toBe('Engine: R4 1.8')
+      expect(wrapper.get('[data-test="spot-gearbox"]').attributes('aria-label')).toBe('Gearbox: Factory')
+      expect(wrapper.get('[data-test="spot-tires"]').attributes('style')).toContain('left: 57%')
+      // A slot with nothing on it is dashed, and the rest of the slots are no row under the stage.
+      expect(wrapper.get('[data-test="spot-gearbox"]').classes()).toContain('spot-empty')
+      expect(wrapper.find('[data-test="slots"]').exists()).toBe(false)
+    })
+
+    it('says how many parts are fitted until a part is tapped, and what is on the slot that was tapped, which is put away when it is tapped again or closed', async () => {
+      const tires = aMountedPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2 })
+      const { wrapper } = await openWithParts({ tires })
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="slot-hint"]').text()).toContain('Tap a part on the car to see what is fitted.')
+      expect(wrapper.get('[data-test="slot-summary"]').text()).toBe('Parts fitted: 1 of 9')
+      expect(wrapper.find('[data-test="slot-detail"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+
+      expect(wrapper.find('[data-test="slot-hint"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="slot-name"]').text()).toBe('Tires')
+      expect(wrapper.get('[data-test="slot-part"]').text()).toBe('Street tires T2')
+      expect(wrapper.get('[data-test="slot-tier"]').text()).toBe('T2')
+      expect(wrapper.get('[data-test="spot-tires"]').classes()).toContain('spot-on')
+      expect(wrapper.get('[data-test="spot-tires"]').attributes('aria-pressed')).toBe('true')
+      expect(wrapper.get('[data-test="spot-tires"] .spot-tag').text()).toBe('Tires')
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+      expect(wrapper.find('[data-test="slot-detail"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+      await wrapper.get('[data-test="slot-close"]').trigger('click')
+      expect(wrapper.find('[data-test="slot-detail"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="spot-tires"]').attributes('aria-pressed')).toBe('false')
+    })
+
+    it('shows another slot in place of the one that was looked at, and leads from its card to the workshop', async () => {
+      const { wrapper } = await openWithParts({ tires: aMountedPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2 }) })
+      await flushPromises()
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+      await wrapper.get('[data-test="spot-brakes"]').trigger('click')
+
+      expect(wrapper.findAll('[data-test="slot-detail"]')).toHaveLength(1)
+      expect(wrapper.get('[data-test="slot-detail"]').attributes('data-slot')).toBe('brakes')
+      expect(wrapper.get('[data-test="spot-tires"]').classes()).not.toContain('spot-on')
+      expect(wrapper.get('[data-test="slot-workshop"]').attributes('href')).toBe('/workshop')
+      expect(wrapper.get('[data-test="slot-workshop"]').text()).toBe('Fit one in the workshop')
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+      expect(wrapper.get('[data-test="slot-workshop"]').text()).toBe('Change in the workshop')
+    })
+
+    it('says that the engine slot holds the engine of the body, and that any other empty slot holds the factory part', async () => {
+      const { wrapper } = await openWithParts()
+      await flushPromises()
+
+      await wrapper.get('[data-test="spot-engine"]').trigger('click')
+      expect(wrapper.get('[data-test="slot-part"]').text()).toBe('R4 1.8')
+      expect(wrapper.get('[data-test="slot-factory"]').text()).toBe('This is the part of the body the car left the factory with. You can fit a better one in the workshop.')
+
+      await wrapper.get('[data-test="spot-gearbox"]').trigger('click')
+      expect(wrapper.get('[data-test="slot-part"]').text()).toBe('Factory')
+      expect(wrapper.get('[data-test="slot-factory"]').text()).toBe('The factory part of the car. You can fit a better one in the workshop.')
+    })
+
+    it('shows the statistics and the affixes of a part on its card', async () => {
+      const grippy = aMountedPart({ id: 31, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2, stats: { grip: 120 } })
+      const { wrapper } = await openWithParts({ tires: grippy })
+      await flushPromises()
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+
+      expect(wrapper.get('[data-test="slot-detail"]').text()).toContain('Grip 120')
+    })
+
+    it('has no spots, and offers every slot as a row under the stage, for a car that has no picture to put them on', async () => {
+      const car = aCar({ vehicle: { ...aCar().vehicle, slug: 'zubr-v8', name: 'Zubr V8' } })
+      const { wrapper } = await openWithParts({}, car, { car: { slug: 'zubr-v8', name: 'Zubr V8', image_url: null } })
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="spots"]').exists()).toBe(false)
+      expect(wrapper.findAll('[data-test="slots"] button')).toHaveLength(9)
+
+      await wrapper.get('[data-test="chip-boost"]').trigger('click')
+
+      expect(wrapper.get('[data-test="chip-boost"]').attributes('aria-pressed')).toBe('true')
+      expect(wrapper.get('[data-test="slot-detail"]').attributes('data-slot')).toBe('boost')
+      expect(wrapper.get('[data-test="slot-name"]').text()).toBe('Forced induction')
+    })
+
+    it('puts a car of a pack, with a picture the app does not have, on the layout of the pictures of the game', async () => {
+      const car = aCar({ vehicle: { ...aCar().vehicle, slug: 'zubr-v8', name: 'Zubr V8' } })
+      const { wrapper } = await openWithParts({}, car, { car: { slug: 'zubr-v8', name: 'Zubr V8', image_url: '/api/v1/media/aaaaaaaa.png' } })
+      await flushPromises()
+
+      expect(wrapper.findAll('[data-test="spots"] .spot')).toHaveLength(9)
+      expect(wrapper.find('[data-test="slots"]').exists()).toBe(false)
+    })
   })
 })
 

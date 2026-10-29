@@ -7,6 +7,7 @@ import type { CarStatKey } from '@/api/types'
 import AccountData from '@/components/AccountData.vue'
 import AccountAway from '@/components/AccountAway.vue'
 import AwaySummary from '@/components/AwaySummary.vue'
+import CarHotspots from '@/components/CarHotspots.vue'
 import CarStage from '@/components/CarStage.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
 import GarageTabs from '@/components/GarageTabs.vue'
@@ -14,16 +15,18 @@ import GameShell from '@/components/GameShell.vue'
 import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
 import LinkAccountDialog from '@/components/LinkAccountDialog.vue'
 import LinkedAccounts from '@/components/LinkedAccounts.vue'
-import RarityMark from '@/components/RarityMark.vue'
-import UpgradeMark from '@/components/UpgradeMark.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RunAlerts from '@/components/RunAlerts.vue'
+import SlotDetail from '@/components/SlotDetail.vue'
+import SlotIcon from '@/components/SlotIcon.vue'
 import SpecCard from '@/components/SpecCard.vue'
 import { carPicture } from '@/features/art'
 import { useServiceLine } from '@/features/car/serviceLine'
+import { layoutOf, spotKeyOf, splitSlots } from '@/features/car/hotspots'
 import { overallScore } from '@/features/car/score'
 import { statFill } from '@/features/car/statFill'
 import { useCarClass } from '@/features/car/useCarClass'
+import { useSlotText } from '@/features/car/useSlotText'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { useFlash } from '@/features/run/useFlash'
 import { useRunStatus } from '@/features/run/useRunStatus'
@@ -50,6 +53,7 @@ const tutorial = useTutorialStore()
 const { money, number } = useFormat()
 const { serviceLine } = useServiceLine()
 const { className } = useCarClass()
+const { slotName } = useSlotText()
 
 useLeaveOnSignOut()
 useRunPolling()
@@ -145,6 +149,22 @@ const { stats: STATS, roleOf } = useModel()
 /** How good the car is as a whole, for the card of its specification. */
 const score = computed(() => overallScore(car.value, STATS.value))
 
+/** The part that is looked at: the slot that was tapped on the car, and tapped again to put it away. */
+const pickedSlot = ref<string | null>(null)
+const picked = computed(() => car.value?.slots.find((slot) => slot.slot === pickedSlot.value) ?? null)
+const mountedCount = computed(() => car.value?.slots.filter((slot) => slot.part).length ?? 0)
+
+function pick(slot: string): void {
+  pickedSlot.value = pickedSlot.value === slot ? null : slot
+}
+
+/**
+ * The parts are on the car where they are on its picture, when it has one (a car with the outline of a body has no places to put them on). The slots that have no place
+ * (a slot of another game) are a row under the stage.
+ */
+const hasPicture = computed(() => !!(pictureUrl.value || (run.run && carPicture(run.run.car.slug))))
+const parts = computed(() => splitSlots(car.value?.slots ?? [], hasPicture.value && run.run ? layoutOf(run.run.car.slug) : {}, roleOf))
+
 /** The top speed the gearbox on the car allows, in km/h, or null when there is no gearbox with a limit on it. The gearbox is the slot with the role, whatever it is called. */
 const gearboxLimit = computed(() => car.value?.slots.find((slot) => (slot.role ?? roleOf(slot.slot)) === 'gearbox')?.part?.stats.top_speed_cap_kmh ?? null)
 
@@ -215,11 +235,35 @@ async function useCode(): Promise<void> {
       <section class="flex flex-col gap-3" aria-labelledby="run-title" data-test="run">
         <!-- The car on its stage, as the showroom of the canvas has it: the name in outline behind it, the level and the state of the run on the floor. -->
         <CarStage :name="run.run.car.name" :src="pictureUrl" :fallback="carPicture(run.run.car.slug)">
-          <span v-if="car" class="chip chip-am" data-test="car-level">{{ t('garage.carLevel', { level: car.level }) }}</span>
-          <span class="chip" :class="chipClass" data-test="status">
+          <template #spots>
+            <CarHotspots v-if="car && parts.placed.length > 0" :placed="parts.placed" :picked="pickedSlot" :engine="car.vehicle.engine" @pick="pick" />
+          </template>
+          <span v-if="car" class="chip chip-am !h-6 !text-[11px]" data-test="car-level">{{ t('garage.carLevel', { level: car.level }) }}</span>
+          <span class="chip !h-6 !text-[11px]" :class="chipClass" data-test="status">
             {{ t(`run.status.${statusKey}`) }}
           </span>
         </CarStage>
+
+        <!-- The slots that have no place on the picture, so that every part can be looked at; and the part that was tapped, or how many there are. -->
+        <template v-if="car">
+          <div v-if="parts.unplaced.length > 0" class="rail !pb-1" role="group" :aria-label="t('garage.parts.other')" data-test="slots">
+            <button
+              v-for="slot in parts.unplaced"
+              :key="slot.slot"
+              type="button"
+              class="chip flex-none cursor-pointer"
+              :class="{ 'chip-am': pickedSlot === slot.slot }"
+              :aria-pressed="pickedSlot === slot.slot"
+              :data-test="`chip-${slot.slot}`"
+              @click="pick(slot.slot)"
+            >
+              <SlotIcon :name="spotKeyOf(slot, roleOf)" class="size-4" />
+              {{ slotName(slot.slot) }}
+            </button>
+          </div>
+
+          <SlotDetail :slot="picked" :engine="car.vehicle.engine" :mounted="mountedCount" :total="car.slots.length" @close="pickedSlot = null" />
+        </template>
 
         <SpecCard :name="run.run.car.name" :kicker="className(car?.vehicle.class)" :tier="car?.vehicle.tier ?? null" :score="car ? score : null" level="h1" heading-id="run-title">
           <p class="sub -mt-1" data-test="track">{{ run.run.track.name }}</p>
@@ -285,27 +329,6 @@ async function useCode(): Promise<void> {
         </dl>
 
         <RunAlerts :run="run.run" />
-      </section>
-
-      <section v-if="car" class="grid grid-cols-3 gap-2" :aria-label="t('workshop.slots')" data-test="slots">
-        <RouterLink
-          v-for="slot in car.slots"
-          :key="slot.slot"
-          :to="{ name: 'workshop' }"
-          class="tile no-underline"
-          :class="[slot.part ? 'on' : '', slot.part && slot.part.rarity_rank > 1 ? `r${slot.part.rarity_rank}` : '']"
-          :data-test="`slot-${slot.slot}`"
-        >
-          <span class="sl">{{ t(`slot.${slot.slot}`) }}</span>
-          <span class="nm">{{ slot.part ? slot.part.name : slot.built_in ? (car.vehicle.engine ?? t('workshop.builtIn')) : t('workshop.empty') }}</span>
-          <span v-if="slot.part" class="mono text-[10px] text-faint">{{ t('part.tier', { tier: slot.part.tier ?? 0 }) }}</span>
-          <RarityMark v-if="slot.part && slot.part.rarity_rank > 1" :rarity="slot.part.rarity" />
-          <UpgradeMark v-if="slot.part" :level="slot.part.upgrade" />
-          <!-- A part that has worn says how much of its life is left, in red when it is unserviceable. -->
-          <span v-if="slot.part && slot.part.condition_percent < 100" class="mono text-[10px]" :class="slot.part.condition_percent < 20 ? 'text-danger' : 'text-faint'" :data-test="`slot-condition-${slot.slot}`">
-            {{ t('part.condition', { percent: slot.part.condition_percent }) }}
-          </span>
-        </RouterLink>
       </section>
 
       <FuelGauge :run="run.run" />

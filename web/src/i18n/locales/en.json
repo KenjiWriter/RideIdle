@@ -78,7 +78,19 @@
     "levelUp": "The car reached level {level}.",
     "tierUnlocked": "You can mount T{tier} parts now.",
     "gearboxLimit": "Gearbox limit: {speed} km/h",
-    "conditionLink": "Technical condition: {percent}%"
+    "conditionLink": "Technical condition: {percent}%",
+    "parts": {
+      "label": "Parts of the car",
+      "hint": "Tap a part on the car to see what is fitted.",
+      "summary": "Parts fitted: {mounted} of {total}",
+      "spot": "{slot}: {part}",
+      "close": "Close",
+      "factory": "The factory part of the car. You can fit a better one in the workshop.",
+      "builtIn": "This is the part of the body the car left the factory with. You can fit a better one in the workshop.",
+      "mount": "Fit one in the workshop",
+      "change": "Change in the workshop",
+      "other": "Other parts"
+    }
   },
   "choose": {
     "title": "Choose your wreck",

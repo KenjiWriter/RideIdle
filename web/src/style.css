@@ -922,6 +922,180 @@ body {
     background: var(--color-amber);
   }
 
+  /* ---------- the parts of a car, each where it is on the picture ---------- */
+  /* The layer has the box of the picture, so a place in percent is a place on the car; only the spots take a tap. */
+  .spots {
+    @apply pointer-events-none absolute inset-0 z-[3];
+  }
+
+  .spot {
+    --spot: var(--color-r1);
+    @apply pointer-events-auto absolute grid cursor-pointer place-items-center p-0;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    color: var(--color-ink);
+    background: color-mix(in srgb, var(--color-bg) 74%, transparent);
+    border: 2px solid var(--spot);
+    border-radius: 50%;
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--spot) 24%, transparent),
+      0 2px 7px rgba(0, 0, 0, 0.55);
+    transition:
+      transform 0.15s ease,
+      background-color 0.15s ease;
+  }
+
+  /* A tap is on a place that is larger than the spot, as the spots lie close on a small stage. */
+  .spot::before {
+    content: '';
+    position: absolute;
+    inset: -7px;
+    border-radius: 50%;
+  }
+
+  /* A ring that goes out from the spot a few times when the screen opens, to say that they are there to be tapped. */
+  .spot::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 2px solid var(--spot);
+    opacity: 0;
+    animation: spot-ping 1.8s ease-out 2;
+    pointer-events: none;
+  }
+
+  .spot svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .spot.r2 {
+    --spot: var(--color-r2);
+  }
+
+  .spot.r3 {
+    --spot: var(--color-r3);
+  }
+
+  .spot.r4 {
+    --spot: var(--color-r4);
+  }
+
+  .spot.r5 {
+    --spot: var(--color-r5);
+  }
+
+  /* Nothing on the slot: a dashed ring, quieter than the rest. */
+  .spot-empty {
+    --spot: var(--color-faint);
+    border-style: dashed;
+    color: var(--color-muted);
+  }
+
+  /* A part that is worn out: red, and it does not stop asking. */
+  .spot-worn {
+    --spot: var(--color-danger);
+    animation: spot-alert 1.6s ease-out infinite;
+  }
+
+  .spot-on {
+    --spot: var(--color-amber);
+    z-index: 1;
+    transform: scale(1.18);
+    color: var(--color-amber-ink);
+    background: var(--color-amber);
+    box-shadow:
+      0 0 0 4px var(--skin-amber-glow),
+      0 3px 10px rgba(0, 0, 0, 0.6);
+  }
+
+  .spot:focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 3px;
+  }
+
+  /* The upgrade of the part, at the corner of its spot. */
+  .spot-up {
+    @apply absolute -right-2.5 -top-2.5 rounded-full px-1 font-mono text-[9px] font-bold leading-[14px];
+    color: var(--color-amber-ink);
+    background: var(--color-amber);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  }
+
+  /* The name of the slot that is looked at, under its spot. */
+  .spot-tag {
+    @apply pointer-events-none absolute left-1/2 top-full z-[2] mt-1.5 whitespace-nowrap rounded-sm px-1.5 font-mono text-[10px] font-bold uppercase;
+    transform: translateX(-50%);
+    letter-spacing: 0.08em;
+    color: var(--color-amber-ink);
+    background: var(--color-amber);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  }
+
+  @keyframes spot-ping {
+    0% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+
+    100% {
+      opacity: 0;
+      transform: scale(1.9);
+    }
+  }
+
+  @keyframes spot-alert {
+    0% {
+      box-shadow:
+        0 0 0 3px color-mix(in srgb, var(--spot) 40%, transparent),
+        0 2px 7px rgba(0, 0, 0, 0.55);
+    }
+
+    100% {
+      box-shadow:
+        0 0 0 11px transparent,
+        0 2px 7px rgba(0, 0, 0, 0.55);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .spot::after,
+    .spot-worn {
+      animation: none;
+    }
+  }
+
+  /* The round plate with the icon of a part, on the card that says what is on the slot. */
+  .slot-badge {
+    @apply grid size-11 flex-none place-items-center rounded-full;
+    color: var(--color-muted);
+    background: var(--skin-well);
+    border: 2px solid currentColor;
+  }
+
+  .slot-badge svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .card-r2 {
+    border-color: var(--color-r2);
+  }
+
+  .card-r3 {
+    border-color: var(--color-r3);
+  }
+
+  .card-r4 {
+    border-color: var(--color-r4);
+  }
+
+  .card-r5 {
+    border-color: var(--color-r5);
+  }
+
   /** The gem before the premium coins of the HUD. */
   .chip-gem::before {
     content: '';

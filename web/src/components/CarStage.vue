@@ -24,6 +24,7 @@ defineProps<{
         </span>
       </template>
     </MediaPicture>
+    <slot name="spots" />
     <div v-if="$slots.default" class="stage-tags"><slot /></div>
     <div v-if="$slots.price" class="stage-price"><slot name="price" /></div>
   </div>
