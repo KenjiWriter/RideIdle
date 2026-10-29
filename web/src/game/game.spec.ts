@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { DEFAULT_GAME, applyGame, parseGame, setGame, useGame, type GameInfo } from './index'
+import { DEFAULT_GAME, THEME_LINK_ID, applyGame, parseGame, setGame, themeLoaded, useGame, type GameInfo } from './index'
 import { loadGame } from './load'
 
 function respond(status: number, body: unknown): Response {
@@ -15,6 +15,8 @@ const ships: GameInfo = {
   theme_color: '#0b3d5c',
   icon_url: '/api/v1/media/aaaaaaaa.png',
   icon_maskable_url: null,
+  theme_css_url: null,
+  has_landing: false,
   is_default: false,
 }
 
@@ -41,7 +43,17 @@ afterEach(() => {
 
 describe('the game of the app', () => {
   it('is the car game until the server says another', () => {
-    expect(DEFAULT_GAME).toMatchObject({ slug: 'raceidle', name: 'RideIdle', locale: 'en', theme_color: '#0e1013', icon_url: null, icon_maskable_url: null, is_default: true })
+    expect(DEFAULT_GAME).toMatchObject({
+      slug: 'raceidle',
+      name: 'RideIdle',
+      locale: 'en',
+      theme_color: '#0e1013',
+      icon_url: null,
+      icon_maskable_url: null,
+      theme_css_url: null,
+      has_landing: false,
+      is_default: true,
+    })
     expect(useGame().game.value).toBe(DEFAULT_GAME)
     expect(useGame().name.value).toBe('RideIdle')
   })
@@ -73,16 +85,31 @@ describe('parseGame', () => {
     expect(parseGame({ slug: 7, name: 'Ships' })).toBeNull()
   })
 
-  it('has the car game’s language and colour for what is missing or is not what it should be, and no icon', () => {
-    expect(parseGame({ slug: 'ships', name: ' Ships ', theme_color: 'blue', locale: '', icon_url: 12 })).toEqual({
+  it('has the car game’s language and colour for what is missing or is not what it should be, and no icon, no style sheet and no front page', () => {
+    expect(parseGame({ slug: 'ships', name: ' Ships ', theme_color: 'blue', locale: '', icon_url: 12, theme_css_url: 5, has_landing: 'yes' })).toEqual({
       slug: 'ships',
       name: 'Ships',
       locale: 'en',
       theme_color: '#0e1013',
       icon_url: null,
       icon_maskable_url: null,
+      theme_css_url: null,
+      has_landing: false,
       is_default: false,
     })
+  })
+
+  it('reads the style sheet and the front page of a game, and takes a server that does not say them (an older one) for a game that has neither', () => {
+    expect(parseGame({ ...ships, theme_css_url: '/api/v1/meta/theme.css?v=2026.10.0', has_landing: true })).toMatchObject({
+      theme_css_url: '/api/v1/meta/theme.css?v=2026.10.0',
+      has_landing: true,
+    })
+
+    const older: Record<string, unknown> = { ...ships }
+    delete older.theme_css_url
+    delete older.has_landing
+
+    expect(parseGame(older)).toMatchObject({ theme_css_url: null, has_landing: false })
   })
 })
 
@@ -126,6 +153,92 @@ describe('applyGame', () => {
     expect(doc.title).toBe('RideIdle')
     expect(doc.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#0e1013')
     expect(doc.querySelector('link[rel="icon"]')?.getAttribute('href')).toBe('/icons/favicon-48.png')
+    expect(doc.getElementById(THEME_LINK_ID)).toBeNull()
+  })
+})
+
+describe('the style sheet of the game', () => {
+  const themed: GameInfo = { ...ships, theme_css_url: '/api/v1/meta/theme.css?v=2026.10.0' }
+
+  it('is a link that comes last in the head, after the sheet that the build put there, so that it has the last word', () => {
+    const doc = page()
+    doc.head.insertAdjacentHTML('beforeend', '<link rel="stylesheet" href="/assets/index-abc123.css" />')
+
+    applyGame(themed, doc)
+
+    const link = doc.head.lastElementChild as HTMLLinkElement
+    expect(link.id).toBe(THEME_LINK_ID)
+    expect(link.getAttribute('rel')).toBe('stylesheet')
+    expect(link.getAttribute('href')).toBe('/api/v1/meta/theme.css?v=2026.10.0')
+    expect(doc.querySelectorAll('link[rel="stylesheet"]')).toHaveLength(2)
+  })
+
+  it('is one at a time: another game replaces it, and a game without a sheet takes it out', () => {
+    const doc = page()
+
+    applyGame(themed, doc)
+    applyGame({ ...themed, theme_css_url: '/api/v1/meta/theme.css?v=2026.10.1' }, doc)
+
+    expect([...doc.querySelectorAll(`#${THEME_LINK_ID}`)].map((link) => link.getAttribute('href'))).toEqual(['/api/v1/meta/theme.css?v=2026.10.1'])
+
+    applyGame(ships, doc)
+
+    expect(doc.getElementById(THEME_LINK_ID)).toBeNull()
+  })
+
+  it('is not asked for by a game that has none', () => {
+    const doc = page()
+
+    applyGame(ships, doc)
+
+    expect(doc.querySelector('link[rel="stylesheet"]')).toBeNull()
+  })
+
+  it('is waited for until it has come', async () => {
+    const doc = page()
+    applyGame(themed, doc)
+
+    let arrived = false
+    void themeLoaded(doc).then(() => (arrived = true))
+    await Promise.resolve()
+    expect(arrived).toBe(false)
+
+    doc.getElementById(THEME_LINK_ID)?.dispatchEvent(new Event('load'))
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(arrived).toBe(true)
+  })
+
+  it('is not waited for when it has failed: the app is drawn with the look it has', async () => {
+    const doc = page()
+    applyGame(themed, doc)
+
+    doc.getElementById(THEME_LINK_ID)?.dispatchEvent(new Event('error'))
+
+    await expect(themeLoaded(doc)).resolves.toBeUndefined()
+  })
+
+  it('is not waited for longer than a moment', async () => {
+    vi.useFakeTimers()
+    const doc = page()
+    applyGame(themed, doc)
+
+    let arrived = false
+    void themeLoaded(doc).then(() => (arrived = true))
+
+    await vi.advanceTimersByTimeAsync(1400)
+    expect(arrived).toBe(false)
+
+    await vi.advanceTimersByTimeAsync(200)
+    expect(arrived).toBe(true)
+  })
+
+  it('is nothing to wait for in a game that has none', async () => {
+    const doc = page()
+    applyGame(ships, doc)
+
+    await expect(themeLoaded(doc)).resolves.toBeUndefined()
   })
 })
 
