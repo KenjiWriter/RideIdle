@@ -1542,6 +1542,89 @@ describe('WorkshopView', () => {
     })
   })
 
+  describe('the inventory against the parts on the car', () => {
+    const SURFACES = { asphalt_dry: 1, asphalt_wet: 0.85, gravel_dry: 0.6, mud: 0.45, snow: 0.4 }
+    const fitted = aMountedPart({ id: 31, slug: 'street-tires-t1', name: 'Street tires T1', slot: 'tires', tier: 1, stats: { grip: 90, handling: 88, braking: 90 }, surfaces: SURFACES })
+    const part = (id: number, stats: Record<string, number>, extra: Record<string, unknown> = {}) => aPart({ id, slug: 'street-tires-t2', name: `Tires ${id}`, slot: 'tires', tier: 2, stats, surfaces: SURFACES, ...extra })
+
+    async function show(inventory: ReturnType<typeof aPart>[], mounted: Record<string, ReturnType<typeof aMountedPart>> = { tires: fitted }) {
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, mounted), inventory })) })
+
+      const { wrapper } = await mountView(WorkshopView, '/workshop')
+      await flushPromises()
+
+      return wrapper
+    }
+
+    it('says a part is worth fitting when it is better than the one on the car and nothing is worse, with an arrow on its button and what is better in green', async () => {
+      const wrapper = await show([part(21, { grip: 100, handling: 98, braking: 100 })])
+      const card = wrapper.get('[data-test="part-21"]')
+
+      expect(card.get('[data-test="verdict-better"]').text()).toBe('▲ Worth fitting')
+      expect(card.find('[data-test="worth-21"]').exists()).toBe(true)
+      expect(card.get('[data-test="compare-title"]').text()).toBe('Against the fitted one: Street tires T1')
+      expect(card.get('[data-test="compare-grip"]').text()).toBe('▲ Grip +10.0 (better)')
+      expect(card.get('[data-test="compare-grip"]').classes()).toContain('cmp-up')
+    })
+
+    it('says a part is worse than the one on the car, in red, and puts no arrow on its button', async () => {
+      const wrapper = await show([part(21, { grip: 80, handling: 88, braking: 85 })])
+      const card = wrapper.get('[data-test="part-21"]')
+
+      expect(card.get('[data-test="verdict-worse"]').text()).toBe('▼ Worse than the fitted one')
+      expect(card.find('[data-test="worth-21"]').exists()).toBe(false)
+      expect(card.get('[data-test="compare-grip"]').classes()).toContain('cmp-down')
+    })
+
+    it('says that it depends when a part is better in one thing and worse in another by about as much, and tells no one to fit it', async () => {
+      const wrapper = await show([part(21, { grip: 100, handling: 88, braking: 85 })])
+      const card = wrapper.get('[data-test="part-21"]')
+
+      expect(card.get('[data-test="verdict-mixed"]').text()).toBe('⇅ Depends: some better, some worse')
+      expect(card.find('[data-test="worth-21"]').exists()).toBe(false)
+    })
+
+    it('counts the grip on the surfaces: rain tires that lose a little on the dry and gain a lot elsewhere depend on the weather, and the verdict is told for each part', async () => {
+      const rain = part(22, { grip: 90, handling: 88, braking: 90 }, { surfaces: { asphalt_dry: 0.97, asphalt_wet: 1, gravel_dry: 0.9, mud: 0.8, snow: 0.7 } })
+      const wrapper = await show([part(21, { grip: 80, handling: 80, braking: 80 }), rain])
+
+      expect(wrapper.find('[data-test="part-21"] [data-test="verdict-worse"]').exists()).toBe(true)
+      expect(wrapper.find('[data-test="part-22"] [data-test="verdict-mixed"]').exists()).toBe(true)
+      expect(wrapper.find('[data-test="worth-22"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="part-22"] [data-test="compare-surface:asphalt_wet"]').text()).toBe('▲ Wet +15% (better)')
+      expect(wrapper.get('[data-test="part-22"] [data-test="compare-surface:asphalt_dry"]').text()).toBe('▼ Dry −3% (worse)')
+    })
+
+    it('says a part is the same when it is no different, and is silent on a slot that holds the factory part', async () => {
+      const same = await show([part(21, { grip: 90, handling: 88, braking: 90 })])
+
+      expect(same.find('[data-test="part-21"] [data-test="verdict-same"]').exists()).toBe(true)
+      expect(same.find('[data-test="part-21"] [data-test="compare-same"]').exists()).toBe(true)
+
+      const factory = await show([part(21, { grip: 100, handling: 98, braking: 100 })], {})
+
+      expect(factory.find('[data-test="part-21"] [data-test="part-compare"]').exists()).toBe(false)
+      expect(factory.find('[data-test="part-21"] [data-test^="verdict-"]').exists()).toBe(false)
+      expect(factory.find('[data-test="worth-21"]').exists()).toBe(false)
+    })
+
+    it('shows what is better and worse but does not tell anyone to fit a part that the car cannot take', async () => {
+      const locked = part(21, { grip: 100, handling: 98, braking: 100 }, { mount_next: { cost_cents: 0, duration_ms: 235_200, locked: { reason: 'cylinders', required: 6, current: 4 } } })
+      const wrapper = await show([locked])
+
+      expect(wrapper.find('[data-test="part-21"] [data-test="compare-grip"]').exists()).toBe(true)
+      expect(wrapper.find('[data-test="part-21"] [data-test^="verdict-"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="worth-21"]').exists()).toBe(false)
+    })
+
+    it('keeps the button of a part that is worth fitting as it was: the same test id and the same words, and the tutorial still points at it', async () => {
+      const wrapper = await show([part(21, { grip: 100, handling: 98, braking: 100 })])
+
+      expect(wrapper.get('[data-test="put-on-21"]').text()).toBe('Put on')
+      expect(wrapper.get('[data-tutorial="mount"]').attributes('data-test')).toBe('put-on-21')
+    })
+  })
+
   describe('the car on its stage', () => {
     const mountedTires = aMountedPart({ id: 21, slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', tier: 2 })
     const exhaustStock = aPart({ id: 22, slug: 'sport-exhaust-t2', name: 'Sport exhaust', slot: 'exhaust', tier: 2 })

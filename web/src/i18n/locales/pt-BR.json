@@ -443,6 +443,12 @@
       "same": "As mesmas estatísticas da peça instalada.",
       "better": "melhor",
       "worse": "pior",
+      "verdict": {
+        "better": "Vale a pena montar",
+        "worse": "Pior que a montada",
+        "mixed": "Depende: algo melhor, algo pior",
+        "same": "Igual à montada"
+      },
       "stat": {
         "grip": "Aderência",
         "handling": "Dirigibilidade",

@@ -443,6 +443,12 @@
       "same": "Takie same statystyki jak założona część.",
       "better": "lepiej",
       "worse": "gorzej",
+      "verdict": {
+        "better": "Warto założyć",
+        "worse": "Gorsza od założonej",
+        "mixed": "Zależy: coś lepsze, coś gorsze",
+        "same": "Taka sama jak założona"
+      },
       "stat": {
         "grip": "Przyczepność",
         "handling": "Prowadzenie",

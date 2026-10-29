@@ -443,6 +443,12 @@
       "same": "The same statistics as the fitted part.",
       "better": "better",
       "worse": "worse",
+      "verdict": {
+        "better": "Worth fitting",
+        "worse": "Worse than the fitted one",
+        "mixed": "Depends: some better, some worse",
+        "same": "Same as the fitted one"
+      },
       "stat": {
         "grip": "Grip",
         "handling": "Handling",

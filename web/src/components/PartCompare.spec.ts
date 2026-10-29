@@ -81,4 +81,25 @@ describe('PartCompare', () => {
       }
     }
   })
+
+  it('sets the grip on the surfaces too, named as the part names them, when both parts are tires', async () => {
+    const surfaces = { asphalt_dry: 1, asphalt_wet: 0.85, gravel_dry: 0.6, mud: 0.45, snow: 0.4 }
+    const wrapper = mount(PartCompare, {
+      props: { offer: { stats: { grip: 100 }, surfaces: { ...surfaces, asphalt_wet: 0.95, mud: 0.4 } }, fitted: { name: 'Street tires T1', stats: { grip: 100 }, surfaces } },
+      global: { plugins: [i18n] },
+    })
+
+    expect(wrapper.findAll('li').map((item) => item.text())).toEqual(['▲ Wet +10% (better)', '▼ Mud −5% (worse)'])
+    expect(wrapper.get('[data-test="compare-surface:asphalt_wet"]').classes()).toContain('cmp-up')
+  })
+
+  it('names the surfaces in the language of the driver', async () => {
+    await setLocale('pl')
+    const wrapper = mount(PartCompare, {
+      props: { offer: { stats: { grip: 100 }, surfaces: { asphalt_wet: 0.95 } }, fitted: { name: 'Opony', stats: { grip: 100 }, surfaces: { asphalt_wet: 0.85 } } },
+      global: { plugins: [i18n] },
+    })
+
+    expect(wrapper.get('[data-test="compare-surface:asphalt_wet"]').text()).toBe('▲ Mokro +10% (lepiej)')
+  })
 })

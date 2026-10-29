@@ -9,11 +9,13 @@ import CarHotspots from '@/components/CarHotspots.vue'
 import CarStage from '@/components/CarStage.vue'
 import GameShell from '@/components/GameShell.vue'
 import JobCancel from '@/components/JobCancel.vue'
+import PartCompare from '@/components/PartCompare.vue'
 import PartCondition from '@/components/PartCondition.vue'
 import PartMerge from '@/components/PartMerge.vue'
 import PartAffixes from '@/components/PartAffixes.vue'
 import MediaPicture from '@/components/MediaPicture.vue'
 import PartStats from '@/components/PartStats.vue'
+import PartVerdict from '@/components/PartVerdict.vue'
 import SlotChips from '@/components/SlotChips.vue'
 import SlotDetail from '@/components/SlotDetail.vue'
 import SpecCard from '@/components/SpecCard.vue'
@@ -27,6 +29,7 @@ import { statFill } from '@/features/car/statFill'
 import { useCarClass } from '@/features/car/useCarClass'
 import { useCarSpots } from '@/features/car/useCarSpots'
 import { useSlotText } from '@/features/car/useSlotText'
+import { comparePart, type Verdict } from '@/features/parts/compare'
 import { rankOf } from '@/features/parts/rarity'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
@@ -158,6 +161,23 @@ const tutorialTarget = computed(() => tutorial.current?.target ?? tutorial.goal?
  * put on, the two parts to merge), so that it never points at something that the filter has hidden.
  */
 const inventoryFilter = computed(() => (tutorialTarget.value === 'mount' || tutorialTarget.value === 'merge' ? null : pickedSlot.value))
+/** The part that is fitted on the slot of a part of the inventory, to set it against; none when the slot holds the factory part. */
+function fittedOf(part: OwnedPart): { name: string; stats: Record<string, number>; surfaces?: Record<string, number> | null } | null {
+  const fitted = car.value?.slots.find((slot) => slot.slot === part.slot)?.part
+
+  return fitted ? { name: fitted.name, stats: fitted.stats, surfaces: fitted.surfaces } : null
+}
+
+/**
+ * Whether a part of the inventory is worth fitting in place of the one on the car: null when the slot holds the factory part, when there is nothing to set against, and
+ * while the car cannot take the part (the comparison is still shown, but nobody is told to fit what the workshop would refuse).
+ */
+function verdictOf(part: OwnedPart): Verdict | null {
+  const fitted = fittedOf(part)
+
+  return fitted && !part.mount_next?.locked ? (comparePart(part, fitted)?.verdict ?? null) : null
+}
+
 const shownParts = computed(() => (inventoryFilter.value === null ? inventory.value : inventory.value.filter((part) => part.slot === inventoryFilter.value)))
 
 // The step of the tutorial that points at the upgrade points at a button on the card of a part, so the slot of a part that can be upgraded is looked at when it comes.
@@ -627,28 +647,35 @@ async function finish(jobId: number): Promise<void> {
                 <span class="tag">{{ t('part.tier', { tier: part.tier ?? 0 }) }}</span>
               </p>
               <p class="sub">{{ t(`slot.${part.slot}`) }}</p>
+              <!-- Worth fitting in place of the part on the car or not, and what is better and what is worse. -->
+              <PartVerdict v-if="verdictOf(part)" :verdict="verdictOf(part)!" class="mt-1" />
               <p class="my-1 flex flex-wrap items-center gap-2">
                 <RarityMark :rarity="part.rarity" />
                 <UpgradeMark :level="part.upgrade" />
               </p>
               <PartStats :part="part" />
               <PartAffixes :part="part" />
+              <PartCompare :offer="part" :fitted="fittedOf(part)" />
               <PartCondition :percent="part.condition_percent" class="mt-1.5" />
               <p v-if="part.repair_next?.locked?.reason === 'worn_out'" class="sub mt-1" :data-test="`repair-info-${part.id}`">{{ t('workshop.repairWornOut') }}</p>
               </div>
             </div>
             <!-- A long reason (the engine bay says what it does not take) wraps inside the card instead of pushing it out of the screen. -->
             <div class="flex max-w-full shrink-0 flex-col gap-1.5">
-              <button
-                type="button"
-                class="btn btn-primary btn-sm"
-                :disabled="busy || busyPartIds.has(part.id) || !!part.mount_next?.locked"
-                :data-tutorial="part.id === mountTarget ? 'mount' : undefined"
-                :data-test="`put-on-${part.id}`"
-                @click="act('mount', part)"
-              >
-                {{ t('workshop.putOn') }}
-              </button>
+              <div class="relative">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm w-full"
+                  :disabled="busy || busyPartIds.has(part.id) || !!part.mount_next?.locked"
+                  :data-tutorial="part.id === mountTarget ? 'mount' : undefined"
+                  :data-test="`put-on-${part.id}`"
+                  @click="act('mount', part)"
+                >
+                  {{ t('workshop.putOn') }}
+                </button>
+                <!-- A part that is worth fitting has an arrow on its button. -->
+                <span v-if="verdictOf(part)?.kind === 'better'" class="worth-flag" aria-hidden="true" :data-test="`worth-${part.id}`">▲</span>
+              </div>
               <!-- A part the car cannot take (too few cylinders, no booster for an intercooler) says why instead of the price: the job would be refused. -->
               <p v-if="part.mount_next?.locked" class="sub text-danger" :data-test="`put-on-lock-${part.id}`">{{ lockText(t, part.mount_next.locked, fixed) }}</p>
               <p v-else-if="part.mount_next" class="sub" :data-test="`put-on-info-${part.id}`">{{ slotJobInfo(part.mount_next) }}</p>

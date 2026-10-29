@@ -115,10 +115,10 @@ const showFilter = computed(() => partSlots.value.length > 1 && (chipSlots.value
 const forSlotCount = computed(() => store.offers.filter((offer) => offer.slot === pickedSlot.value).length)
 
 /** The part that is fitted on the slot of an offer, to set the offer against; none when the slot holds the factory part or the car is not known. */
-function fittedOf(offer: ShopOffer): { name: string; stats: Record<string, number> } | null {
+function fittedOf(offer: ShopOffer): { name: string; stats: Record<string, number>; surfaces?: Record<string, number> | null } | null {
   const part = stageCar.value?.slots.find((slot) => slot.slot === offer.slot)?.part
 
-  return part ? { name: part.name, stats: part.stats } : null
+  return part ? { name: part.name, stats: part.stats, surfaces: part.surfaces } : null
 }
 
 /** The slots that have a part for sale, in order. */

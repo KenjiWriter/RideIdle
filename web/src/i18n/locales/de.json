@@ -443,6 +443,12 @@
       "same": "Dieselben Werte wie das verbaute Teil.",
       "better": "besser",
       "worse": "schlechter",
+      "verdict": {
+        "better": "Einbauen lohnt sich",
+        "worse": "Schlechter als das verbaute Teil",
+        "mixed": "Kommt darauf an: teils besser, teils schlechter",
+        "same": "Gleich wie das verbaute Teil"
+      },
       "stat": {
         "grip": "Haftung",
         "handling": "Fahrverhalten",
