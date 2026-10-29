@@ -2,8 +2,10 @@
 import { computed, onMounted } from 'vue'
 
 import type { DealerOffer } from '@/api/types'
+import CarStage from '@/components/CarStage.vue'
 import CityTabs from '@/components/CityTabs.vue'
 import GameShell from '@/components/GameShell.vue'
+import { carPicture } from '@/features/art'
 import { useMarketScreen } from '@/features/market/useMarketScreen'
 import { useFormat } from '@/i18n/useFormat'
 
@@ -46,10 +48,13 @@ const buy = (offer: DealerOffer) =>
       <p v-if="!hasRoom" class="card card-hi text-sm" role="status" data-test="no-room">{{ t('market.noRoom', { city }) }}</p>
 
       <article v-for="offer in offers" :key="offer.vehicle.slug" class="card flex flex-col gap-2 !p-3" :class="{ 'opacity-90': !offer.open }" :data-test="`offer-${offer.vehicle.slug}`">
+        <CarStage compact :name="offer.vehicle.name" :src="offer.vehicle.image_url" :fallback="carPicture(offer.vehicle.slug)" />
+
         <div class="flex items-center justify-between gap-2">
           <div class="flex min-w-0 items-center gap-2">
             <b class="truncate text-base" data-test="name">{{ offer.vehicle.name }}</b>
             <span class="tag flex-none">{{ className(offer.vehicle.class) }}</span>
+            <span v-if="offer.vehicle.tier" class="tier !h-5 flex-none !px-2 !text-sm" data-test="tier">{{ t('car.tier', { tier: offer.vehicle.tier }) }}</span>
           </div>
           <div class="flex-none font-display text-[26px] font-bold leading-none text-amber" data-test="price">{{ money(offer.price_cents) }}</div>
         </div>

@@ -60,7 +60,7 @@ export interface RunField {
 /** A run: a car driving laps on a track (GET /api/v1/runs/current). Times are ms of the server clock, fuel is in ml. */
 export interface Run {
   id: number
-  car: { slug: string; name: string; image_url?: string | null }
+  car: { slug: string; name: string; image_url?: string | null; class?: string | null; tier?: number | null }
   track: { slug: string; name: string; kind?: TrackKind }
   status: RunStatus
   stop_reason: StopReason | null
@@ -518,7 +518,7 @@ export interface GarageCar {
   xp: { total: number; level_start: number; next_level_at: number | null }
   /** The next tier of parts the car cannot have mounted yet, and the level that opens it, or null when no level does. */
   tier_unlock: { tier: number; level: number } | null
-  vehicle: { slug: string; name: string; image_url?: string | null; engine: string | null; power_kw: number | null; drivetrain: 'fwd' | 'rwd' | 'awd' | null }
+  vehicle: { slug: string; name: string; image_url?: string | null; class?: string | null; tier?: number | null; engine: string | null; power_kw: number | null; drivetrain: 'fwd' | 'rwd' | 'awd' | null }
   /** With the parts that are on the car, and without them. */
   stats: Record<CarStatKey, number>
   base_stats: Record<CarStatKey, number>
@@ -905,7 +905,7 @@ export interface FleetCar {
   selected: boolean
   /** How worn the car is: 100 is perfect, and a worn car breaks down more. */
   condition_percent: number
-  vehicle: { slug: string; name: string }
+  vehicle: { slug: string; name: string; image_url?: string | null; class?: string | null; tier?: number | null }
   city: { slug: string; name: string }
   run: { id: number; status: RunStatus; stop_reason: StopReason | null; laps_done: number; fuel_ml: number; tank_ml: number; track: string } | null
   /** The journey the car is on, if it is. */
@@ -949,6 +949,9 @@ export interface MarketVehicle {
   slug: string
   name: string
   class: string
+  /** The tier of the body, and the picture the pack gives it (a path of the API); older answers have neither. */
+  tier?: number
+  image_url?: string | null
   drivetrain: 'fwd' | 'rwd' | 'awd'
   engine: string
   power_kw: number

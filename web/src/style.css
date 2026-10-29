@@ -33,6 +33,43 @@
   --font-mono: 'JetBrains Mono', ui-monospace, Consolas, monospace;
 }
 
+/*
+ * The plates of the skin (buttons, panels, chips, the HUD) are mixed from the colours of the theme, so that a game that gives other colours (rules/branding) gets
+ * plates of them, and not the steel and amber of the car game. Written in the sheet that has no layer, beside the colours a game gives, and computed on the root,
+ * where the colours that win are known.
+ */
+:root {
+  --skin-shadow: color-mix(in srgb, var(--color-bg) 50%, black);
+  --skin-well: color-mix(in srgb, var(--color-bg) 60%, black);
+  --skin-edge: color-mix(in srgb, var(--color-line) 50%, var(--color-line-2));
+  --skin-edge-hi: var(--color-line-2);
+  --skin-plate-top: color-mix(in srgb, var(--color-surface-3) 96%, white);
+  --skin-plate-bottom: color-mix(in srgb, var(--color-surface) 90%, black);
+  --skin-panel-top: color-mix(in srgb, var(--color-surface-2) 96%, white);
+  --skin-panel-bottom: color-mix(in srgb, var(--color-surface) 82%, black);
+  --skin-chip-top: var(--color-surface-3);
+  --skin-chip-bottom: color-mix(in srgb, var(--color-surface-2) 88%, black);
+  --skin-bar-top: color-mix(in srgb, var(--color-surface-3) 94%, white);
+  --skin-bar-bottom: color-mix(in srgb, var(--color-bg) 55%, var(--color-surface));
+  --skin-amber-top: color-mix(in srgb, var(--color-amber) 68%, white);
+  --skin-amber-bottom: color-mix(in srgb, var(--color-amber) 92%, black);
+  --skin-amber-edge: color-mix(in srgb, var(--color-amber) 62%, black);
+  --skin-amber-line: color-mix(in srgb, var(--color-amber) 72%, black);
+  --skin-amber-text: color-mix(in srgb, var(--color-amber) 80%, white);
+  --skin-amber-glow: color-mix(in srgb, var(--color-amber) 30%, transparent);
+  --skin-cyan-line: color-mix(in srgb, var(--color-cyan) 62%, black);
+  --skin-cyan-text: color-mix(in srgb, var(--color-cyan) 88%, white);
+  --skin-danger-line: color-mix(in srgb, var(--color-danger) 62%, black);
+  --skin-page: color-mix(in srgb, var(--color-bg) 88%, black);
+
+  /* The stage of a car on the showroom screens: a studio of the colour of the surfaces, lit from above, with a floor the car stands on. */
+  --stage-top: color-mix(in srgb, var(--color-cyan) 14%, var(--color-surface-3));
+  --stage-bottom: color-mix(in srgb, var(--color-surface) 70%, var(--color-bg));
+  --stage-lit: color-mix(in srgb, var(--color-cyan) 10%, var(--color-surface-2));
+  --stage-floor: color-mix(in srgb, var(--color-cyan) 34%, transparent);
+  --stage-line: color-mix(in srgb, var(--color-ink) 62%, transparent);
+}
+
 html,
 body,
 #app {
@@ -46,8 +83,8 @@ body {
   line-height: 1.55;
   text-wrap: pretty;
   background:
-    radial-gradient(120% 55% at 50% -6%, rgba(255, 178, 36, 0.14), transparent 62%),
-    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 7px), #0b0d11;
+    radial-gradient(120% 55% at 50% -6%, color-mix(in srgb, var(--color-amber) 14%, transparent), transparent 62%),
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0 2px, transparent 2px 7px), var(--skin-page);
   background-attachment: fixed;
 }
 
@@ -57,7 +94,7 @@ body {
     @apply inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 px-5 text-center font-display text-xl font-bold uppercase italic no-underline transition;
     letter-spacing: 0.06em;
     border: 0;
-    border-bottom: 4px solid #a35f00;
+    border-bottom: 4px solid var(--skin-amber-edge);
     border-radius: 4px 4px 0 4px;
     clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
     text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
@@ -70,8 +107,8 @@ body {
   }
 
   .btn-primary {
-    background: linear-gradient(#ffd35e, #f5a010);
-    color: #2a1800;
+    background: linear-gradient(var(--skin-amber-top), var(--skin-amber-bottom));
+    color: var(--color-amber-ink);
   }
 
   .btn-primary:not(:disabled):hover {
@@ -79,24 +116,24 @@ body {
   }
 
   .btn-secondary {
-    background: linear-gradient(#2b323e, #1a1f27);
+    background: linear-gradient(var(--skin-plate-top), var(--skin-plate-bottom));
     color: var(--color-ink);
-    border: 1px solid #3f495a;
-    border-bottom: 4px solid #07080b;
+    border: 1px solid var(--skin-edge-hi);
+    border-bottom: 4px solid var(--skin-well);
     text-shadow: none;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
   .btn-secondary:not(:disabled):hover {
     border-color: var(--color-amber);
-    border-bottom-color: #07080b;
+    border-bottom-color: var(--skin-well);
   }
 
   .btn-danger {
-    background: linear-gradient(#2b323e, #1a1f27);
+    background: linear-gradient(var(--skin-plate-top), var(--skin-plate-bottom));
     color: var(--color-danger);
-    border: 1px solid #7a3a34;
-    border-bottom: 4px solid #07080b;
+    border: 1px solid var(--skin-danger-line);
+    border-bottom: 4px solid var(--skin-well);
     text-shadow: none;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
@@ -120,27 +157,27 @@ body {
   /* ---------- panels ---------- */
   .card {
     @apply p-5;
-    background: linear-gradient(#1c212b, #12161c);
-    border: 1px solid #333b49;
+    background: linear-gradient(var(--skin-panel-top), var(--skin-panel-bottom));
+    border: 1px solid var(--skin-edge);
     border-radius: 8px;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.06),
-      0 3px 0 #06070a;
+      0 3px 0 var(--skin-shadow);
   }
 
   .card-hi {
-    border-color: #b77a10;
+    border-color: var(--skin-amber-line);
     box-shadow:
-      inset 0 1px 0 rgba(255, 200, 80, 0.25),
-      0 0 0 1px rgba(255, 178, 36, 0.25),
-      0 3px 0 #06070a;
+      inset 0 1px 0 color-mix(in srgb, var(--color-amber) 25%, transparent),
+      0 0 0 1px var(--skin-amber-glow),
+      0 3px 0 var(--skin-shadow);
   }
 
   .card-cy {
-    border-color: #1c8aa6;
+    border-color: var(--skin-cyan-line);
     box-shadow:
-      inset 0 1px 0 rgba(120, 220, 255, 0.18),
-      0 3px 0 #06070a;
+      inset 0 1px 0 color-mix(in srgb, var(--color-cyan) 18%, transparent),
+      0 3px 0 var(--skin-shadow);
   }
 
   /** The flat panel of the landing page, which the canvas draws without the bevel of the game. */
@@ -154,7 +191,7 @@ body {
   /** The picture of a car or of the workshop. */
   .pic {
     @apply block w-full object-cover;
-    border: 1px solid #333b49;
+    border: 1px solid var(--skin-edge);
     border-radius: 8px;
   }
 
@@ -174,7 +211,7 @@ body {
   .hz {
     height: 12px;
     border-radius: 2px;
-    background: repeating-linear-gradient(-45deg, var(--color-amber) 0 12px, #15110a 12px 24px);
+    background: repeating-linear-gradient(-45deg, var(--color-amber) 0 12px, var(--color-amber-bg) 12px 24px);
   }
 
   /** A link in the top bar, drawn as a plate with a border. */
@@ -233,43 +270,130 @@ body {
 
   .chip {
     @apply inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 font-mono text-[12.5px] text-ink;
-    background: linear-gradient(#242b36, #171c24);
-    border: 1px solid #3a4252;
+    background: linear-gradient(var(--skin-chip-top), var(--skin-chip-bottom));
+    border: 1px solid var(--skin-edge-hi);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
   }
 
   .chip-am {
-    border-color: #b77a10;
-    color: #ffc94a;
+    border-color: var(--skin-amber-line);
+    color: var(--skin-amber-text);
   }
 
   .chip-cy {
-    border-color: #1c8aa6;
-    color: #59d4f2;
+    border-color: var(--skin-cyan-line);
+    color: var(--skin-cyan-text);
   }
 
   .chip-bad {
-    border-color: #a8473e;
+    border-color: var(--skin-danger-line);
     color: var(--color-danger);
   }
 
   /* ---------- the HUD and the navigation of the game ---------- */
   /* Stuck to the top of the screen, as the navigation is to the bottom: the level and the cash are always in sight. */
   .hud {
-    @apply sticky top-0 z-20 flex min-h-[68px] items-center gap-2.5 px-3.5 py-2.5;
-    background: linear-gradient(#272d39, #161a22);
-    border-bottom: 3px solid #07080b;
+    @apply sticky top-0 z-20 flex flex-col;
+    background: linear-gradient(var(--skin-bar-top), var(--skin-bar-bottom));
+    border-bottom: 3px solid var(--skin-well);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.12),
-      inset 0 -2px 0 #3a4252;
+      inset 0 -2px 0 var(--skin-edge-hi);
+  }
+
+  /* The top row, in segments as the board of the game has it: the gear, the level, the bars of the experience and of the fuel, the currencies. */
+  .hud-main {
+    @apply flex min-h-[58px] items-center gap-2 px-2.5 py-1.5;
+  }
+
+  .hud-gear {
+    @apply flex h-9 w-9 flex-none items-center justify-center no-underline;
+    color: var(--color-muted);
+    background: linear-gradient(var(--skin-plate-top), var(--skin-plate-bottom));
+    border: 1px solid var(--skin-edge-hi);
+    border-bottom-width: 3px;
+    border-bottom-color: var(--skin-well);
+    border-radius: 6px;
+  }
+
+  .hud-gear:hover,
+  .hud-gear:focus-visible {
+    color: var(--color-amber);
+    border-color: var(--color-amber);
+    border-bottom-color: var(--skin-well);
+  }
+
+  .hud-meters {
+    @apply flex min-w-0 flex-1 flex-col gap-1;
+  }
+
+  .hud-line {
+    @apply flex justify-end font-mono text-[11px] leading-none text-muted;
+    margin-bottom: 3px;
+  }
+
+  .hud-fuel {
+    @apply flex items-center gap-1.5;
+  }
+
+  .hud-fuelbar {
+    @apply flex-1;
+  }
+
+  .hud-fuelbar > i {
+    @apply h-2;
+  }
+
+  /* Green, as the plus beside it: the tank on the screen of the fuel is cyan, and this rule has to win over it. */
+  .fuelbar.hud-fuelbar > i.on {
+    background: var(--color-ok);
+  }
+
+  /* The tile that leads to the tank, slanted as the bars are: green, as the fuel is. */
+  .hud-plus {
+    @apply flex h-[22px] w-[30px] flex-none items-center justify-center font-display text-[20px] font-bold leading-none no-underline;
+    color: var(--color-bg);
+    background: linear-gradient(color-mix(in srgb, var(--color-ok) 70%, white), color-mix(in srgb, var(--color-ok) 85%, black));
+    border-bottom: 3px solid color-mix(in srgb, var(--color-ok) 55%, black);
+    clip-path: polygon(18% 0, 100% 0, 82% 100%, 0 100%);
+  }
+
+  .hud-plus:hover,
+  .hud-plus:focus-visible {
+    @apply brightness-110;
+  }
+
+  .hud-money {
+    @apply flex flex-none flex-col items-end gap-1;
+  }
+
+  /* The strip under the bars: the car that is played, with its tier, and the time of the game. */
+  .hud-car {
+    @apply flex min-h-[26px] items-center gap-2 px-3 text-xs;
+    background: color-mix(in srgb, var(--skin-well) 78%, transparent);
+    border-top: 1px solid var(--skin-well);
+  }
+
+  .hud-car-name {
+    @apply min-w-0 truncate font-display text-[15px] font-bold uppercase italic text-ink;
+    letter-spacing: 0.04em;
+  }
+
+  .hud-car-kind {
+    @apply hidden truncate font-mono text-[10.5px] uppercase text-faint min-[400px]:inline;
+    letter-spacing: 0.08em;
+  }
+
+  .hud-clock {
+    @apply ml-auto flex-none whitespace-nowrap font-mono text-[11px] text-muted;
   }
 
   .lvl {
-    @apply flex h-[54px] w-[50px] flex-none flex-col items-center justify-center font-display font-bold;
+    @apply flex h-[50px] w-[46px] flex-none flex-col items-center justify-center font-display font-bold;
     line-height: 1;
     clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
-    background: linear-gradient(#ffd66a, #e58f00);
-    color: #2a1800;
+    background: linear-gradient(var(--skin-amber-top), var(--skin-amber-bottom));
+    color: var(--color-amber-ink);
   }
 
   .lvl small {
@@ -279,14 +403,14 @@ body {
 
   .lvl strong {
     @apply text-[21px];
-    color: #2a1800;
+    color: var(--color-amber-ink);
   }
 
   /* ---------- the goal of the tutorial, under the HUD ---------- */
   .goal {
     @apply flex flex-col gap-1.5 rounded-lg px-3 py-2.5;
-    background: linear-gradient(#232a34, #181d25);
-    border: 1px solid #3a4252;
+    background: linear-gradient(var(--skin-chip-top), var(--skin-chip-bottom));
+    border: 1px solid var(--skin-edge-hi);
     border-left: 4px solid var(--color-amber);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
   }
@@ -314,7 +438,7 @@ body {
 
   .goal-dots i {
     @apply h-1.5 w-3.5 rounded-sm;
-    background: #07080b;
+    background: var(--skin-well);
   }
 
   .goal-dots i.on {
@@ -349,28 +473,28 @@ body {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: radial-gradient(circle at 35% 30%, #ffeaa6, #e39400 70%);
-    box-shadow: 0 0 0 1px #6a4300;
+    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--color-amber) 40%, white), color-mix(in srgb, var(--color-amber) 88%, black) 70%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-amber) 40%, black);
   }
 
   /** A bar with cells, for XP, fuel and the progress of a job. */
   .bar {
     @apply relative h-2.5 overflow-hidden;
-    background: #07080b;
+    background: var(--skin-well);
     border-radius: 2px;
     box-shadow:
       inset 0 1px 3px #000,
-      0 0 0 1px #2e3542;
+      0 0 0 1px var(--color-line);
   }
 
   .bar > i {
     @apply block h-full;
-    background: linear-gradient(#ffd66e, #f29a00);
+    background: linear-gradient(var(--skin-amber-top), var(--skin-amber-bottom));
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
   }
 
   .bar-cy > i {
-    background: linear-gradient(#8fe9ff, #19a8cc);
+    background: linear-gradient(color-mix(in srgb, var(--color-cyan) 60%, white), color-mix(in srgb, var(--color-cyan) 82%, black));
   }
 
   /** A bar of what is wrong: the condition of a part that is unserviceable. */
@@ -407,8 +531,8 @@ body {
 
   .navb {
     @apply sticky bottom-0 z-10 flex;
-    background: linear-gradient(#242b36, #11151b);
-    border-top: 3px solid #3a4252;
+    background: linear-gradient(var(--skin-bar-top), var(--skin-bar-bottom));
+    border-top: 3px solid var(--skin-edge-hi);
     box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.5);
   }
 
@@ -419,19 +543,19 @@ body {
   }
 
   .navb a.on {
-    color: #ffc94a;
-    background: linear-gradient(#2b323f, #1a1f27);
-    box-shadow: inset 0 3px 0 #ffb224;
+    color: var(--skin-amber-text);
+    background: linear-gradient(var(--skin-plate-top), var(--skin-plate-bottom));
+    box-shadow: inset 0 3px 0 var(--color-amber);
   }
 
   .navb a.on svg {
-    filter: drop-shadow(0 0 6px rgba(255, 178, 36, 0.75));
+    filter: drop-shadow(0 0 6px var(--skin-amber-glow));
   }
 
   /* The line under the label that tells of the lap in progress: there in every tab, empty in all but the race, so that the icons stand level. */
   .navb-sub {
     @apply -mt-0.5 block min-h-[11px] whitespace-nowrap text-[9.5px] normal-case leading-[11px];
-    color: #ffc94a;
+    color: var(--skin-amber-text);
     letter-spacing: 0;
     font-variant-numeric: tabular-nums;
   }
@@ -441,34 +565,34 @@ body {
     @apply grid gap-1 p-1;
     grid-auto-flow: column;
     grid-auto-columns: 1fr;
-    background: #090b0f;
-    border: 1px solid #333b49;
+    background: var(--skin-well);
+    border: 1px solid var(--skin-edge);
     border-radius: 8px;
     box-shadow: inset 0 2px 4px #000;
   }
 
   .seg a {
     @apply flex min-h-11 items-center justify-center text-[13px] font-semibold no-underline;
-    background: linear-gradient(#272e3a, #181d25);
-    border: 1px solid #3a4252;
+    background: linear-gradient(var(--skin-plate-top), var(--skin-plate-bottom));
+    border: 1px solid var(--skin-edge-hi);
     border-bottom-width: 3px;
     border-radius: 6px;
-    color: #aeb5c2;
+    color: var(--color-r1);
   }
 
   .seg a.on {
-    background: linear-gradient(#ffd35e, #f5a010);
-    border-color: #a35f00;
-    color: #2a1800;
+    background: linear-gradient(var(--skin-amber-top), var(--skin-amber-bottom));
+    border-color: var(--skin-amber-edge);
+    color: var(--color-amber-ink);
   }
 
   /* ---------- the board of a race: a row for each racer ---------- */
   .lb {
     @apply flex flex-col overflow-hidden;
-    background: #0c0f14;
-    border: 1px solid #333b49;
+    background: var(--skin-page);
+    border: 1px solid var(--skin-edge);
     border-radius: 12px;
-    box-shadow: 0 3px 0 #06070a;
+    box-shadow: 0 3px 0 var(--skin-shadow);
   }
 
   .lbr {
@@ -526,12 +650,12 @@ body {
   .tile {
     @apply flex min-h-20 flex-col gap-[3px] p-[9px_10px] text-left text-xs text-ink;
     line-height: 1.25;
-    background: linear-gradient(#1e232c, #12161c);
-    border: 1px solid #38414f;
+    background: linear-gradient(var(--skin-panel-top), var(--skin-panel-bottom));
+    border: 1px solid var(--skin-edge-hi);
     border-radius: 8px;
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.06),
-      0 3px 0 #06070a;
+      0 3px 0 var(--skin-shadow);
   }
 
   .tile .sl {
@@ -548,11 +672,11 @@ body {
   }
 
   .tile.on {
-    border-color: #3fa55e;
+    border-color: color-mix(in srgb, var(--color-ok) 70%, black);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.06),
-      0 3px 0 #06070a,
-      0 0 12px rgba(106, 212, 135, 0.22);
+      0 3px 0 var(--skin-shadow),
+      0 0 12px color-mix(in srgb, var(--color-ok) 22%, transparent);
   }
 
   .tile.r2 {
@@ -607,6 +731,205 @@ body {
 
   .pips > b.on {
     background: currentColor;
+  }
+
+  /* ---------- the showroom: a car on its stage, the card of its specification, a strip of cars ---------- */
+  /* The stage is a studio of the colour of the surfaces. The pictures that come with the app and those of a pack have a dark ground of their own, so the car is
+     faded into the stage by a soft mask and not cut out of it. */
+  .stage {
+    @apply relative isolate overflow-hidden;
+    aspect-ratio: 3 / 2;
+    border: 1px solid var(--skin-edge);
+    border-radius: 12px;
+    background:
+      radial-gradient(62% 52% at 50% 64%, var(--stage-lit), transparent 74%),
+      linear-gradient(var(--stage-top), var(--stage-bottom));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 3px 0 var(--skin-shadow);
+  }
+
+  /* The floor under the car. */
+  .stage::before {
+    content: '';
+    position: absolute;
+    z-index: 0;
+    left: 12%;
+    right: 12%;
+    bottom: 7%;
+    height: 17%;
+    background: radial-gradient(closest-side, var(--stage-floor), transparent);
+  }
+
+  /* The name of the car, drawn in outline behind it. */
+  .stage-name {
+    @apply pointer-events-none absolute z-0 font-display font-bold uppercase italic;
+    top: 10px;
+    left: 14px;
+    right: 14px;
+    font-size: clamp(40px, 15.5vw, 70px);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--stage-line);
+    text-wrap: balance;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .stage-car {
+    @apply absolute inset-0 z-[1] h-full w-full object-contain;
+    -webkit-mask-image: radial-gradient(ellipse 60% 58% at 50% 56%, #000 56%, transparent 100%);
+    mask-image: radial-gradient(ellipse 60% 58% at 50% 56%, #000 56%, transparent 100%);
+  }
+
+  /* A car that has no picture: the outline of a body, on the floor. */
+  .stage-empty {
+    @apply absolute inset-0 z-[1] flex items-end justify-center pb-[12%];
+    color: var(--stage-line);
+  }
+
+  .stage-empty svg {
+    width: 66%;
+    height: auto;
+    opacity: 0.55;
+  }
+
+  /* What stands on the stage besides the car: the level, the state. */
+  .stage-tags {
+    @apply absolute z-[2] flex flex-wrap gap-1.5;
+    left: 10px;
+    bottom: 10px;
+  }
+
+  .stage-price {
+    @apply absolute z-[2];
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .stage-sm {
+    aspect-ratio: 16 / 9;
+  }
+
+  .stage-sm .stage-name {
+    top: 8px;
+    font-size: clamp(26px, 9.5vw, 42px);
+    -webkit-line-clamp: 1;
+  }
+
+  /* The tier of the car, as a plate on its card. */
+  .tier {
+    @apply inline-flex h-7 flex-none items-center px-2.5 font-display text-lg font-bold uppercase italic;
+    letter-spacing: 0.06em;
+    color: var(--color-amber-ink);
+    background: linear-gradient(var(--skin-amber-top), var(--skin-amber-bottom));
+    border-bottom: 3px solid var(--skin-amber-edge);
+    border-radius: 3px;
+    transform: skewX(-10deg);
+  }
+
+  /* The plate in the strip of the bar at the top: blue, smaller, as the tier of the board of the game. */
+  .tier-cy {
+    @apply h-[18px] px-1.5 text-[13px];
+    color: var(--color-cyan-bg);
+    background: linear-gradient(color-mix(in srgb, var(--color-cyan) 70%, white), color-mix(in srgb, var(--color-cyan) 88%, black));
+    border-bottom-width: 2px;
+    border-bottom-color: color-mix(in srgb, var(--color-cyan) 55%, black);
+  }
+
+  /* The overall score: the number the whole card is for. */
+  .score {
+    @apply flex flex-col items-end;
+    line-height: 1;
+  }
+
+  .score small {
+    @apply font-mono text-[10px] uppercase text-faint;
+    letter-spacing: 0.12em;
+  }
+
+  .score b {
+    @apply font-display text-[46px] font-bold italic text-amber;
+    margin-top: 3px;
+    text-shadow: 0 2px 0 #000;
+  }
+
+  /* The strip of cars under a stage: they are chosen by a tap, and a strip longer than the screen is swiped. */
+  .rail {
+    @apply flex gap-2 overflow-x-auto;
+    scroll-snap-type: x proximity;
+    padding: 2px 2px 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .thumb {
+    @apply relative flex-none cursor-pointer overflow-hidden p-0 text-left;
+    flex-basis: 124px;
+    scroll-snap-align: start;
+    color: var(--color-ink);
+    background: linear-gradient(var(--skin-panel-top), var(--skin-panel-bottom));
+    border: 1px solid var(--skin-edge-hi);
+    border-radius: 8px;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 3px 0 var(--skin-shadow);
+  }
+
+  .thumb.on {
+    border-color: var(--color-amber);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--color-amber) 25%, transparent),
+      0 0 0 1px var(--skin-amber-glow),
+      0 3px 0 var(--skin-shadow);
+  }
+
+  .thumb:focus-visible {
+    outline: 2px solid var(--color-amber);
+    outline-offset: 2px;
+  }
+
+  .thumb-pic {
+    @apply relative block overflow-hidden;
+    aspect-ratio: 3 / 2;
+    background: linear-gradient(var(--stage-top), var(--stage-bottom));
+  }
+
+  .thumb-pic img {
+    @apply absolute inset-0 h-full w-full object-contain;
+    -webkit-mask-image: radial-gradient(ellipse 62% 60% at 50% 56%, #000 54%, transparent 100%);
+    mask-image: radial-gradient(ellipse 62% 60% at 50% 56%, #000 54%, transparent 100%);
+  }
+
+  .thumb-body {
+    @apply flex flex-col gap-0.5 px-2 py-1.5;
+  }
+
+  .thumb-name {
+    @apply truncate text-[13px] font-semibold;
+  }
+
+  .thumb-meta {
+    @apply truncate font-mono text-[11px] text-faint;
+  }
+
+  .thumb-tag {
+    @apply absolute left-1.5 top-1.5 z-[2] rounded-sm px-1.5 font-mono text-[10px] font-bold uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-amber-ink);
+    background: var(--color-amber);
+  }
+
+  /** The gem before the premium coins of the HUD. */
+  .chip-gem::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 14px;
+    height: 15px;
+    clip-path: polygon(50% 0, 100% 38%, 50% 100%, 0 38%);
+    background: linear-gradient(135deg, color-mix(in srgb, var(--color-cyan) 55%, white), color-mix(in srgb, var(--color-cyan) 80%, black));
   }
 
   /* ---------- the tutorial: the mentor writes from an old touch phone ---------- */
@@ -828,4 +1151,10 @@ body {
 /* What the tutorial points at is scrolled to under the HUD and under the button that skips, and above the phone. */
 [data-tutorial] {
   scroll-margin-top: 132px;
+}
+
+/* The places that the gear and the plus of the bar at the top lead to are scrolled to under it. */
+#fuel,
+#account {
+  scroll-margin-top: 120px;
 }

@@ -55,6 +55,17 @@ describe('ExchangeView', () => {
     expect(first.get('[data-test="buy"]').text()).toBe('Buy')
   })
 
+  it('puts each car on a small stage, with the plate of its tier', async () => {
+    serve({ 'GET /api/v1/market': () => respond(200, aMarket()), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(ExchangeView, '/exchange')
+    await flushPromises()
+
+    const first = wrapper.get('[data-test="listing-0"]')
+    expect(first.get('[data-test="stage"] .stage-name').text()).toBe('Rdzak GT-3')
+    expect(first.get('[data-test="tier"]').text()).toBe('T2')
+  })
+
   it('does not show the condition of a car that was not inspected: its bar is dashed', async () => {
     serve({ 'GET /api/v1/market': () => respond(200, aMarket()), 'GET /api/v1/runs/current': noRun })
 

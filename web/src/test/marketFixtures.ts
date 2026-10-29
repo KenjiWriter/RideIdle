@@ -3,7 +3,7 @@ import type { DealerOffer, ExchangeListing, MarketResponse, MarketVehicle, Stora
 import { NOW } from './garageFixtures'
 
 export function aVehicle(overrides: Partial<MarketVehicle> = {}): MarketVehicle {
-  return { slug: 'rdzak-gt-3', name: 'Rdzak GT-3', class: 'hatchback', drivetrain: 'fwd', engine: 'R4 1.6', power_kw: 86, top_speed_kmh: 168, mass_kg: 960, ...overrides }
+  return { slug: 'rdzak-gt-3', name: 'Rdzak GT-3', class: 'hatchback', tier: 2, drivetrain: 'fwd', engine: 'R4 1.6', power_kw: 86, top_speed_kmh: 168, mass_kg: 960, ...overrides }
 }
 
 /** A car of the exchange that nobody has inspected: the Rdzak GT-3 of the board of the exchange, $3 620. */

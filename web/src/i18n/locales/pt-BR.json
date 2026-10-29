@@ -99,7 +99,10 @@
     "speed": "{value} km/h",
     "weight": "{value} kg",
     "liters": "{value} l",
-    "xp": "{value} XP"
+    "xp": "{value} XP",
+    "score": "Pontuação geral",
+    "tier": "T{tier}",
+    "tierTitle": "Nível do carro: {tier}"
   },
   "run": {
     "laps": "{n} volta | {n} voltas",
@@ -583,7 +586,11 @@
   "hud": {
     "level": "LV",
     "progress": "{into} / {needed} XP",
-    "xp": "Experiência neste nível"
+    "xp": "Experiência neste nível",
+    "coins": "RideCoin: {count}",
+    "settings": "Conta e configurações",
+    "refuel": "Abastecer",
+    "fuel": "Combustível: {percent}%"
   },
   "onboarding": {
     "step": "Etapa {step} de {total}"
@@ -847,7 +854,9 @@
       "last_car": "Seu último carro fica com você.",
       "busy": "Ele está na estrada ou tem serviço na oficina."
     },
-    "xpNote": "Só o carro que você joga dá XP a você. Os outros rendem dinheiro e sobem de nível sozinhos."
+    "xpNote": "Só o carro que você joga dá XP a você. Os outros rendem dinheiro e sobem de nível sozinhos.",
+    "cars": "Seus carros",
+    "value": "Vale {price}"
   },
   "market": {
     "tabs": "Serviços da cidade",

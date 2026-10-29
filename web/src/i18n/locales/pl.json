@@ -99,7 +99,10 @@
     "speed": "{value} km/h",
     "weight": "{value} kg",
     "liters": "{value} l",
-    "xp": "{value} XP"
+    "xp": "{value} XP",
+    "score": "Wynik ogólny",
+    "tier": "T{tier}",
+    "tierTitle": "Tier auta: {tier}"
   },
   "run": {
     "laps": "{n} okrążenie | {n} okrążenia | {n} okrążeń",
@@ -583,7 +586,11 @@
   "hud": {
     "level": "LV",
     "progress": "{into} / {needed} XP",
-    "xp": "Doświadczenie na tym poziomie"
+    "xp": "Doświadczenie na tym poziomie",
+    "coins": "RideCoin: {count}",
+    "settings": "Konto i ustawienia",
+    "refuel": "Zatankuj",
+    "fuel": "Paliwo: {percent}%"
   },
   "onboarding": {
     "step": "Krok {step} z {total}"
@@ -847,7 +854,9 @@
       "last_car": "Ostatnie auto zostaje z Tobą.",
       "busy": "Auto jest w drodze albo ma zlecenie w warsztacie."
     },
-    "xpNote": "XP dostajesz tylko za auto, którym grasz. Pozostałe zarabiają i same awansują."
+    "xpNote": "XP dostajesz tylko za auto, którym grasz. Pozostałe zarabiają i same awansują.",
+    "cars": "Twoje auta",
+    "value": "Wartość {price}"
   },
   "market": {
     "tabs": "Usługi miasta",

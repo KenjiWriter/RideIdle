@@ -5,7 +5,7 @@ import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { NOW } from '@/test/garageFixtures'
 import { respond, serveApi } from '@/test/fetchServer'
-import { aMarket } from '@/test/marketFixtures'
+import { aMarket, anOffer, aVehicle } from '@/test/marketFixtures'
 import { mountView } from '@/test/mountView'
 
 import DealerView from './DealerView.vue'
@@ -48,6 +48,28 @@ describe('DealerView', () => {
     expect(offer.get('[data-test="mass"]').text()).toBe('880 kg')
     expect(offer.text()).toContain('Mileage 0–15 km · condition 100% · no hidden defects')
     expect(offer.get('[data-test="buy"]').text()).toBe('Buy')
+  })
+
+  it('puts each car on a small stage, with the plate of its tier and the picture the pack gives it', async () => {
+    const offers = [
+      anOffer({ vehicle: aVehicle({ slug: 'rdzak-gt-2', name: 'Rdzak GT-2', tier: 1, image_url: '/api/v1/media/aaaaaaaa.png' }) }),
+      anOffer({ vehicle: aVehicle({ slug: 'zubr-v8', name: 'Zubr V8', tier: 5 }) }),
+    ]
+    serve({ 'GET /api/v1/market': () => respond(200, aMarket({ dealer: offers })), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(DealerView, '/dealer')
+    await flushPromises()
+
+    const first = wrapper.get('[data-test="offer-rdzak-gt-2"]')
+    expect(first.get('[data-test="stage"] .stage-name').text()).toBe('Rdzak GT-2')
+    expect(first.get('[data-test="stage"] [data-test="picture"]').attributes('src')).toBe('/api/v1/media/aaaaaaaa.png')
+    expect(first.get('[data-test="tier"]').text()).toBe('T1')
+
+    // A car with no picture of its own stands on the stage as the outline of a body.
+    const second = wrapper.get('[data-test="offer-zubr-v8"]')
+    expect(second.get('[data-test="tier"]').text()).toBe('T5')
+    expect(second.find('[data-test="stage"] [data-test="picture"]').exists()).toBe(false)
+    expect(second.find('[data-test="stage"] [data-test="picture-empty"]').exists()).toBe(true)
   })
 
   it('says what level a car asks for, and does not let the driver buy it', async () => {

@@ -1,26 +1,29 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import type { CarStatKey } from '@/api/types'
 import AccountData from '@/components/AccountData.vue'
 import AccountAway from '@/components/AccountAway.vue'
 import AwaySummary from '@/components/AwaySummary.vue'
+import CarStage from '@/components/CarStage.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
 import GarageTabs from '@/components/GarageTabs.vue'
 import GameShell from '@/components/GameShell.vue'
 import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
 import LinkAccountDialog from '@/components/LinkAccountDialog.vue'
 import LinkedAccounts from '@/components/LinkedAccounts.vue'
-import MediaPicture from '@/components/MediaPicture.vue'
 import RarityMark from '@/components/RarityMark.vue'
 import UpgradeMark from '@/components/UpgradeMark.vue'
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RunAlerts from '@/components/RunAlerts.vue'
+import SpecCard from '@/components/SpecCard.vue'
 import { carPicture } from '@/features/art'
 import { useServiceLine } from '@/features/car/serviceLine'
+import { overallScore } from '@/features/car/score'
 import { statFill } from '@/features/car/statFill'
+import { useCarClass } from '@/features/car/useCarClass'
 import { baseLapMs, baseRewardCents } from '@/features/run/laps'
 import { useFlash } from '@/features/run/useFlash'
 import { useRunStatus } from '@/features/run/useRunStatus'
@@ -38,6 +41,7 @@ import { useTutorialStore } from '@/stores/tutorial'
 
 const { t } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const session = useSessionStore()
 const run = useRunStore()
 const away = useAwayStore()
@@ -45,6 +49,7 @@ const garage = useGarageStore()
 const tutorial = useTutorialStore()
 const { money, number } = useFormat()
 const { serviceLine } = useServiceLine()
+const { className } = useCarClass()
 
 useLeaveOnSignOut()
 useRunPolling()
@@ -76,12 +81,26 @@ async function open(): Promise<void> {
 
     // Nor is the summary of the rest of the account: what the other cars did while the driver was away.
     await away.load().catch(() => undefined)
+
+    await scrollToHash()
   } catch (failure) {
     if (!endSessionIfUnauthorized(failure)) {
       loadError.value = true
     }
   }
 }
+
+/** The gear and the plus of the bar at the top lead to the account and to the tank of this screen: they are scrolled to once the screen has what it shows. */
+async function scrollToHash(): Promise<void> {
+  if (route.hash === '') {
+    return
+  }
+
+  await nextTick()
+  document.getElementById(route.hash.slice(1))?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+}
+
+watch(() => route.hash, scrollToHash)
 
 onMounted(open)
 
@@ -122,6 +141,9 @@ const xpNeeded = computed(() => (car.value && car.value.xp.next_level_at !== nul
 const xpFill = computed(() => (xpNeeded.value ? Math.min(100, Math.round((xpInto.value / xpNeeded.value) * 100)) : 100))
 /** The statistics that the screens show, in the order of the model of the game, and what a slot is to the formulas. */
 const { stats: STATS, roleOf } = useModel()
+
+/** How good the car is as a whole, for the card of its specification. */
+const score = computed(() => overallScore(car.value, STATS.value))
 
 /** The top speed the gearbox on the car allows, in km/h, or null when there is no gearbox with a limit on it. The gearbox is the slot with the role, whatever it is called. */
 const gearboxLimit = computed(() => car.value?.slots.find((slot) => (slot.role ?? roleOf(slot.slot)) === 'gearbox')?.part?.stats.top_speed_cap_kmh ?? null)
@@ -191,44 +213,61 @@ async function useCode(): Promise<void> {
       <AccountAway v-if="away.visible && away.summary" :summary="away.summary" @dismiss="away.dismiss().catch(() => undefined)" />
 
       <section class="flex flex-col gap-3" aria-labelledby="run-title" data-test="run">
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0">
-            <h1 id="run-title" class="ttl" data-test="car">{{ run.run.car.name }}</h1>
-            <p class="sub mt-1" data-test="track">{{ run.run.track.name }}</p>
-          </div>
-          <div class="flex flex-none flex-col items-end gap-1.5">
-            <span v-if="car" class="chip chip-am" data-test="car-level">{{ t('garage.carLevel', { level: car.level }) }}</span>
-            <span class="chip" :class="chipClass" data-test="status">
-              {{ t(`run.status.${statusKey}`) }}
-            </span>
-          </div>
-        </div>
+        <!-- The car on its stage, as the showroom of the canvas has it: the name in outline behind it, the level and the state of the run on the floor. -->
+        <CarStage :name="run.run.car.name" :src="pictureUrl" :fallback="carPicture(run.run.car.slug)">
+          <span v-if="car" class="chip chip-am" data-test="car-level">{{ t('garage.carLevel', { level: car.level }) }}</span>
+          <span class="chip" :class="chipClass" data-test="status">
+            {{ t(`run.status.${statusKey}`) }}
+          </span>
+        </CarStage>
 
-        <!-- The experience of the car, and what is left to the next level, as the board of the garage has it. -->
-        <div v-if="car" data-test="car-xp">
-          <div class="mb-1 flex justify-between text-xs text-muted">
-            <span>{{ t('garage.carXp') }}</span>
-            <span class="mono text-ink" data-test="car-xp-value">
-              {{ xpNeeded === null ? t('garage.carXpMax') : `${number(xpInto)} / ${number(xpNeeded)}` }}
-            </span>
-          </div>
-          <div class="bar" role="progressbar" :aria-label="t('garage.carXp')" :aria-valuenow="xpFill" aria-valuemin="0" aria-valuemax="100"><i :style="{ width: `${xpFill}%` }" /></div>
-          <p v-if="car.tier_unlock" class="sub mt-1" data-test="tier-unlock">{{ t('garage.nextTier', { level: car.tier_unlock.level, tier: car.tier_unlock.tier }) }}</p>
-        </div>
+        <SpecCard :name="run.run.car.name" :kicker="className(car?.vehicle.class)" :tier="car?.vehicle.tier ?? null" :score="car ? score : null" level="h1" heading-id="run-title">
+          <p class="sub -mt-1" data-test="track">{{ run.run.track.name }}</p>
 
-        <div v-if="pictureUrl || carPicture(run.run.car.slug)" class="card flex items-stretch overflow-hidden !p-0" data-test="picture">
-          <MediaPicture :src="pictureUrl" :fallback="carPicture(run.run.car.slug)" :alt="run.run.car.name" class="h-[86px] w-[130px] flex-none object-cover" />
-          <div class="flex min-w-0 flex-col justify-center gap-1.5 px-3 py-2">
-            <div class="flex flex-wrap gap-1.5">
-              <span v-if="car?.vehicle.drivetrain" class="tag tag-am" data-test="drivetrain">{{ car.vehicle.drivetrain.toUpperCase() }}</span>
-              <span v-if="car?.vehicle.engine" class="chip h-6">{{ car.vehicle.engine }}</span>
-              <span v-if="car?.vehicle.power_kw" class="chip h-6">{{ t('car.power', { value: car.vehicle.power_kw }) }}</span>
+          <!-- The experience of the car, and what is left to the next level, as the board of the garage has it. -->
+          <div v-if="car" data-test="car-xp">
+            <div class="mb-1 flex justify-between text-xs text-muted">
+              <span>{{ t('garage.carXp') }}</span>
+              <span class="mono text-ink" data-test="car-xp-value">
+                {{ xpNeeded === null ? t('garage.carXpMax') : `${number(xpInto)} / ${number(xpNeeded)}` }}
+              </span>
             </div>
-            <p class="text-xs text-muted">
-              {{ t('run.stat.lapTime') }} <b class="mono text-ink" data-test="lap-time">{{ formatLapTime(baseLapMs(run.run)) }}</b>
-            </p>
+            <div class="bar" role="progressbar" :aria-label="t('garage.carXp')" :aria-valuenow="xpFill" aria-valuemin="0" aria-valuemax="100"><i :style="{ width: `${xpFill}%` }" /></div>
+            <p v-if="car.tier_unlock" class="sub mt-1" data-test="tier-unlock">{{ t('garage.nextTier', { level: car.tier_unlock.level, tier: car.tier_unlock.tier }) }}</p>
           </div>
-        </div>
+
+          <div class="flex flex-wrap items-center gap-1.5">
+            <span v-if="car?.vehicle.drivetrain" class="tag tag-am" data-test="drivetrain">{{ car.vehicle.drivetrain.toUpperCase() }}</span>
+            <span v-if="car?.vehicle.engine" class="chip h-6">{{ car.vehicle.engine }}</span>
+            <span v-if="car?.vehicle.power_kw" class="chip h-6">{{ t('car.power', { value: car.vehicle.power_kw }) }}</span>
+            <span class="ml-auto text-xs text-muted">
+              {{ t('run.stat.lapTime') }} <b class="mono text-ink" data-test="lap-time">{{ formatLapTime(baseLapMs(run.run)) }}</b>
+            </span>
+          </div>
+
+          <section v-if="car" class="flex flex-col gap-1" :aria-label="t('workshop.stats')" data-test="stats">
+            <div v-for="stat in STATS" :key="stat" class="st" :data-test="`stat-${stat}`">
+              <span>{{ t(`carStat.${stat}`) }}</span>
+              <div class="bar"><i :style="{ width: `${statFill(car, stat)}%` }" /></div>
+              <span>
+                {{ number(car.stats[stat], 0) }}
+                <em v-if="delta(stat) !== 0" :class="{ dn: delta(stat) < 0 }" :data-test="`delta-${stat}`">{{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 0) }}</em>
+              </span>
+            </div>
+            <!-- The limit of the gearbox, when it has one, and the way to the screen of the technical state of the car. -->
+            <div class="mt-1 flex items-center justify-between gap-3 text-xs">
+              <span v-if="gearboxLimit !== null" class="text-faint" data-test="gearbox-limit">{{ t('garage.gearboxLimit', { speed: number(gearboxLimit) }) }}</span>
+              <RouterLink :to="{ name: 'condition' }" class="-my-3 ml-auto py-3 text-amber no-underline" data-test="condition-link">
+                {{ t('garage.conditionLink', { percent: car.parts_condition_percent }) }}
+              </RouterLink>
+            </div>
+            <!-- The odometer and the service of the car: the place to see that it is due is here, the place to do it is the workshop. -->
+            <p class="sub mt-1" data-test="upkeep">
+              {{ t('workshop.mileage', { km: number(car.mileage_km) }) }} ·
+              <span :class="{ 'text-danger': car.service.due_in_km < 0 }" data-test="upkeep-service">{{ serviceLine(car.service) }}</span>
+            </p>
+          </section>
+        </SpecCard>
 
         <dl class="grid grid-cols-3 gap-2" data-test="run-stats">
           <div class="card !p-2.5" data-tutorial="laps">
@@ -246,29 +285,6 @@ async function useCode(): Promise<void> {
         </dl>
 
         <RunAlerts :run="run.run" />
-      </section>
-
-      <section v-if="car" class="flex flex-col gap-1" :aria-label="t('workshop.stats')" data-test="stats">
-        <div v-for="stat in STATS" :key="stat" class="st" :data-test="`stat-${stat}`">
-          <span>{{ t(`carStat.${stat}`) }}</span>
-          <div class="bar"><i :style="{ width: `${statFill(car, stat)}%` }" /></div>
-          <span>
-            {{ number(car.stats[stat], 0) }}
-            <em v-if="delta(stat) !== 0" :class="{ dn: delta(stat) < 0 }" :data-test="`delta-${stat}`">{{ delta(stat) > 0 ? '+' : '−' }}{{ number(Math.abs(delta(stat)), 0) }}</em>
-          </span>
-        </div>
-        <!-- The limit of the gearbox, when it has one, and the way to the screen of the technical state of the car. -->
-        <div class="mt-1 flex items-center justify-between gap-3 text-xs">
-          <span v-if="gearboxLimit !== null" class="text-faint" data-test="gearbox-limit">{{ t('garage.gearboxLimit', { speed: number(gearboxLimit) }) }}</span>
-          <RouterLink :to="{ name: 'condition' }" class="-my-3 ml-auto py-3 text-amber no-underline" data-test="condition-link">
-            {{ t('garage.conditionLink', { percent: car.parts_condition_percent }) }}
-          </RouterLink>
-        </div>
-        <!-- The odometer and the service of the car: the place to see that it is due is here, the place to do it is the workshop. -->
-        <p class="sub mt-1" data-test="upkeep">
-          {{ t('workshop.mileage', { km: number(car.mileage_km) }) }} ·
-          <span :class="{ 'text-danger': car.service.due_in_km < 0 }" data-test="upkeep-service">{{ serviceLine(car.service) }}</span>
-        </p>
       </section>
 
       <section v-if="car" class="grid grid-cols-3 gap-2" :aria-label="t('workshop.slots')" data-test="slots">
@@ -295,11 +311,14 @@ async function useCode(): Promise<void> {
       <FuelGauge :run="run.run" />
     </template>
 
-    <RecoveryPanel v-if="session.me?.is_guest" ref="recoveryPanel" />
+    <!-- The account: the code that brings the garage back, the accounts it is linked to, and the data of the driver. The gear of the bar at the top leads here. -->
+    <div id="account" class="flex flex-col gap-3" data-test="account">
+      <RecoveryPanel v-if="session.me?.is_guest" ref="recoveryPanel" />
 
-    <LinkedAccounts />
+      <LinkedAccounts />
 
-    <AccountData />
+      <AccountData />
+    </div>
 
     <LinkAccountDialog v-if="linkOpen && offerLinking" @later="later" @recovery="useCode" />
 

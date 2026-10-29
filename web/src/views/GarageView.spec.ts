@@ -823,6 +823,62 @@ describe('GarageView', () => {
       expect(wrapper.get('[data-test="car-xp"] [role="progressbar"]').attributes('aria-valuenow')).toBe('68')
     })
 
+    it('stands on a stage: the name in outline, the level and the state of the run on the floor', async () => {
+      const { mounted } = openWithCar()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      const stage = wrapper.get('[data-test="stage"]')
+      expect(stage.get('.stage-name').text()).toBe('Rdzak GT-4')
+      expect(stage.get('[data-test="car-level"]').text()).toBe('Car LV 3')
+      expect(stage.get('[data-test="status"]').text()).toBe('Racing')
+      // The car of the app has a picture of its own, which is the one on the stage.
+      expect(stage.get('[data-test="picture"]').attributes('alt')).toBe('Rdzak GT-4')
+    })
+
+    it('shows the picture the pack gives the car in place of the one the app brings, and the outline of a body for a car with none', async () => {
+      const { mounted } = openWithCar(aCar(), { car: { slug: 'rdzak-gt-4', name: 'Rdzak GT-4', image_url: '/api/v1/media/aaaaaaaa.png' } })
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="stage"] [data-test="picture"]').attributes('src')).toBe('/api/v1/media/aaaaaaaa.png')
+
+      const none = openWithCar(aCar({ vehicle: { ...aCar().vehicle, slug: 'zubr-v8', name: 'Zubr V8' } }), { car: { slug: 'zubr-v8', name: 'Zubr V8', image_url: null } })
+      const bare = await none.mounted
+      await flushPromises()
+
+      expect(bare.wrapper.find('[data-test="stage"] [data-test="picture"]').exists()).toBe(false)
+      expect(bare.wrapper.get('[data-test="stage"] [data-test="picture-empty"]').attributes('aria-label')).toBe('Zubr V8')
+    })
+
+    it('has the card of the specification: the kind of the body, the tier, and the overall score of the bars', async () => {
+      const { mounted } = openWithCar()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      const card = wrapper.get('[data-test="spec"]')
+      expect(card.get('[data-test="car-kind"]').text()).toBe('Hatchback')
+      expect(card.get('h1').text()).toBe('Rdzak GT-4')
+      expect(card.get('[data-test="car-tier"]').text()).toBe('T2')
+      // The bars of the fixture are 24%, 39%, 36%, 35%, 36% and 10% full: 30% of a thousand.
+      expect(card.get('[data-test="score"] b').text()).toBe('301')
+      expect(card.get('[data-test="score"] small').text()).toBe('Overall score')
+      // The bars are in the card, and so are the experience and the way to the technical state.
+      expect(card.findAll('.st').length).toBe(6)
+      expect(card.find('[data-test="car-xp"]').exists()).toBe(true)
+      expect(card.find('[data-test="condition-link"]').exists()).toBe(true)
+    })
+
+    it('has no plate and no line for a body that the server does not give a tier and a kind for (an older server)', async () => {
+      const { mounted } = openWithCar(aCar({ vehicle: { slug: 'rdzak-gt-4', name: 'Rdzak GT-4', engine: 'R4 1.8', power_kw: 97, drivetrain: 'fwd' } }))
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="car-tier"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="car-kind"]').exists()).toBe(false)
+      expect(wrapper.get('[data-test="score"] b').text()).toBe('301')
+    })
+
     it('says what the next level that opens parts opens', async () => {
       const { mounted } = openWithCar()
       const { wrapper } = await mounted

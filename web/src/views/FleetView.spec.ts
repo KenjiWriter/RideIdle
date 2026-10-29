@@ -1,4 +1,4 @@
-import { flushPromises } from '@vue/test-utils'
+import { flushPromises, type VueWrapper } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { storeToken } from '@/auth/token'
@@ -13,6 +13,9 @@ import FleetView from './FleetView.vue'
 const fetchMock = vi.fn()
 const serve = (routes: Record<string, () => Response | Promise<Response>>) => serveApi(fetchMock, routes)
 const noRun = () => respond(404, { message: 'No run', code: 'no_run' })
+
+/** Puts the car on the stage, as a tap on its place in the strip does. */
+const focus = (wrapper: Pick<VueWrapper, 'get'>, id: number) => wrapper.get(`[data-test="thumb-${id}"]`).trigger('click')
 
 describe('FleetView', () => {
   beforeEach(async () => {
@@ -30,7 +33,7 @@ describe('FleetView', () => {
     vi.unstubAllGlobals()
   })
 
-  it('lists the cars in the garage of their city, the one the driver plays first, and the free places', async () => {
+  it('puts the car the driver plays on the stage, with the strip of all the cars under it, and the free places of the garages', async () => {
     serve({ 'GET /api/v1/cars': () => respond(200, aFleet()), 'GET /api/v1/runs/current': noRun })
 
     const { wrapper } = await mountView(FleetView, '/garage/fleet')
@@ -40,22 +43,68 @@ describe('FleetView', () => {
     expect(wrapper.get('[data-test="summary"]').text()).toBe('Cars: 2 · Garages: 2')
     expect(wrapper.get('[data-test="garage-zlomowo"] [data-test="garage-title"]').text()).toBe('Złomowo · 1 / 3 places')
 
-    const first = wrapper.get('[data-test="garage-zlomowo"] [data-test="car-5"]')
+    // The car that is played is on the stage, and its card is the only one.
+    expect(wrapper.get('[data-test="stage"] .stage-name').text()).toBe('Rdzak GT-4')
+    expect(wrapper.findAll('article').length).toBe(1)
+
+    const first = wrapper.get('[data-test="car-5"]')
     expect(first.get('[data-test="car-name"]').text()).toBe('Rdzak GT-4')
     expect(first.get('[data-test="car-selected"]').text()).toBe('Selected')
-    expect(first.get('[data-test="car-status"]').text()).toBe('Racing')
+    expect(wrapper.get('[data-test="stage"] [data-test="car-status"]').text()).toBe('Racing')
     expect(first.get('[data-test="car-where"]').text()).toBe('Złomowo · Złomowo Street Sprint')
     expect(first.get('[data-test="car-fuel"]').text()).toBe('31 / 45 l')
     expect(first.get('[data-test="car-laps"]').text()).toBe('Laps: 12')
     // The car the driver plays has no button to play it.
     expect(first.find('[data-test="play"]').exists()).toBe(false)
 
-    const second = wrapper.get('[data-test="garage-kruszyn"] [data-test="car-6"]')
-    expect(second.get('[data-test="car-status"]').text()).toBe('Out of fuel')
+    expect(wrapper.get('[data-test="garage-zlomowo"] [data-test="free-places"]').text()).toBe('Free places: 2')
+  })
+
+  it('has a place in the strip for every car, with where it stands and what it is worth, and marks the one that is played', async () => {
+    serve({ 'GET /api/v1/cars': () => respond(200, aFleet()), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+
+    expect(wrapper.findAll('[data-test="rail"] .thumb').map((thumb) => thumb.get('[data-test="thumb-name"]').text())).toEqual(['Rdzak GT-4', 'Bizon M-2'])
+    expect(wrapper.get('[data-test="thumb-6"]').text()).toContain('Kruszyn')
+    expect(wrapper.get('[data-test="thumb-6"]').text()).toContain('Worth $798')
+    expect(wrapper.get('[data-test="thumb-5"] [data-test="thumb-selected"]').text()).toBe('Selected')
+    expect(wrapper.find('[data-test="thumb-6"] [data-test="thumb-selected"]').exists()).toBe(false)
+    // The car on the stage is the one that is lit, and a reader is told so.
+    expect(wrapper.get('[data-test="thumb-5"]').attributes('aria-pressed')).toBe('true')
+    expect(wrapper.get('[data-test="thumb-6"]').attributes('aria-pressed')).toBe('false')
+  })
+
+  it('puts another car on the stage when it is tapped in the strip, with its state and its buttons', async () => {
+    serve({ 'GET /api/v1/cars': () => respond(200, aFleet()), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+    await focus(wrapper, 6)
+
+    expect(wrapper.get('[data-test="stage"] .stage-name').text()).toBe('Bizon M-2')
+    expect(wrapper.find('[data-test="car-5"]').exists()).toBe(false)
+
+    const second = wrapper.get('[data-test="car-6"]')
+    expect(wrapper.get('[data-test="stage"] [data-test="car-status"]').text()).toBe('Out of fuel')
     expect(second.find('[data-test="car-selected"]').exists()).toBe(false)
     expect(second.get('[data-test="play"]').text()).toBe('Play this car')
+    expect(wrapper.get('[data-test="thumb-6"]').attributes('aria-pressed')).toBe('true')
+  })
 
-    expect(wrapper.get('[data-test="garage-zlomowo"] [data-test="free-places"]').text()).toBe('Free places: 2')
+  it('shows the kind and the tier of the car on its card, and the picture of the pack on the stage and in the strip', async () => {
+    const car = aFleetCar({ vehicle: { slug: 'rdzak-gt-4', name: 'Rdzak GT-4', class: 'hatchback', tier: 2, image_url: '/api/v1/media/aaaaaaaa.png' } })
+    serve({ 'GET /api/v1/cars': () => respond(200, aFleet({ cars: [car] })), 'GET /api/v1/runs/current': noRun })
+
+    const { wrapper } = await mountView(FleetView, '/garage/fleet')
+    await flushPromises()
+
+    const card = wrapper.get('[data-test="car-5"]')
+    expect(card.get('.kick').text()).toBe('Hatchback')
+    expect(card.get('.tier').text()).toBe('T2')
+    expect(wrapper.get('[data-test="stage"] [data-test="picture"]').attributes('src')).toBe('/api/v1/media/aaaaaaaa.png')
+    expect(wrapper.get('[data-test="thumb-5"] img').attributes('src')).toBe('/api/v1/media/aaaaaaaa.png')
   })
 
   it('has the tabs of the garage, with the fleet lit, and keeps the garage lit in the navigation', async () => {
@@ -84,11 +133,13 @@ describe('FleetView', () => {
     const { wrapper } = await mountView(FleetView, '/garage/fleet')
     await flushPromises()
 
-    // The place is kept at the destination, so the car is listed there.
-    const card = wrapper.get('[data-test="garage-kruszyn"] [data-test="car-6"]')
+    await focus(wrapper, 6)
+
+    const card = wrapper.get('[data-test="car-6"]')
     expect(card.get('[data-test="car-where"]').text()).toBe('On the road: Złomowo → Kruszyn, arrives in 5 min 00 s')
-    expect(card.get('[data-test="car-status"]').text()).toBe('On the road')
-    expect(wrapper.find('[data-test="garage-zlomowo"] [data-test="car-6"]').exists()).toBe(false)
+    expect(wrapper.get('[data-test="stage"] [data-test="car-status"]').text()).toBe('On the road')
+    // The place is kept at the destination: the garage there counts the car.
+    expect(wrapper.get('[data-test="garage-kruszyn"] [data-test="garage-title"]').text()).toContain('places')
   })
 
   it('asks the server again when a journey is due', async () => {
@@ -105,6 +156,9 @@ describe('FleetView', () => {
     await flushPromises()
 
     expect(asked).toBe(2)
+
+    await focus(wrapper, 6)
+
     expect(wrapper.find('[data-test="car-6"] [data-test="car-where"]').text()).toBe('Kruszyn · Kruszyn Quarry')
   })
 
@@ -118,13 +172,16 @@ describe('FleetView', () => {
 
     const { wrapper } = await mountView(FleetView, '/garage/fleet')
     await flushPromises()
+    await focus(wrapper, 6)
     await wrapper.get('[data-test="car-6"] [data-test="play"]').trigger('click')
     await flushPromises()
 
     expect(calls.some((call) => call.method === 'POST' && call.url.endsWith('/cars/6/select'))).toBe(true)
     expect(wrapper.get('[data-test="done"]').text()).toBe('You play Bizon M-2 now.')
+    // The car that is on the stage stays there, and is the one that is played now.
     expect(wrapper.find('[data-test="car-6"] [data-test="car-selected"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="car-5"] [data-test="car-selected"]').exists()).toBe(false)
+    expect(wrapper.find('[data-test="thumb-6"] [data-test="thumb-selected"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="thumb-5"] [data-test="thumb-selected"]').exists()).toBe(false)
     // The screens that show the car of the driver are asked for it again.
     expect(calls.filter((call) => call.url.endsWith('/v1/garage')).length).toBe(1)
     expect(calls.filter((call) => call.url.endsWith('/v1/map')).length).toBe(1)
@@ -191,6 +248,9 @@ describe('FleetView', () => {
 
     expect(wrapper.get('[data-test="car-5"] [data-test="car-condition"]').text()).toBe('Condition 100%')
     expect(wrapper.get('[data-test="car-5"] [data-test="car-condition"]').classes()).not.toContain('chip-bad')
+
+    await focus(wrapper, 6)
+
     expect(wrapper.get('[data-test="car-6"] [data-test="car-condition"]').text()).toBe('Condition 45%')
     expect(wrapper.get('[data-test="car-6"] [data-test="car-condition"]').classes()).toContain('chip-bad')
   })
@@ -202,8 +262,8 @@ describe('FleetView', () => {
     const { wrapper } = await mountView(FleetView, '/garage/fleet')
     await flushPromises()
 
-    expect(wrapper.get('[data-test="car-5"] [data-test="car-status"]').text()).toBe('Waiting to start')
-    expect(wrapper.get('[data-test="car-5"] [data-test="car-status"]').classes()).toContain('chip-am')
+    expect(wrapper.get('[data-test="stage"] [data-test="car-status"]').text()).toBe('Waiting to start')
+    expect(wrapper.get('[data-test="stage"] [data-test="car-status"]').classes()).toContain('chip-am')
   })
 
   it('leads to the exchange, where the cars are bought', async () => {
@@ -248,8 +308,12 @@ describe('FleetView', () => {
 
     expect(wrapper.get('h1').text()).toBe('Flota')
     expect(wrapper.get('[data-test="garage-zlomowo"] [data-test="garage-title"]').text()).toBe('Złomowo · 1 / 3 miejsc')
-    expect(wrapper.get('[data-test="car-6"] [data-test="play"]').text()).toBe('Graj tym autem')
     expect(wrapper.get('[data-test="car-5"] [data-test="car-condition"]').text()).toBe('Kondycja 100%')
+    expect(wrapper.get('[data-test="thumb-6"]').text()).toContain('Wartość 798')
+
+    await focus(wrapper, 6)
+
+    expect(wrapper.get('[data-test="car-6"] [data-test="play"]').text()).toBe('Graj tym autem')
   })
 
   it('asks before a car is sold, with the price, and sells it for that price', async () => {
@@ -262,6 +326,8 @@ describe('FleetView', () => {
 
     const { wrapper } = await mountView(FleetView, '/garage/fleet')
     await flushPromises()
+
+    await focus(wrapper, 6)
 
     const card = wrapper.get('[data-test="car-6"]')
     expect(card.get('[data-test="sell"]').text()).toBe('Sell · $798')
@@ -285,6 +351,7 @@ describe('FleetView', () => {
 
     const { wrapper } = await mountView(FleetView, '/garage/fleet')
     await flushPromises()
+    await focus(wrapper, 6)
     await wrapper.get('[data-test="car-6"] [data-test="sell"]').trigger('click')
     await wrapper.get('[data-test="sell-keep"]').trigger('click')
 
@@ -303,6 +370,9 @@ describe('FleetView', () => {
 
     expect(wrapper.get('[data-test="car-5"] [data-test="sell"]').attributes('disabled')).toBeDefined()
     expect(wrapper.get('[data-test="car-5"] [data-test="sell-blocked"]').text()).toBe('Your last car stays with you.')
+
+    await focus(wrapper, 6)
+
     expect(wrapper.get('[data-test="car-6"] [data-test="sell"]').attributes('disabled')).toBeDefined()
     expect(wrapper.get('[data-test="car-6"] [data-test="sell-blocked"]').text()).toBe('It is on the road or has work in the workshop.')
   })
@@ -316,6 +386,7 @@ describe('FleetView', () => {
 
     const { wrapper } = await mountView(FleetView, '/garage/fleet')
     await flushPromises()
+    await focus(wrapper, 6)
     await wrapper.get('[data-test="car-6"] [data-test="sell"]').trigger('click')
     await wrapper.get('[data-test="sell-confirm"]').trigger('click')
     await flushPromises()

@@ -6,8 +6,13 @@ import { RouterLink, useRouter } from 'vue-router'
 import { ApiError } from '@/api/client'
 import type { FleetCar, FleetGarage } from '@/api/types'
 import CarSale from '@/components/CarSale.vue'
+import CarStage from '@/components/CarStage.vue'
 import GameShell from '@/components/GameShell.vue'
 import GarageTabs from '@/components/GarageTabs.vue'
+import CarSilhouette from '@/components/CarSilhouette.vue'
+import MediaPicture from '@/components/MediaPicture.vue'
+import { carPicture } from '@/features/art'
+import { useCarClass } from '@/features/car/useCarClass'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
@@ -23,6 +28,7 @@ const MIN_ASK_MS = 3_000
 
 const { t } = useI18n()
 const { money, fixed } = useFormat()
+const { className } = useCarClass()
 const router = useRouter()
 const store = useFleetStore()
 const { message: done, show: showDone, clear: clearDone } = useFlash()
@@ -43,6 +49,10 @@ const garages = computed(() => store.fleet?.garages ?? [])
 const owned = computed(() => garages.value.filter((garage) => garage.owned))
 const unowned = computed(() => garages.value.filter((garage) => !garage.owned))
 const cash = computed(() => store.cash?.cash_cents ?? 0)
+
+/** The car on the stage: the one the driver tapped in the strip while it is still in the fleet, else the one that is played. */
+const focusId = ref<number | null>(null)
+const focused = computed<FleetCar | null>(() => cars.value.find((car) => car.id === focusId.value) ?? cars.value.find((car) => car.selected) ?? cars.value[0] ?? null)
 
 async function load(): Promise<void> {
   lastAsk = Date.now()
@@ -81,9 +91,6 @@ onBeforeUnmount(() => {
   clearInterval(ticker)
   clearInterval(poller)
 })
-
-/** The cars that stand in a garage, or are on their way to it: the place is kept for a car on the road. */
-const carsIn = (garage: FleetGarage): FleetCar[] => cars.value.filter((car) => (car.travel?.to ?? car.city.slug) === garage.city)
 
 function statusKey(car: FleetCar): string {
   return car.run?.stop_reason ?? 'running'
@@ -175,29 +182,65 @@ const buyGarage = (garage: FleetGarage) =>
       <p v-if="error" class="text-danger" role="alert" data-test="error">{{ error }}</p>
       <p v-if="done" class="card card-cy text-sm" role="status" data-test="done">{{ done }}</p>
 
-      <section v-for="garage in owned" :key="garage.city" class="flex flex-col gap-2" :aria-label="garage.name" :data-test="`garage-${garage.city}`">
-        <p class="kick !mb-0" data-test="garage-title">{{ garage.name }} · {{ t('fleet.places', { used: garage.used, capacity: garage.capacity }) }}</p>
+      <template v-if="focused">
+        <!-- The car that is looked at, on its stage, and the strip of all the cars under it: a tap puts another one on the stage. -->
+        <CarStage :key="focused.id" :name="focused.vehicle.name" :src="focused.vehicle.image_url" :fallback="carPicture(focused.vehicle.slug)">
+          <span class="chip chip-am">{{ t('garage.carLevel', { level: focused.level }) }}</span>
+          <span class="chip" :class="chipClass(focused)" data-test="car-status">{{ t(`run.status.${statusKey(focused)}`) }}</span>
+        </CarStage>
 
-        <article v-for="car in carsIn(garage)" :key="car.id" class="card flex flex-col gap-1.5 !p-3" :class="{ 'card-hi': car.selected }" :data-test="`car-${car.id}`">
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex min-w-0 items-center gap-2">
-              <b class="truncate text-[15px]" data-test="car-name">{{ car.vehicle.name }}</b>
-              <span v-if="car.selected" class="tag tag-am" data-test="car-selected">{{ t('fleet.selected') }}</span>
+        <div class="rail" role="group" :aria-label="t('fleet.cars')" data-test="rail">
+          <button
+            v-for="car in cars"
+            :key="car.id"
+            type="button"
+            class="thumb"
+            :class="{ on: car.id === focused.id }"
+            :aria-pressed="car.id === focused.id"
+            :data-test="`thumb-${car.id}`"
+            @click="focusId = car.id"
+          >
+            <span class="thumb-pic">
+              <MediaPicture :src="car.vehicle.image_url" :fallback="carPicture(car.vehicle.slug)" alt="">
+                <template #placeholder><span class="stage-empty" data-test="thumb-empty" aria-hidden="true"><CarSilhouette /></span></template>
+              </MediaPicture>
+              <span v-if="car.selected" class="thumb-tag" data-test="thumb-selected">{{ t('fleet.selected') }}</span>
+            </span>
+            <span class="thumb-body">
+              <span class="thumb-name" data-test="thumb-name">{{ car.vehicle.name }}</span>
+              <span class="thumb-meta">{{ car.city.name }}</span>
+              <span class="thumb-meta text-amber">{{ t('fleet.value', { price: money(car.sale_cents) }) }}</span>
+            </span>
+          </button>
+        </div>
+
+        <article class="card flex flex-col gap-2 !p-3" :class="{ 'card-hi': focused.selected }" :data-test="`car-${focused.id}`">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p v-if="className(focused.vehicle.class)" class="kick !mb-1">{{ className(focused.vehicle.class) }}</p>
+              <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+                <b class="truncate text-[17px]" data-test="car-name">{{ focused.vehicle.name }}</b>
+                <span v-if="focused.vehicle.tier" class="tier">{{ t('car.tier', { tier: focused.vehicle.tier }) }}</span>
+                <span v-if="focused.selected" class="tag tag-am" data-test="car-selected">{{ t('fleet.selected') }}</span>
+              </div>
             </div>
-            <span class="chip flex-none" :class="chipClass(car)" data-test="car-status">{{ t(`run.status.${statusKey(car)}`) }}</span>
           </div>
-          <p class="text-xs text-muted" data-test="car-where">{{ whereText(car) }}</p>
-          <div v-if="car.run" class="flex flex-wrap gap-1.5">
-            <span class="chip" data-test="car-fuel">{{ t('fleet.fuel', { fuel: fixed(car.run.fuel_ml / 1000, 0), tank: fixed(car.run.tank_ml / 1000, 0) }) }}</span>
-            <span class="chip" data-test="car-laps">{{ t('fleet.laps', { count: car.run.laps_done }) }}</span>
-            <span class="chip chip-am">{{ t('garage.carLevel', { level: car.level }) }}</span>
-            <span class="chip" :class="car.condition_percent < 60 ? 'chip-bad' : ''" data-test="car-condition">{{ t('fleet.condition', { percent: car.condition_percent }) }}</span>
+          <p class="text-xs text-muted" data-test="car-where">{{ whereText(focused) }}</p>
+          <div v-if="focused.run" class="flex flex-wrap gap-1.5">
+            <span class="chip" data-test="car-fuel">{{ t('fleet.fuel', { fuel: fixed(focused.run.fuel_ml / 1000, 0), tank: fixed(focused.run.tank_ml / 1000, 0) }) }}</span>
+            <span class="chip" data-test="car-laps">{{ t('fleet.laps', { count: focused.run.laps_done }) }}</span>
+            <span class="chip chip-am">{{ t('garage.carLevel', { level: focused.level }) }}</span>
+            <span class="chip" :class="focused.condition_percent < 60 ? 'chip-bad' : ''" data-test="car-condition">{{ t('fleet.condition', { percent: focused.condition_percent }) }}</span>
           </div>
           <div class="flex flex-wrap gap-2">
-            <button v-if="!car.selected" type="button" class="btn btn-secondary btn-sm flex-1" :disabled="busy" data-test="play" @click="choose(car)">{{ t('fleet.play') }}</button>
-            <CarSale :car="car" :disabled="busy" @sell="sell(car)" />
+            <button v-if="!focused.selected" type="button" class="btn btn-secondary btn-sm flex-1" :disabled="busy" data-test="play" @click="choose(focused)">{{ t('fleet.play') }}</button>
+            <CarSale :car="focused" :disabled="busy" @sell="sell(focused)" />
           </div>
         </article>
+      </template>
+
+      <section v-for="garage in owned" :key="garage.city" class="flex flex-col gap-2" :aria-label="garage.name" :data-test="`garage-${garage.city}`">
+        <p class="kick !mb-0" data-test="garage-title">{{ garage.name }} · {{ t('fleet.places', { used: garage.used, capacity: garage.capacity }) }}</p>
 
         <div v-if="garage.free > 0" class="card flex items-center justify-between gap-2.5 !p-3 !border-dashed" data-test="free-places">
           <p class="text-sm text-muted">{{ t('fleet.free', { count: garage.free }) }}</p>
