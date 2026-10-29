@@ -51,6 +51,7 @@ class CreateGame extends CreateRecord
     {
         return [
             Step::make(__('admin.games.wizard.step_name'))->description(__('admin.games.wizard.step_name_hint'))->schema([
+                View::make('filament.games.preview')->viewData(['installation' => (string) parse_url((string) config('ride.web_url'), PHP_URL_HOST), 'fallback' => __('admin.games.name')]),
                 TextInput::make('name')
                     ->label(__('admin.games.name'))
                     ->required()

@@ -684,6 +684,31 @@ return [
             'game' => 'Gra',
         ],
     ],
+    'changes' => [
+        'title' => 'Niezapisane zmiany',
+        'revert' => 'Cofnij',
+        'revert_all' => 'Cofnij wszystko',
+        'yes' => 'tak',
+        'no' => 'nie',
+        'empty' => 'puste',
+        'effects' => [
+            'game' => [
+                'name' => 'Nazwa na karcie przeglądarki, w pasku aplikacji, w mailach i na ekranie startowym gry.',
+                'domain' => 'Adres, pod którym gra odpowiada. Nowa domena potrzebuje nowego certyfikatu (strona „Domena i SSL”).',
+                'locale' => 'Język, w którym gra wita nowych graczy, dopóki nie wybiorą własnego.',
+                'theme_color' => 'Kolor paska przeglądarki i ikony zainstalowanej aplikacji.',
+                'status' => 'Szkic nie odpowiada pod swoją domeną, a „Działa” wpuszcza graczy.',
+            ],
+        ],
+        'preview' => [
+            'heading' => 'Tak to będzie wyglądać',
+            'tab' => 'Karta przeglądarki',
+            'bar' => 'Pasek aplikacji',
+            'address' => 'Adres',
+            'installation' => 'adres instalacji (gra nie ma własnej domeny)',
+            'draft' => 'Szkic nie odpowiada pod swoją domeną, dopóki nie dostanie statusu „Działa”.',
+        ],
+    ],
     'players' => [
         'nav' => 'Gracze',
         'one' => 'Gracz',

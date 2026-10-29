@@ -684,6 +684,31 @@ return [
             'game' => 'Game',
         ],
     ],
+    'changes' => [
+        'title' => 'Unsaved changes',
+        'revert' => 'Undo',
+        'revert_all' => 'Undo all',
+        'yes' => 'yes',
+        'no' => 'no',
+        'empty' => 'empty',
+        'effects' => [
+            'game' => [
+                'name' => 'The name on the browser tab, in the app bar, in e-mails and on the start screen of the game.',
+                'domain' => 'The address the game answers on. A new domain needs a new certificate (the “Domain and SSL” page).',
+                'locale' => 'The language in which the game greets new players until they choose their own.',
+                'theme_color' => 'The colour of the browser bar and of the icon of the installed app.',
+                'status' => 'A draft does not answer on its domain, and “Live” lets the players in.',
+            ],
+        ],
+        'preview' => [
+            'heading' => 'How it will look',
+            'tab' => 'Browser tab',
+            'bar' => 'App bar',
+            'address' => 'Address',
+            'installation' => 'the address of the installation (the game has no domain of its own)',
+            'draft' => 'A draft does not answer on its domain until it is made live.',
+        ],
+    ],
     'players' => [
         'nav' => 'Players',
         'one' => 'Player',

@@ -658,6 +658,31 @@ return [
             'game' => 'Spiel',
         ],
     ],
+    'changes' => [
+        'title' => 'Nicht gespeicherte Änderungen',
+        'revert' => 'Rückgängig',
+        'revert_all' => 'Alles rückgängig',
+        'yes' => 'ja',
+        'no' => 'nein',
+        'empty' => 'leer',
+        'effects' => [
+            'game' => [
+                'name' => 'Der Name auf dem Browser-Tab, in der App-Leiste, in E-Mails und auf dem Startbildschirm des Spiels.',
+                'domain' => 'Die Adresse, unter der das Spiel antwortet. Eine neue Domain braucht ein neues Zertifikat (Seite „Domain und SSL“).',
+                'locale' => 'Die Sprache, in der das Spiel neue Spieler begrüßt, bis sie eine eigene wählen.',
+                'theme_color' => 'Die Farbe der Browserleiste und des Symbols der installierten App.',
+                'status' => 'Ein Entwurf antwortet nicht unter seiner Domain, und „Live“ lässt die Spieler hinein.',
+            ],
+        ],
+        'preview' => [
+            'heading' => 'So sieht es aus',
+            'tab' => 'Browser-Tab',
+            'bar' => 'App-Leiste',
+            'address' => 'Adresse',
+            'installation' => 'die Adresse der Installation (das Spiel hat keine eigene Domain)',
+            'draft' => 'Ein Entwurf antwortet nicht unter seiner Domain, bis er live geschaltet wird.',
+        ],
+    ],
     'players' => [
         'nav' => 'Spieler',
         'one' => 'Spieler',

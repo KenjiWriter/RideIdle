@@ -658,6 +658,31 @@ return [
             'game' => 'Jeu',
         ],
     ],
+    'changes' => [
+        'title' => 'Modifications non enregistrées',
+        'revert' => 'Annuler',
+        'revert_all' => 'Tout annuler',
+        'yes' => 'oui',
+        'no' => 'non',
+        'empty' => 'vide',
+        'effects' => [
+            'game' => [
+                'name' => 'Le nom sur l’onglet du navigateur, dans la barre de l’application, dans les e-mails et sur l’écran de départ du jeu.',
+                'domain' => 'L’adresse sur laquelle le jeu répond. Un nouveau domaine a besoin d’un nouveau certificat (page « Domaine et SSL »).',
+                'locale' => 'La langue dans laquelle le jeu accueille les nouveaux joueurs tant qu’ils n’ont pas choisi la leur.',
+                'theme_color' => 'La couleur de la barre du navigateur et de l’icône de l’application installée.',
+                'status' => 'Un brouillon ne répond pas sur son domaine, et « En ligne » laisse entrer les joueurs.',
+            ],
+        ],
+        'preview' => [
+            'heading' => 'Aperçu',
+            'tab' => 'Onglet du navigateur',
+            'bar' => 'Barre de l’application',
+            'address' => 'Adresse',
+            'installation' => 'l’adresse de l’installation (le jeu n’a pas de domaine propre)',
+            'draft' => 'Un brouillon ne répond pas sur son domaine tant qu’il n’est pas mis en ligne.',
+        ],
+    ],
     'players' => [
         'nav' => 'Joueurs',
         'one' => 'Joueur',

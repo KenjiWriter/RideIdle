@@ -8,6 +8,7 @@ use App\Content\ContentPackInvalid;
 use App\Content\Definitions\DefinitionForm;
 use App\Content\Definitions\DefinitionRefused;
 use App\Filament\Concerns\ForAGame;
+use App\Filament\Concerns\ShowsChanges;
 use App\Models\Admin;
 use App\Models\ContentDefinition;
 use App\Services\ContentDrafts;
@@ -32,6 +33,7 @@ abstract class RulesDocumentPage extends Page implements HasSchemas
 {
     use ForAGame;
     use InteractsWithSchemas;
+    use ShowsChanges;
 
     /** @var array<string, mixed>|null */
     public ?array $data = [];
@@ -90,6 +92,7 @@ abstract class RulesDocumentPage extends Page implements HasSchemas
         }
 
         return $schema->components([
+            $this->changesBar(),
             Form::make([EmbeddedSchema::make('form')])
                 ->id('form')
                 ->livewireSubmitHandler('save')
@@ -200,6 +203,7 @@ abstract class RulesDocumentPage extends Page implements HasSchemas
         $definition = $this->definition();
 
         $this->form->fill($definition === null ? [] : $this->toState($definition->workingDocument()));
+        $this->rememberSavedState();
     }
 
     protected function definition(): ?ContentDefinition

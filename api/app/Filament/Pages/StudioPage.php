@@ -49,6 +49,11 @@ class StudioPage extends RulesDocumentPage
         return 'starter';
     }
 
+    protected function changesIgnoredFields(): array
+    {
+        return ['section', 'sliders'];
+    }
+
     protected function fields(array $document): array
     {
         $catalog = $this->catalog();

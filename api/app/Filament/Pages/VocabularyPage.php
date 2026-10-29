@@ -50,6 +50,11 @@ class VocabularyPage extends RulesDocumentPage
         return 'vocabulary';
     }
 
+    protected function changesIgnoredFields(): array
+    {
+        return ['area', 'search', 'only_changed'];
+    }
+
     /** A database that was made before the vocabulary existed has no such document; the first draft makes it. */
     protected function unstartedDefinition(): ?ContentDefinition
     {

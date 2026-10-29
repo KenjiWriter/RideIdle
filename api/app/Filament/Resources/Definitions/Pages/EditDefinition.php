@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Definitions\Pages;
 
 use App\Content\Definitions\DefinitionForm;
 use App\Content\Definitions\DefinitionRefused;
+use App\Filament\Concerns\ShowsChanges;
 use App\Filament\Resources\Definitions\DefinitionResource;
 use App\Models\Admin;
 use App\Models\ContentDefinition;
@@ -14,6 +15,7 @@ use App\Services\DefinitionLifecycle;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Schemas\Schema;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,6 +26,7 @@ use Illuminate\Support\Facades\Auth;
 abstract class EditDefinition extends EditRecord
 {
     use ChecksDefinitionDrafts;
+    use ShowsChanges;
 
     /**
      * @param  array<string, mixed>  $data
@@ -57,9 +60,24 @@ abstract class EditDefinition extends EditRecord
         }
     }
 
+    protected function afterFill(): void
+    {
+        $this->rememberSavedState();
+    }
+
     protected function afterSave(): void
     {
+        $this->rememberSavedState();
         $this->warnAboutLanguages();
+    }
+
+    public function content(Schema $schema): Schema
+    {
+        return $schema->components([
+            $this->changesBar(),
+            $this->getFormContentComponent(),
+            $this->getRelationManagersContentComponent(),
+        ]);
     }
 
     protected function getSavedNotificationTitle(): ?string

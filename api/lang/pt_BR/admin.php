@@ -658,6 +658,31 @@ return [
             'game' => 'Jogo',
         ],
     ],
+    'changes' => [
+        'title' => 'Alterações não salvas',
+        'revert' => 'Desfazer',
+        'revert_all' => 'Desfazer tudo',
+        'yes' => 'sim',
+        'no' => 'não',
+        'empty' => 'vazio',
+        'effects' => [
+            'game' => [
+                'name' => 'O nome na aba do navegador, na barra do app, nos e-mails e na tela inicial do jogo.',
+                'domain' => 'O endereço em que o jogo responde. Um domínio novo precisa de um certificado novo (página “Domínio e SSL”).',
+                'locale' => 'O idioma em que o jogo recebe os novos jogadores até que escolham o seu.',
+                'theme_color' => 'A cor da barra do navegador e do ícone do app instalado.',
+                'status' => 'Um rascunho não responde no seu domínio, e “No ar” deixa os jogadores entrarem.',
+            ],
+        ],
+        'preview' => [
+            'heading' => 'Como vai ficar',
+            'tab' => 'Aba do navegador',
+            'bar' => 'Barra do app',
+            'address' => 'Endereço',
+            'installation' => 'o endereço da instalação (o jogo não tem domínio próprio)',
+            'draft' => 'Um rascunho não responde no seu domínio até ser colocado no ar.',
+        ],
+    ],
     'players' => [
         'nav' => 'Jogadores',
         'one' => 'Jogador',
