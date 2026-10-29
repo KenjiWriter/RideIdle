@@ -86,4 +86,28 @@ class User extends Authenticatable
     {
         return $this->hasMany(RaceRun::class);
     }
+
+    /** @return HasMany<Car, $this> the cars of the driver that were not sold */
+    public function cars(): HasMany
+    {
+        return $this->hasMany(Car::class);
+    }
+
+    /** @return HasMany<Purchase, $this> */
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
+    }
+
+    /** @return HasMany<LedgerEntry, $this> */
+    public function ledgerEntries(): HasMany
+    {
+        return $this->hasMany(LedgerEntry::class);
+    }
+
+    /** @return HasMany<UserVisit, $this> */
+    public function visits(): HasMany
+    {
+        return $this->hasMany(UserVisit::class);
+    }
 }
