@@ -11,6 +11,7 @@ import { useMapStore } from '@/stores/map'
 import { usePremiumStore } from '@/stores/premium'
 import { useRunStore } from '@/stores/run'
 import { respond, serveApi } from '@/test/fetchServer'
+import { passOffer, premiumView, vipOffer } from '@/test/premiumFixtures'
 import { liveFields } from '@/test/runFixtures'
 
 import GameHud from './GameHud.vue'
@@ -37,7 +38,14 @@ function aRun(weather = 'dry', overrides: Partial<Run> = {}): Run {
   } as unknown as Run
 }
 
-const aRouter = () => createRouter({ history: createMemoryHistory(), routes: [{ path: '/garage', name: 'garage', component: { template: '<div />' } }] })
+const aRouter = () =>
+  createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      { path: '/garage', name: 'garage', component: { template: '<div />' } },
+      { path: '/premium', name: 'premium', component: { template: '<div />' } },
+    ],
+  })
 
 /** The bar at the top, with a run in the store when it is given one. */
 function show(run: Run | null = null) {
@@ -220,8 +228,8 @@ describe('GameHud', () => {
       expect(calls.filter((call) => call.url.endsWith('/v1/premium'))).toHaveLength(1)
     })
 
-    it('are not asked for when an answer has said it', async () => {
-      const calls = serveApi(fetchMock, {})
+    it('are asked for once even when an answer has said how many there are, because the badges of the paid extras come with them', async () => {
+      const calls = serveApi(fetchMock, { 'GET /api/v1/premium': () => respond(200, { data: premiumView() }) })
       const pinia = createPinia()
       setActivePinia(pinia)
       useMapStore().premiumSeenAt = 5
@@ -229,7 +237,66 @@ describe('GameHud', () => {
       mount(GameHud, { global: { plugins: [pinia, i18n, aRouter()] } })
       await flushPromises()
 
-      expect(calls).toHaveLength(0)
+      expect(calls.filter((call) => call.url.endsWith('/v1/premium'))).toHaveLength(1)
+    })
+
+    it('are a link to the premium shop, where the VIP account and the pass are', async () => {
+      serveApi(fetchMock, { 'GET /api/v1/premium': () => respond(200, { data: premiumView({ balance: 40 }) }) })
+
+      const wrapper = show()
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="coins-chip"]').attributes('href')).toBe('/premium')
+    })
+  })
+
+  describe('the paid extras', () => {
+    it('show no badge to a driver who has none of them', async () => {
+      serveApi(fetchMock, { 'GET /api/v1/premium': () => respond(200, { data: premiumView() }) })
+
+      const wrapper = show()
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="hud-vip"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="hud-pass"]').exists()).toBe(false)
+    })
+
+    it('show a badge for the VIP account and one for the pass while they last, and take them away when they end', async () => {
+      const soon = Date.now() + 60_000
+      serveApi(fetchMock, {
+        'GET /api/v1/premium': () =>
+          respond(200, {
+            data: premiumView({
+              vip: vipOffer({ active: true, until_ms: soon, remaining_ms: 60_000 }),
+              infinity: passOffer({ active: true, until_ms: soon + 600_000, remaining_ms: 660_000 }),
+            }),
+          }),
+      })
+
+      const wrapper = show()
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="hud-vip"]').text()).toBe('VIP')
+      expect(wrapper.get('[data-test="hud-vip"]').attributes('title')).toBe('VIP account: more cash and XP for every lap')
+      expect(wrapper.get('[data-test="hud-pass"]').text()).toBe('∞')
+
+      // The VIP ends in a minute: the badge goes out without asking the server, the pass is still on.
+      await vi.advanceTimersByTimeAsync(62_000)
+
+      expect(wrapper.find('[data-test="hud-vip"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="hud-pass"]').exists()).toBe(true)
+    })
+
+    it('show no badge for an extra that the game has switched off, whatever time the driver has left', async () => {
+      const later = Date.now() + 3_600_000
+      serveApi(fetchMock, {
+        'GET /api/v1/premium': () => respond(200, { data: premiumView({ vip: vipOffer({ enabled: false, until_ms: later, remaining_ms: 3_600_000 }) }) }),
+      })
+
+      const wrapper = show()
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="hud-vip"]').exists()).toBe(false)
     })
   })
 })

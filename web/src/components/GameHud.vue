@@ -9,6 +9,7 @@ import { levelOf } from '@/features/player/level'
 import { usePremiumCoins } from '@/features/player/usePremiumCoins'
 import { useFormat } from '@/i18n/useFormat'
 import { useGarageStore } from '@/stores/garage'
+import { usePremiumStore } from '@/stores/premium'
 import { useRunStore } from '@/stores/run'
 import { useSessionStore } from '@/stores/session'
 
@@ -19,6 +20,7 @@ const run = useRunStore()
 const garage = useGarageStore()
 const session = useSessionStore()
 const { coins, ensure: ensureCoins } = usePremiumCoins()
+const premium = usePremiumStore()
 
 const progress = computed(() => levelOf(run.wallet?.xp ?? 0))
 const fill = computed(() => Math.min(100, Math.round((progress.value.into / progress.value.needed) * 100)))
@@ -97,7 +99,8 @@ const phaseName = computed(() => (te(`clock.phase.${time.value.phase}`) ? t(`clo
       <!-- The two currencies as pills, the cash and the premium coins. -->
       <div class="hud-money">
         <span v-if="cash !== null" class="chip chip-am chip-coin h-6" data-tutorial="cash" data-test="cash-chip">{{ money(cash, 2) }}</span>
-        <span v-if="coins !== null" class="chip chip-cy chip-gem h-6" :aria-label="t('hud.coins', { count: number(coins) })" data-test="coins-chip">{{ number(coins) }}</span>
+        <!-- The way to the premium shop: the coins, the VIP account and the pass are bought there. -->
+        <RouterLink v-if="coins !== null" :to="{ name: 'premium' }" class="chip chip-cy chip-gem h-6 hover:brightness-110" :aria-label="t('hud.coins', { count: number(coins) })" data-test="coins-chip">{{ number(coins) }}</RouterLink>
       </div>
     </div>
 
@@ -108,6 +111,8 @@ const phaseName = computed(() => (te(`clock.phase.${time.value.phase}`) ? t(`clo
         <span v-if="car.tier" class="tier tier-cy" data-test="hud-car-tier">{{ t('car.tier', { tier: car.tier }) }}</span>
         <span v-if="carKind" class="hud-car-kind" data-test="hud-car-kind">{{ carKind }}</span>
       </template>
+      <span v-if="premium.vipActiveAt(now)" class="tag tag-am" :title="t('hud.vipTitle')" data-test="hud-vip">{{ t('hud.vip') }}</span>
+      <span v-if="premium.infinityActiveAt(now)" class="tag tag-ok" :title="t('hud.passTitle')" data-test="hud-pass">{{ t('hud.pass') }}</span>
       <span class="hud-clock" :title="t('clock.label', { time: time.label, phase: phaseName })" data-test="clock">{{ clockText }}</span>
     </div>
   </div>

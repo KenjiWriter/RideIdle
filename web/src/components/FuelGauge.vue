@@ -7,6 +7,7 @@ import { baseLapMs, lapsOfFuel } from '@/features/run/laps'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 
+import AutoRefillSwitch from './AutoRefillSwitch.vue'
 import RefuelControl from './RefuelControl.vue'
 
 const props = defineProps<{ run: Run }>()
@@ -53,5 +54,6 @@ function liters(ml: number): string {
     </p>
 
     <RefuelControl :run="run" />
+    <AutoRefillSwitch />
   </section>
 </template>
