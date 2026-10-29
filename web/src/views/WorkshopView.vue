@@ -212,9 +212,9 @@ async function load(): Promise<void> {
 function tick(): void {
   now.value = store.serverNow()
 
-  // A job whose time has come is carried out by the server when it is asked.
+  // A job whose time has come is carried out by the server when it is asked, and the step of the tutorial that waited for it is done with it: the goal is asked for too.
   if (jobs.value.some((job) => job.finish_ms <= now.value) && Date.now() - lastAsk >= MIN_ASK_MS) {
-    void load()
+    void load().then(() => tutorial.load().catch(() => undefined))
   }
 }
 

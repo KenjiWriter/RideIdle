@@ -4,6 +4,7 @@ import { onMounted } from 'vue'
 import TutorialGoal from '@/components/TutorialGoal.vue'
 import TutorialOverlay from '@/components/TutorialOverlay.vue'
 import { useTutorialReward } from '@/features/run/useTutorialReward'
+import { useTutorialSync } from '@/features/tutorial/useTutorialSync'
 import { useGarageStore } from '@/stores/garage'
 import { useRunStore } from '@/stores/run'
 import { useTutorialStore } from '@/stores/tutorial'
@@ -29,6 +30,9 @@ onMounted(() => {
     tutorial.load().catch(() => undefined)
   }
 })
+
+// The goal of the step that is on is kept true on every screen of the game, without the driver having to go to another tab to bring it up to date.
+useTutorialSync()
 
 /**
  * What the mentor paid for a step is said once, on whichever screen the driver is on. The experience that went to the car shows in the bar of the garage, which is asked for again.
