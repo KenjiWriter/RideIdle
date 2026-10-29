@@ -1028,12 +1028,12 @@ body {
   /* A job of the workshop on the slot: how far it has got, drawn as a ring round the spot (--p is a number from 0 to 100), cyan as the bars of a job are. */
   .spot-ring {
     position: absolute;
-    inset: -6px;
+    inset: -8px;
     border-radius: 50%;
     pointer-events: none;
-    background: conic-gradient(var(--color-cyan) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--color-cyan) 22%, transparent) 0);
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
-    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    background: conic-gradient(var(--color-cyan) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--color-cyan) 30%, transparent) 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
   }
 
   /* A job that waits its turn: a small clock at the corner of its spot. */
