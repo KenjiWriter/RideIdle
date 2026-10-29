@@ -5,7 +5,8 @@
 #   /up        the health check of Laravel
 #
 # This is a template: provision.sh puts the domain, the folder of the application and the version of PHP in place of
-# __DOMAIN__, __APP_DIR__ and __PHP_VERSION__ and writes it to /etc/nginx/sites-available/rideidle.conf.
+# __DOMAIN__, __APP_DIR__ and __PHP_VERSION__ and writes it to /etc/nginx/sites-available/rideidle.conf. Another game of the installation is the same site
+# on a domain of its own (game-site.sh renders this template for it into /etc/nginx/sites-available/rideidle-game-<name>.conf): a game is found by the host.
 
 # Plain HTTP only answers the check of Let's Encrypt and sends everything else to HTTPS.
 server {
@@ -104,16 +105,10 @@ server {
         add_header Cache-Control "no-cache" always;
     }
 
-    # The worker and the manifest of the PWA are asked for again at every start, so a change of either is seen at once (a worker that is kept would keep the
-    # old app). The type of the manifest is set here because the mime.types of an older nginx does not know .webmanifest.
+    # The worker of the PWA is asked for again at every start, so a change of it is seen at once (a worker that is kept would keep the old app). The manifest is
+    # not a file: the API makes it for the game of the host (/api/v1/meta/manifest), so it is answered by the /api/ location above.
     location = /sw.js {
         include /etc/nginx/snippets/rideidle-security.conf;
-        add_header Cache-Control "no-cache" always;
-    }
-
-    location = /manifest.webmanifest {
-        include /etc/nginx/snippets/rideidle-security.conf;
-        default_type application/manifest+json;
         add_header Cache-Control "no-cache" always;
     }
 
