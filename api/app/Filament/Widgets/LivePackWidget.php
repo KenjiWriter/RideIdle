@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Pages\PendingChangesPage;
 use App\Games\CurrentGame;
 use App\Models\ContentActivation;
 use App\Models\ContentDefinition;
@@ -32,7 +33,7 @@ class LivePackWidget extends StatsOverviewWidget
                 ->description($fromDatabase ? __('admin.widget.database_hint') : __('admin.widget.files_hint'))
                 ->color($fromDatabase ? 'success' : 'warning'),
             Stat::make(__('admin.widget.packs'), (string) ContentPack::query()->count()),
-            Stat::make(__('admin.widget.drafts'), (string) ContentDefinition::query()->whereNotNull('draft')->count())->description(__('admin.widget.drafts_hint')),
+            Stat::make(__('admin.widget.drafts'), (string) ContentDefinition::query()->whereNotNull('draft')->count())->description(__('admin.widget.drafts_hint'))->url(PendingChangesPage::getUrl()),
         ];
     }
 }
