@@ -16,6 +16,30 @@ export function formatMoney(cents: number, locale: AppLocale, fractionDigits = 0
 }
 
 /**
+ * A price in real money, in the currency the game sells in (ISO 4217, "PLN"), as the language of the driver writes it. The amount is in the smallest unit of the
+ * currency (grosze), as the API keeps it.
+ */
+export function formatPrice(minor: number, currency: string, locale: AppLocale): string {
+  return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(minor / 100)
+}
+
+/**
+ * A time that is left of an account that lasts days: "29 d 23 h" for more than a day, "5 h 07 min" for less, "12 min" for the last hour. Rounded down, so it never
+ * promises more than there is.
+ */
+export function formatTimeLeft(ms: number): string {
+  const minutes = Math.max(0, Math.floor(ms / 60_000))
+  const days = Math.floor(minutes / 1440)
+  const hours = Math.floor((minutes % 1440) / 60)
+
+  if (days > 0) {
+    return `${days} d ${hours} h`
+  }
+
+  return hours > 0 ? `${hours} h ${String(minutes % 60).padStart(2, '0')} min` : `${minutes} min`
+}
+
+/**
  * A day as the language writes it ("23 października 2026"). The version of the legal texts is a day such as
  * 2026-10-23; a text that is not one is returned as it is.
  */

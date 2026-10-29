@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
-import { formatDay, formatFixed, formatMoney, formatNumber } from './format'
+import { formatDay, formatFixed, formatMoney, formatNumber, formatPrice } from './format'
 import { DEFAULT_LOCALE, normalizeLocale } from './locales'
 
 /** Money, numbers and days in the language of the interface, which follows it when the driver switches the language. */
@@ -16,5 +16,7 @@ export function useFormat() {
     /** A chance in percent: whole when it is, with one decimal when it is not (4.5). */
     percent: (value: number): string => (Number.isInteger(value) ? formatNumber(value, current.value, 0) : formatFixed(value, current.value, 1)),
     day: (value: string): string => formatDay(value, current.value),
+    /** A price in real money (the amount in the smallest unit of the currency, the currency as ISO 4217). */
+    price: (minor: number, currency: string): string => formatPrice(minor, currency, current.value),
   }
 }

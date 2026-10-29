@@ -121,7 +121,7 @@ export interface Wallet {
 
 export interface SettlementEvent {
   /** `service_due` says the car has driven as far as its service falls due (`mileage_km`); a `breakdown` may say which part it was (`part`, the name of the slot). */
-  type: 'lap_batch' | 'breakdown' | 'fuel_empty' | 'service_due'
+  type: 'lap_batch' | 'breakdown' | 'fuel_empty' | 'auto_refill' | 'service_due'
   at_ms: number
   payload: Record<string, number | string>
 }
@@ -135,6 +135,12 @@ export interface Settlement {
   laps: number
   cash_cents: number
   xp: number
+  /** How much of the cash and the XP the VIP account added (they are in the totals above). */
+  bonus_cash_cents?: number
+  bonus_xp?: number
+  /** How many times the tank was filled for the driver, and how many of those took a charge (the pass fills it for nothing). */
+  auto_refills?: number
+  refill_charges?: number
   stop_reason: StopReason | null
   events: SettlementEvent[]
 }
@@ -146,6 +152,11 @@ export interface RunSummary {
   xp: number
   from_ms: number | null
   to_ms: number | null
+  /** What the VIP account added to the cash and the XP above, and how often the tank was filled for the driver (and how many charges that took). */
+  bonus_cash_cents?: number
+  bonus_xp?: number
+  auto_refills?: number
+  refill_charges?: number
   stop_reason: StopReason | null
 }
 
@@ -586,6 +597,10 @@ export interface AwayCar {
   played: boolean
   earned_cents: number
   laps: number
+  /** What the VIP account added to `earned_cents`, how often the tank was filled for the driver and how many charges that took. */
+  bonus_cents?: number
+  refills?: number
+  refill_charges?: number
   waiting: 'fuel_empty' | 'breakdown' | null
 }
 
@@ -611,6 +626,10 @@ export interface AwayAccount {
   to_ms?: number
   away_minutes?: number
   earned_cents?: number
+  /** What the VIP account added to `earned_cents`; how many times the tank was filled for the driver in the break, and how many charges that took. */
+  bonus_cents?: number
+  auto_refills?: number
+  auto_refill_charges?: number
   cars?: AwayCar[]
   jobs?: AwayJob[]
   journeys?: AwayJourney[]
@@ -620,6 +639,65 @@ export interface AwayAccount {
 export interface AwayResponse {
   data: AwayAccount
   now_ms: number
+}
+
+/** A pack of charges of the auto-refill: one charge is one full refill of the tank. */
+export interface RefillPack {
+  slug: string
+  charges: number
+  coins: number
+}
+
+/** The auto-refill: whether the game sells it, the driver's wish, their stock of charges and the packs. */
+export interface AutoRefillOffer {
+  enabled: boolean
+  /** The driver's wish to have the tank filled for them (on until they switch it off). */
+  preference: boolean
+  stock: number
+  stock_cap: number
+  packs: RefillPack[]
+}
+
+/** The VIP account: more cash and XP for every lap, for a time. The times are ms of the clock of the server. */
+export interface VipOffer {
+  enabled: boolean
+  active: boolean
+  until_ms: number | null
+  remaining_ms: number
+  days: number
+  coins: number
+  cash_bonus_ppm: number
+  xp_bonus_ppm: number
+}
+
+/** The pass of the endless refill: the auto-refill costs no charge while it lasts. It is sold for money, so `purchasable` is false until a payment provider is connected. */
+export interface InfinityOffer {
+  enabled: boolean
+  active: boolean
+  until_ms: number | null
+  remaining_ms: number
+  days: number
+  price_minor: number
+  purchasable: boolean
+}
+
+/** GET /api/v1/premium, and the answer of every purchase of the paid extras. An extra the game does not mention is null. */
+export interface PremiumView {
+  balance: number
+  currency: { code: string; name: string } | null
+  price_currency: string | null
+  now_ms: number
+  autorefill: AutoRefillOffer | null
+  vip: VipOffer | null
+  infinity: InfinityOffer | null
+}
+
+/** What a purchase of the paid extras did: `repeated` means the same request had been done, so nothing was charged now. */
+export interface PremiumPurchase {
+  data: PremiumView
+  repeated?: boolean
+  spent_coins?: number
+  bought_charges?: number
 }
 
 /** What finishing a timer at once costs in premium coins, and what was left of it (ms) when the server answered. */
