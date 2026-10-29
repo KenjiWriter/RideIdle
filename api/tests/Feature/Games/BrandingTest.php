@@ -177,7 +177,7 @@ describe('what the server says of the look of the host', function () {
         ]);
 
         $game = $this->getJson('/api/v1/meta/game', ['X-Game' => 'ships'])->assertOk();
-        expect($game->json('theme_css_url'))->toBe('/api/v1/meta/theme.css?v=2026.10.0')->and($game->json('has_landing'))->toBeFalse();
+        expect($game->json('theme_css_url'))->toBe('/api/v1/meta/theme.css?v=2026.10.31')->and($game->json('has_landing'))->toBeFalse();
 
         $sheet = $this->get('/api/v1/meta/theme.css', ['X-Game' => 'ships'])->assertOk();
 
@@ -204,7 +204,7 @@ describe('what the server says of the look of the host', function () {
 
         $landing = $this->getJson('/api/v1/meta/landing', ['X-Game' => 'ships'])->assertOk();
 
-        expect($landing->json('number'))->toBe('2026.10.0')
+        expect($landing->json('number'))->toBe('2026.10.31')
             ->and($landing->json('blocks.0.image_url'))->toBe("/api/v1/media/{$picture}")
             ->and($landing->json('blocks.0'))->not->toHaveKey('image')
             ->and($landing->json('blocks.0.title'))->toBe(brandingText('Sail', 'Płyń'))

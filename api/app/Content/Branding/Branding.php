@@ -61,11 +61,9 @@ final class Branding
 
     public static function fromSource(ContentSource $source): self
     {
-        if (! $source->has('rules/branding')) {
-            return new self('', []);
-        }
-
-        return new self($source->has('pack') ? (string) ($source->manifest()['version'] ?? '') : '', $source->document('rules/branding'));
+        // The number is the one the pack was made live under (what the runs are frozen with), which changes with every pack, so a copy of the sheet that a browser
+        // keeps is asked for again when another pack is live; the version in pack.json is the content's own and stays the same across packs.
+        return new self($source->rulesetVersion(), $source->has('rules/branding') ? $source->document('rules/branding') : []);
     }
 
     /** The number of the pack that the look is from: what a copy of it is called. */
