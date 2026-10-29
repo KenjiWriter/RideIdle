@@ -50,6 +50,29 @@ describe('AccountAway', () => {
     expect(wrapper.get('[data-test="away-car-2"]').text()).toContain('+$45.00 · 12 laps')
   })
 
+  it('says how many times the tank was filled for the driver in the cars that were not played, and the bonus of the VIP account', () => {
+    const wrapper = mountAway(
+      aSummary({
+        cars: [
+          { id: 1, name: 'Rdzak GT-4', played: true, earned_cents: 9_000, laps: 40, bonus_cents: 900, refills: 4, refill_charges: 4, waiting: null },
+          { id: 2, name: 'Bizon M-2', played: false, earned_cents: 4_500, laps: 12, bonus_cents: 750, refills: 2, refill_charges: 1, waiting: null },
+          { id: 3, name: 'Kuna 4x4', played: false, earned_cents: 1_500, laps: 4, bonus_cents: 250, refills: 1, refill_charges: 0, waiting: null },
+        ],
+      }),
+    )
+
+    expect(wrapper.get('[data-test="away-extras-refills"]').text()).toBe('The tank was filled for you 3 times (stock −1)')
+    expect(wrapper.get('[data-test="away-extras-bonus"]').text()).toBe('VIP bonus: +$10.00')
+  })
+
+  it('says the refills were free when the pass paid for all of them, and shows nothing of the extras when there were none', () => {
+    const free = mountAway(aSummary({ cars: [{ id: 2, name: 'Bizon M-2', played: false, earned_cents: 4_500, laps: 12, refills: 1, refill_charges: 0, waiting: null }] }))
+
+    expect(free.get('[data-test="away-extras-refills"]').text()).toBe('The tank was filled for you 1 time, free with the pass')
+    expect(free.find('[data-test="away-extras-bonus"]').exists()).toBe(false)
+    expect(mountAway(aSummary()).find('[data-test="away-extras"]').exists()).toBe(false)
+  })
+
   it('says which cars wait for the driver, and why', () => {
     const wrapper = mountAway(aSummary())
 

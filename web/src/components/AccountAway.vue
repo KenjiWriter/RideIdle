@@ -21,6 +21,10 @@ const cars = computed(() => (props.summary.cars ?? []).filter((car) => !car.play
 const jobs = computed(() => props.summary.jobs ?? [])
 const journeys = computed(() => props.summary.journeys ?? [])
 const earned = computed(() => cars.value.reduce((sum, car) => sum + car.earned_cents, 0))
+/** The tank filled for the driver and the bonus of the VIP account, for the cars that were not played. */
+const refills = computed(() => cars.value.reduce((sum, car) => sum + (car.refills ?? 0), 0))
+const chargesUsed = computed(() => cars.value.reduce((sum, car) => sum + (car.refill_charges ?? 0), 0))
+const bonus = computed(() => cars.value.reduce((sum, car) => sum + (car.bonus_cents ?? 0), 0))
 
 /** What the police made of a boosted journey, in words (nothing when they did not stop the car). */
 function police(journey: AwayJourney): string | null {
@@ -65,6 +69,13 @@ function police(journey: AwayJourney): string | null {
           <span v-else class="mono whitespace-nowrap text-amber">+{{ money(car.earned_cents, 2) }} · {{ t('awayAccount.laps', { count: number(car.laps) }) }}</span>
         </li>
       </ul>
+    </div>
+
+    <div v-if="refills > 0 || bonus > 0" class="flex flex-col gap-1" data-test="away-extras">
+      <p v-if="refills > 0" class="text-[13px] text-muted" data-test="away-extras-refills">
+        {{ chargesUsed > 0 ? t('run.away.refills', { n: refills, charges: chargesUsed }, refills) : t('run.away.refillsFree', { n: refills }, refills) }}
+      </p>
+      <p v-if="bonus > 0" class="text-[13px] text-amber" data-test="away-extras-bonus">{{ t('run.away.bonus', { amount: money(bonus, 2) }) }}</p>
     </div>
 
     <div v-if="jobs.length > 0" class="flex flex-col gap-1.5" data-test="away-jobs">
