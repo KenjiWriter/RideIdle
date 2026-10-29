@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Content\FileContentSource;
+use App\Games\CurrentGame;
 use App\Models\Car;
 use App\Models\ContentDefinition;
 use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\TutorialProgress;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -29,10 +32,10 @@ final class DefinitionUsage
     {
         $counts = match ($definition->kind) {
             ContentDefinition::KIND_VEHICLE => [
-                'cars' => Car::withoutGlobalScopes()->where('vehicle_slug', $definition->slug)->count(),
-                'runs' => RaceRun::withoutGlobalScopes()->where('car_slug', $definition->slug)->count(),
+                'cars' => Car::withoutGlobalScopes()->where('vehicle_slug', $definition->slug)->whereIn('user_id', $this->players())->count(),
+                'runs' => RaceRun::withoutGlobalScopes()->where('car_slug', $definition->slug)->whereIn('user_id', $this->players())->count(),
             ],
-            ContentDefinition::KIND_PART => ['parts' => Part::query()->where('part_slug', $definition->slug)->count()],
+            ContentDefinition::KIND_PART => ['parts' => Part::query()->where('part_slug', $definition->slug)->whereIn('user_id', $this->players())->count()],
             default => [],
         };
 
@@ -54,10 +57,10 @@ final class DefinitionUsage
 
         if ($slug === 'starter') {
             foreach (array_diff(array_keys($before['regions'] ?? []), array_keys($after['regions'] ?? [])) as $region) {
-                $count = DB::table('city_garages')->where('region', $region)->count()
-                    + DB::table('city_workshops')->where('city', $region)->count()
-                    + DB::table('workshop_jobs')->where('city', $region)->count()
-                    + DB::table('travels')->where('from_region', $region)->orWhere('to_region', $region)->count();
+                $count = DB::table('city_garages')->where('region', $region)->whereIn('user_id', $this->players())->count()
+                    + DB::table('city_workshops')->where('city', $region)->whereIn('user_id', $this->players())->count()
+                    + DB::table('workshop_jobs')->where('city', $region)->whereIn('user_id', $this->players())->count()
+                    + DB::table('travels')->where(fn ($query) => $query->where('from_region', $region)->orWhere('to_region', $region))->whereIn('user_id', $this->players())->count();
 
                 if ($count > 0) {
                     $used[] = "city {$region} ({$count})";
@@ -65,7 +68,7 @@ final class DefinitionUsage
             }
 
             foreach (array_diff(array_keys($before['tracks'] ?? []), array_keys($after['tracks'] ?? [])) as $track) {
-                $count = RaceRun::withoutGlobalScopes()->where('track_slug', $track)->count();
+                $count = RaceRun::withoutGlobalScopes()->where('track_slug', $track)->whereIn('user_id', $this->players())->count();
 
                 if ($count > 0) {
                     $used[] = "track {$track} ({$count})";
@@ -77,7 +80,7 @@ final class DefinitionUsage
             $kept = array_column($after['steps'] ?? [], 'key');
 
             foreach (array_diff(array_column($before['steps'] ?? [], 'key'), $kept) as $key) {
-                $count = TutorialProgress::query()->where('step_key', $key)->count();
+                $count = TutorialProgress::query()->where('step_key', $key)->whereIn('user_id', $this->players())->count();
 
                 if ($count > 0) {
                     $used[] = "step {$key} ({$count})";
@@ -88,6 +91,12 @@ final class DefinitionUsage
         return $used;
     }
 
+    /** The players of the game in play: what a player has is of that game, and what the players of another game have is not counted. */
+    private function players(): Builder
+    {
+        return User::query()->select('users.id');
+    }
+
     /**
      * The places of the rules and the tutorial of the pack that is live that name the definition: the stock tires, the shop, the wreck prices of the garage and the
      * parts that the tutorial gives away.
@@ -96,8 +105,9 @@ final class DefinitionUsage
      */
     public function references(ContentDefinition $definition): array
     {
-        $source = $this->packs->active() === null ? new FileContentSource((string) config('ride.content_path')) : $this->packs->activeSource();
-        $rules = $source->has('rules/starter') ? $source->document('rules/starter') : [];
+        // Without a live pack the default game reads the files of the repository; another game has nothing yet that could name a definition.
+        $source = $this->packs->active() !== null ? $this->packs->activeSource() : (app(CurrentGame::class)->isDefault() ? new FileContentSource((string) config('ride.content_path')) : null);
+        $rules = $source?->has('rules/starter') ? $source->document('rules/starter') : [];
         $places = [];
 
         if ($definition->kind === ContentDefinition::KIND_PART) {
@@ -109,7 +119,7 @@ final class DefinitionUsage
                 $places[] = 'shop.parts';
             }
 
-            foreach ($source->has('rules/tutorial') ? ($source->document('rules/tutorial')['steps'] ?? []) : [] as $step) {
+            foreach ($source?->has('rules/tutorial') ? ($source->document('rules/tutorial')['steps'] ?? []) : [] as $step) {
                 if (($step['reward']['part'] ?? null) === $definition->slug) {
                     $places[] = "tutorial.{$step['key']}";
                 }

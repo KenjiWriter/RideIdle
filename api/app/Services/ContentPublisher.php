@@ -23,6 +23,7 @@ use App\Models\ContentDefinition;
 use App\Models\ContentPack;
 use App\Models\ContentPublication;
 use App\Models\Part;
+use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
@@ -320,7 +321,7 @@ final class ContentPublisher
         // A slot that players have parts in stays in the model: the parts and the cars are by the key of the slot.
         $model = GameModel::fromSource($candidate);
 
-        foreach (Part::query()->selectRaw('slot, count(*) as total')->groupBy('slot')->get() as $row) {
+        foreach (Part::query()->whereIn('user_id', User::query()->select('users.id'))->selectRaw('slot, count(*) as total')->groupBy('slot')->get() as $row) {
             if (! $model->has((string) $row->slot)) {
                 $result->addError('rules/model.json', '/slots', "It takes out the slot {$row->slot}, which players have parts in ({$row->total} parts).");
             }

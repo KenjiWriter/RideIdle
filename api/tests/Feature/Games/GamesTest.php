@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Content\ContentException;
 use App\Content\PackContent;
+use App\Content\PackValidationResult;
 use App\Games\CurrentGame;
 use App\Games\Games;
 use App\Models\AccountIdentity;
@@ -11,7 +12,10 @@ use App\Models\ContentActivation;
 use App\Models\ContentDefinition;
 use App\Models\ContentPack;
 use App\Models\Game;
+use App\Models\Part;
 use App\Models\User;
+use App\Services\ContentPublisher;
+use App\Services\DefinitionUsage;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -41,6 +45,12 @@ function backToTheFirstGame(): void
 function liveInGame(Game $game, ?PackContent $content = null, string $number = '2026.10.30'): ContentPack
 {
     return inGame($game, fn (): ContentPack => contentPacks()->import($content ?? repositoryContent(), $number, activate: true, checkTables: false)->pack);
+}
+
+/** A driver of the game with this slug. */
+function driverIn(string $slug): User
+{
+    return inGame(Game::query()->where('slug', $slug)->firstOrFail(), fn (): User => User::factory()->guest()->create());
 }
 
 /** @return array<string, string> the headers of a request to a game, in development */
@@ -249,5 +259,40 @@ describe('the content of the games', function () {
             ->and(inGame(Game::query()->where('slug', 'ships')->firstOrFail(), fn () => ContentPack::query()->count()))->toBe(1)
             ->and(ContentPack::query()->count())->toBe(0)
             ->and(Artisan::call('content:status', ['--game' => 'nope']))->toBe(1);
+    });
+});
+
+describe('what the players of a game have', function () {
+    it('is counted in their game: a part that a player of another game has is no use of a definition of this one', function () {
+        $ships = shipsGame();
+        contentPacks()->import(repositoryContent(), '2026.10.30', activate: true, checkTables: false);
+        liveInGame($ships);
+        Part::factory()->create(['user_id' => driverIn('ships')->id, 'part_slug' => 'sport-exhaust-t2', 'slot' => 'exhaust']);
+
+        $usage = app(DefinitionUsage::class);
+        $definition = fn (): ContentDefinition => ContentDefinition::query()->where('kind', 'part')->where('slug', 'sport-exhaust-t2')->firstOrFail();
+
+        expect($usage->instances($definition()))->toBe([])
+            ->and(inGame($ships, fn () => $usage->instances($definition())))->toBe(['parts' => 1]);
+    });
+
+    it('does not hold a slot of the first game because players of another have parts in it', function () {
+        $ships = shipsGame();
+        contentPacks()->import(repositoryContent(), '2026.10.30', activate: true, checkTables: false);
+        liveInGame($ships);
+        Part::factory()->create(['user_id' => driverIn('ships')->id, 'part_slug' => 'sport-exhaust-t2', 'slot' => 'exhaust']);
+
+        // A candidate that has no slot for the exhaust.
+        $candidate = contentWith(['rules/model' => fn (array $model): array => [...$model, 'slots' => array_values(array_filter($model['slots'], fn (array $slot): bool => $slot['key'] !== 'exhaust'))]]);
+        $guards = new ReflectionMethod(ContentPublisher::class, 'guards');
+        $judge = function () use ($guards, $candidate): array {
+            $result = new PackValidationResult;
+            $guards->invoke(app(ContentPublisher::class), $candidate, contentPacks()->activeSource(), $result);
+
+            return array_column($result->errors(), 'message');
+        };
+
+        expect($judge())->toBe([])
+            ->and(inGame($ships, $judge))->toContain('It takes out the slot exhaust, which players have parts in (1 parts).');
     });
 });
