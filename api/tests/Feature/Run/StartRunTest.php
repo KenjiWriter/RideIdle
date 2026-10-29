@@ -25,6 +25,9 @@ it('starts the run of a driver with the small tank that the tutorial arranges fo
         ->assertHeader('Cache-Control', 'no-store, private')
         ->assertJsonPath('data.car.slug', 'rdzak-gt-4')
         ->assertJsonPath('data.car.name', 'Rdzak GT-4')
+        // What the bar at the top of the screens says of the car that is played: its kind of body and its tier.
+        ->assertJsonPath('data.car.class', 'hatchback')
+        ->assertJsonPath('data.car.tier', 2)
         ->assertJsonPath('data.track.slug', 'zlomowo-street')
         // The car waits in the garage until the driver sends it out (the Start of the tournament screen).
         ->assertJsonPath('data.status', 'stopped')

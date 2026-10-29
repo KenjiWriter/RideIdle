@@ -46,6 +46,9 @@ final class RunResource extends JsonResource
                 'slug' => $this->car_slug,
                 'name' => $vehicle !== null ? I18nText::from($vehicle['name'])->for() : $this->car_slug,
                 'image_url' => $vehicle !== null ? ContentImages::urlOf($vehicle) : null,
+                // The kind of body and the tier of the car: the bar at the top of every screen says what car is played.
+                'class' => $vehicle['class'] ?? null,
+                'tier' => $vehicle['tier'] ?? null,
             ],
             'track' => [
                 'slug' => $this->track_slug,
