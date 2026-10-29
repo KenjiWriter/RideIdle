@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Games;
 
 use App\Content\BotProfiles;
+use App\Content\Branding\Branding;
 use App\Content\Catalog;
 use App\Content\ContentSource;
 use App\Content\Rules;
@@ -104,7 +105,7 @@ final class CurrentGame
     /** The content that was read for a game is that game's: the sources, the catalog and the rules are read again for the game that is in play now. */
     private function forgetContent(): void
     {
-        foreach ([ContentSource::class, Catalog::class, Rules::class, BotProfiles::class, TutorialSteps::class, Vocabulary::class] as $abstract) {
+        foreach ([ContentSource::class, Catalog::class, Rules::class, BotProfiles::class, TutorialSteps::class, Vocabulary::class, Branding::class] as $abstract) {
             app()->forgetInstance($abstract);
         }
     }

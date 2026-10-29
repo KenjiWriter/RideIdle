@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Content\Branding\Branding;
 use App\Content\ContentException;
 use App\Content\ContentSource;
 use App\Content\ImageRefused;
@@ -164,7 +165,7 @@ final class ContentImages
     }
 
     /**
-     * The pictures that the cars and the parts of a source name.
+     * The pictures that the cars and the parts of a source name, and the ones of the look of the game (its front page, the preview of a link and its style sheet).
      *
      * @return list<string>
      */
@@ -179,6 +180,12 @@ final class ContentImages
                 if (is_string($name) && preg_match(self::NAME, $name) === 1) {
                     $names[$name] = $name;
                 }
+            }
+        }
+
+        if ($source->has('rules/branding')) {
+            foreach (Branding::pictures($source->document('rules/branding')) as $name) {
+                $names[$name] = $name;
             }
         }
 

@@ -73,6 +73,10 @@ return [
     // neither is done.
     'web_locales_path' => env('WEB_LOCALES_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'web'.DIRECTORY_SEPARATOR.'src'.DIRECTORY_SEPARATOR.'i18n'.DIRECTORY_SEPARATOR.'locales'),
 
+    // The build of the web app (web/dist): the page that a robot is given for the address of a game is the page of the app with the tags of the preview of the game in
+    // its head (GET /api/v1/meta/share), so it is read from there; where the folder is not there (an API on its own), the page is the tags alone.
+    'web_dist_path' => env('WEB_DIST_PATH', dirname(base_path()).DIRECTORY_SEPARATOR.'web'.DIRECTORY_SEPARATOR.'dist'),
+
     // The admin panel (F4): the host it answers on (admin.example.com; then it is the whole of that host), or nothing, and it is /admin on the host of the
     // application, which is how a development machine has it. The language of the panel is the one of the people who run it.
     'admin_domain' => env('ADMIN_DOMAIN') ?: null,

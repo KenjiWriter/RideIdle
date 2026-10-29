@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Content;
 
+use App\Content\Branding\Branding;
+use App\Content\Branding\CssPolicy;
 use App\Content\Vocabulary\MessageCatalog;
 use App\Services\ContentImages;
 use App\Support\Locale;
@@ -39,6 +41,7 @@ final class PackValidator
         'tutorial' => 'tutorial.schema.json',
         'vocabulary' => 'vocabulary.schema.json',
         'model' => 'model.schema.json',
+        'branding' => 'branding.schema.json',
     ];
 
     private readonly Validator $validator;
@@ -127,12 +130,13 @@ final class PackValidator
 
         $this->warnAboutMissingPictures($pictures, $result);
 
-        foreach (['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json', 'economy' => 'economy.schema.json', 'vocabulary' => 'vocabulary.schema.json', 'model' => 'model.schema.json'] as $name => $schemaFile) {
+        foreach (['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json', 'economy' => 'economy.schema.json', 'vocabulary' => 'vocabulary.schema.json', 'model' => 'model.schema.json', 'branding' => 'branding.schema.json'] as $name => $schemaFile) {
             if (! $source->has("rules/{$name}")) {
-                // A pack with no vocabulary is a pack that does not change the words of the app, and one with no model is a game of the cars of the first pack.
+                // A pack with no vocabulary is a pack that does not change the words of the app, one with no model is a game of the cars of the first pack, and one
+                // with no branding is the app as it looks.
                 match ($name) {
                     'economy' => $result->addWarning("rules/{$name}.json", '', 'The anchors of the economy are missing: the simulators cannot be run on this content.'),
-                    'vocabulary', 'model' => null,
+                    'vocabulary', 'model', 'branding' => null,
                     default => $result->addError("rules/{$name}.json", '', 'The document is missing.'),
                 };
 
@@ -145,6 +149,7 @@ final class PackValidator
                 $this->warnAboutMissingRulesTranslations("rules/{$name}.json", $name, $data, $result);
                 $this->checkVocabulary("rules/{$name}.json", $name, $data, $result, GameModel::fromSource($source));
                 $this->checkModelDocument("rules/{$name}.json", $name, $data, $result);
+                $this->checkBrandingDocument("rules/{$name}.json", $name, $data, $result);
             }
         }
 
@@ -189,6 +194,7 @@ final class PackValidator
             $this->warnAboutMissingRulesTranslations($relative, (string) $slug, $data, $result);
             $this->checkVocabulary($relative, (string) $slug, $data, $result, $model);
             $this->checkModelDocument($relative, (string) $slug, $data, $result);
+            $this->checkBrandingDocument($relative, (string) $slug, $data, $result);
 
             return $result;
         }
@@ -612,6 +618,22 @@ final class PackValidator
             }
         }
 
+        if ($name === 'branding') {
+            foreach ($data['landing']['blocks'] ?? [] as $index => $block) {
+                foreach (['eyebrow', 'title', 'subtitle', 'text', 'body', 'alt', 'caption'] as $field) {
+                    $texts["/landing/blocks/{$index}/{$field}"] = $block[$field] ?? null;
+                }
+
+                foreach ($block['items'] ?? [] as $position => $item) {
+                    foreach (['kicker', 'title', 'text'] as $field) {
+                        $texts["/landing/blocks/{$index}/items/{$position}/{$field}"] = $item[$field] ?? null;
+                    }
+                }
+            }
+
+            $texts['/share/description'] = $data['share']['description'] ?? null;
+        }
+
         if ($name === 'tutorial') {
             foreach ($data['steps'] ?? [] as $index => $step) {
                 foreach ($step['sms'] ?? [] as $position => $sms) {
@@ -689,6 +711,30 @@ final class PackValidator
                     $result->addError($relative, $pointer, "The message has {$forms} form(s) of a plural in this language, separated by |: the text must have the same number.");
                 }
             }
+        }
+    }
+
+    /**
+     * What the schema cannot say about the look of a game: the style sheet of its own is read the way a browser reads it and refused for anything that would load
+     * something from outside (each reason is an error of its own, so that the person sees what to take out), and the pictures that the front page, the preview of a
+     * link and the sheet name are looked for in the store (the pack is whole without one, but the person who makes it live should know).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function checkBrandingDocument(string $relative, string $name, array $data, PackValidationResult $result): void
+    {
+        if ($name !== 'branding') {
+            return;
+        }
+
+        foreach (CssPolicy::problems((string) ($data['css'] ?? '')) as $problem) {
+            $result->addError($relative, '/css', $problem);
+        }
+
+        $missing = app(ContentImages::class)->missing(Branding::pictures($data));
+
+        foreach ($missing as $picture) {
+            $result->addWarning($relative, '', "The picture {$picture} is not in the store of images of this environment: upload it in the panel, or import the bundle that carries it.");
         }
     }
 

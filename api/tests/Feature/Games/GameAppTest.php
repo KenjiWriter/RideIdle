@@ -45,6 +45,8 @@ describe('the game as the app asks for it', function () {
             'theme_color' => '#0e1013',
             'icon_url' => null,
             'icon_maskable_url' => null,
+            'theme_css_url' => null,
+            'has_landing' => false,
             'is_default' => true,
         ])
             ->and($response->headers->get('Cache-Control'))->toContain('public')->toContain('max-age=60');

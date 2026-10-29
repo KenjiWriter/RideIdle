@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rideidle.local/schema/branding.schema.json",
+  "title": "The look and the front page of the game (content/rules/branding.json, schema v0)",
+  "description": "What makes the app of a game look like that game and not another: the colours and the fonts of the app (a few of them, by name), a style sheet of its own, the front page (the blocks that the page at the address of the domain is made of) and what a link to the game shows when it is shared (the title, the description and the picture of the preview). Every part is optional, and a pack without this document, or with an empty one, is the app as it is: the car game's dark and amber look and its own front page. The colours are the ones that the app reads by name (bg, surface, ink, amber ...) and a colour that is not here is the app's. The fonts are chosen from the ones that the app brings or that every device has, since a font file is not something the game keeps. The style sheet is the last word on any rule of the app but cannot load anything from outside: it cannot import another sheet or a font, and a url() in it points only at a picture of the game (/api/v1/media/<name>), which the pack names by that url. The front page is a list of blocks of a few kinds, each with its texts in the languages of the game; it is data and not HTML, so that a page of the game never runs what a person typed in the panel.",
+  "type": "object",
+  "properties": {
+    "schema": { "const": 0 },
+    "version": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$" },
+    "colors": {
+      "description": "The colours of the app by their names; a colour left out is the app's own.",
+      "type": "object",
+      "propertyNames": { "enum": ["bg", "surface", "surface_2", "surface_3", "line", "line_2", "ink", "muted", "faint", "amber", "amber_ink", "amber_bg", "cyan", "cyan_bg", "ok", "danger", "r1", "r2", "r3", "r4", "r5"] },
+      "additionalProperties": { "$ref": "#/$defs/color" }
+    },
+    "fonts": {
+      "description": "The fonts of the headings (display), of the text (sans) and of the numbers (mono), each one of the presets.",
+      "type": "object",
+      "properties": {
+        "display": { "$ref": "#/$defs/font" },
+        "sans": { "$ref": "#/$defs/font" },
+        "mono": { "$ref": "#/$defs/font" }
+      },
+      "additionalProperties": false
+    },
+    "css": {
+      "description": "A style sheet that comes after the one of the app, so that it has the last word. No @import, no @font-face, no image-set(), and a url() only to a picture of the game.",
+      "type": "string",
+      "maxLength": 20000
+    },
+    "landing": {
+      "description": "The page at the address of the domain, as the blocks it is made of, from the top. A game without it has the front page of the app.",
+      "type": "object",
+      "properties": {
+        "blocks": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": { "$ref": "#/$defs/block" }
+        }
+      },
+      "required": ["blocks"],
+      "additionalProperties": false
+    },
+    "share": {
+      "description": "What a link to the game shows where it is shared (the preview that a chat or a social network makes). A game without it shows its name.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 70 },
+        "description": { "$ref": "#/$defs/sentence" },
+        "image": { "$ref": "common.schema.json#/$defs/image" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": ["schema", "version"],
+  "additionalProperties": false,
+  "$defs": {
+    "color": {
+      "description": "A colour as #rrggbb.",
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "font": {
+      "description": "A font by its preset: the ones the app brings (barlow-condensed, barlow, jetbrains-mono) and the ones every device has (system-sans, system-serif, system-mono).",
+      "enum": ["barlow-condensed", "barlow", "jetbrains-mono", "system-sans", "system-serif", "system-mono"]
+    },
+    "line": {
+      "description": "A short text in the languages of the game: English and Polish are required, a language that is left out says the English text.",
+      "type": "object",
+      "properties": {
+        "en": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "pl": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "fr": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "de": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "pt-BR": { "type": "string", "minLength": 1, "maxLength": 120 }
+      },
+      "required": ["en", "pl"],
+      "additionalProperties": false
+    },
+    "sentence": {
+      "description": "A text of a few sentences in the languages of the game.",
+      "type": "object",
+      "properties": {
+        "en": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "pl": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "fr": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "de": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "pt-BR": { "type": "string", "minLength": 1, "maxLength": 400 }
+      },
+      "required": ["en", "pl"],
+      "additionalProperties": false
+    },
+    "paragraphs": {
+      "description": "A long text in the languages of the game; a blank line starts a new paragraph, and nothing in it is read as HTML.",
+      "type": "object",
+      "properties": {
+        "en": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "pl": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "fr": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "de": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "pt-BR": { "type": "string", "minLength": 1, "maxLength": 4000 }
+      },
+      "required": ["en", "pl"],
+      "additionalProperties": false
+    },
+    "block": {
+      "description": "One block of the front page. hero: the top of the page (eyebrow, title, subtitle, a picture and its description) with the buttons that start or go on with the game; features: one to six cards (kicker, title, text); text: a title and paragraphs; image: a picture with its description and a caption; cta: the buttons again, with a title and a sentence. The fields that a kind does not use are not read.",
+      "type": "object",
+      "properties": {
+        "type": { "enum": ["hero", "features", "text", "image", "cta"] },
+        "eyebrow": { "$ref": "#/$defs/line" },
+        "title": { "$ref": "#/$defs/line" },
+        "subtitle": { "$ref": "#/$defs/sentence" },
+        "text": { "$ref": "#/$defs/sentence" },
+        "body": { "$ref": "#/$defs/paragraphs" },
+        "image": { "$ref": "common.schema.json#/$defs/image" },
+        "alt": { "$ref": "#/$defs/line" },
+        "caption": { "$ref": "#/$defs/line" },
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "properties": {
+              "kicker": { "$ref": "#/$defs/line" },
+              "title": { "$ref": "#/$defs/line" },
+              "text": { "$ref": "#/$defs/sentence" }
+            },
+            "required": ["title", "text"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["type"],
+      "additionalProperties": false,
+      "allOf": [
+        { "if": { "properties": { "type": { "const": "hero" } } }, "then": { "required": ["title"] } },
+        { "if": { "properties": { "type": { "const": "features" } } }, "then": { "required": ["items"] } },
+        { "if": { "properties": { "type": { "const": "text" } } }, "then": { "required": ["body"] } },
+        { "if": { "properties": { "type": { "const": "image" } } }, "then": { "required": ["image", "alt"] } }
+      ]
+    }
+  }
+}

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Content\Branding\Branding;
 use App\Games\CurrentGame;
 use App\Http\Controllers\Controller;
 use App\Models\Game;
@@ -20,13 +21,17 @@ final class GameController extends Controller
         ['src' => '/icons/icon-maskable-512.png', 'sizes' => '512x512', 'type' => 'image/png', 'purpose' => 'maskable'],
     ];
 
+    /** What the first game says of itself where it is described. */
+    public const DEFAULT_DESCRIPTION = 'An idle racing game: rebuild a wreck, buy better cars and keep earning while you are away.';
+
     public function __construct(private readonly CurrentGame $current, private readonly ContentImages $images) {}
 
     /**
      * The game that the request is for, as the app needs it before it draws anything: its name (the title of the page and the mark of the game), its colour, the
-     * language a visitor gets when theirs is not one of the game, and its icons (paths of the API, or null where it has none and the app keeps its own).
+     * language a visitor gets when theirs is not one of the game, its icons (paths of the API, or null where it has none and the app keeps its own), the address of
+     * its style sheet (null where it has none, so that the app does not ask for one) and whether it has a front page of its own.
      */
-    public function show(Request $request): JsonResponse
+    public function show(Request $request, Branding $branding): JsonResponse
     {
         $game = $this->game();
 
@@ -37,6 +42,8 @@ final class GameController extends Controller
             'theme_color' => $game->theme_color,
             'icon_url' => $game->icon === null ? null : ContentImages::url($game->icon),
             'icon_maskable_url' => $game->icon_maskable === null ? null : ContentImages::url($game->icon_maskable),
+            'theme_css_url' => $branding->hasTheme() ? route('theme', [], false).'?v='.rawurlencode($branding->number()) : null,
+            'has_landing' => $branding->hasLanding(),
             'is_default' => (bool) $game->is_default,
         ]), 60);
     }
@@ -53,7 +60,7 @@ final class GameController extends Controller
             'id' => '/',
             'name' => $game->name,
             'short_name' => $this->shortName($game->name),
-            'description' => $game->is_default ? 'An idle racing game: rebuild a wreck, buy better cars and keep earning while you are away.' : $game->name,
+            'description' => $game->is_default ? self::DEFAULT_DESCRIPTION : $game->name,
             'lang' => $game->locale,
             'start_url' => '/garage',
             'scope' => '/',

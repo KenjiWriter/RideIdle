@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\AccountEmailController;
 use App\Http\Controllers\Api\V1\AccountRecoveryController;
 use App\Http\Controllers\Api\V1\AuthProviderController;
 use App\Http\Controllers\Api\V1\AwayController;
+use App\Http\Controllers\Api\V1\BrandingController;
 use App\Http\Controllers\Api\V1\FleetController;
 use App\Http\Controllers\Api\V1\GameController;
 use App\Http\Controllers\Api\V1\GarageController;
@@ -38,6 +39,9 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/meta/model', [ModelController::class, 'show']);
     Route::get('/meta/game', [GameController::class, 'show']);
     Route::get('/meta/manifest', [GameController::class, 'manifest']);
+    Route::get('/meta/theme.css', [BrandingController::class, 'theme'])->name('theme');
+    Route::get('/meta/landing', [BrandingController::class, 'landing']);
+    Route::get('/meta/share', [BrandingController::class, 'share']);
 
     // The pictures of the cars and the parts, by the checksum of their bytes.
     Route::get('/media/{name}', [MediaController::class, 'show'])->where('name', ContentImages::ROUTE)->name('media');

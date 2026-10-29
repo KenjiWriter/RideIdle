@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Content\BotProfiles;
+use App\Content\Branding\Branding;
 use App\Content\Catalog;
 use App\Content\ContentSource;
 use App\Content\Rules;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(RunService::class, fn ($app) => new RunService(ledger: $app->make(Ledger::class), script: $app->make(TutorialScript::class)));
         $this->app->scoped(TutorialSteps::class, fn () => TutorialSteps::fromConfig());
         $this->app->scoped(Vocabulary::class, fn () => Vocabulary::fromConfig());
+        $this->app->scoped(Branding::class, fn () => Branding::fromConfig());
     }
 
     /**
