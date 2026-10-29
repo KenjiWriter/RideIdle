@@ -129,6 +129,22 @@ final class ContentImages
     }
 
     /**
+     * What a picture is: its kind of file and its size, or null when it is not kept (a manifest says the size of an icon).
+     *
+     * @return array{mime: string, width: int, height: int}|null
+     */
+    public function describe(string $name): ?array
+    {
+        if (preg_match(self::NAME, $name, $found) !== 1) {
+            return null;
+        }
+
+        $image = ContentImage::query()->where('sha256', $found[1])->where('kind', $found[2])->first(['mime', 'width', 'height']);
+
+        return $image === null ? null : ['mime' => $image->mime, 'width' => (int) $image->width, 'height' => (int) $image->height];
+    }
+
+    /**
      * Which of the names are not kept. When the table of the pictures is not there yet (the content is checked before the migrations of a deploy), none is judged.
      *
      * @param  list<string>  $names

@@ -9,12 +9,17 @@ use App\Filament\Resources\Games\Pages\EditGame;
 use App\Filament\Resources\Games\Pages\ListGames;
 use App\Models\Admin;
 use App\Models\Game;
+use App\Services\ContentImages;
 use BackedEnum;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
@@ -103,6 +108,8 @@ class GameResource extends Resource
                 ->unique(ignoreRecord: true),
             Select::make('locale')->label(__('admin.games.locale'))->options(config('ride.locale_names'))->required()->default('en'),
             TextInput::make('theme_color')->label(__('admin.games.theme_color'))->helperText(__('admin.games.theme_color_hint'))->required()->regex('/^#[0-9a-fA-F]{6}$/')->default('#0e1013'),
+            ...self::iconFields('icon'),
+            ...self::iconFields('icon_maskable'),
             Select::make('status')
                 ->label(__('admin.games.status'))
                 ->helperText(__('admin.games.status_hint'))
@@ -111,6 +118,27 @@ class GameResource extends Resource
                 ->default(Game::STATUS_DRAFT),
             Toggle::make('is_default')->label(__('admin.games.is_default'))->helperText(__('admin.games.is_default_hint'))->disabled()->dehydrated(false),
         ]);
+    }
+
+    /**
+     * The icon of a game (or its icon with a margin): the picture that is there, a box for another and a way to take it off. The page that saves the game keeps the
+     * file (see `HandlesGameIcons`) and puts its name in the column.
+     *
+     * @return list<mixed>
+     */
+    private static function iconFields(string $field): array
+    {
+        return [
+            Hidden::make($field),
+            View::make('filament.forms.definition-image')->viewData(fn (Get $get): array => ['name' => $get($field)]),
+            FileUpload::make("{$field}_upload")
+                ->label(__("admin.games.{$field}"))
+                ->helperText(__("admin.games.{$field}_hint"))
+                ->storeFiles(false)
+                ->acceptedFileTypes(['image/png', 'image/webp', 'image/jpeg'])
+                ->maxSize(intdiv(ContentImages::MAX_BYTES, 1024)),
+            Toggle::make("{$field}_remove")->label(__('admin.games.icon_remove'))->visible(fn (Get $get): bool => filled($get($field)))->default(false),
+        ];
     }
 
     public static function table(Table $table): Table

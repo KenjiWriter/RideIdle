@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\AccountRecoveryController;
 use App\Http\Controllers\Api\V1\AuthProviderController;
 use App\Http\Controllers\Api\V1\AwayController;
 use App\Http\Controllers\Api\V1\FleetController;
+use App\Http\Controllers\Api\V1\GameController;
 use App\Http\Controllers\Api\V1\GarageController;
 use App\Http\Controllers\Api\V1\LegalController;
 use App\Http\Controllers\Api\V1\LocaleController;
@@ -35,6 +36,8 @@ Route::prefix('v1')->group(function (): void {
     Route::get('/meta/legal', [LegalController::class, 'show']);
     Route::get('/meta/vocabulary', [VocabularyController::class, 'show']);
     Route::get('/meta/model', [ModelController::class, 'show']);
+    Route::get('/meta/game', [GameController::class, 'show']);
+    Route::get('/meta/manifest', [GameController::class, 'manifest']);
 
     // The pictures of the cars and the parts, by the checksum of their bytes.
     Route::get('/media/{name}', [MediaController::class, 'show'])->where('name', ContentImages::ROUTE)->name('media');

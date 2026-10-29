@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Games\CurrentGame;
 use App\Models\AccountIdentity;
 use App\Models\AccountToken;
 use App\Models\User;
@@ -56,6 +57,11 @@ final class SocialSignIn
 
         $driver = Socialite::driver($provider)->stateless()->with(['state' => $state]);
 
+        // A game with a domain of its own has its own address registered with the provider.
+        if (($callback = app(CurrentGame::class)->callbackUrl($provider)) !== null) {
+            $driver->redirectUrl($callback);
+        }
+
         // Apple puts a nonce into the identity token it signs and we check it: a token made for another flow is refused.
         if ($provider === AccountIdentity::APPLE) {
             $driver->setNonce(self::nonce($state));
@@ -87,6 +93,10 @@ final class SocialSignIn
 
         try {
             $driver = Socialite::driver($provider)->stateless();
+
+            if (($callback = app(CurrentGame::class)->callbackUrl($provider)) !== null) {
+                $driver->redirectUrl($callback);
+            }
 
             if ($provider === AccountIdentity::APPLE) {
                 $driver->setNonce(self::nonce($state));

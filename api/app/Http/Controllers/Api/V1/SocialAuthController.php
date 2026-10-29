@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Exceptions\ProviderAlreadyLinkedException;
+use App\Games\CurrentGame;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MeResource;
 use App\Models\AccountToken;
@@ -59,7 +60,7 @@ final class SocialAuthController extends Controller
     {
         $outcome = $providers->isEnabled($provider) ? $flow->collect($provider, $request) : ['result' => 'error'];
 
-        return redirect()->away(config('ride.web_url').'/auth/callback#'.http_build_query([...$outcome, 'provider' => $provider]));
+        return redirect()->away(app(CurrentGame::class)->webUrl().'/auth/callback#'.http_build_query([...$outcome, 'provider' => $provider]));
     }
 
     /**

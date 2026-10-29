@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Games\CurrentGame;
 use App\Mail\AccountLinkMail;
 use App\Models\User;
 use App\Support\Locale;
@@ -17,9 +18,7 @@ use Illuminate\Support\Facades\Mail;
  */
 final class AccountLinks
 {
-    public function __construct(private readonly AccountTokens $tokens)
-    {
-    }
+    public function __construct(private readonly AccountTokens $tokens) {}
 
     public static function ttlSeconds(): int
     {
@@ -40,7 +39,7 @@ final class AccountLinks
             'consent_at' => $consentAt,
         ]);
 
-        $url = config('ride.web_url').'/account/confirm?token='.$secret;
+        $url = app(CurrentGame::class)->webUrl().'/account/confirm?token='.$secret;
 
         Mail::to($email)
             ->locale(Locale::toLaravel(Locale::normalize($about->locale) ?? Locale::default()))

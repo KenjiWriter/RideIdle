@@ -12,7 +12,15 @@ use Filament\Resources\Pages\CreateRecord;
 /** Makes a game: it starts as a draft, which answers to nobody until it is made live. */
 class CreateGame extends CreateRecord
 {
+    use HandlesGameIcons;
+
     protected static string $resource = GameResource::class;
+
+    /** @param array<string, mixed> $data */
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        return $this->withIcons($data);
+    }
 
     protected function afterCreate(): void
     {

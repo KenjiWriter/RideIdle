@@ -55,6 +55,33 @@ final class CurrentGame
     }
 
     /**
+     * The address of the web app of the game in play: the one of this installation (`WEB_URL`) for the default game and for a game without a domain, else the domain of
+     * the game, with the scheme of `WEB_URL`. It is where the links in an e-mail and the return from another service lead: to the app of the game of the account.
+     */
+    public function webUrl(): string
+    {
+        $base = (string) config('ride.web_url');
+        $domain = $this->game?->domain;
+
+        if ($this->game === null || $this->game->is_default || blank($domain)) {
+            return $base;
+        }
+
+        return (parse_url($base, PHP_URL_SCHEME) ?: 'https').'://'.$domain;
+    }
+
+    /**
+     * Where another service sends the person back to, for a game that has a domain of its own: the callback of the API on that domain (the provider has the
+     * address of each game registered). Null for the first game, whose address is the one of the configuration.
+     */
+    public function callbackUrl(string $provider): ?string
+    {
+        $base = $this->webUrl();
+
+        return $base === (string) config('ride.web_url') ? null : "{$base}/api/v1/auth/{$provider}/callback";
+    }
+
+    /**
      * Does the work for a game and gives the one that was in force back after it.
      *
      * @template T
