@@ -823,6 +823,16 @@ describe('GarageView', () => {
       expect(wrapper.get('[data-test="car-xp"] [role="progressbar"]').attributes('aria-valuenow')).toBe('68')
     })
 
+    it('has the language in the account section, where the gear of the bar at the top leads, as the screens of the game have no header for it', async () => {
+      const { mounted } = openWithCar()
+      const { wrapper } = await mounted
+      await flushPromises()
+
+      expect(wrapper.find('[data-test="account"] [data-test="language"] select').exists()).toBe(true)
+      expect(wrapper.find('[data-test="account"]').attributes('id')).toBe('account')
+      expect(wrapper.find('[data-test="fuel"]').attributes('id')).toBe('fuel')
+    })
+
     it('stands on a stage: the name in outline, the level and the state of the run on the floor', async () => {
       const { mounted } = openWithCar()
       const { wrapper } = await mounted

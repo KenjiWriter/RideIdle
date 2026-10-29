@@ -8,6 +8,8 @@ declare module 'vue-router' {
     guestOnly?: boolean
     /** Draws its own top bar with the name of the game, as the canvas does: the header of the application is left out. */
     bare?: boolean
+    /** A screen of the game itself: the bar at the top (the level, the fuel, the cash) is its header, so the header of the application is left out. */
+    game?: boolean
   }
 }
 
@@ -30,16 +32,16 @@ export const routes: RouteRecordRaw[] = [
   // The story between the name and the choice of a wreck: only for a driver who has just been made.
   { path: '/story', name: 'story', component: () => import('@/views/StoryView.vue'), meta: { requiresAuth: true, bare: true } },
   { path: '/choose', name: 'choose', component: () => import('@/views/ChooseCarView.vue'), meta: { requiresAuth: true, bare: true } },
-  { path: '/map', name: 'map', component: () => import('@/views/MapView.vue'), meta: { requiresAuth: true } },
-  { path: '/race', name: 'race', component: () => import('@/views/RaceView.vue'), meta: { requiresAuth: true } },
-  { path: '/garage', name: 'garage', component: () => import('@/views/GarageView.vue'), meta: { requiresAuth: true } },
+  { path: '/map', name: 'map', component: () => import('@/views/MapView.vue'), meta: { requiresAuth: true, game: true } },
+  { path: '/race', name: 'race', component: () => import('@/views/RaceView.vue'), meta: { requiresAuth: true, game: true } },
+  { path: '/garage', name: 'garage', component: () => import('@/views/GarageView.vue'), meta: { requiresAuth: true, game: true } },
   // The fleet is a part of the garage: the navigation keeps "Garage" lit, and the tabs of the garage lead here and back.
-  { path: '/garage/fleet', name: 'fleet', component: () => import('@/views/FleetView.vue'), meta: { requiresAuth: true } },
+  { path: '/garage/fleet', name: 'fleet', component: () => import('@/views/FleetView.vue'), meta: { requiresAuth: true, game: true } },
   // The technical state of the car is a part of the garage too: the navigation keeps "Garage" lit.
-  { path: '/garage/condition', name: 'condition', component: () => import('@/views/ConditionView.vue'), meta: { requiresAuth: true } },
-  { path: '/workshop', name: 'workshop', component: () => import('@/views/WorkshopView.vue'), meta: { requiresAuth: true } },
-  { path: '/shop', name: 'shop', component: () => import('@/views/ShopView.vue'), meta: { requiresAuth: true } },
-  { path: '/exchange', name: 'exchange', component: () => import('@/views/ExchangeView.vue'), meta: { requiresAuth: true } },
-  { path: '/dealer', name: 'dealer', component: () => import('@/views/DealerView.vue'), meta: { requiresAuth: true } },
-  { path: '/storage', name: 'storage', component: () => import('@/views/StorageView.vue'), meta: { requiresAuth: true } },
+  { path: '/garage/condition', name: 'condition', component: () => import('@/views/ConditionView.vue'), meta: { requiresAuth: true, game: true } },
+  { path: '/workshop', name: 'workshop', component: () => import('@/views/WorkshopView.vue'), meta: { requiresAuth: true, game: true } },
+  { path: '/shop', name: 'shop', component: () => import('@/views/ShopView.vue'), meta: { requiresAuth: true, game: true } },
+  { path: '/exchange', name: 'exchange', component: () => import('@/views/ExchangeView.vue'), meta: { requiresAuth: true, game: true } },
+  { path: '/dealer', name: 'dealer', component: () => import('@/views/DealerView.vue'), meta: { requiresAuth: true, game: true } },
+  { path: '/storage', name: 'storage', component: () => import('@/views/StorageView.vue'), meta: { requiresAuth: true, game: true } },
 ]

@@ -810,8 +810,17 @@ body {
     bottom: 10px;
   }
 
+  /* The small stage of a card in a list (the dealer, the exchange): lower, so that a list of cars is not a list of pictures. */
   .stage-sm {
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 2 / 1;
+  }
+
+  .stage-sm .stage-empty {
+    padding-bottom: 9%;
+  }
+
+  .stage-sm .stage-empty svg {
+    width: 50%;
   }
 
   .stage-sm .stage-name {

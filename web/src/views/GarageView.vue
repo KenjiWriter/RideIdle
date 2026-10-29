@@ -12,6 +12,7 @@ import CarStage from '@/components/CarStage.vue'
 import FuelGauge from '@/components/FuelGauge.vue'
 import GarageTabs from '@/components/GarageTabs.vue'
 import GameShell from '@/components/GameShell.vue'
+import LanguageSwitcher from '@/components/LanguageSwitcher.vue'
 import LinkAccountBanner from '@/components/LinkAccountBanner.vue'
 import LinkAccountDialog from '@/components/LinkAccountDialog.vue'
 import LinkedAccounts from '@/components/LinkedAccounts.vue'
@@ -336,6 +337,11 @@ async function useCode(): Promise<void> {
 
     <!-- The account: the code that brings the garage back, the accounts it is linked to, and the data of the driver. The gear of the bar at the top leads here. -->
     <div id="account" class="flex flex-col gap-3" data-test="account">
+      <!-- The game has no header with the language, as the bar at the top is the HUD: it is chosen here, where the gear leads. -->
+      <div class="card flex items-center justify-between gap-3 !p-3" data-test="language">
+        <LanguageSwitcher />
+      </div>
+
       <RecoveryPanel v-if="session.me?.is_guest" ref="recoveryPanel" />
 
       <LinkedAccounts />

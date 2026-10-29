@@ -41,7 +41,7 @@ const { rewardMessage } = useTutorialReward(() => {
 </script>
 
 <template>
-  <div class="mx-auto flex min-h-[calc(100vh-61px)] w-full max-w-[480px] flex-col border-x border-line bg-bg/70">
+  <div class="mx-auto flex min-h-screen w-full max-w-[480px] flex-col border-x border-line bg-bg/70">
     <GameHud />
     <div class="flex flex-1 flex-col gap-3 px-3.5 py-3">
       <TutorialGoal />

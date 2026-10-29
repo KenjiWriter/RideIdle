@@ -40,6 +40,19 @@ describe('App', () => {
     expect(wrapper.get('[data-test="footer-privacy"]').text()).toBe('Polityka prywatności')
   })
 
+  it('has the header with the name of the game and the language on a page of the legal documents, and none on the landing page, which draws its own', async () => {
+    const legal = await mountView(App, '/terms')
+    await flushPromises()
+
+    expect(legal.wrapper.find('[data-test="app-header"]').exists()).toBe(true)
+    expect(legal.wrapper.find('[data-test="app-header"] select').exists()).toBe(true)
+
+    const landing = await mountView(App, '/')
+    await flushPromises()
+
+    expect(landing.wrapper.find('[data-test="app-header"]').exists()).toBe(false)
+  })
+
   it('is there on the terms page as well, so that the other document is at hand', async () => {
     const { wrapper } = await mountView(App, '/terms')
     await flushPromises()
