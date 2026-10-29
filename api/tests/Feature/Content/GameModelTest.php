@@ -206,6 +206,17 @@ describe('the validation of a model', function () {
             }])))->toContain('rules/economy.json /anchors/parts/slot_share/sails');
     });
 
+    it('asks for the life of the parts and the time of a job only for a slot that has parts, so that a slot can be added to the model before the rules know it', function () {
+        $sails = fn (array $model): array => [...$model, 'slots' => [...$model['slots'], ['key' => 'sails']]];
+
+        // An empty slot passes. A part in it then asks for what the rules give a slot that has parts.
+        expect(modelErrors(contentWith(['rules/model' => $sails])))->toBe([]);
+
+        $withPart = contentWith(['rules/model' => $sails, 'parts/sport-exhaust-t2' => fn (array $part): array => [...$part, 'slot' => 'sails']]);
+
+        expect(modelErrors($withPart))->toContain('rules/starter.json /wear/life_km', 'rules/starter.json /workshop/base_time_ms');
+    });
+
     it('wants the stock tires to be in the slot that is the tires', function () {
         $errors = modelErrors(contentWith(['rules/starter' => fn (array $rules): array => [...$rules, 'stock_tires' => 'sport-suspension-t1']]));
 

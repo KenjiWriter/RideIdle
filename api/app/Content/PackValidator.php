@@ -758,8 +758,8 @@ final class PackValidator
     /**
      * The model against the rest of the content: every part is in a slot of the model (and has what its role asks), the rules that are by slot (the life, the time of
      * a job, the effects of the legendary parts, the crates, the equipment, the affixes, the shares of the economy) name slots of the model, the life and the time of
-     * a job are given for every slot (a part of one that has none would divide by nothing), the stock tires are the tires of the game, and a slot that the app has no
-     * word for is named in the vocabulary.
+     * a job are given for every slot that has parts (a part of one that has none would divide by nothing), the stock tires are the tires of the game, and a slot that the
+     * app has no word for is named in the vocabulary.
      *
      * @param  array<string, mixed>  $rules
      */
@@ -800,9 +800,13 @@ final class PackValidator
             }
         }
 
+        // A slot that has parts needs the life of its parts and the time of a job (a part of it would divide by nothing); one that has none does not yet, which is what lets a
+        // slot be added to the model first and to the rules after (each document is saved on its own, and the rules may only name slots of the model).
+        $withParts = array_unique(array_column($source->documents('parts'), 'slot'));
+
         foreach (['/wear/life_km' => 'life of the parts in km', '/workshop/base_time_ms' => 'time of a job'] as $pointer => $what) {
-            foreach (array_diff($slots, array_keys($byKey[$pointer])) as $slot) {
-                $result->addError('rules/starter.json', $pointer, "The slot {$slot} has no {$what}: the rules give it for every slot of the game.");
+            foreach (array_intersect(array_diff($slots, array_keys($byKey[$pointer])), $withParts) as $slot) {
+                $result->addError('rules/starter.json', $pointer, "The slot {$slot} has parts, but no {$what}: the rules give it for every slot that has parts.");
             }
         }
 

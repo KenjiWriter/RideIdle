@@ -7,6 +7,7 @@ namespace App\Filament\Forms;
 use App\Content\Definitions\SchemaChoices;
 use App\Filament\Forms\Components\MapPoint;
 use App\Filament\Resources\Definitions\Forms\DefinitionFields;
+use App\Services\ContentDrafts;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -123,7 +124,7 @@ final class WorldFields
                     ]),
                     DefinitionFields::texts('name', __('admin.definitions.name')),
                     Grid::make(3)->schema([
-                        Select::make('reference_tires')->label(__('admin.world.reference_tires'))->helperText(__('admin.world.reference_tires_hint'))->options(fn (): array => ContentOptions::parts('tires'))->placeholder('-'),
+                        Select::make('reference_tires')->label(__('admin.world.reference_tires'))->helperText(__('admin.world.reference_tires_hint'))->options(fn (): array => ContentOptions::parts(app(ContentDrafts::class)->workingModel()->slotOf('tires') ?? 'tires'))->placeholder('-'),
                         TextInput::make('min_player_level')->label(__('admin.world.min_player_level'))->numeric()->integer()->minValue(1)->required(),
                         Toggle::make('lit')->label(__('admin.world.lit'))->inline(false),
                     ]),
