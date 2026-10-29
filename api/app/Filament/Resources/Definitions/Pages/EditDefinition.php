@@ -51,7 +51,7 @@ abstract class EditDefinition extends EditRecord
         $resource = static::getResource();
 
         try {
-            return app(ContentDrafts::class)->save($record, DefinitionForm::toDocument($resource::kind(), $data), $this->admin());
+            return app(ContentDrafts::class)->save($record, DefinitionForm::toDocument($resource::kind(), $data, app(ContentDrafts::class)->workingModel()), $this->admin());
         } catch (DefinitionRefused $refusal) {
             $this->refuse($refusal);
         }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Content\Definitions;
 
+use App\Content\GameModel;
 use InvalidArgumentException;
 
 /**
@@ -34,13 +35,14 @@ final class DefinitionForm
      * The document that a form makes.
      *
      * @param  array<string, mixed>  $state
+     * @param  GameModel|null  $model  the model of the game that the part is made for: which slot is the tires and which the engine decides what a part has; the model of the car game when none is given
      * @return array<string, mixed>
      */
-    public static function toDocument(string $kind, array $state): array
+    public static function toDocument(string $kind, array $state, ?GameModel $model = null): array
     {
         return match ($kind) {
             'vehicle' => self::vehicleDocument($state),
-            'part' => self::partDocument($state),
+            'part' => self::partDocument($state, $model ?? GameModel::default()),
             default => throw new InvalidArgumentException("There is no form for {$kind}."),
         };
     }
@@ -157,7 +159,7 @@ final class DefinitionForm
      * @param  array<string, mixed>  $state
      * @return array<string, mixed>
      */
-    private static function partDocument(array $state): array
+    private static function partDocument(array $state, GameModel $model): array
     {
         $slot = self::text($state['slot'] ?? null);
         $document = ['slug' => self::text($state['slug'] ?? null), 'name' => self::i18n($state['name'] ?? [])];
@@ -168,7 +170,7 @@ final class DefinitionForm
 
         $document['slot'] = $slot;
 
-        if ($slot === 'tires') {
+        if ($model->is((string) $slot, 'tires')) {
             $document['tire_kind'] = self::text($state['tire_kind'] ?? null);
         }
 
@@ -187,7 +189,7 @@ final class DefinitionForm
 
         $document['stats'] = $stats;
 
-        if ($slot === 'engine') {
+        if ($model->is((string) $slot, 'engine')) {
             $document['engine'] = ['layout' => self::text($state['engine_layout'] ?? null), 'displacement_l' => self::number($state['engine_displacement_l'] ?? null)];
         }
 

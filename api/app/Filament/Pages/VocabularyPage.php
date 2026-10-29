@@ -9,6 +9,7 @@ use App\Content\Definitions\VocabularyForm;
 use App\Content\Vocabulary\MessageCatalog;
 use App\Filament\Forms\VocabularyFields;
 use App\Models\ContentDefinition;
+use App\Services\ContentDrafts;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -153,7 +154,7 @@ class VocabularyPage extends RulesDocumentPage
                 ->live()
                 ->afterStateUpdated(fn () => $this->fillForm()),
             Text::make(__('admin.vocabulary.shown', ['shown' => count($shown['keys']), 'matching' => $shown['matching']]).' '.__('admin.vocabulary.hint')),
-            ...VocabularyFields::schema($shown['keys'], $catalog, $document),
+            ...VocabularyFields::schema($shown['keys'], $catalog, $document, $this->vocabulary()->packSlotKeys()),
         ];
     }
 
@@ -208,6 +209,6 @@ class VocabularyPage extends RulesDocumentPage
 
     private function vocabulary(): VocabularyForm
     {
-        return $this->vocabularyForm ??= new VocabularyForm(MessageCatalog::fromConfig());
+        return $this->vocabularyForm ??= new VocabularyForm(MessageCatalog::fromConfig(), app(ContentDrafts::class)->workingModel());
     }
 }

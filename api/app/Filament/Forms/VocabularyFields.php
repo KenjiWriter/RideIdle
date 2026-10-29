@@ -18,9 +18,10 @@ final class VocabularyFields
     /**
      * @param  list<string>  $keys  the messages to show, in order
      * @param  array<string, mixed>  $document  the document being worked on
+     * @param  list<string>  $packSlotKeys  the messages that name a slot of the model that the app has no name for
      * @return list<mixed>
      */
-    public static function schema(array $keys, MessageCatalog $catalog, array $document): array
+    public static function schema(array $keys, MessageCatalog $catalog, array $document, array $packSlotKeys = []): array
     {
         $changed = (array) ($document['messages'] ?? []);
         $language = (string) config('ride.admin_locale');
@@ -30,7 +31,11 @@ final class VocabularyFields
             $isChanged = isset($changed[$key]);
 
             $sections[] = Section::make($isChanged ? "{$key} ●" : $key)
-                ->description($catalog->text($key, $language) === null ? __('admin.vocabulary.not_in_app') : __('admin.vocabulary.app_says', ['text' => $catalog->text($key, $language)]))
+                ->description(match (true) {
+                    in_array($key, $packSlotKeys, true) => __('admin.vocabulary.slot_of_pack'),
+                    $catalog->text($key, $language) === null => __('admin.vocabulary.not_in_app'),
+                    default => __('admin.vocabulary.app_says', ['text' => $catalog->text($key, $language)]),
+                })
                 ->compact()
                 ->collapsible()
                 ->collapsed(! $isChanged && count($keys) > 8)

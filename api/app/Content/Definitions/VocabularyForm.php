@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Content\Definitions;
 
+use App\Content\GameModel;
 use App\Content\Vocabulary\MessageCatalog;
 use stdClass;
 
@@ -20,7 +21,31 @@ final class VocabularyForm
     /** The value of the choice of an area that means all of them. */
     public const ALL = '*';
 
-    public function __construct(private readonly MessageCatalog $catalog) {}
+    /** @param GameModel|null $model the model of the game as it is being worked on: its slots that the app has no name for are messages of the pack too */
+    public function __construct(private readonly MessageCatalog $catalog, private readonly ?GameModel $model = null) {}
+
+    /**
+     * The messages that name the slots of the model that the app does not know (a game with a sail where the car game has tires): the app has no text for them, so
+     * the pack gives it. A hidden slot is not shown and needs none. Without the texts of the web app, nothing is known to be missing from it.
+     *
+     * @return list<string>
+     */
+    public function packSlotKeys(): array
+    {
+        if ($this->model === null || ! $this->catalog->available()) {
+            return [];
+        }
+
+        $keys = [];
+
+        foreach ($this->model->slots() as ['key' => $slot, 'hidden' => $hidden]) {
+            if (! $hidden && ! $this->catalog->has("slot.{$slot}")) {
+                $keys[] = "slot.{$slot}";
+            }
+        }
+
+        return $keys;
+    }
 
     /**
      * The messages that can be changed, in the order of the app, and the ones the document has that the app does not (a text for a message that was taken out of
@@ -32,6 +57,10 @@ final class VocabularyForm
     public function keys(array $document): array
     {
         $keys = array_keys($this->catalog->all());
+
+        foreach ($this->packSlotKeys() as $key) {
+            $keys[] = $key;
+        }
 
         foreach (array_keys(self::messagesOf($document)) as $key) {
             if (! in_array((string) $key, $keys, true)) {

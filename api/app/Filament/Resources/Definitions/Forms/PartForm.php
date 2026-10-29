@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Definitions\Forms;
 
 use App\Content\Catalog;
+use App\Services\ContentDrafts;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -20,11 +21,22 @@ final class PartForm
     /** The statistics that parts have had so far, suggested when a name is typed; any name that the schema allows can be written. */
     private const KNOWN_STATS = ['grip', 'handling', 'braking', 'clearance', 'power_mult', 'lag', 'fuel_mult', 'engine_load', 'boost_gain', 'mass_kg', 'launch', 'top_speed_cap_kmh', 'capacity_l', 'power_kw', 'engine_mass_kg'];
 
-    /** @return list<mixed> */
+    /**
+     * The slots are the ones of the model of the game as it is being worked on, and what a part has depends on the role of its slot: the kind of tires for the slot
+     * that is the tires, the layout and the displacement for the slot that is the engine.
+     *
+     * @return list<mixed>
+     */
     public static function schema(): array
     {
-        $tires = fn (Get $get): bool => $get('slot') === 'tires';
-        $engine = fn (Get $get): bool => $get('slot') === 'engine';
+        $model = app(ContentDrafts::class)->workingModel();
+        $tires = fn (Get $get): bool => $model->is((string) $get('slot'), 'tires');
+        $engine = fn (Get $get): bool => $model->is((string) $get('slot'), 'engine');
+        $slots = [];
+
+        foreach ($model->slots() as ['key' => $key, 'role' => $role]) {
+            $slots[$key] = $role === null || $role === $key ? $key : "{$key} ({$role})";
+        }
 
         return [
             Section::make(__('admin.definitions.sections.identification'))->schema([
@@ -34,7 +46,7 @@ final class PartForm
             DefinitionFields::image(),
             Section::make(__('admin.definitions.sections.part'))->schema([
                 Grid::make(4)->schema([
-                    Select::make('slot')->label(__('admin.definitions.slot'))->options(self::options(['tires', 'suspension', 'brakes', 'engine', 'boost', 'gearbox', 'exhaust', 'cooling', 'tank', 'ecu']))->required()->live(),
+                    Select::make('slot')->label(__('admin.definitions.slot'))->options($slots)->required()->live(),
                     Select::make('tire_kind')->label(__('admin.definitions.tire_kind'))->options(self::options(['all_season', 'street', 'slick', 'rain', 'offroad', 'winter']))->visible($tires)->required($tires),
                     Select::make('tier')->label(__('admin.definitions.tier'))->options(array_combine(range(1, 10), range(1, 10)))->required(),
                     TextInput::make('price')->label(__('admin.definitions.price'))->numeric()->prefix('$')->required(),

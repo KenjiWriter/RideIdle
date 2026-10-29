@@ -31,7 +31,7 @@ trait ChecksDefinitionDrafts
     {
         /** @var class-string<DefinitionResource> $resource */
         $resource = static::getResource();
-        $result = app(ContentDrafts::class)->validate($resource::kind(), DefinitionForm::toDocument($resource::kind(), $state), $slug);
+        $result = app(ContentDrafts::class)->validate($resource::kind(), DefinitionForm::toDocument($resource::kind(), $state, app(ContentDrafts::class)->workingModel()), $slug);
 
         $this->missingLanguages = [];
 

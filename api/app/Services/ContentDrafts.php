@@ -49,7 +49,7 @@ final class ContentDrafts
     }
 
     /** The model of the game as it is being worked on (its draft, or what was published last), or the one of the car game when the content has none. */
-    private function workingModel(): GameModel
+    public function workingModel(): GameModel
     {
         $definition = ContentDefinition::query()->where('kind', ContentDefinition::KIND_RULES)->where('slug', 'model')->with('latestVersion')->first();
         $text = $definition?->draft ?? $definition?->latestVersion?->document;

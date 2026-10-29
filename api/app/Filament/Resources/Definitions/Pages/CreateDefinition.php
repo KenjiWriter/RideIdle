@@ -31,7 +31,7 @@ abstract class CreateDefinition extends CreateRecord
         $resource = static::getResource();
 
         try {
-            return app(ContentDrafts::class)->create($resource::kind(), DefinitionForm::toDocument($resource::kind(), $data), Auth::guard('admin')->user());
+            return app(ContentDrafts::class)->create($resource::kind(), DefinitionForm::toDocument($resource::kind(), $data, app(ContentDrafts::class)->workingModel()), Auth::guard('admin')->user());
         } catch (DefinitionRefused $refusal) {
             $this->refuse($refusal);
         }
