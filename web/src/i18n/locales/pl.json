@@ -434,6 +434,35 @@
       "legendary": "Gwarancja (Legendarna): jeszcze {count}",
       "last": "Ostatnia skrzynka",
       "free": "Za darmo"
+    },
+    "spotHint": "Dotknij części na aucie, żeby zobaczyć, co jest na nią do kupienia.",
+    "forSlot": "Na sprzedaż do tego slotu: {count}",
+    "noneForSlot": "Do tego slotu nic teraz nie ma na sprzedaż.",
+    "compare": {
+      "title": "Wobec założonej: {name}",
+      "same": "Takie same statystyki jak założona część.",
+      "better": "lepiej",
+      "worse": "gorzej",
+      "stat": {
+        "grip": "Przyczepność",
+        "handling": "Prowadzenie",
+        "braking": "Hamowanie",
+        "power_mult": "Moc",
+        "fade_resistance": "Odporność na przegrzanie",
+        "cooling": "Chłodzenie",
+        "capacity_l": "Pojemność",
+        "gears": "Biegi",
+        "top_speed_cap_kmh": "Limit prędkości",
+        "clearance": "Terenowość",
+        "lag": "Opóźnienie",
+        "fuel_mult": "Spalanie",
+        "engine_load": "Obciążenie silnika",
+        "boost_gain": "Moc doładowania",
+        "mass_kg": "Masa",
+        "launch": "Start",
+        "power_kw": "Moc silnika",
+        "engine_mass_kg": "Masa silnika"
+      }
     }
   },
   "workshop": {

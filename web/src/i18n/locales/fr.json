@@ -434,6 +434,35 @@
       "legendary": "Garantie (Légendaire) : encore {count}",
       "last": "Dernière caisse",
       "free": "Gratuit"
+    },
+    "spotHint": "Touchez une pièce sur la voiture pour voir ce qui est en vente.",
+    "forSlot": "En vente pour cet emplacement : {count}",
+    "noneForSlot": "Rien n’est en vente pour cet emplacement pour le moment.",
+    "compare": {
+      "title": "Par rapport à celle qui est montée : {name}",
+      "same": "Les mêmes statistiques que la pièce montée.",
+      "better": "mieux",
+      "worse": "moins bien",
+      "stat": {
+        "grip": "Adhérence",
+        "handling": "Tenue de route",
+        "braking": "Freinage",
+        "power_mult": "Puissance",
+        "fade_resistance": "Résistance à la surchauffe",
+        "cooling": "Refroidissement",
+        "capacity_l": "Capacité",
+        "gears": "Rapports",
+        "top_speed_cap_kmh": "Limite de vitesse",
+        "clearance": "Tout-terrain",
+        "lag": "Temps de réponse",
+        "fuel_mult": "Consommation",
+        "engine_load": "Charge moteur",
+        "boost_gain": "Gain de suralimentation",
+        "mass_kg": "Masse",
+        "launch": "Démarrage",
+        "power_kw": "Puissance du moteur",
+        "engine_mass_kg": "Masse du moteur"
+      }
     }
   },
   "workshop": {

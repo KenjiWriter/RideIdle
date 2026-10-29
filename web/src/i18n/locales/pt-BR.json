@@ -434,6 +434,35 @@
       "legendary": "Garantia (Lendária): faltam {count}",
       "last": "Última caixa",
       "free": "Grátis"
+    },
+    "spotHint": "Toque numa peça do carro para ver o que está à venda.",
+    "forSlot": "À venda para este espaço: {count}",
+    "noneForSlot": "Não há nada à venda para este espaço agora.",
+    "compare": {
+      "title": "Em relação à instalada: {name}",
+      "same": "As mesmas estatísticas da peça instalada.",
+      "better": "melhor",
+      "worse": "pior",
+      "stat": {
+        "grip": "Aderência",
+        "handling": "Dirigibilidade",
+        "braking": "Frenagem",
+        "power_mult": "Potência",
+        "fade_resistance": "Resistência ao superaquecimento",
+        "cooling": "Arrefecimento",
+        "capacity_l": "Capacidade",
+        "gears": "Marchas",
+        "top_speed_cap_kmh": "Limite de velocidade",
+        "clearance": "Off-road",
+        "lag": "Atraso",
+        "fuel_mult": "Consumo",
+        "engine_load": "Carga do motor",
+        "boost_gain": "Ganho de sobrealimentação",
+        "mass_kg": "Massa",
+        "launch": "Largada",
+        "power_kw": "Potência do motor",
+        "engine_mass_kg": "Massa do motor"
+      }
     }
   },
   "workshop": {

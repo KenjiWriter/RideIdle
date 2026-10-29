@@ -4,8 +4,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
-import { aCrates, anOpenedCrate, aPart, anOffer } from '@/test/garageFixtures'
-import { setModel } from '@/model'
+import { aCar, aCrates, aGarage, aMountedPart, anOpenedCrate, aPart, anOffer } from '@/test/garageFixtures'
+import { DEFAULT_MODEL, setModel } from '@/model'
 import { mountView } from '@/test/mountView'
 import { aTutorial } from '@/test/tutorialFixtures'
 
@@ -690,5 +690,300 @@ describe('ShopView in a game with another model', () => {
 
     expect(wrapper.findAll('section[data-test^="group-"]').map((group) => group.attributes('data-test'))).toEqual(['group-sails', 'group-hull'])
     expect(wrapper.find('[data-test="offer-old-exhaust-t1"]').exists()).toBe(false)
+  })
+})
+
+describe('ShopView on a stage', () => {
+  const FITTED_TIRES = aMountedPart({ slot: 'tires', slug: 'street-tires-t1', name: 'Street tires T1', tier: 1, stats: { grip: 90, handling: 88, braking: 90 } })
+  const FITTED_BOOST = aMountedPart({ slot: 'boost', slug: 'turbo-mini-t3', name: 'Turbo mini', tier: 3, stats: { power_mult: 1.38, lag: 4, fuel_mult: 1.28, engine_load: 14 } })
+
+  const parts = [
+    anOffer({ slug: 'street-tires-t2', name: 'Street tires T2', slot: 'tires', price_cents: 57_000, stats: { grip: 100, handling: 98, braking: 100 }, required_car_level: 3, mountable: true }),
+    anOffer({ slug: 'sport-suspension-t1', name: 'Sport suspension', slot: 'suspension', tier: 1, price_cents: 75_000, stats: { handling: 100, clearance: 25 }, required_car_level: 0, mountable: true }),
+    anOffer({ slug: 'turbo-duo-t4', name: 'Turbo duo', slot: 'boost', tier: 4, price_cents: 120_000, stats: { power_mult: 1.45, lag: 3, fuel_mult: 1.3, engine_load: 14 }, required_car_level: 3, mountable: true }),
+  ]
+
+  beforeEach(async () => {
+    localStorage.clear()
+    fetchMock.mockReset()
+    vi.stubGlobal('fetch', fetchMock)
+    await setLocale('en')
+    storeToken('device-token')
+  })
+
+  afterEach(() => {
+    setModel()
+    vi.unstubAllGlobals()
+  })
+
+  /** The shop of a driver whose garage can be read: the car on the stage, with the parts that are fitted. */
+  async function openWith(car = aCar({}, { tires: FITTED_TIRES, boost: FITTED_BOOST }), offers = parts) {
+    const calls = serve({
+      'GET /api/v1/shop': () => respond(200, { data: { crates: aCrates(), parts: offers, car: { id: 5, level: 3 } }, wallet: { cash_cents: 900_000, xp: 0 } }),
+      'GET /api/v1/garage': () => respond(200, aGarage({ car })),
+      'GET /api/v1/runs/current': () => respond(404, { message: 'No run', code: 'no_run' }),
+    })
+    const { wrapper } = await mountView(ShopView, '/shop')
+    await flushPromises()
+
+    return { wrapper, calls }
+  }
+
+  const groups = (wrapper: Awaited<ReturnType<typeof openWith>>['wrapper']) => wrapper.findAll('section[data-test^="group-"]').map((group) => group.attributes('data-test'))
+
+  describe('the stage', () => {
+    it('puts the car of the garage on a stage, with a spot for each of its parts, and says what the spots are for', async () => {
+      const { wrapper } = await openWith()
+
+      expect(wrapper.get('[data-test="stage"] .stage-name').text()).toBe('Rdzak GT-4')
+      expect(wrapper.get('[data-test="stage-level"]').text()).toBe('Car LV 3')
+      expect(wrapper.findAll('[data-test="spots"] .spot')).toHaveLength(9)
+      expect(wrapper.get('[data-test="shop-hint"]').text()).toBe('Tap a part on the car to see what is for sale for it.')
+      // Nothing is narrowed down, and every slot with a part for sale is listed.
+      expect(groups(wrapper)).toEqual(['group-tires', 'group-suspension', 'group-boost'])
+    })
+
+    it('asks for the garage when the shop opens, and shows no stage when it cannot be read: the shop works without it', async () => {
+      const calls = serve({
+        'GET /api/v1/shop': () => respond(200, { data: { crates: aCrates(), parts, car: { id: 5, level: 3 } }, wallet: { cash_cents: 900_000, xp: 0 } }),
+        'GET /api/v1/garage': () => respond(500, { message: 'Server error' }),
+      })
+      const { wrapper } = await mountView(ShopView, '/shop')
+      await flushPromises()
+
+      expect(calls.some((call) => call.url.endsWith('/v1/garage'))).toBe(true)
+      expect(wrapper.find('[data-test="stage"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="shop-hint"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="load-error"]').exists()).toBe(false)
+      expect(groups(wrapper)).toEqual(['group-tires', 'group-suspension', 'group-boost'])
+      // With no stage the row of chips is the way to narrow the list down, with a chip for every slot.
+      expect(wrapper.findAll('[data-test="part-filter"] [role="radio"]').map((chip) => chip.attributes('data-test'))).toEqual(['filter-all', 'filter-tires', 'filter-suspension', 'filter-boost'])
+    })
+
+    it('narrows the list of parts to the slot that is tapped on the car, and says what is on the car now and how many parts are for sale for it', async () => {
+      const { wrapper } = await openWith()
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+
+      expect(groups(wrapper)).toEqual(['group-tires'])
+      expect(wrapper.get('[data-test="spot-tires"]').classes()).toContain('spot-on')
+      expect(wrapper.find('[data-test="shop-hint"]').exists()).toBe(false)
+
+      const card = wrapper.get('[data-test="slot-detail"]')
+      expect(card.attributes('data-slot')).toBe('tires')
+      expect(card.get('[data-test="slot-part"]').text()).toBe('Street tires T1')
+      expect(card.get('[data-test="shop-slot-note"]').text()).toBe('For sale for this slot: 1')
+      // The card has no way to the workshop of its own: the shop leads there when a part is bought.
+      expect(card.find('[data-test="slot-workshop"]').exists()).toBe(false)
+    })
+
+    it('shows all the parts again when the same spot is tapped, when the card is closed, and when all the parts are chosen', async () => {
+      const { wrapper } = await openWith()
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+      expect(groups(wrapper)).toHaveLength(3)
+      expect(wrapper.find('[data-test="slot-detail"]').exists()).toBe(false)
+
+      await wrapper.get('[data-test="spot-boost"]').trigger('click')
+      await wrapper.get('[data-test="slot-close"]').trigger('click')
+      expect(groups(wrapper)).toHaveLength(3)
+
+      await wrapper.get('[data-test="spot-boost"]').trigger('click')
+      await wrapper.get('[data-test="filter-all"]').trigger('click')
+      expect(groups(wrapper)).toHaveLength(3)
+      expect(wrapper.find('[data-test="slot-detail"]').exists()).toBe(false)
+    })
+
+    it('shows another slot in place of the one that was looked at', async () => {
+      const { wrapper } = await openWith()
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+      await wrapper.get('[data-test="spot-suspension"]').trigger('click')
+
+      expect(groups(wrapper)).toEqual(['group-suspension'])
+      expect(wrapper.get('[data-test="slot-detail"]').attributes('data-slot')).toBe('suspension')
+      // Nothing is fitted on that slot: the card says it is the factory part.
+      expect(wrapper.get('[data-test="slot-part"]').text()).toBe('Factory')
+    })
+
+    it('brings the list of parts into view when a spot is tapped, and not when it is tapped to put the slot away', async () => {
+      const scrolled = vi.fn()
+      HTMLElement.prototype.scrollIntoView = scrolled
+
+      try {
+        const { wrapper } = await openWith()
+
+        await wrapper.get('[data-test="spot-tires"]').trigger('click')
+        await flushPromises()
+        expect(scrolled).toHaveBeenCalledTimes(1)
+
+        await wrapper.get('[data-test="spot-tires"]').trigger('click')
+        await flushPromises()
+        expect(scrolled).toHaveBeenCalledTimes(1)
+      } finally {
+        // jsdom has no scrollIntoView: the screen goes on without it.
+        // @ts-expect-error put back as it was
+        delete HTMLElement.prototype.scrollIntoView
+      }
+    })
+
+    it('says that nothing is for sale for a slot that has no parts in the shop', async () => {
+      const { wrapper } = await openWith()
+
+      await wrapper.get('[data-test="spot-tank"]').trigger('click')
+
+      expect(groups(wrapper)).toEqual([])
+      expect(wrapper.get('[data-test="shop-slot-note"]').text()).toBe('Nothing is for sale for this slot right now.')
+      // The row of chips has the chip of all the parts to go back with.
+      expect(wrapper.find('[data-test="filter-all"]').exists()).toBe(true)
+    })
+
+    it('leaves the chips to the slots that have no place on the picture, and shows the chip of a slot that is chosen on the car', async () => {
+      // A slot of another game has no place on the picture: its parts are told apart by a chip.
+      setModel({ ...DEFAULT_MODEL, slots: [...DEFAULT_MODEL.slots, { key: 'wings', role: null, hidden: false }] })
+
+      const car = aCar({ slots: [...aCar().slots, { slot: 'wings', role: null, part: null, built_in: false }] })
+      const { wrapper } = await openWith(car, [...parts.slice(0, 2), anOffer({ slug: 'big-wing-t1', name: 'Big wing', slot: 'wings', tier: 1 })])
+
+      // The row is there for the one slot that has no spot, and the slots that have one are not in it.
+      expect(wrapper.findAll('[data-test="part-filter"] [role="radio"]').map((chip) => chip.attributes('data-test'))).toEqual(['filter-all', 'filter-wings'])
+
+      await wrapper.get('[data-test="filter-wings"]').trigger('click')
+      expect(groups(wrapper)).toEqual(['group-wings'])
+      // A chip that is on stays on when it is tapped again: the chip of all the parts turns it off.
+      await wrapper.get('[data-test="filter-wings"]').trigger('click')
+      expect(groups(wrapper)).toEqual(['group-wings'])
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+      expect(wrapper.findAll('[data-test="part-filter"] [role="radio"]').map((chip) => chip.attributes('data-test'))).toEqual(['filter-all', 'filter-tires', 'filter-wings'])
+      expect(wrapper.get('[data-test="filter-tires"]').attributes('aria-checked')).toBe('true')
+    })
+
+    it('has no spots, and a chip for every slot, for a car that has no picture', async () => {
+      const car = aCar({ vehicle: { ...aCar().vehicle, slug: 'zubr-v8', name: 'Zubr V8', image_url: null } })
+      const { wrapper } = await openWith(car)
+
+      expect(wrapper.get('[data-test="stage"] .stage-name').text()).toBe('Zubr V8')
+      expect(wrapper.find('[data-test="spots"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="shop-hint"]').exists()).toBe(false)
+      expect(wrapper.findAll('[data-test="part-filter"] [role="radio"]')).toHaveLength(4)
+
+      await wrapper.get('[data-test="filter-boost"]').trigger('click')
+
+      expect(groups(wrapper)).toEqual(['group-boost'])
+      expect(wrapper.get('[data-test="slot-detail"]').attributes('data-slot')).toBe('boost')
+    })
+
+    it('says in the language of the driver what the spots are for', async () => {
+      await setLocale('pl')
+      const { wrapper } = await openWith()
+
+      expect(wrapper.get('[data-test="shop-hint"]').text()).toBe('Dotknij części na aucie, żeby zobaczyć, co jest na nią do kupienia.')
+
+      await wrapper.get('[data-test="spot-tires"]').trigger('click')
+
+      expect(wrapper.get('[data-test="shop-slot-note"]').text()).toBe('Na sprzedaż do tego slotu: 1')
+    })
+  })
+
+  describe('the part on the car, set against the parts for sale', () => {
+    it('shows by how much a part for sale is better or worse than the one that is fitted, statistic by statistic', async () => {
+      const { wrapper } = await openWith()
+
+      const compare = wrapper.get('[data-test="offer-street-tires-t2"] [data-test="part-compare"]')
+
+      expect(compare.get('[data-test="compare-title"]').text()).toBe('Against the fitted one: Street tires T1')
+      expect(compare.get('[data-test="compare-grip"]').text()).toContain('Grip +10.0')
+      expect(compare.get('[data-test="compare-handling"]').text()).toContain('Handling +10.0')
+      expect(compare.get('[data-test="compare-braking"]').text()).toContain('Braking +10.0')
+      expect(compare.get('[data-test="compare-grip"]').classes()).toContain('cmp-up')
+    })
+
+    it('counts a lower number as better where less is better (lag, fuel, load, mass), and a higher one as worse there', async () => {
+      const { wrapper } = await openWith()
+
+      const compare = wrapper.get('[data-test="offer-turbo-duo-t4"] [data-test="part-compare"]')
+
+      // The power is higher: better. The lag is lower: better, whatever the arrow says. The fuel factor is higher: worse. The load is the same: not listed.
+      expect(compare.get('[data-test="compare-power_mult"]').text()).toContain('Power +7.0%')
+      expect(compare.get('[data-test="compare-power_mult"]').classes()).toContain('cmp-up')
+      expect(compare.get('[data-test="compare-lag"]').text()).toContain('▼')
+      expect(compare.get('[data-test="compare-lag"]').text()).toContain('Lag −1.0')
+      expect(compare.get('[data-test="compare-lag"]').classes()).toContain('cmp-up')
+      expect(compare.get('[data-test="compare-fuel_mult"]').text()).toContain('Fuel +0.02')
+      expect(compare.get('[data-test="compare-fuel_mult"]').classes()).toContain('cmp-down')
+      expect(compare.find('[data-test="compare-engine_load"]').exists()).toBe(false)
+    })
+
+    it('tells a reader whether a change is better or worse, as the colour does for the eye', async () => {
+      const { wrapper } = await openWith()
+
+      expect(wrapper.get('[data-test="offer-turbo-duo-t4"] [data-test="compare-lag"] .sr-only').text()).toBe('(better)')
+      expect(wrapper.get('[data-test="offer-turbo-duo-t4"] [data-test="compare-fuel_mult"] .sr-only').text()).toBe('(worse)')
+    })
+
+    it('has nothing to set a part against when the slot holds the factory part, or the garage is not known', async () => {
+      const { wrapper } = await openWith()
+
+      // Nothing is fitted on the suspension.
+      expect(wrapper.find('[data-test="offer-sport-suspension-t1"] [data-test="part-compare"]').exists()).toBe(false)
+
+      const none = await openWith(aCar())
+      expect(none.wrapper.findAll('[data-test="part-compare"]')).toHaveLength(0)
+    })
+
+    it('says that a part has the same statistics as the one that is fitted', async () => {
+      const same = anOffer({ slug: 'street-tires-t1', name: 'Street tires T1', slot: 'tires', tier: 1, stats: { grip: 90, handling: 88, braking: 90 } })
+      const { wrapper } = await openWith(undefined, [same])
+
+      expect(wrapper.get('[data-test="offer-street-tires-t1"] [data-test="compare-same"]').text()).toBe('The same statistics as the fitted part.')
+    })
+
+    it('compares nothing across statistics that the two parts do not both have', async () => {
+      // The suspension for sale has the clearance and the fitted one has only the handling: only the handling is set against.
+      const car = aCar({}, { suspension: aMountedPart({ slot: 'suspension', slug: 'old-springs', name: 'Old springs', tier: 1, stats: { handling: 90 } }) })
+      const { wrapper } = await openWith(car)
+
+      const compare = wrapper.get('[data-test="offer-sport-suspension-t1"] [data-test="part-compare"]')
+      expect(compare.get('[data-test="compare-handling"]').text()).toContain('Handling +10.0')
+      expect(compare.find('[data-test="compare-clearance"]').exists()).toBe(false)
+    })
+
+    it('writes the statistics in the language of the driver', async () => {
+      await setLocale('pl')
+      const { wrapper } = await openWith()
+
+      expect(wrapper.get('[data-test="offer-street-tires-t2"] [data-test="compare-title"]').text()).toBe('Wobec założonej: Street tires T1')
+      expect(wrapper.get('[data-test="offer-street-tires-t2"] [data-test="compare-grip"]').text()).toContain('Przyczepność +10,0')
+    })
+  })
+
+  describe('the strip of crates', () => {
+    it('has the kinds of crate side by side in a strip, each with its own button, and the guarantees under the strip', async () => {
+      const { wrapper } = await openWith()
+
+      const rail = wrapper.get('[data-test="crate-rail"]')
+
+      expect(rail.classes()).toContain('rail')
+      expect(rail.findAll('article').map((card) => card.attributes('data-test'))).toEqual(['crate-slot', 'crate-mixed', 'crate-premium'])
+      // Every card has its button: the premium crate is not open at this level, and says so on its own.
+      expect(rail.findAll('[data-test="crate-open"], [data-test="crate-locked"]')).toHaveLength(3)
+      expect(rail.get('[data-test="crate-premium"] [data-test="crate-locked"]').attributes('disabled')).toBeDefined()
+      // The slots of a crate that has a choice are in its card, and the guarantees are not in the strip.
+      expect(rail.findAll('[data-test="crate-slots"]').length).toBeGreaterThan(0)
+      expect(rail.find('[data-test="guarantee-standard"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="crates"] > [data-test="guarantee-standard"]').exists()).toBe(true)
+    })
+
+    it('keeps the anchor of the tutorial on the button of the first crate that can be opened', async () => {
+      const { wrapper } = await openWith()
+
+      const anchors = wrapper.findAll('[data-tutorial="crate"]')
+
+      expect(anchors).toHaveLength(1)
+      expect(anchors[0]!.attributes('data-test')).toBe('crate-open')
+      expect(wrapper.get('[data-test="crate-slot"]').find('[data-tutorial="crate"]').exists()).toBe(true)
+    })
   })
 })

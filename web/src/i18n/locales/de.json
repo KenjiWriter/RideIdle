@@ -434,6 +434,35 @@
       "legendary": "Garantie (Legendär): noch {count}",
       "last": "Letzte Kiste",
       "free": "Gratis"
+    },
+    "spotHint": "Tippe auf ein Teil am Auto, um zu sehen, was es dafür zu kaufen gibt.",
+    "forSlot": "Zum Verkauf für diesen Slot: {count}",
+    "noneForSlot": "Für diesen Slot gibt es gerade nichts zu kaufen.",
+    "compare": {
+      "title": "Gegenüber dem verbauten Teil: {name}",
+      "same": "Dieselben Werte wie das verbaute Teil.",
+      "better": "besser",
+      "worse": "schlechter",
+      "stat": {
+        "grip": "Haftung",
+        "handling": "Fahrverhalten",
+        "braking": "Bremsen",
+        "power_mult": "Leistung",
+        "fade_resistance": "Fading-Beständigkeit",
+        "cooling": "Kühlung",
+        "capacity_l": "Fassungsvermögen",
+        "gears": "Gänge",
+        "top_speed_cap_kmh": "Geschwindigkeitsgrenze",
+        "clearance": "Gelände",
+        "lag": "Verzögerung",
+        "fuel_mult": "Verbrauch",
+        "engine_load": "Motorlast",
+        "boost_gain": "Ladeleistung",
+        "mass_kg": "Masse",
+        "launch": "Anfahren",
+        "power_kw": "Motorleistung",
+        "engine_mass_kg": "Motormasse"
+      }
     }
   },
   "workshop": {

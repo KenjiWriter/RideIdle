@@ -434,6 +434,35 @@
       "legendary": "Guarantee (Legendary): {count} to go",
       "last": "Last crate",
       "free": "Free"
+    },
+    "spotHint": "Tap a part on the car to see what is for sale for it.",
+    "forSlot": "For sale for this slot: {count}",
+    "noneForSlot": "Nothing is for sale for this slot right now.",
+    "compare": {
+      "title": "Against the fitted one: {name}",
+      "same": "The same statistics as the fitted part.",
+      "better": "better",
+      "worse": "worse",
+      "stat": {
+        "grip": "Grip",
+        "handling": "Handling",
+        "braking": "Braking",
+        "power_mult": "Power",
+        "fade_resistance": "Fade resistance",
+        "cooling": "Cooling",
+        "capacity_l": "Capacity",
+        "gears": "Gears",
+        "top_speed_cap_kmh": "Speed limit",
+        "clearance": "Off-road",
+        "lag": "Lag",
+        "fuel_mult": "Fuel",
+        "engine_load": "Engine load",
+        "boost_gain": "Boost gain",
+        "mass_kg": "Mass",
+        "launch": "Launch",
+        "power_kw": "Engine power",
+        "engine_mass_kg": "Engine mass"
+      }
     }
   },
   "workshop": {

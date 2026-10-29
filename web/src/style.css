@@ -1353,6 +1353,32 @@ body {
       animation: none;
     }
   }
+
+  /* ---------- the shop ---------- */
+  /* A crate in the strip: a card that is as wide as most of the strip, so that the next one peeks out from the edge and a driver sees that the strip is swiped. */
+  .crate {
+    @apply flex flex-none flex-col gap-2;
+    flex-basis: min(272px, 82%);
+    scroll-snap-align: start;
+  }
+
+  /* A part for sale set against the part that is fitted: what is better in green, what is worse in red (the arrow is the direction of the number, the colour is the verdict). */
+  .cmp {
+    @apply inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-[11px];
+    line-height: 1.3;
+  }
+
+  .cmp-up {
+    color: var(--color-ok);
+    background: color-mix(in srgb, var(--color-ok) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-ok) 40%, transparent);
+  }
+
+  .cmp-down {
+    color: var(--color-danger);
+    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-danger) 40%, transparent);
+  }
 }
 
 /* What the tutorial points at is scrolled to under the HUD and under the button that skips, and above the phone. */
