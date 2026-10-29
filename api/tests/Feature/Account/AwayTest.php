@@ -210,6 +210,58 @@ describe('the jobs and the journeys', function () {
     });
 });
 
+describe('the paid extras', function () {
+    it('count the times the tank was filled for the driver in the break, and the charges they took, and the part of the earnings that the VIP account added', function () {
+        $driver = awayDriver();
+        $run = awayCar($driver);
+        $other = awayCar($driver);
+
+        $settlement = Settlement::query()->create([
+            'race_run_id' => $run->id,
+            'state_version' => 1,
+            'cursor_from_ms' => awayMs('2026-10-28 06:00:00'),
+            'cursor_to_ms' => awayMs('2026-10-28 11:00:00'),
+            'now_ms' => awayMs('2026-10-28 11:00:00'),
+            'laps' => 100,
+            'cash_cents' => 186_000,
+            'bonus_cash_cents' => 31_000,
+            'auto_refills' => 3,
+            'refill_charges' => 2,
+            'xp' => 0,
+            'created_at' => '2026-10-28 11:00:00',
+        ]);
+
+        // Two of the refills are in the break and were paid with a charge, one is free (the pass), and one was before the break.
+        foreach ([['2026-10-28 05:00:00', 0], ['2026-10-28 07:00:00', 0], ['2026-10-28 08:30:00', 1], ['2026-10-28 10:00:00', 0]] as $seq => [$moment, $free]) {
+            $settlement->events()->create(['seq' => $seq + 1, 'type' => 'auto_refill', 'at_ms' => awayMs($moment), 'payload' => ['added_ml' => 45_000, 'free' => $free]]);
+        }
+
+        $response = awayShow($driver)->assertOk();
+
+        expect($response->json('data.auto_refills'))->toBe(3)
+            ->and($response->json('data.auto_refill_charges'))->toBe(2)
+            ->and($response->json('data.bonus_cents'))->toBe(31_000)
+            ->and($response->json('data.earned_cents'))->toBe(186_000)
+            ->and($response->json('data.cars.0'))->toMatchArray(['id' => $run->car_id, 'refills' => 3, 'refill_charges' => 2, 'bonus_cents' => 31_000, 'earned_cents' => 186_000]);
+
+        $otherRefills = collect($response->json('data.cars'))->firstWhere('id', $other->car_id);
+
+        expect($otherRefills)->toBeNull();
+    });
+
+    it('say none of it for a driver who has bought nothing', function () {
+        $driver = awayDriver();
+        $run = awayCar($driver);
+        awaySettled($run, '2026-10-28 06:00:00', '2026-10-28 11:00:00', 50_000, 40);
+
+        awayShow($driver)->assertOk()
+            ->assertJsonPath('data.auto_refills', 0)
+            ->assertJsonPath('data.auto_refill_charges', 0)
+            ->assertJsonPath('data.bonus_cents', 0)
+            ->assertJsonPath('data.cars.0.refills', 0);
+    });
+});
+
 describe('the reach', function () {
     it('goes back a week at most, whatever the break was', function () {
         $driver = awayDriver(['away_from' => '2026-10-01 08:00:00']);

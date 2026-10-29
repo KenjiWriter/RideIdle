@@ -16,6 +16,7 @@ use App\Support\I18nText;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * What happened to the whole account while the driver was away: what each car earned, which jobs of the workshop were done, which journeys ended (and what the
@@ -67,7 +68,7 @@ final class AwaySummary
      * The summary of the break that waits for the driver, or `pending: false` when there is none. What is due is carried out first and every car is settled, so the
      * earnings are current.
      *
-     * @return array{pending: bool, from_ms?: int, to_ms?: int, away_minutes?: int, earned_cents?: int, cars?: list<array<string, mixed>>, jobs?: list<array<string, mixed>>, journeys?: list<array<string, mixed>>}
+     * @return array{pending: bool, from_ms?: int, to_ms?: int, away_minutes?: int, earned_cents?: int, bonus_cents?: int, auto_refills?: int, auto_refill_charges?: int, cars?: list<array<string, mixed>>, jobs?: list<array<string, mixed>>, journeys?: list<array<string, mixed>>}
      */
     public function summary(User $user): array
     {
@@ -98,6 +99,10 @@ final class AwaySummary
             'to_ms' => $toMs,
             'away_minutes' => (int) $from->diffInMinutes($to, true),
             'earned_cents' => array_sum(array_column($cars, 'earned_cents')),
+            // What the VIP account added to it, and how many times the tank was filled for the driver (and how many charges that took: the pass fills it for nothing).
+            'bonus_cents' => array_sum(array_column($cars, 'bonus_cents')),
+            'auto_refills' => array_sum(array_column($cars, 'refills')),
+            'auto_refill_charges' => array_sum(array_column($cars, 'refill_charges')),
             'cars' => $cars,
             'jobs' => $this->jobs($userId, $fromMs, $toMs),
             'journeys' => $this->journeys($userId, $fromMs, $toMs),
@@ -108,7 +113,7 @@ final class AwaySummary
      * What each car earned in the break, and whether it stands and waits. A car that earned nothing and does not wait for anything is left out.
      *
      * @param  Collection<int, RaceRun>  $runs
-     * @return list<array{id: int|null, name: string, played: bool, earned_cents: int, laps: int, waiting: string|null}>
+     * @return list<array{id: int|null, name: string, played: bool, earned_cents: int, bonus_cents: int, laps: int, refills: int, refill_charges: int, waiting: string|null}>
      */
     private function cars($runs, int $fromMs, int $toMs, ?int $played): array
     {
@@ -116,12 +121,14 @@ final class AwaySummary
             ->whereIn('race_run_id', $runs->modelKeys())
             ->where('cursor_to_ms', '>', $fromMs)
             ->where('cursor_from_ms', '<', $toMs)
-            ->get(['race_run_id', 'cursor_from_ms', 'cursor_to_ms', 'laps', 'cash_cents'])
+            ->get(['race_run_id', 'cursor_from_ms', 'cursor_to_ms', 'laps', 'cash_cents', 'bonus_cash_cents'])
             ->groupBy('race_run_id');
+        $refills = $this->refills($runs->modelKeys(), $fromMs, $toMs);
         $cars = [];
 
         foreach ($runs as $run) {
             $earned = 0;
+            $bonus = 0;
             $laps = 0;
 
             foreach ($settlements->get($run->id, collect()) as $settlement) {
@@ -130,6 +137,7 @@ final class AwaySummary
 
                 if ($inside > 0) {
                     $earned += (int) round($settlement->cash_cents * $inside / $span);
+                    $bonus += (int) round($settlement->bonus_cash_cents * $inside / $span);
                     $laps += (int) round($settlement->laps * $inside / $span);
                 }
             }
@@ -148,7 +156,10 @@ final class AwaySummary
                 'name' => $vehicle === null ? (string) ($run->car?->vehicle_slug ?? '') : I18nText::from($vehicle['name'])->for(),
                 'played' => $run->car_id !== null && $run->car_id === $played,
                 'earned_cents' => $earned,
+                'bonus_cents' => $bonus,
                 'laps' => $laps,
+                'refills' => count($refills[$run->id] ?? []),
+                'refill_charges' => count(array_filter($refills[$run->id] ?? [], static fn (bool $free): bool => ! $free)),
                 'waiting' => $waiting,
             ];
         }
@@ -156,6 +167,30 @@ final class AwaySummary
         usort($cars, static fn (array $a, array $b): int => $b['earned_cents'] <=> $a['earned_cents']);
 
         return $cars;
+    }
+
+    /**
+     * The times the tank was filled for the driver in the break, by run: for each, whether it was free (the pass paid for it).
+     *
+     * @param  list<int|string>  $runIds
+     * @return array<int, list<bool>>
+     */
+    private function refills(array $runIds, int $fromMs, int $toMs): array
+    {
+        $found = [];
+
+        $rows = DB::table('settlement_events')
+            ->join('settlements', 'settlements.id', '=', 'settlement_events.settlement_id')
+            ->whereIn('settlements.race_run_id', $runIds)
+            ->where('settlement_events.type', EventType::AutoRefill->value)
+            ->whereBetween('settlement_events.at_ms', [$fromMs, $toMs])
+            ->get(['settlements.race_run_id as run_id', 'settlement_events.payload']);
+
+        foreach ($rows as $row) {
+            $found[(int) $row->run_id][] = (int) (json_decode((string) $row->payload, true)['free'] ?? 0) === 1;
+        }
+
+        return $found;
     }
 
     /**
