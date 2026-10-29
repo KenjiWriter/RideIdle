@@ -1025,6 +1025,30 @@ body {
     outline-offset: 3px;
   }
 
+  /* A job of the workshop on the slot: how far it has got, drawn as a ring round the spot (--p is a number from 0 to 100), cyan as the bars of a job are. */
+  .spot-ring {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    pointer-events: none;
+    background: conic-gradient(var(--color-cyan) calc(var(--p, 0) * 1%), color-mix(in srgb, var(--color-cyan) 22%, transparent) 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+  }
+
+  /* A job that waits its turn: a small clock at the corner of its spot. */
+  .spot-queued {
+    @apply absolute -bottom-2 -right-2 grid size-4 place-items-center rounded-full;
+    color: var(--color-cyan-bg);
+    background: var(--color-cyan);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  }
+
+  .spot-queued svg {
+    width: 10px;
+    height: 10px;
+  }
+
   /* The upgrade of the part, at the corner of its spot. */
   .spot-up {
     @apply absolute -right-2.5 -top-2.5 rounded-full px-1 font-mono text-[9px] font-bold leading-[14px];

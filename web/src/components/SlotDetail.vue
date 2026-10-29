@@ -14,7 +14,8 @@ import { spotKeyOf } from '@/features/car/hotspots'
 import { useSlotText } from '@/features/car/useSlotText'
 import { useModel } from '@/model'
 
-const props = defineProps<{
+const props = withDefaults(
+  defineProps<{
   /** The slot that was tapped, or null when none was. */
   slot: GarageSlot | null
   /** The engine of the body, which is what stands on the engine slot until a part does. */
@@ -22,7 +23,11 @@ const props = defineProps<{
   /** How many of the slots have a part on them, and how many there are. */
   mounted: number
   total: number
-}>()
+  /** The way to the workshop under the card: a screen that has the actions of the workshop of its own leaves it out. */
+  link?: boolean
+}>(),
+  { link: true },
+)
 
 const emit = defineEmits<{ close: [] }>()
 
@@ -70,7 +75,10 @@ const factory = computed(() => !!props.slot && !props.slot.part)
     </template>
     <p v-else class="sub" data-test="slot-factory">{{ slot.built_in ? t('garage.parts.builtIn') : t('garage.parts.factory') }}</p>
 
-    <RouterLink :to="{ name: 'workshop' }" class="btn btn-secondary btn-sm self-start no-underline" data-test="slot-workshop">
+    <!-- What a screen has to do with the slot: the actions of the workshop on the part, the parts that fit. -->
+    <slot />
+
+    <RouterLink v-if="link" :to="{ name: 'workshop' }" class="btn btn-secondary btn-sm self-start no-underline" data-test="slot-workshop">
       {{ factory ? t('garage.parts.mount') : t('garage.parts.change') }}
     </RouterLink>
   </section>

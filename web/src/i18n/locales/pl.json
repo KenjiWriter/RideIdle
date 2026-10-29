@@ -89,7 +89,9 @@
       "builtIn": "To część nadwozia, z którą auto wyjechało z fabryki. W warsztacie założysz lepszą.",
       "mount": "Załóż w warsztacie",
       "change": "Zmień w warsztacie",
-      "other": "Pozostałe części"
+      "other": "Pozostałe części",
+      "working": "w trakcie pracy",
+      "queued": "czeka w kolejce"
     }
   },
   "choose": {

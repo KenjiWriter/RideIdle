@@ -89,7 +89,9 @@
       "builtIn": "Esta é a peça da carroceria com que o carro saiu da fábrica. Na oficina você monta uma melhor.",
       "mount": "Montar na oficina",
       "change": "Trocar na oficina",
-      "other": "Outras peças"
+      "other": "Outras peças",
+      "working": "em andamento",
+      "queued": "esperando na fila"
     }
   },
   "choose": {

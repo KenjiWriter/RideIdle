@@ -89,7 +89,9 @@
       "builtIn": "C’est la pièce de la carrosserie avec laquelle la voiture est sortie d’usine. Vous pouvez en monter une meilleure à l’atelier.",
       "mount": "Monter à l’atelier",
       "change": "Changer à l’atelier",
-      "other": "Autres pièces"
+      "other": "Autres pièces",
+      "working": "en cours",
+      "queued": "en attente"
     }
   },
   "choose": {

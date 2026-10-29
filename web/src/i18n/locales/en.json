@@ -89,7 +89,9 @@
       "builtIn": "This is the part of the body the car left the factory with. You can fit a better one in the workshop.",
       "mount": "Fit one in the workshop",
       "change": "Change in the workshop",
-      "other": "Other parts"
+      "other": "Other parts",
+      "working": "being worked on",
+      "queued": "waiting in the queue"
     }
   },
   "choose": {

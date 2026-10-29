@@ -89,7 +89,9 @@
       "builtIn": "Das ist das Karosserieteil, mit dem das Auto aus dem Werk kam. In der Werkstatt kannst du ein besseres einbauen.",
       "mount": "In der Werkstatt einbauen",
       "change": "In der Werkstatt wechseln",
-      "other": "Weitere Teile"
+      "other": "Weitere Teile",
+      "working": "in Arbeit",
+      "queued": "wartet in der Warteschlange"
     }
   },
   "choose": {
