@@ -683,7 +683,9 @@
     "goalShow": "Mostrar",
     "goalXp": "{xp} XP",
     "goalCarXp": "{xp} XP do carro",
-    "goalGarage": "Garagem em {city}"
+    "goalGarage": "Garagem em {city}",
+    "arrowDown": "O objetivo está mais abaixo",
+    "arrowUp": "O objetivo está mais acima"
   },
   "story": {
     "scene1": "“Escute, preciso sumir por um tempo.”",

@@ -683,7 +683,9 @@
     "goalShow": "Zeig mir",
     "goalXp": "{xp} XP",
     "goalCarXp": "{xp} Auto-XP",
-    "goalGarage": "Garage in {city}"
+    "goalGarage": "Garage in {city}",
+    "arrowDown": "Das Ziel ist weiter unten",
+    "arrowUp": "Das Ziel ist weiter oben"
   },
   "story": {
     "scene1": "„Hör zu, ich muss für eine Weile verschwinden.“",

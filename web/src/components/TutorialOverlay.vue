@@ -9,6 +9,12 @@ import { useTutorialStore } from '@/stores/tutorial'
 /** The room round the highlighted thing, in px. */
 const SPOTLIGHT_PADDING = 6
 
+/** How far from the bars at the top and at the bottom a thing has to be to count as out of sight, in px: one that is a little under the bar is seen, and is not sent for. */
+const OUT_OF_SIGHT_MARGIN = 8
+
+/** The room between the arrow that points to a thing out of sight and the bar it stands over, in px. */
+const ARROW_GAP = 12
+
 /** How often the place of the highlighted thing is measured again: the page moves under it (it loads, it scrolls, a message appears). */
 const MEASURE_MS = 250
 
@@ -23,6 +29,11 @@ const asked = ref(false)
 const rect = ref<{ top: number; left: number; width: number; height: number } | null>(null)
 /** Where the button that skips goes: just under the HUD, wherever the page has scrolled it to. */
 const skipTop = ref(76)
+/** Where the thing the step points at is when it is not on the screen: further down than the driver sees (under the navigation), or further up (over the bar at the top). */
+const away = ref<'below' | 'above' | null>(null)
+/** Where the arrow stands: over the navigation, or under the bar at the top. */
+const arrowBottom = ref(76)
+const arrowTop = ref(76)
 const replyButton = ref<HTMLButtonElement | null>(null)
 const keepButton = ref<HTMLButtonElement | null>(null)
 
@@ -80,7 +91,31 @@ function measure(): void {
   }
 
   rect.value = box ? { top: box.top, left: box.left, width: box.width, height: box.height } : null
-  skipTop.value = Math.round((document.querySelector('[data-test="hud"]')?.getBoundingClientRect().bottom ?? 68) + 8)
+
+  const hudBottom = document.querySelector('[data-test="hud"]')?.getBoundingClientRect().bottom ?? 68
+  const navTop = document.querySelector('[data-test="game-nav"]')?.getBoundingClientRect().top ?? window.innerHeight
+
+  skipTop.value = Math.round(hudBottom + 8)
+  arrowTop.value = Math.round(hudBottom + ARROW_GAP)
+  arrowBottom.value = Math.round(window.innerHeight - navTop + ARROW_GAP)
+
+  // A thing that stands in the bars themselves (the cash in the top bar, the tabs of the navigation) is always in sight, and a thing that has no size is not on the page yet.
+  if (!element || !box || (box.width === 0 && box.height === 0) || element.closest('[data-test="hud"], [data-test="game-nav"]')) {
+    away.value = null
+  } else if (box.top >= navTop - OUT_OF_SIGHT_MARGIN) {
+    away.value = 'below'
+  } else if (box.bottom <= hudBottom + OUT_OF_SIGHT_MARGIN) {
+    away.value = 'above'
+  } else {
+    away.value = null
+  }
+}
+
+/** The arrow is a way to the thing: it is brought to the middle of the screen. */
+function goToTarget(): void {
+  const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+
+  targetElement()?.scrollIntoView?.({ block: 'center', behavior: reduced ? 'auto' : 'smooth' })
 }
 
 let timer: ReturnType<typeof setInterval> | undefined
@@ -197,6 +232,23 @@ function onKeydown(event: KeyboardEvent): void {
   <div v-if="step" data-test="tutorial">
     <!-- The thing the step points at: ringed while the phone is out and after it is put away, until the driver does it. -->
     <div v-if="rect" class="pointer-events-none fixed z-[41] rounded-lg" :class="store.showing ? 'ring-hl' : 'ring-hl ring-soft'" :style="ringStyle" aria-hidden="true" data-test="tutorial-ring" />
+
+    <!-- The thing the step points at is further down (or up) than the driver sees: an arrow over the navigation says so, and a tap takes the driver there. -->
+    <button
+      v-if="away && !store.showing"
+      type="button"
+      class="goal-arrow fixed left-1/2 z-[39]"
+      :class="away === 'below' ? 'goal-arrow-down' : 'goal-arrow-up'"
+      :style="away === 'below' ? { bottom: `${arrowBottom}px` } : { top: `${arrowTop}px` }"
+      :data-test="`tutorial-arrow-${away}`"
+      @click="goToTarget"
+    >
+      <svg class="goal-arrow-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path v-if="away === 'below'" d="M6 9l6 6 6-6" />
+        <path v-else d="M6 15l6-6 6 6" />
+      </svg>
+      {{ away === 'below' ? t('tutorial.arrowDown') : t('tutorial.arrowUp') }}
+    </button>
 
     <template v-if="store.showing">
       <div class="fixed inset-0 z-40 bg-[rgba(6,8,10,0.82)]" :style="dimStyle" aria-hidden="true" data-test="tutorial-dim" />

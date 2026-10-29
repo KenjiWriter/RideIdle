@@ -1,6 +1,7 @@
 import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { TutorialTarget } from '@/api/types'
 import { storeToken } from '@/auth/token'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
@@ -304,5 +305,101 @@ describe('TutorialOverlay', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-test="tutorial-confirm"]').exists()).toBe(false)
+  })
+
+  describe('the arrow to a goal that is out of sight', () => {
+    /** The step that waits with the phone put away: what is left is the goal, and the thing it points at. */
+    const waiting = (target: TutorialTarget = 'service') => aTutorial(aStep({ target, acknowledged: true }))
+
+    /** The navigation at the bottom of the screen, which jsdom has no layout for: its place is given, and what is put in it is in it. */
+    function putNavigation(top = 704): HTMLElement {
+      const nav = document.createElement('nav')
+      nav.setAttribute('data-test', 'game-nav')
+      nav.getBoundingClientRect = () => ({ top, left: 0, width: 480, height: 64, right: 480, bottom: top + 64, x: 0, y: top, toJSON: () => ({}) }) as DOMRect
+      document.body.append(nav)
+      targets.push(nav)
+
+      return nav
+    }
+
+    it('points down, over the navigation, when the thing is further down than the driver sees, and a tap brings it to the middle of the screen', async () => {
+      const element = putOnPage('service', { top: 1500, left: 20, width: 340, height: 56 })
+      element.scrollIntoView = vi.fn()
+      putNavigation()
+      const { wrapper } = await show(waiting())
+
+      const arrow = wrapper.get('[data-test="tutorial-arrow-below"]')
+      expect(arrow.text()).toBe('Your goal is further down')
+      // Over the navigation: the window is 768 px high and the navigation begins at 704, so it stands 12 px over it.
+      expect(arrow.attributes('style')).toContain('bottom: 76px')
+      expect(wrapper.find('[data-test="tutorial-arrow-above"]').exists()).toBe(false)
+
+      await arrow.trigger('click')
+
+      expect(element.scrollIntoView).toHaveBeenCalledWith(expect.objectContaining({ block: 'center' }))
+    })
+
+    it('points up, under the bar at the top, when the thing is further up', async () => {
+      putOnPage('service', { top: -400, left: 20, width: 340, height: 56 })
+      const { wrapper } = await show(waiting())
+
+      const arrow = wrapper.get('[data-test="tutorial-arrow-above"]')
+      expect(arrow.text()).toBe('Your goal is further up')
+      expect(arrow.attributes('style')).toContain('top: ')
+      expect(wrapper.find('[data-test="tutorial-arrow-below"]').exists()).toBe(false)
+    })
+
+    it('is not there when the thing is in sight, even a little under the navigation', async () => {
+      putNavigation(704)
+      putOnPage('service', { top: 300, left: 20, width: 340, height: 56 })
+      const inSight = await show(waiting())
+
+      expect(inSight.wrapper.find('[data-test="tutorial-arrow-below"]').exists()).toBe(false)
+      expect(inSight.wrapper.find('[data-test="tutorial-arrow-above"]').exists()).toBe(false)
+
+      // A thing that begins 10 px over the navigation is seen, if only the top of it.
+      targets.at(-1)!.getBoundingClientRect = () => ({ top: 690, left: 20, width: 340, height: 120, right: 360, bottom: 810, x: 20, y: 690, toJSON: () => ({}) }) as DOMRect
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      await flushPromises()
+
+      expect(inSight.wrapper.find('[data-test="tutorial-arrow-below"]').exists()).toBe(false)
+    })
+
+    it('is not there for what stands in the bars themselves: a tab of the navigation, or the cash in the top bar', async () => {
+      const nav = putNavigation(704)
+      const tab = document.createElement('a')
+      tab.setAttribute('data-tutorial', 'workshop')
+      tab.getBoundingClientRect = () => ({ top: 720, left: 20, width: 90, height: 44, right: 110, bottom: 764, x: 20, y: 720, toJSON: () => ({}) }) as DOMRect
+      nav.append(tab)
+
+      const { wrapper } = await show(waiting('mount'))
+
+      // The step points at the tires of the workshop, which is not on this screen, so the tab that leads there is ringed: and it is in sight.
+      expect(wrapper.find('[data-test="tutorial-ring"]').exists()).toBe(true)
+      expect(wrapper.find('[data-test="tutorial-arrow-below"]').exists()).toBe(false)
+      expect(wrapper.find('[data-test="tutorial-arrow-above"]').exists()).toBe(false)
+    })
+
+    it('is not there while the phone is out, which has the screen, and not for a thing that has no size yet', async () => {
+      putOnPage('service', { top: 1500, left: 20, width: 340, height: 56 })
+      const out = await show(aTutorial(aStep({ target: 'service' })))
+
+      expect(out.wrapper.find('[data-test="tutorial-arrow-below"]').exists()).toBe(false)
+
+      const empty = putOnPage('crate', { top: 0, left: 0, width: 0, height: 0 })
+      empty.remove()
+      putOnPage('crate', { top: 0, left: 0, width: 0, height: 0 })
+      const none = await show(waiting('crate'))
+
+      expect(none.wrapper.find('[data-test="tutorial-arrow-below"]').exists()).toBe(false)
+    })
+
+    it('says it in the language of the driver', async () => {
+      await setLocale('pl')
+      putOnPage('service', { top: 1500, left: 20, width: 340, height: 56 })
+      const { wrapper } = await show(waiting())
+
+      expect(wrapper.get('[data-test="tutorial-arrow-below"]').text()).toBe('Cel jest niżej')
+    })
   })
 })
