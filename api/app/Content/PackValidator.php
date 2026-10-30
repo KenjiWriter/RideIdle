@@ -7,6 +7,7 @@ namespace App\Content;
 use App\Content\Branding\Branding;
 use App\Content\Branding\CssPolicy;
 use App\Content\Vocabulary\MessageCatalog;
+use App\Domain\Run\TrackModel;
 use App\Services\ContentImages;
 use App\Support\Locale;
 use DateTimeZone;
@@ -28,6 +29,12 @@ use Opis\JsonSchema\Validator;
  */
 final class PackValidator
 {
+    /** How far a number that was said by hand may be from the one the model makes before it is worth a warning. */
+    private const HAND_NUMBER_TOLERANCE = 0.02;
+
+    /** How much of the experience of a lap the rounding to a whole number may take before it is worth a warning. */
+    private const ROUNDED_EXPERIENCE_TOLERANCE = 0.1;
+
     private const SCHEMA_BASE = 'https://rideidle.local/schema/';
 
     /** Folder name => schema file. */
@@ -382,6 +389,8 @@ final class PackValidator
             }
         }
 
+        $this->checkTrackNumbers($rules, $result);
+
         foreach ($rules['regions'] ?? [] as $slug => $region) {
             $chances = $region['weather_ppm'] ?? [];
 
@@ -424,6 +433,105 @@ final class PackValidator
 
         if ($first !== null && ($rules['tracks'][$first]['min_player_level'] ?? 1) !== 1) {
             $result->addError($file, "/tracks/{$first}/min_player_level", 'The first track is where a new driver starts: it is open from level 1.');
+        }
+    }
+
+    /**
+     * What the numbers of a track come to, which the schema cannot say: the speed has at most four decimals and the experience of an hour two, the track is no stunt (a
+     * length of 200 m and a lap of 8 s at least: below that the experience of a lap cannot be rounded fairly, and a track that is made by the model must not be shorter,
+     * while one that was said by hand only gets a warning), and a number that is said by hand is believed over the model, so that it is worth saying when it is not what
+     * the model would make. The experience of a lap is a whole number, so it is also said when the rounding takes a tenth of it.
+     *
+     * @param  array<string, mixed>  $rules
+     */
+    private function checkTrackNumbers(array $rules, PackValidationResult $result): void
+    {
+        $file = 'rules/starter.json';
+        $loads = TrackNumbers::fuelLoads($rules);
+
+        foreach ($rules['tracks'] ?? [] as $slug => $track) {
+            $length = $track['length_m'] ?? null;
+
+            if (! is_array($track) || ! is_int($length)) {
+                continue;
+            }
+
+            $modelled = isset($track['speed_kmh']);
+
+            if ($modelled && is_numeric($track['speed_kmh']) && round((float) $track['speed_kmh'], 4) != $track['speed_kmh']) {
+                $result->addError($file, "/tracks/{$slug}/speed_kmh", 'The speed has more than four decimals.');
+            }
+
+            if (isset($track['xp_per_hour']) && is_numeric($track['xp_per_hour']) && round((float) $track['xp_per_hour'], 2) != $track['xp_per_hour']) {
+                $result->addError($file, "/tracks/{$slug}/xp_per_hour", 'The experience of an hour has more than two decimals.');
+            }
+
+            $numbers = TrackNumbers::derive($track, $loads);
+            $lap = $numbers['base_lap_ms'] ?? null;
+
+            if (! is_int($lap)) {
+                continue;
+            }
+
+            $flag = $modelled ? $result->addError(...) : $result->addWarning(...);
+
+            if ($length < TrackModel::MIN_LENGTH_M) {
+                $flag($file, "/tracks/{$slug}/length_m", 'The track is shorter than '.TrackModel::MIN_LENGTH_M.' m.');
+            }
+
+            if ($lap < TrackModel::MIN_LAP_MS) {
+                $flag($file, "/tracks/{$slug}/".($modelled ? 'speed_kmh' : 'base_lap_ms'), 'The lap of the track takes '.round($lap / 1000, 1).' s, less than '.(TrackModel::MIN_LAP_MS / 1000).' s.');
+            }
+
+            $this->warnAboutHandNumbers($file, (string) $slug, $track, $loads, $lap, $result);
+            $this->warnAboutRoundedExperience($file, (string) $slug, $track, $lap, $result);
+        }
+    }
+
+    /**
+     * A number that was said by hand and is not what the model would make of the length and the speed, the kind of the track and what an hour pays and gives.
+     *
+     * @param  array<string, mixed>  $track
+     * @param  array<string, int>  $loads
+     */
+    private function warnAboutHandNumbers(string $file, string $slug, array $track, array $loads, int $lap, PackValidationResult $result): void
+    {
+        $load = $loads[(string) ($track['kind'] ?? TrackNumbers::DEFAULT_KIND)] ?? $loads[TrackNumbers::DEFAULT_KIND];
+        $made = [
+            'base_lap_ms' => isset($track['speed_kmh']) && is_numeric($track['speed_kmh']) ? TrackModel::lapMs((int) $track['length_m'], TrackNumbers::speedScaled($track['speed_kmh'])) : null,
+            'fuel_per_lap_ml' => TrackModel::fuelMl($load, $lap),
+            'reward_cents_per_lap' => isset($track['pay_cents_per_hour']) ? TrackModel::cashCents((int) $track['pay_cents_per_hour'], $lap) : null,
+            'xp_per_lap' => isset($track['xp_per_hour']) && is_numeric($track['xp_per_hour']) ? TrackModel::xp(TrackNumbers::centiXp($track['xp_per_hour']), $lap) : null,
+        ];
+
+        foreach ($made as $field => $expected) {
+            $said = $track[$field] ?? null;
+
+            if ($expected === null || ! is_int($said) || $expected === 0 || abs($said - $expected) / $expected <= self::HAND_NUMBER_TOLERANCE) {
+                continue;
+            }
+
+            $result->addWarning($file, "/tracks/{$slug}/{$field}", sprintf('The track says %d by hand, and the model would make %d (%+.1f%%): the number that is said is the one that counts.', $said, $expected, 100 * ($said - $expected) / $expected));
+        }
+    }
+
+    /**
+     * The experience of a lap is a whole number, so a short lap of a track that gives experience by the hour is paid more or less than the hour says: said when the
+     * rounding is more than a tenth.
+     *
+     * @param  array<string, mixed>  $track
+     */
+    private function warnAboutRoundedExperience(string $file, string $slug, array $track, int $lap, PackValidationResult $result): void
+    {
+        if (isset($track['xp_per_lap']) || ! isset($track['xp_per_hour']) || ! is_numeric($track['xp_per_hour']) || $track['xp_per_hour'] <= 0) {
+            return;
+        }
+
+        $exact = $track['xp_per_hour'] * $lap / 3_600_000;
+        $given = TrackModel::xp(TrackNumbers::centiXp($track['xp_per_hour']), $lap);
+
+        if (abs($given - $exact) / $exact > self::ROUNDED_EXPERIENCE_TOLERANCE) {
+            $result->addWarning($file, "/tracks/{$slug}/xp_per_hour", sprintf('A lap of this track is worth %.2f XP, and the game gives %d: a lap gives a whole number, so an hour gives %+.0f%% of what it says. A longer track rounds less.', $exact, $given, 100 * ($given - $exact) / $exact));
         }
     }
 

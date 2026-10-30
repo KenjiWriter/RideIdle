@@ -883,11 +883,14 @@
           "reference_tires": { "description": "The tires of the car that the bots of the race are made around, when the stock tires are not what the track asks for: on gravel every stock car is a second slower than a car with the right tires, and a field made around the stock ones would pay a bonus to everyone who buys them. Without it the reference car has the stock tires.", "$ref": "common.schema.json#/$defs/slug" },
           "lit": { "description": "Whether the track has lights: a track that has none takes longer to drive at night.", "type": "boolean" },
           "min_player_level": { "description": "The level of the driver from which the track is open. A car is thought of as the level of the track when the tracks are compared: it can mount the tier that level reaches.", "type": "integer", "minimum": 1 },
-          "base_lap_ms": { "description": "Lap time of a car that matches the reference exactly.", "type": "integer", "minimum": 1 },
-          "length_m": { "description": "How long a lap is, in metres: what the odometer of a car and the wear of its parts grow by with every lap.", "type": "integer", "minimum": 1 },
-          "fuel_per_lap_ml": { "type": "integer", "minimum": 1 },
-          "reward_cents_per_lap": { "$ref": "common.schema.json#/$defs/cents" },
-          "xp_per_lap": { "description": "The XP of a lap of the base time, in dry weather. A car that laps faster gets the share of it that its lap is of the base lap, so that an hour on the track gives every car the same XP: XP is for the time of driving, and a faster car only drives more laps. A car that is slower gets all of it.", "type": "integer", "minimum": 0 },
+          "length_m": { "description": "How long a lap is, in metres. It is the source of the numbers of a lap: the lap of the reference car is the length over the speed of the track, the fuel is what the engine burns in that time, and what a lap pays and gives is what an hour pays and gives for that time. It is also what the odometer of a car and the wear of its parts grow by with every lap.", "type": "integer", "minimum": 1, "maximum": 100000000000 },
+          "speed_kmh": { "description": "The average speed of the car that the track is made for, in km/h, with everything that slows it counted in: the corners, the surface, the climbs and the traffic. The lap of that car is the length over this speed. At most four decimals.", "type": "number", "minimum": 20, "maximum": 300 },
+          "pay_cents_per_hour": { "description": "What an hour of driving on the track pays the reference car in dry weather, in cents, before the tier of the car, the place among the bots and the weather: what a lap pays is this for the time of the lap, so a longer track is not paid less for an hour.", "type": "integer", "minimum": 1 },
+          "xp_per_hour": { "description": "The XP that an hour of driving on the track gives in dry weather, at most two decimals: the XP of a lap is this for the time of the lap, whole. A car that laps faster gets the share of it that its lap is of the lap of the reference car, so that an hour on the track gives every car the same XP.", "type": "number", "minimum": 0, "maximum": 3600 },
+          "base_lap_ms": { "description": "The lap of a car that matches the reference exactly, in ms, said by hand: it is believed over the length and the speed of the track (`speed_kmh`), which is what makes it. For the games and the packs made before the speed.", "type": "integer", "minimum": 1 },
+          "fuel_per_lap_ml": { "description": "The fuel of a lap for a car of the fuel use of the track, in ml, said by hand: it is believed over what the engine burns in the time of the lap (`track_model.fuel_ml_per_s` by the kind of the track).", "type": "integer", "minimum": 1 },
+          "reward_cents_per_lap": { "description": "What a lap pays in dry weather, in cents, said by hand: it is believed over what an hour pays for the time of the lap (`pay_cents_per_hour`).", "$ref": "common.schema.json#/$defs/cents" },
+          "xp_per_lap": { "description": "The XP of a lap of the base time, in dry weather, said by hand: it is believed over what an hour gives for the time of the lap (`xp_per_hour`). A car that laps faster gets the share of it that its lap is of the base lap, so that an hour on the track gives every car the same XP: XP is for the time of driving, and a faster car only drives more laps. A car that is slower gets all of it.", "type": "integer", "minimum": 0 },
           "demand": {
             "description": "How much every statistic counts on this track, in percent, adding up to 100.",
             "type": "object",
@@ -903,9 +906,33 @@
             "additionalProperties": { "type": "number", "exclusiveMinimum": 0 }
           }
         },
-        "required": ["name", "region", "surface", "lit", "min_player_level", "base_lap_ms", "length_m", "fuel_per_lap_ml", "reward_cents_per_lap", "xp_per_lap", "demand", "reference"],
+        "required": ["name", "region", "surface", "lit", "min_player_level", "length_m", "demand", "reference"],
+        "allOf": [
+          { "description": "The lap is made by the length and the speed, or said.", "anyOf": [{ "required": ["speed_kmh"] }, { "required": ["base_lap_ms"] }] },
+          { "description": "What a lap pays is made by what an hour pays, or said.", "anyOf": [{ "required": ["pay_cents_per_hour"] }, { "required": ["reward_cents_per_lap"] }] },
+          { "description": "The XP of a lap is made by what an hour gives, or said.", "anyOf": [{ "required": ["xp_per_hour"] }, { "required": ["xp_per_lap"] }] }
+        ],
         "additionalProperties": false
       }
+    },
+    "track_model": {
+      "description": "What the numbers of a track come to: the load of the engine of the kinds of track. Without it the game has 12, 20 and 32 ml of fuel for every second of a lap.",
+      "type": "object",
+      "properties": {
+        "fuel_ml_per_s": {
+          "description": "What the engine of a car of the fuel use of the track (1.0) burns in every second of a lap, by the kind of the track, in ml: the fuel of the lap of the reference car is this for the time of the lap. A sprint is easy on the engine (a tank lasts about an hour), an endurance track is hard on it (a tank lasts about twenty minutes). Changing one of these moves the fuel of every track of the kind.",
+          "type": "object",
+          "properties": {
+            "sprint": { "type": "integer", "minimum": 1, "maximum": 1000 },
+            "standard": { "type": "integer", "minimum": 1, "maximum": 1000 },
+            "endurance": { "type": "integer", "minimum": 1, "maximum": 1000 }
+          },
+          "required": ["sprint", "standard", "endurance"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["fuel_ml_per_s"],
+      "additionalProperties": false
     }
   },
   "required": ["schema", "version", "fuel", "repair", "breakdown", "wear", "tow", "stock_tires", "car", "engines", "drivetrain", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks", "bots"],

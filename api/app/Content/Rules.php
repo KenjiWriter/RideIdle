@@ -20,11 +20,25 @@ final class Rules
 {
     private ?PlayerXpCurve $playerCurve = null;
 
+    /** @var array<string, mixed> the document, with the numbers of every track that the game reads made (`TrackNumbers`) */
+    private readonly array $data;
+
     /**
      * @param  array<string, mixed>  $data
      * @param  GameModel|null  $model  the slots and statistics of the game; the model of the car game when none is given
      */
-    private function __construct(private readonly array $data, private readonly ?GameModel $model = null) {}
+    private function __construct(array $data, private readonly ?GameModel $model = null)
+    {
+        $loads = TrackNumbers::fuelLoads($data);
+
+        foreach ($data['tracks'] ?? [] as $slug => $track) {
+            if (is_array($track)) {
+                $data['tracks'][$slug] = TrackNumbers::derive($track, $loads);
+            }
+        }
+
+        $this->data = $data;
+    }
 
     public static function fromConfig(): self
     {
@@ -1285,7 +1299,26 @@ final class Rules
     /** What a track asks of the driver: `sprint`, `standard` (when the rules do not say) or `endurance`. */
     public function trackKind(string $slug): string
     {
-        return (string) ($this->data['tracks'][$slug]['kind'] ?? 'standard');
+        return (string) ($this->data['tracks'][$slug]['kind'] ?? TrackNumbers::DEFAULT_KIND);
+    }
+
+    /**
+     * What the engine of a car burns for every second of a lap of a track of this kind, in ml, for a car of the fuel use of the track (1.0): the fuel of the lap of
+     * the reference car is this over the time of the lap. The rules say it (`track_model.fuel_ml_per_s`), and the ones that do not have 12, 20 and 32.
+     */
+    public function trackFuelMlPerSecond(string $kind): int
+    {
+        $loads = TrackNumbers::fuelLoads($this->data);
+
+        return $loads[$kind] ?? $loads[TrackNumbers::DEFAULT_KIND];
+    }
+
+    /**
+     * The speed of the reference car on a track, in km/h: what the document says, or what its lap comes to over its length.
+     */
+    public function trackSpeedKmh(string $slug): int|float
+    {
+        return $this->data['tracks'][$slug]['speed_kmh'] ?? throw new InvalidArgumentException("Unknown track {$slug}.");
     }
 
     /** The track a new run starts on: the first one of the rules. */
