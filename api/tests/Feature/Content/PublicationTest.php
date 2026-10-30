@@ -240,10 +240,10 @@ describe('what stops a pack', function () {
     });
 
     it('is a gate that does not pass, and the game reads the content it read before', function () {
-        // The schema lets a lap give ten times the XP, and the pace of the design does not: the economy gate says so.
+        // The schema lets an hour give three times the XP (it allows up to 3 600 an hour), and the pace of the design does not: the economy gate says so.
         draftOf('rules/starter', function (array $rules): array {
             foreach ($rules['tracks'] as $slug => $track) {
-                $rules['tracks'][$slug]['xp_per_lap'] = $track['xp_per_lap'] * 10;
+                $rules['tracks'][$slug]['xp_per_hour'] = $track['xp_per_hour'] * 3;
             }
 
             return $rules;

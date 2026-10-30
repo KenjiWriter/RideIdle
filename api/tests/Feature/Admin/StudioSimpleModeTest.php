@@ -25,12 +25,12 @@ beforeEach(function () {
 
 describe('the pointers of the simple mode', function () {
     it('are matched whole, and a star stands for one name', function () {
-        $mode = new SimpleMode(['/tracks/*/reward_cents_per_lap', '/fuel/price_cents_per_liter']);
+        $mode = new SimpleMode(['/tracks/*/pay_cents_per_hour', '/fuel/price_cents_per_liter']);
         $numbers = ParameterCatalog::ofTheGame()->parameters(simpleRules(), 'tracks');
         $kept = array_map(fn ($parameter) => $parameter->pointer(), $mode->only($numbers));
 
         expect($kept)->not->toBeEmpty()
-            ->and($kept)->each->toEndWith('/reward_cents_per_lap')
+            ->and($kept)->each->toEndWith('/pay_cents_per_hour')
             ->and($kept)->each->toStartWith('/tracks/');
     });
 

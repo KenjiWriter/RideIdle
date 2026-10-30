@@ -23,12 +23,26 @@ return [
             'range' => 'From 0 to 3600, at most two decimals (from the schema).',
             'tip' => 'On a very short track the rounding to whole XP a lap changes the result by ten percent or more: the validator warns when the rounding takes more than a tenth.',
         ],
-        '/track_model/fuel_ml_per_s/*' => [
-            'label' => 'Fuel per second of a lap (kind of track)',
-            'help' => 'How much fuel the engine of a car of normal thirst burns in every second of a lap; the name of the field says for which kind of track: sprint, standard or endurance. The fuel of a lap of the reference car is this number times the time of the lap, and a thirstier car burns more.',
-            'example' => 'Sprint 12 ml (0.012 l) a second, standard 20 ml, endurance 32 ml: the Złomowo street track (75 s) burns 1.5 l a lap.',
+        '/track_model/fuel_ml_per_s/sprint' => [
+            'label' => 'Fuel per second of a lap: sprint',
+            'help' => 'How much fuel the engine of a car of normal thirst burns in every second of a lap on a track of the kind “sprint”. The fuel of a lap of the reference car is this number times the time of the lap, and a thirstier car burns more.',
+            'example' => 'Sprint 12 ml (0.012 l) a second: the Scrapyard Dash (12 s) burns 144 ml.',
             'range' => 'From 1 to 1000 ml a second (from the schema).',
-            'tip' => 'Changing one of these moves the fuel of every track of the kind at once. A tank lasts the capacity ÷ this number in seconds: 45 l at 12 ml is about an hour, at 32 ml about 23 minutes.',
+            'tip' => 'Changing this moves the fuel of every track of the kind at once. A tank lasts the capacity ÷ this number in seconds: 45 l at 12 ml is about an hour, at 32 ml about 23 minutes.',
+        ],
+        '/track_model/fuel_ml_per_s/standard' => [
+            'label' => 'Fuel per second of a lap: standard',
+            'help' => 'How much fuel the engine of a car of normal thirst burns in every second of a lap on a track of the kind “standard”. The fuel of a lap of the reference car is this number times the time of the lap, and a thirstier car burns more.',
+            'example' => 'Standard 20 ml a second: the Złomowo street track (75 s) burns 1.5 l a lap.',
+            'range' => 'From 1 to 1000 ml a second (from the schema).',
+            'tip' => 'Changing this moves the fuel of every track of the kind at once. A tank lasts the capacity ÷ this number in seconds: 45 l at 12 ml is about an hour, at 32 ml about 23 minutes.',
+        ],
+        '/track_model/fuel_ml_per_s/endurance' => [
+            'label' => 'Fuel per second of a lap: endurance',
+            'help' => 'How much fuel the engine of a car of normal thirst burns in every second of a lap on a track of the kind “endurance”. The fuel of a lap of the reference car is this number times the time of the lap, and a thirstier car burns more.',
+            'example' => 'Endurance 32 ml a second: the Złomowo Ring Road (300 s) burns 9.6 l a lap.',
+            'range' => 'From 1 to 1000 ml a second (from the schema).',
+            'tip' => 'Changing this moves the fuel of every track of the kind at once. A tank lasts the capacity ÷ this number in seconds: 45 l at 12 ml is about an hour, at 32 ml about 23 minutes.',
         ],
     ],
 ];

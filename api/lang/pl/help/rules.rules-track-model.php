@@ -23,12 +23,26 @@ return [
             'range' => 'Od 0 do 3600, najwyżej dwa miejsca po przecinku (ze schematu).',
             'tip' => 'Na bardzo krótkim torze zaokrąglenie do całych XP za okrążenie zmienia wynik o kilkanaście procent: walidator ostrzega, gdy zaokrąglenie zabiera ponad jedną dziesiątą.',
         ],
-        '/track_model/fuel_ml_per_s/*' => [
-            'label' => 'Paliwo na sekundę okrążenia (rodzaj toru)',
-            'help' => 'Ile paliwa spala w każdej sekundzie okrążenia silnik auta o zwykłym zużyciu; nazwa pola mówi, dla jakiego rodzaju toru: sprint, standard albo dystans. Paliwo okrążenia auta wzorcowego to ta liczba razy czas okrążenia, a łapczywsze auto spala więcej.',
-            'example' => 'Sprint 12 ml (0,012 l) na sekundę, standard 20 ml, dystans 32 ml: ulica Złomowo (75 s) spala 1,5 l na okrążenie.',
+        '/track_model/fuel_ml_per_s/sprint' => [
+            'label' => 'Paliwo na sekundę okrążenia: sprint',
+            'help' => 'Ile paliwa spala w każdej sekundzie okrążenia silnik auta o zwykłym zużyciu na torze rodzaju „sprint”. Paliwo okrążenia auta wzorcowego to ta liczba razy czas okrążenia, a łapczywsze auto spala więcej.',
+            'example' => 'Sprint 12 ml (0,012 l) na sekundę: Sprint po złomowisku (12 s) spala 144 ml.',
             'range' => 'Od 1 do 1000 ml na sekundę (ze schematu).',
-            'tip' => 'Zmiana jednej z tych liczb rusza paliwo wszystkich torów tego rodzaju naraz. Zbiornik starcza na pojemność ÷ tę liczbę sekund: 45 l przy 12 ml to ok. godzina, przy 32 ml ok. 23 minuty.',
+            'tip' => 'Zmiana tej liczby rusza paliwo wszystkich torów tego rodzaju naraz. Zbiornik starcza na pojemność ÷ tę liczbę sekund: 45 l przy 12 ml to ok. godzina, przy 32 ml ok. 23 minuty.',
+        ],
+        '/track_model/fuel_ml_per_s/standard' => [
+            'label' => 'Paliwo na sekundę okrążenia: standard',
+            'help' => 'Ile paliwa spala w każdej sekundzie okrążenia silnik auta o zwykłym zużyciu na torze rodzaju „standard”. Paliwo okrążenia auta wzorcowego to ta liczba razy czas okrążenia, a łapczywsze auto spala więcej.',
+            'example' => 'Standard 20 ml na sekundę: ulica Złomowo (75 s) spala 1,5 l na okrążenie.',
+            'range' => 'Od 1 do 1000 ml na sekundę (ze schematu).',
+            'tip' => 'Zmiana tej liczby rusza paliwo wszystkich torów tego rodzaju naraz. Zbiornik starcza na pojemność ÷ tę liczbę sekund: 45 l przy 12 ml to ok. godzina, przy 32 ml ok. 23 minuty.',
+        ],
+        '/track_model/fuel_ml_per_s/endurance' => [
+            'label' => 'Paliwo na sekundę okrążenia: dystans',
+            'help' => 'Ile paliwa spala w każdej sekundzie okrążenia silnik auta o zwykłym zużyciu na torze rodzaju „dystans”. Paliwo okrążenia auta wzorcowego to ta liczba razy czas okrążenia, a łapczywsze auto spala więcej.',
+            'example' => 'Dystans 32 ml na sekundę: Obwodnica Złomowo (300 s) spala 9,6 l na okrążenie.',
+            'range' => 'Od 1 do 1000 ml na sekundę (ze schematu).',
+            'tip' => 'Zmiana tej liczby rusza paliwo wszystkich torów tego rodzaju naraz. Zbiornik starcza na pojemność ÷ tę liczbę sekund: 45 l przy 12 ml to ok. godzina, przy 32 ml ok. 23 minuty.',
         ],
     ],
 ];

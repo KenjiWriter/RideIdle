@@ -23,12 +23,26 @@ return [
             'range' => 'Von 0 bis 3600, höchstens zwei Dezimalstellen (aus dem Schema).',
             'tip' => 'Auf einer sehr kurzen Strecke verändert die Rundung auf ganze XP pro Runde das Ergebnis um zehn Prozent oder mehr: Der Prüfer warnt, wenn die Rundung mehr als ein Zehntel nimmt.',
         ],
-        '/track_model/fuel_ml_per_s/*' => [
-            'label' => 'Kraftstoff pro Sekunde einer Runde (Art der Strecke)',
-            'help' => 'Wie viel Kraftstoff der Motor eines Autos mit normalem Durst in jeder Sekunde einer Runde verbrennt; der Name des Feldes sagt, für welche Art von Strecke: Sprint, Standard oder Langstrecke. Der Kraftstoff einer Runde des Referenzautos ist diese Zahl mal die Zeit der Runde, ein durstigeres Auto verbrennt mehr.',
-            'example' => 'Sprint 12 ml (0,012 l) pro Sekunde, Standard 20 ml, Langstrecke 32 ml: Die Stadtstrecke Złomowo (75 s) verbrennt 1,5 l pro Runde.',
+        '/track_model/fuel_ml_per_s/sprint' => [
+            'label' => 'Kraftstoff pro Sekunde einer Runde: Sprint',
+            'help' => 'Wie viel Kraftstoff der Motor eines Autos mit normalem Durst in jeder Sekunde einer Runde auf einer Strecke der Art „Sprint“ verbrennt. Der Kraftstoff einer Runde des Referenzautos ist diese Zahl mal die Zeit der Runde, ein durstigeres Auto verbrennt mehr.',
+            'example' => 'Sprint 12 ml (0,012 l) pro Sekunde: Der Schrottplatz-Sprint (12 s) verbrennt 144 ml.',
             'range' => 'Von 1 bis 1000 ml pro Sekunde (aus dem Schema).',
-            'tip' => 'Wer eine dieser Zahlen ändert, verschiebt den Kraftstoff aller Strecken dieser Art auf einmal. Ein Tank hält Fassungsvermögen ÷ diese Zahl in Sekunden: 45 l bei 12 ml sind etwa eine Stunde, bei 32 ml etwa 23 Minuten.',
+            'tip' => 'Wer diese Zahl ändert, verschiebt den Kraftstoff aller Strecken dieser Art auf einmal. Ein Tank hält Fassungsvermögen ÷ diese Zahl in Sekunden: 45 l bei 12 ml sind etwa eine Stunde, bei 32 ml etwa 23 Minuten.',
+        ],
+        '/track_model/fuel_ml_per_s/standard' => [
+            'label' => 'Kraftstoff pro Sekunde einer Runde: Standard',
+            'help' => 'Wie viel Kraftstoff der Motor eines Autos mit normalem Durst in jeder Sekunde einer Runde auf einer Strecke der Art „Standard“ verbrennt. Der Kraftstoff einer Runde des Referenzautos ist diese Zahl mal die Zeit der Runde, ein durstigeres Auto verbrennt mehr.',
+            'example' => 'Standard 20 ml pro Sekunde: Die Stadtstrecke Złomowo (75 s) verbrennt 1,5 l pro Runde.',
+            'range' => 'Von 1 bis 1000 ml pro Sekunde (aus dem Schema).',
+            'tip' => 'Wer diese Zahl ändert, verschiebt den Kraftstoff aller Strecken dieser Art auf einmal. Ein Tank hält Fassungsvermögen ÷ diese Zahl in Sekunden: 45 l bei 12 ml sind etwa eine Stunde, bei 32 ml etwa 23 Minuten.',
+        ],
+        '/track_model/fuel_ml_per_s/endurance' => [
+            'label' => 'Kraftstoff pro Sekunde einer Runde: Langstrecke',
+            'help' => 'Wie viel Kraftstoff der Motor eines Autos mit normalem Durst in jeder Sekunde einer Runde auf einer Strecke der Art „Langstrecke“ verbrennt. Der Kraftstoff einer Runde des Referenzautos ist diese Zahl mal die Zeit der Runde, ein durstigeres Auto verbrennt mehr.',
+            'example' => 'Langstrecke 32 ml pro Sekunde: Die Umgehungsstraße Złomowo (300 s) verbrennt 9,6 l pro Runde.',
+            'range' => 'Von 1 bis 1000 ml pro Sekunde (aus dem Schema).',
+            'tip' => 'Wer diese Zahl ändert, verschiebt den Kraftstoff aller Strecken dieser Art auf einmal. Ein Tank hält Fassungsvermögen ÷ diese Zahl in Sekunden: 45 l bei 12 ml sind etwa eine Stunde, bei 32 ml etwa 23 Minuten.',
         ],
     ],
 ];

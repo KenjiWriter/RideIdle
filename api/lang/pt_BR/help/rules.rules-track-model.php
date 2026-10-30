@@ -23,12 +23,26 @@ return [
             'range' => 'De 0 a 3600, no máximo duas casas decimais (do esquema).',
             'tip' => 'Em uma pista muito curta, o arredondamento para XP inteiro por volta muda o resultado em dez por cento ou mais: o validador avisa quando o arredondamento tira mais de um décimo.',
         ],
-        '/track_model/fuel_ml_per_s/*' => [
-            'label' => 'Combustível por segundo de volta (tipo de pista)',
-            'help' => 'Quanto combustível o motor de um carro de sede normal queima a cada segundo de uma volta; o nome do campo diz para qual tipo de pista: sprint, padrão ou endurance. O combustível de uma volta do carro de referência é esse número vezes o tempo da volta, e um carro mais sedento queima mais.',
-            'example' => 'Sprint 12 ml (0,012 l) por segundo, padrão 20 ml, endurance 32 ml: a pista urbana de Złomowo (75 s) queima 1,5 l por volta.',
+        '/track_model/fuel_ml_per_s/sprint' => [
+            'label' => 'Combustível por segundo de volta: sprint',
+            'help' => 'Quanto combustível o motor de um carro de sede normal queima a cada segundo de uma volta em uma pista do tipo “sprint”. O combustível de uma volta do carro de referência é esse número vezes o tempo da volta, e um carro mais sedento queima mais.',
+            'example' => 'Sprint 12 ml (0,012 l) por segundo: a Corrida do ferro-velho (12 s) queima 144 ml.',
             'range' => 'De 1 a 1000 ml por segundo (do esquema).',
-            'tip' => 'Mudar um desses números move de uma vez o combustível de todas as pistas do tipo. Um tanque dura a capacidade ÷ esse número, em segundos: 45 l a 12 ml dão cerca de uma hora, a 32 ml cerca de 23 minutos.',
+            'tip' => 'Mudar este número move de uma vez o combustível de todas as pistas do tipo. Um tanque dura a capacidade ÷ este número, em segundos: 45 l a 12 ml dão cerca de uma hora, a 32 ml cerca de 23 minutos.',
+        ],
+        '/track_model/fuel_ml_per_s/standard' => [
+            'label' => 'Combustível por segundo de volta: padrão',
+            'help' => 'Quanto combustível o motor de um carro de sede normal queima a cada segundo de uma volta em uma pista do tipo “padrão”. O combustível de uma volta do carro de referência é esse número vezes o tempo da volta, e um carro mais sedento queima mais.',
+            'example' => 'Padrão 20 ml por segundo: a pista urbana de Złomowo (75 s) queima 1,5 l por volta.',
+            'range' => 'De 1 a 1000 ml por segundo (do esquema).',
+            'tip' => 'Mudar este número move de uma vez o combustível de todas as pistas do tipo. Um tanque dura a capacidade ÷ este número, em segundos: 45 l a 12 ml dão cerca de uma hora, a 32 ml cerca de 23 minutos.',
+        ],
+        '/track_model/fuel_ml_per_s/endurance' => [
+            'label' => 'Combustível por segundo de volta: endurance',
+            'help' => 'Quanto combustível o motor de um carro de sede normal queima a cada segundo de uma volta em uma pista do tipo “endurance”. O combustível de uma volta do carro de referência é esse número vezes o tempo da volta, e um carro mais sedento queima mais.',
+            'example' => 'Endurance 32 ml por segundo: o Anel viário de Złomowo (300 s) queima 9,6 l por volta.',
+            'range' => 'De 1 a 1000 ml por segundo (do esquema).',
+            'tip' => 'Mudar este número move de uma vez o combustível de todas as pistas do tipo. Um tanque dura a capacidade ÷ este número, em segundos: 45 l a 12 ml dão cerca de uma hora, a 32 ml cerca de 23 minutos.',
         ],
     ],
 ];

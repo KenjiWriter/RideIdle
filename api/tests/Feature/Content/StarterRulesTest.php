@@ -204,7 +204,8 @@ it('makes waiting for a tow cost more than the repair and the fuel it saves', fu
     $rules = starterRules();
     $problems = [];
 
-    foreach ($rules['tracks'] as $slug => $track) {
+    // The lap, the fuel and what a lap pays are made by the model of the tracks, so they are asked of the rules as the game reads them.
+    foreach (Rules::fromArray($rules)->tracks() as $slug => $track) {
         // What the car would have earned in the time it waits, against what the driver would have paid instead.
         $lostCents = $rules['tow']['delay_ms'] / $track['base_lap_ms'] * $track['reward_cents_per_lap'];
         // What the driver pays to get going again: the repair, and the fuel of one lap (the tow leaves more, but one lap is all that is needed).

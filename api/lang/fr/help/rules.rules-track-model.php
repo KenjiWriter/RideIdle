@@ -23,12 +23,26 @@ return [
             'range' => 'De 0 à 3600, au plus deux décimales (d’après le schéma).',
             'tip' => 'Sur un circuit très court, l’arrondi à l’XP entier par tour modifie le résultat de dix pour cent ou plus : le validateur avertit quand l’arrondi retire plus d’un dixième.',
         ],
-        '/track_model/fuel_ml_per_s/*' => [
-            'label' => 'Carburant par seconde de tour (type de circuit)',
-            'help' => 'Le carburant que brûle le moteur d’une voiture de soif normale à chaque seconde d’un tour ; le nom du champ dit pour quel type de circuit : sprint, standard ou endurance. Le carburant d’un tour de la voiture de référence est ce nombre multiplié par le temps du tour, et une voiture plus gourmande en brûle davantage.',
-            'example' => 'Sprint 12 ml (0,012 l) par seconde, standard 20 ml, endurance 32 ml : le circuit urbain de Złomowo (75 s) brûle 1,5 l par tour.',
+        '/track_model/fuel_ml_per_s/sprint' => [
+            'label' => 'Carburant par seconde de tour : sprint',
+            'help' => 'Le carburant que brûle le moteur d’une voiture de soif normale à chaque seconde d’un tour sur un circuit du type « sprint ». Le carburant d’un tour de la voiture de référence est ce nombre multiplié par le temps du tour, et une voiture plus gourmande en brûle davantage.',
+            'example' => 'Sprint 12 ml (0,012 l) par seconde : le Sprint de la casse (12 s) brûle 144 ml.',
             'range' => 'De 1 à 1000 ml par seconde (d’après le schéma).',
-            'tip' => 'Changer l’un de ces nombres déplace d’un coup le carburant de tous les circuits de ce type. Un réservoir dure sa capacité ÷ ce nombre, en secondes : 45 l à 12 ml font environ une heure, à 32 ml environ 23 minutes.',
+            'tip' => 'Changer ce nombre déplace d’un coup le carburant de tous les circuits de ce type. Un réservoir dure sa capacité ÷ ce nombre, en secondes : 45 l à 12 ml font environ une heure, à 32 ml environ 23 minutes.',
+        ],
+        '/track_model/fuel_ml_per_s/standard' => [
+            'label' => 'Carburant par seconde de tour : standard',
+            'help' => 'Le carburant que brûle le moteur d’une voiture de soif normale à chaque seconde d’un tour sur un circuit du type « standard ». Le carburant d’un tour de la voiture de référence est ce nombre multiplié par le temps du tour, et une voiture plus gourmande en brûle davantage.',
+            'example' => 'Standard 20 ml par seconde : le circuit urbain de Złomowo (75 s) brûle 1,5 l par tour.',
+            'range' => 'De 1 à 1000 ml par seconde (d’après le schéma).',
+            'tip' => 'Changer ce nombre déplace d’un coup le carburant de tous les circuits de ce type. Un réservoir dure sa capacité ÷ ce nombre, en secondes : 45 l à 12 ml font environ une heure, à 32 ml environ 23 minutes.',
+        ],
+        '/track_model/fuel_ml_per_s/endurance' => [
+            'label' => 'Carburant par seconde de tour : endurance',
+            'help' => 'Le carburant que brûle le moteur d’une voiture de soif normale à chaque seconde d’un tour sur un circuit du type « endurance ». Le carburant d’un tour de la voiture de référence est ce nombre multiplié par le temps du tour, et une voiture plus gourmande en brûle davantage.',
+            'example' => 'Endurance 32 ml par seconde : le Périphérique de Złomowo (300 s) brûle 9,6 l par tour.',
+            'range' => 'De 1 à 1000 ml par seconde (d’après le schéma).',
+            'tip' => 'Changer ce nombre déplace d’un coup le carburant de tous les circuits de ce type. Un réservoir dure sa capacité ÷ ce nombre, en secondes : 45 l à 12 ml font environ une heure, à 32 ml environ 23 minutes.',
         ],
     ],
 ];

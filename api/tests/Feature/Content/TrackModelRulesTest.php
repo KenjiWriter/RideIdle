@@ -170,7 +170,9 @@ describe('the rules that say them', function () {
     it('are refused when the speed has more than four decimals or the experience of an hour more than two', function () {
         expect(validatedTrack('zlomowo-street', ['speed_kmh' => 124.80001])['errors'])->toContain('rules/starter.json /tracks/zlomowo-street/speed_kmh')
             ->and(validatedTrack('zlomowo-street', ['xp_per_hour' => 960.001])['errors'])->toContain('rules/starter.json /tracks/zlomowo-street/xp_per_hour')
-            ->and(validatedTrack('zlomowo-street', ['speed_kmh' => 124.8001, 'xp_per_hour' => 960.01])['errors'])->toBe([]);
+            ->and(validatedTrack('zlomowo-street', ['speed_kmh' => 124.8001, 'xp_per_hour' => 960.01])['errors'])->toBe([])
+            // The noise of the arithmetic of whoever made the number (665.45 times 3 is 1996.3500000000001) is not a decimal.
+            ->and(validatedTrack('zlomowo-street', ['xp_per_hour' => 665.45 * 3, 'speed_kmh' => 0.1 + 0.2 + 124.5])['errors'])->toBe([]);
     });
 
     it('are refused when a track made by the model is a stunt, and are warned about when one that was said by hand is', function () {
@@ -180,8 +182,14 @@ describe('the rules that say them', function () {
         expect($modelled['errors'])->toContain('rules/starter.json /tracks/zlomowo-street/length_m')->toContain('rules/starter.json /tracks/zlomowo-street/speed_kmh');
 
         $byHand = validatedRules(function (array $rules): array {
-            $rules['tracks']['zlomowo-yard-dash']['length_m'] = 150;
-            $rules['tracks']['zlomowo-yard-dash']['base_lap_ms'] = 4_000;
+            $rules['tracks']['zlomowo-yard-dash'] = [
+                ...array_diff_key($rules['tracks']['zlomowo-yard-dash'], array_flip(['speed_kmh', 'pay_cents_per_hour', 'xp_per_hour'])),
+                'length_m' => 150,
+                'base_lap_ms' => 4_000,
+                'fuel_per_lap_ml' => 48,
+                'reward_cents_per_lap' => 67,
+                'xp_per_lap' => 1,
+            ];
 
             return $rules;
         });

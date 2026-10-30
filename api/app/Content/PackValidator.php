@@ -35,6 +35,9 @@ final class PackValidator
     /** How much of the experience of a lap the rounding to a whole number may take before it is worth a warning. */
     private const ROUNDED_EXPERIENCE_TOLERANCE = 0.1;
 
+    /** How far a number may be from one with fewer decimals before it is said to have more (the noise of the arithmetic of whoever made it is not a decimal). */
+    private const DECIMALS_TOLERANCE = 1e-9;
+
     private const SCHEMA_BASE = 'https://rideidle.local/schema/';
 
     /** Folder name => schema file. */
@@ -458,11 +461,11 @@ final class PackValidator
 
             $modelled = isset($track['speed_kmh']);
 
-            if ($modelled && is_numeric($track['speed_kmh']) && round((float) $track['speed_kmh'], 4) != $track['speed_kmh']) {
+            if ($modelled && is_numeric($track['speed_kmh']) && abs(round((float) $track['speed_kmh'], 4) - $track['speed_kmh']) > self::DECIMALS_TOLERANCE) {
                 $result->addError($file, "/tracks/{$slug}/speed_kmh", 'The speed has more than four decimals.');
             }
 
-            if (isset($track['xp_per_hour']) && is_numeric($track['xp_per_hour']) && round((float) $track['xp_per_hour'], 2) != $track['xp_per_hour']) {
+            if (isset($track['xp_per_hour']) && is_numeric($track['xp_per_hour']) && abs(round((float) $track['xp_per_hour'], 2) - $track['xp_per_hour']) > self::DECIMALS_TOLERANCE) {
                 $result->addError($file, "/tracks/{$slug}/xp_per_hour", 'The experience of an hour has more than two decimals.');
             }
 

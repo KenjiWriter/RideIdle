@@ -83,7 +83,7 @@ describe('the report', function () {
         $admin = signedInAdmin(Admin::ROLE_PUBLISHER);
         $rules = JsonDocument::decode((string) repositoryContent()->raw('rules/starter'));
         foreach ($rules['tracks'] as $slug => $track) {
-            $rules['tracks'][$slug]['xp_per_lap'] = $track['xp_per_lap'] * 10;
+            $rules['tracks'][$slug]['xp_per_hour'] = $track['xp_per_hour'] * 3;
         }
         app(ContentDrafts::class)->save(ContentDefinition::query()->where('kind', 'rules')->where('slug', 'starter')->firstOrFail(), $rules, $admin);
 
