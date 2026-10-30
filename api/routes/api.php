@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\LocaleController;
 use App\Http\Controllers\Api\V1\MarketController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\MediaController;
+use App\Http\Controllers\Api\V1\MissionController;
 use App\Http\Controllers\Api\V1\ModelController;
 use App\Http\Controllers\Api\V1\PlayerController;
 use App\Http\Controllers\Api\V1\PremiumController;
@@ -109,6 +110,12 @@ Route::prefix('v1')->group(function (): void {
         Route::post('/premium/autorefill', [PremiumController::class, 'buyAutoRefill']);
         Route::patch('/premium/autorefill', [PremiumController::class, 'setAutoRefill']);
         Route::post('/premium/vip', [PremiumController::class, 'buyVip']);
+
+        // The sets of missions of a day, a week and a month, and taking what they pay.
+        Route::get('/missions', [MissionController::class, 'show'])->middleware('throttle:missions');
+        Route::post('/missions/claim', [MissionController::class, 'claimAll']);
+        Route::post('/missions/{mission}/claim', [MissionController::class, 'claim'])->whereNumber('mission');
+        Route::post('/missions/{kind}/bonus', [MissionController::class, 'bonus'])->whereIn('kind', ['daily', 'weekly', 'monthly']);
 
         Route::get('/away', [AwayController::class, 'show']);
         Route::post('/away/seen', [AwayController::class, 'seen']);

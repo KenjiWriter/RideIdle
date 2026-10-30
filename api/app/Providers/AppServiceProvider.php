@@ -6,6 +6,7 @@ use App\Content\BotProfiles;
 use App\Content\Branding\Branding;
 use App\Content\Catalog;
 use App\Content\ContentSource;
+use App\Content\MissionCatalog;
 use App\Content\Rules;
 use App\Content\TutorialSteps;
 use App\Content\Vocabulary\Vocabulary;
@@ -45,6 +46,7 @@ class AppServiceProvider extends ServiceProvider
         // a service that is built by hand (in a test, for a run of its own) leaves them out.
         $this->app->bind(RunService::class, fn ($app) => new RunService(ledger: $app->make(Ledger::class), script: $app->make(TutorialScript::class)));
         $this->app->scoped(TutorialSteps::class, fn () => TutorialSteps::fromConfig());
+        $this->app->scoped(MissionCatalog::class, fn () => MissionCatalog::fromConfig());
         $this->app->scoped(Vocabulary::class, fn () => Vocabulary::fromConfig());
         $this->app->scoped(Branding::class, fn () => Branding::fromConfig());
     }
@@ -64,6 +66,9 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(function (SocialiteWasCalled $event): void {
             $event->extendSocialite('apple', Provider::class);
         });
+
+        // The missions are counted out of the facts of the game whenever they are looked at, and the bar of the game looks every minute or so.
+        RateLimiter::for('missions', fn (Request $request) => Limit::perMinute(30)->by((string) $request->user()?->getAuthIdentifier()));
 
         // Creating a guest is free, so it is limited per address.
         RateLimiter::for('guest-create', fn (Request $request) => Limit::perHour(10)->by((string) $request->ip()));

@@ -21,6 +21,8 @@ use App\Models\StorageOpening;
 use App\Models\Travel;
 use App\Models\TutorialProgress;
 use App\Models\User;
+use App\Models\UserMission;
+use App\Models\UserMissionPeriod;
 use App\Models\UserVisit;
 use App\Models\Wallet;
 use App\Models\WorkshopJob;
@@ -71,6 +73,8 @@ final class AccountErasure
             'workshop jobs' => WorkshopJob::query()->where('user_id', $user->id)->count(),
             'travels' => Travel::query()->where('user_id', $user->id)->count(),
             'tutorial steps' => TutorialProgress::query()->where('user_id', $user->id)->count(),
+            'missions' => UserMission::query()->where('user_id', $user->id)->count(),
+            'mission sets' => UserMissionPeriod::query()->where('user_id', $user->id)->count(),
             'runs' => $runs->count(),
             'settlements' => $settlements->count(),
             'settlement events' => SettlementEvent::query()->whereIn('settlement_id', $settlements)->count(),
@@ -110,6 +114,8 @@ final class AccountErasure
             CityGarage::query()->where('user_id', $user->id)->delete();
             CityWorkshop::query()->where('user_id', $user->id)->delete();
             TutorialProgress::query()->where('user_id', $user->id)->delete();
+            UserMission::query()->where('user_id', $user->id)->delete();
+            UserMissionPeriod::query()->where('user_id', $user->id)->delete();
             Part::query()->where('user_id', $user->id)->delete();
             Car::query()->withoutGlobalScopes()->where('user_id', $user->id)->delete();
             StorageOpening::query()->where('user_id', $user->id)->delete();
