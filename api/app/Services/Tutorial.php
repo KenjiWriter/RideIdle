@@ -57,10 +57,9 @@ final class Tutorial
         private readonly RunInputsFactory $inputs,
         private readonly Ledger $ledger,
         private readonly Garage $garage,
-        private readonly CarProgress $progress,
+        private readonly RewardPayer $payer,
         private readonly Catalog $catalog,
         private readonly CityGarages $garages,
-        private readonly PartAffixes $affixes,
         private readonly Rules $rules,
     ) {}
 
@@ -178,7 +177,7 @@ final class Tutorial
 
                 // What the step is to be done with is in the inventory before the messages are shown.
                 if (isset($step['gift'])) {
-                    $this->givePart($userId, $step['gift']['part'], Rarity::fromKey($step['gift']['rarity'] ?? 'common'), (int) ($step['gift']['count'] ?? 1));
+                    $this->payer->givePart($userId, $step['gift']['part'], Rarity::fromKey($step['gift']['rarity'] ?? 'common'), (int) ($step['gift']['count'] ?? 1));
                 }
 
                 // Shown first: it can be completed on the next look.
@@ -203,14 +202,11 @@ final class Tutorial
 
             // The experience of the driver goes before the garage and the part, which may ask for a level: the steps are paid in the order of the design.
             $this->ledger->grantXp($userId, $xp);
-            $part = isset($step['reward']['part']) ? $this->givePart($userId, $step['reward']['part']) : null;
+            $part = isset($step['reward']['part']) ? $this->payer->givePart($userId, $step['reward']['part']) : null;
             $garage = isset($step['reward']['garage']) && $this->garages->grant($userId, $step['reward']['garage']) ? $step['reward']['garage'] : null;
 
             // The experience goes to the car the driver has: with no car there is nothing to give it to.
-            if ($carXp > 0) {
-                $car = $this->garage->carOf($userId);
-                $carXp = $car === null ? 0 : ($this->progress->award($car->id, $carXp) === null ? 0 : $carXp);
-            }
+            $carXp = $this->payer->awardCarXp($userId, $carXp);
 
             if ($cents > 0 || $carXp > 0 || $xp > 0 || $part !== null || $garage !== null) {
                 $rewarded[] = ['key' => $step['key'], 'cash_cents' => $cents, 'car_xp' => $carXp, 'xp' => $xp, 'part' => $part, 'garage' => $garage];
@@ -272,24 +268,6 @@ final class Tutorial
         }
 
         return null;
-    }
-
-    /** Parts of the pack in the inventory of the driver, common unless said otherwise: the slug, or null for a part that the pack does not have. */
-    private function givePart(int $userId, string $slug, Rarity $rarity = Rarity::Common, int $count = 1): ?string
-    {
-        $definition = $this->catalog->part($slug);
-
-        if ($definition === null) {
-            return null;
-        }
-
-        for ($given = 0; $given < $count; $given++) {
-            $part = Part::query()->create(['user_id' => $userId, 'part_slug' => $slug, 'slot' => $definition['slot'], 'rarity' => $rarity->value]);
-
-            $this->affixes->give($part, $rarity);
-        }
-
-        return $slug;
     }
 
     /**

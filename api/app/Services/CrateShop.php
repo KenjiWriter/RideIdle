@@ -185,6 +185,83 @@ final class CrateShop
     }
 
     /**
+     * A crate that a mission gives: opened for the driver at once, for nothing, with the odds of its kind. It has a count of its own for the guarantees
+     * (`m:standard`, `m:premium`), so that the crates that were given neither move the guarantees of the ones that are bought nor count as bought, and the slot is
+     * drawn, whatever the kind. A kind that the level of the driver does not open is replaced by the best one it does. The caller holds the lock of the wallet.
+     *
+     * @return array{part: Part, kind: string}|null null when the level opens nothing to draw
+     */
+    public function grantFree(int $userId, string $kind): ?array
+    {
+        $level = $this->levelOf($userId);
+        $kinds = $this->crates->kinds();
+        $pools = $this->openPools($level);
+
+        if (! isset($kinds[$kind]) || $pools === []) {
+            return null;
+        }
+
+        if ($level < $kinds[$kind]['min_player_level']) {
+            $open = array_filter($kinds, static fn (array $candidate): bool => $candidate['min_player_level'] <= $level);
+            uasort($open, static fn (array $a, array $b): int => $b['min_player_level'] <=> $a['min_player_level']);
+            $kind = (string) array_key_first($open);
+        }
+
+        $group = $kinds[$kind]['group'];
+        $stream = 'm:'.$group;
+        $index = CrateOpening::query()->where('user_id', $userId)->where('pity_group', $stream)->count();
+        $seed = hash_hmac('sha256', "crate|{$userId}|{$stream}|{$index}", (string) config('app.key'));
+
+        $slots = array_keys($pools);
+        $chosen = $slots[$this->crates->pick($seed, 'slot', count($slots))];
+        $pool = $pools[$chosen];
+        $since = $this->since($userId, $group, $stream);
+        $rarity = $this->crates->draw($seed, $group, $since['floor'], $since['legendary']);
+        $model = $pool['parts'][$this->crates->pick($seed, 'model', count($pool['parts']))];
+
+        $part = Part::query()->create(['user_id' => $userId, 'part_slug' => $model['slug'], 'slot' => $model['slot'], 'rarity' => $rarity->value]);
+        $this->affixes->give($part, $rarity);
+
+        CrateOpening::query()->create([
+            'user_id' => $userId,
+            'kind' => $kind,
+            'pity_group' => $stream,
+            'opening_index' => $index,
+            'slot' => $chosen,
+            'tier' => $pool['tier'],
+            'rarity' => $rarity->value,
+            'part_slug' => $model['slug'],
+            'price_cents' => 0,
+            'part_id' => $part->id,
+        ]);
+
+        return ['part' => $part, 'kind' => $kind];
+    }
+
+    /**
+     * A part of a rarity that a mission gives: from the pool of the shop that the level of the driver opens, in a slot that is drawn from `$seedKey` (the same key
+     * gives the same part). Null when the level opens nothing to draw. The caller holds the lock of the wallet.
+     */
+    public function grantPart(int $userId, Rarity $rarity, string $seedKey): ?Part
+    {
+        $pools = $this->openPools($this->levelOf($userId));
+
+        if ($pools === []) {
+            return null;
+        }
+
+        $seed = hash_hmac('sha256', "part|{$userId}|{$seedKey}", (string) config('app.key'));
+        $slots = array_keys($pools);
+        $pool = $pools[$slots[$this->crates->pick($seed, 'slot', count($slots))]];
+        $model = $pool['parts'][$this->crates->pick($seed, 'model', count($pool['parts']))];
+
+        $part = Part::query()->create(['user_id' => $userId, 'part_slug' => $model['slug'], 'slot' => $model['slot'], 'rarity' => $rarity->value]);
+        $this->affixes->give($part, $rarity);
+
+        return $part;
+    }
+
+    /**
      * What a crate can give at a level of the driver, by slot (in the order of the shop): the parts of the shop of the highest tier of the slot
      * that the level opens.
      *
@@ -235,9 +312,9 @@ final class CrateShop
      *
      * @return array{floor: int, legendary: int}
      */
-    private function since(int $userId, string $group): array
+    private function since(int $userId, string $group, ?string $stream = null): array
     {
-        $openings = CrateOpening::query()->where('user_id', $userId)->where('pity_group', $group);
+        $openings = CrateOpening::query()->where('user_id', $userId)->where('pity_group', $stream ?? $group);
         $total = (clone $openings)->count();
 
         return [
