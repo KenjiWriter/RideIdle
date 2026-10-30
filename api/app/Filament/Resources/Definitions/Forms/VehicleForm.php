@@ -33,12 +33,12 @@ final class VehicleForm
             DefinitionFields::image(),
             Section::make(__('admin.definitions.sections.car'))->schema([
                 Grid::make(3)->schema([
-                    Select::make('class')->helpKey('vehicle.class')->options(self::options(self::CLASSES))->required(),
-                    Select::make('drivetrain')->helpKey('vehicle.drivetrain')->options(self::options(['fwd', 'rwd', 'awd']))->required(),
-                    Select::make('powertrain')->helpKey('vehicle.powertrain')->options(self::options(['ice', 'ev']))->required()->live(),
+                    Select::make('class')->helpKey('vehicle.class')->options(FieldHelp::options('vehicle.class', self::CLASSES))->required(),
+                    Select::make('drivetrain')->helpKey('vehicle.drivetrain')->options(FieldHelp::options('vehicle.drivetrain', ['fwd', 'rwd', 'awd']))->required(),
+                    Select::make('powertrain')->helpKey('vehicle.powertrain')->options(FieldHelp::options('vehicle.powertrain', ['ice', 'ev']))->required()->live(),
                 ]),
                 Grid::make(3)->schema([
-                    Select::make('engine_layout')->helpKey('vehicle.engine_layout')->options(self::options(['R4', 'V6', 'R6', 'V8', 'V10', 'V12']))->visible($combustion)->required($combustion),
+                    Select::make('engine_layout')->helpKey('vehicle.engine_layout')->options(FieldHelp::options('vehicle.engine_layout', ['R4', 'V6', 'R6', 'V8', 'V10', 'V12']))->visible($combustion)->required($combustion),
                     TextInput::make('engine_displacement_l')->helpKey('vehicle.engine_displacement_l')->numeric()->visible($combustion)->required($combustion),
                     TextInput::make('engine_tune')->helpKey('vehicle.engine_tune')->numeric()->visible($combustion)->required($combustion),
                     TextInput::make('engine_motors')->helpKey('vehicle.engine_motors')->numeric()->visible($electric)->required($electric),
@@ -57,11 +57,11 @@ final class VehicleForm
             ]),
             Section::make(__('admin.definitions.sections.offer'))->schema([
                 Grid::make(3)->schema([
-                    Select::make('tier')->helpKey('vehicle.tier')->options(array_combine(range(1, 10), range(1, 10)))->required(),
+                    Select::make('tier')->helpKey('vehicle.tier')->options(FieldHelp::options('vehicle.tier', array_map('strval', range(1, 10))))->required(),
                     TextInput::make('min_player_level')->helpKey('vehicle.min_player_level')->numeric()->required(),
                     TextInput::make('price')->helpKey('vehicle.price')->numeric()->prefix('$')->required(),
                 ]),
-                CheckboxList::make('sources')->helpKey('vehicle.sources')->options(self::options(['start', 'exchange', 'dealer']))->required()->columns(3),
+                CheckboxList::make('sources')->helpKey('vehicle.sources')->options(FieldHelp::options('vehicle.sources', ['start', 'exchange', 'dealer']))->required()->columns(3),
             ]),
         ];
     }

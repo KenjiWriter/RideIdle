@@ -29,20 +29,21 @@ final class FieldHelp
     /** Makes `->helpKey()` a method of every field of the forms. */
     public static function register(): void
     {
-        Field::macro('helpKey', function (string $key, array $replace = []): Field {
+        Field::macro('helpKey', function (string $key, array $replace = [], bool $options = true): Field {
             /** @var Field $this */
-            return FieldHelp::apply($this, $key, $replace);
+            return FieldHelp::apply($this, $key, $replace, options: $options);
         });
     }
 
     /**
      * Gives a field the label, the helper text and the tip of its entry (what a field has no entry for is left as the form made it), and marks it with its key. A word of
      * the entry that begins with a colon (`:min`) is put in place of what `$replace` has for it. A field that has a label of its own, as the boxes for the languages of a text
-     * have, takes only the helper text (`$label` false), and one box of several takes it once (`$help` false for the others).
+     * have, takes only the helper text (`$label` false), and one box of several takes it once (`$help` false for the others). A field that shows a line under each of its
+     * options itself (a radio) leaves them out of the text (`$options` false).
      *
      * @param  array<string, scalar>  $replace
      */
-    public static function apply(Field $field, string $key, array $replace = [], bool $label = true, bool $help = true): Field
+    public static function apply(Field $field, string $key, array $replace = [], bool $label = true, bool $help = true, bool $options = true): Field
     {
         $field->extraAttributes(['data-help' => $key], merge: true);
 
@@ -57,7 +58,7 @@ final class FieldHelp
         }
 
         if ($help) {
-            $field->helperText(fn (): ?HtmlString => self::helper($key, $replace));
+            $field->helperText(fn (): ?HtmlString => self::helper($key, $replace, $options));
         }
 
         if (isset($entry['tip'])) {
@@ -130,11 +131,28 @@ final class FieldHelp
      *
      * @param  array<string, scalar>  $replace
      */
-    public static function helper(string $key, array $replace = []): ?HtmlString
+    public static function helper(string $key, array $replace = [], bool $options = true): ?HtmlString
     {
         $entry = self::entry($key);
 
-        return $entry === null ? null : self::html($entry, $replace);
+        return $entry === null ? null : self::html($entry, $replace, $options);
+    }
+
+    /**
+     * The line of each option of a choice, by value, for a field that shows them beside the options.
+     *
+     * @param  list<string>  $values
+     * @return array<string, string>
+     */
+    public static function descriptions(string $key, array $values): array
+    {
+        $lines = [];
+
+        foreach ($values as $value) {
+            $lines[$value] = (string) (self::entry($key)['options'][$value]['help'] ?? '');
+        }
+
+        return $lines;
     }
 
     /**
@@ -143,7 +161,7 @@ final class FieldHelp
      * @param  array<string, mixed>  $entry
      * @param  array<string, scalar>  $replace
      */
-    public static function html(array $entry, array $replace = []): ?HtmlString
+    public static function html(array $entry, array $replace = [], bool $options = true): ?HtmlString
     {
         $lines = [];
 
@@ -157,16 +175,16 @@ final class FieldHelp
             }
         }
 
-        $options = [];
+        $items = [];
 
-        foreach ((array) ($entry['options'] ?? []) as $value => $option) {
+        foreach ($options ? (array) ($entry['options'] ?? []) : [] as $value => $option) {
             if (filled($option['help'] ?? null)) {
-                $options[] = '<li><strong>'.e((string) self::said($option['label'] ?? $value, $replace)).'</strong>: '.e((string) self::said($option['help'], $replace)).'</li>';
+                $items[] = '<li><strong>'.e((string) self::said($option['label'] ?? $value, $replace)).'</strong>: '.e((string) self::said($option['help'], $replace)).'</li>';
             }
         }
 
-        if ($options !== []) {
-            $lines[] = '<ul style="margin:.25rem 0 0 1.1rem;list-style:disc">'.implode('', $options).'</ul>';
+        if ($items !== []) {
+            $lines[] = '<ul style="margin:.25rem 0 0 1.1rem;list-style:disc">'.implode('', $items).'</ul>';
         }
 
         return $lines === [] ? null : new HtmlString('<div style="display:grid;gap:.25rem">'.implode('', $lines).'</div>');

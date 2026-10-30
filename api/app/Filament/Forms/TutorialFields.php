@@ -65,13 +65,13 @@ final class TutorialFields
                     ->schema([
                         Grid::make(3)->schema([
                             TextInput::make('key')->helpKey('tutorial.key')->required()->maxLength(64)->regex('/^[a-z0-9]+(-[a-z0-9]+)*$/')->distinct(),
-                            Select::make('phase')->helpKey('tutorial.phase')->options(array_combine(range(1, 4), range(1, 4)))->required(),
+                            Select::make('phase')->helpKey('tutorial.phase')->options(FieldHelp::options('tutorial.phase', array_map('strval', range(1, 4))))->required(),
                             TextInput::make('sender')->helpKey('tutorial.sender')->required()->regex('/^\+48 555 010 [0-9]{3}$/'),
                         ]),
                         Grid::make(3)->schema([
                             TextInput::make('trigger')->helpKey('tutorial.trigger')->datalist($conditions)->required(),
                             TextInput::make('completion')->helpKey('tutorial.completion')->datalist($conditions)->required(),
-                            Select::make('target')->helpKey('tutorial.target')->options(array_combine($targets, $targets))->placeholder(__('admin.tutorial.no_target')),
+                            Select::make('target')->helpKey('tutorial.target')->options(FieldHelp::options('tutorial.target', $targets))->placeholder(__('admin.tutorial.no_target')),
                         ]),
                         DefinitionFields::texts('goal', __('admin.tutorial.goal'), 'tutorial.goal'),
                         DefinitionFields::texts('waiting', __('admin.tutorial.waiting'), 'tutorial.waiting', required: false),
@@ -84,11 +84,11 @@ final class TutorialFields
                         DefinitionFields::texts('reply', __('admin.tutorial.reply'), 'tutorial.reply', required: false),
                         Toggle::make('optional')->helpKey('tutorial.optional')->inline(false),
                         DefinitionFields::texts('decline', __('admin.tutorial.decline'), 'tutorial.decline', required: false),
-                        CheckboxList::make('arranges')->helpKey('tutorial.arranges')->options(array_combine($jobs, $jobs))->columns(5),
+                        CheckboxList::make('arranges')->helpKey('tutorial.arranges')->options(FieldHelp::options('tutorial.arranges', $jobs))->columns(5),
                         Fieldset::make(__('admin.tutorial.gift'))->schema([
                             Grid::make(3)->schema([
                                 Select::make('gift_part')->helpKey('tutorial.gift_part')->options(fn (): array => ContentOptions::parts())->placeholder('-')->searchable(),
-                                Select::make('gift_rarity')->helpKey('tutorial.gift_rarity')->options(array_combine(['common', 'uncommon', 'rare', 'epic', 'legendary'], ['common', 'uncommon', 'rare', 'epic', 'legendary']))->placeholder('common'),
+                                Select::make('gift_rarity')->helpKey('tutorial.gift_rarity')->options(FieldHelp::options('tutorial.gift_rarity', ['common', 'uncommon', 'rare', 'epic', 'legendary']))->placeholder('common'),
                                 TextInput::make('gift_count')->helpKey('tutorial.gift_count')->numeric()->integer()->minValue(1)->maxValue(4),
                             ]),
                         ])->columns(1),

@@ -82,17 +82,9 @@ class CreateGame extends CreateRecord
             ]),
             Step::make(__('admin.games.wizard.step_start'))->description(__('admin.games.wizard.step_start_hint'))->schema([
                 Radio::make('start')
-                    ->helpKey('wizard.start')
-                    ->options([
-                        GameCreator::START_TEMPLATE => __('admin.games.wizard.start_template'),
-                        GameCreator::START_COPY => __('admin.games.wizard.start_copy'),
-                        GameCreator::START_NONE => __('admin.games.wizard.start_none'),
-                    ])
-                    ->descriptions([
-                        GameCreator::START_TEMPLATE => __('admin.games.wizard.start_template_hint'),
-                        GameCreator::START_COPY => __('admin.games.wizard.start_copy_hint'),
-                        GameCreator::START_NONE => __('admin.games.wizard.start_none_hint'),
-                    ])
+                    ->helpKey('wizard.start', options: false)
+                    ->options(FieldHelp::options('wizard.start', [GameCreator::START_TEMPLATE, GameCreator::START_COPY, GameCreator::START_NONE]))
+                    ->descriptions(FieldHelp::descriptions('wizard.start', [GameCreator::START_TEMPLATE, GameCreator::START_COPY, GameCreator::START_NONE]))
                     ->default(GameCreator::START_TEMPLATE)
                     ->required()
                     ->live(),

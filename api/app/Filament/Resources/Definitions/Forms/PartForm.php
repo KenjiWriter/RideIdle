@@ -37,7 +37,7 @@ final class PartForm
         $slots = [];
 
         foreach ($model->slots() as ['key' => $key, 'role' => $role]) {
-            $slots[$key] = $role === null || $role === $key ? $key : "{$key} ({$role})";
+            $slots[$key] = FieldHelp::entry('part.slot')['options'][$key]['label'] ?? ($role === null || $role === $key ? $key : "{$key} ({$role})");
         }
 
         return [
@@ -50,8 +50,8 @@ final class PartForm
             Section::make(__('admin.definitions.sections.part'))->schema([
                 Grid::make(4)->schema([
                     Select::make('slot')->helpKey('part.slot')->options($slots)->required()->live(),
-                    Select::make('tire_kind')->helpKey('part.tire_kind')->options(self::options(['all_season', 'street', 'slick', 'rain', 'offroad', 'winter']))->visible($tires)->required($tires),
-                    Select::make('tier')->helpKey('part.tier')->options(array_combine(range(1, 10), range(1, 10)))->required(),
+                    Select::make('tire_kind')->helpKey('part.tire_kind')->options(FieldHelp::options('part.tire_kind', ['all_season', 'street', 'slick', 'rain', 'offroad', 'winter']))->visible($tires)->required($tires),
+                    Select::make('tier')->helpKey('part.tier')->options(FieldHelp::options('part.tier', array_map('strval', range(1, 10))))->required(),
                     TextInput::make('price')->helpKey('part.price')->numeric()->prefix('$')->required(),
                 ]),
                 Grid::make(2)->schema([
@@ -75,9 +75,9 @@ final class PartForm
                 Grid::make(3)->schema([
                     TextInput::make('requires_min_cylinders')->helpKey('part.requires_min_cylinders')->numeric(),
                     Toggle::make('requires_booster')->helpKey('part.requires_booster'),
-                    Select::make('fits_powertrain')->helpKey('part.fits_powertrain')->options(self::options(['ice', 'ev']))->placeholder('-'),
+                    Select::make('fits_powertrain')->helpKey('part.fits_powertrain')->options(FieldHelp::options('part.fits_powertrain', ['ice', 'ev']))->placeholder('-'),
                 ]),
-                CheckboxList::make('fits_classes')->helpKey('part.fits_classes')->options(self::options(['hatchback', 'hot_hatch', 'sedan', 'coupe', 'muscle', 'pickup', 'van', 'gt', 'super', 'hyper']))->columns(5),
+                CheckboxList::make('fits_classes')->helpKey('part.fits_classes')->options(FieldHelp::options('part.fits_classes', ['hatchback', 'hot_hatch', 'sedan', 'coupe', 'muscle', 'pickup', 'van', 'gt', 'super', 'hyper']))->columns(5),
             ])->collapsed(),
         ];
     }

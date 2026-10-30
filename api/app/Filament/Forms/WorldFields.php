@@ -73,7 +73,7 @@ final class WorldFields
                         ->addActionLabel(__('admin.world.weather_add'))
                         ->columns(2)
                         ->schema([
-                            Select::make('weather')->helpKey('world.weather_kind')->options(array_combine($weather, $weather))->required()->distinct(),
+                            Select::make('weather')->helpKey('world.weather_kind')->options(FieldHelp::options('world.weather_kind', $weather))->required()->distinct(),
                             TextInput::make('percent')->helpKey('world.weather_chance')->numeric()->minValue(0.0001)->maxValue(100)->suffix('%')->required(),
                         ]),
                 ]),
@@ -119,8 +119,8 @@ final class WorldFields
                     Grid::make(4)->schema([
                         TextInput::make('slug')->helpKey('world.track_slug')->required()->maxLength(64)->regex(self::SLUG)->distinct(),
                         Select::make('region')->helpKey('world.track_region')->options(fn (Get $get): array => ContentOptions::cities($get('../../regions')))->required(),
-                        Select::make('surface')->helpKey('world.surface')->options(['asphalt' => 'asphalt', 'gravel' => 'gravel'])->required(),
-                        Select::make('kind')->helpKey('world.kind')->options(array_combine(['sprint', 'standard', 'endurance'], array_map(fn (string $kind): string => __("admin.world.kinds.{$kind}"), ['sprint', 'standard', 'endurance'])))->placeholder(__('admin.world.kinds.standard')),
+                        Select::make('surface')->helpKey('world.surface')->options(FieldHelp::options('world.surface', ['asphalt', 'gravel']))->required(),
+                        Select::make('kind')->helpKey('world.kind')->options(FieldHelp::options('world.kind', ['sprint', 'standard', 'endurance']))->placeholder(__('admin.world.kinds.standard')),
                     ]),
                     DefinitionFields::texts('name', __('admin.definitions.name'), 'world.track_name'),
                     Grid::make(3)->schema([
@@ -154,7 +154,7 @@ final class WorldFields
             ->addActionLabel(__('admin.definitions.stat_add'))
             ->columns(2)
             ->schema([
-                Select::make('stat')->helpKey('world.stat')->options(array_combine($stats, $stats))->required()->distinct(),
+                Select::make('stat')->helpKey('world.stat')->options(FieldHelp::options('world.stat', $stats))->required()->distinct(),
                 TextInput::make('value')->helpKey("world.{$field}_value")->numeric()->required(),
             ]);
     }
