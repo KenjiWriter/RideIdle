@@ -6,6 +6,8 @@ namespace App\Filament\Forms;
 
 use App\Content\Definitions\DefinitionForm;
 use App\Content\Vocabulary\MessageCatalog;
+use App\Filament\Support\FieldHelp;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
 
@@ -41,10 +43,12 @@ final class VocabularyFields
                 ->collapsed(! $isChanged && count($keys) > 8)
                 ->columns(['default' => 1, 'md' => 2, 'xl' => 5])
                 ->schema(array_map(
-                    static fn (string $locale): TextInput => TextInput::make("values.m{$position}.{$locale}")
-                        ->label($locale)
-                        ->placeholder($catalog->text($key, $locale))
-                        ->maxLength(400),
+                    static fn (string $locale): Field => FieldHelp::apply(
+                        TextInput::make("values.m{$position}.{$locale}")->label($locale)->placeholder($catalog->text($key, $locale))->maxLength(400),
+                        'vocabulary.value',
+                        label: false,
+                        help: false,
+                    ),
                     DefinitionForm::LOCALES,
                 ));
         }

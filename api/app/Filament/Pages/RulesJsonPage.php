@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Pages;
 
 use App\Content\Definitions\JsonDocument;
+use App\Filament\Support\FieldHelp;
 use Closure;
 use Filament\Forms\Components\CodeEditor;
 use Filament\Forms\Components\CodeEditor\Enums\Language;
@@ -46,9 +47,9 @@ class RulesJsonPage extends RulesDocumentPage
     protected function fields(array $document): array
     {
         return [
+            FieldHelp::guide('rules_text'),
             Select::make('document')
-                ->label(__('admin.json.document'))
-                ->helperText(__('admin.json.document_hint'))
+                ->helpKey('rules_text.document')
                 ->options(array_combine(self::DOCUMENTS, array_map(fn (string $slug): string => __("admin.json.documents.{$slug}"), self::DOCUMENTS)))
                 ->selectablePlaceholder(false)
                 ->required()
@@ -58,7 +59,7 @@ class RulesJsonPage extends RulesDocumentPage
                     $set('json', JsonDocument::encode($this->definition()?->workingDocument() ?? []));
                 }),
             CodeEditor::make('json')
-                ->label(__('admin.json.json'))
+                ->helpKey('rules_text.json')
                 ->language(Language::Json)
                 ->required()
                 ->rule(fn (): Closure => function (string $attribute, mixed $value, Closure $fail): void {

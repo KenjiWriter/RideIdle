@@ -86,7 +86,7 @@ describe('the form of the world', function () {
         $state = WorldForm::toState($rules);
         $state['tracks'][0]['reward'] = '15.55';
         $state['regions'][0]['map'] = ['x' => '80', 'y' => '300'];
-        $state['regions'][0]['weather'][] = ['weather' => '', 'ppm' => 5];
+        $state['regions'][0]['weather'][] = ['weather' => '', 'percent' => 5];
 
         $made = WorldForm::apply($rules, $state);
 

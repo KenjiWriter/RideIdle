@@ -7,6 +7,7 @@ namespace App\Filament\Forms;
 use App\Content\Definitions\SchemaChoices;
 use App\Filament\Forms\Components\MapPoint;
 use App\Filament\Resources\Definitions\Forms\DefinitionFields;
+use App\Filament\Support\FieldHelp;
 use App\Services\ContentDrafts;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -32,6 +33,7 @@ final class WorldFields
     public static function schema(array $weather): array
     {
         return [
+            FieldHelp::guide('world'),
             Tabs::make('world')->persistTabInQueryString()->tabs([
                 Tab::make(__('admin.world.cities'))->schema(self::cities($weather)),
                 Tab::make(__('admin.world.roads'))->schema(self::roads()),
@@ -48,8 +50,8 @@ final class WorldFields
     {
         return [
             Repeater::make('regions')
+                ->helpKey('world.regions')
                 ->hiddenLabel()
-                ->helperText(__('admin.world.cities_hint'))
                 ->minItems(1)
                 ->collapsible()
                 ->collapsed()
@@ -58,23 +60,21 @@ final class WorldFields
                 ->itemLabel(fn (array $state): ?string => self::itemLabel($state))
                 ->schema([
                     Grid::make(2)->schema([
-                        TextInput::make('slug')->label(__('admin.definitions.slug'))->required()->maxLength(64)->regex(self::SLUG)->distinct()->live(onBlur: true),
-                        TextInput::make('climate_seed')->label(__('admin.world.climate_seed'))->helperText(__('admin.world.climate_seed_hint'))->required()->maxLength(64),
+                        TextInput::make('slug')->helpKey('world.city_slug')->required()->maxLength(64)->regex(self::SLUG)->distinct()->live(onBlur: true),
+                        TextInput::make('climate_seed')->helpKey('world.climate_seed')->required()->maxLength(64),
                     ]),
-                    DefinitionFields::texts('name', __('admin.definitions.name')),
+                    DefinitionFields::texts('name', __('admin.definitions.name'), 'world.city_name'),
                     MapPoint::make('map')
-                        ->label(__('admin.world.map'))
-                        ->helperText(__('admin.world.map_hint'))
+                        ->helpKey('world.map')
                         ->context(fn (Get $get): array => self::board($get('../../regions'), $get('../../roads'), $get('slug'))),
                     Repeater::make('weather')
-                        ->label(__('admin.world.weather'))
-                        ->helperText(__('admin.world.weather_hint'))
+                        ->helpKey('world.weather')
                         ->minItems(1)
                         ->addActionLabel(__('admin.world.weather_add'))
                         ->columns(2)
                         ->schema([
-                            Select::make('weather')->label(__('admin.world.weather_kind'))->options(array_combine($weather, $weather))->required()->distinct(),
-                            TextInput::make('ppm')->label(__('admin.world.ppm'))->numeric()->integer()->minValue(1)->maxValue(1_000_000)->required(),
+                            Select::make('weather')->helpKey('world.weather_kind')->options(array_combine($weather, $weather))->required()->distinct(),
+                            TextInput::make('percent')->helpKey('world.weather_chance')->numeric()->minValue(0.0001)->maxValue(100)->suffix('%')->required(),
                         ]),
                 ]),
         ];
@@ -87,15 +87,15 @@ final class WorldFields
 
         return [
             Repeater::make('roads')
+                ->helpKey('world.roads')
                 ->hiddenLabel()
-                ->helperText(__('admin.world.roads_hint'))
                 ->minItems(1)
                 ->addActionLabel(__('admin.world.road_add'))
                 ->columns(3)
                 ->schema([
-                    Select::make('from')->label(__('admin.world.from'))->options($cities)->required(),
-                    Select::make('to')->label(__('admin.world.to'))->options($cities)->required(),
-                    TextInput::make('km')->label(__('admin.world.km'))->numeric()->integer()->minValue(1)->required(),
+                    Select::make('from')->helpKey('world.from')->options($cities)->required(),
+                    Select::make('to')->helpKey('world.to')->options($cities)->required(),
+                    TextInput::make('km')->helpKey('world.km')->numeric()->integer()->minValue(1)->required(),
                 ]),
         ];
     }
@@ -107,8 +107,8 @@ final class WorldFields
 
         return [
             Repeater::make('tracks')
+                ->helpKey('world.tracks')
                 ->hiddenLabel()
-                ->helperText(__('admin.world.tracks_hint'))
                 ->minItems(1)
                 ->collapsible()
                 ->collapsed()
@@ -117,26 +117,26 @@ final class WorldFields
                 ->itemLabel(fn (array $state): ?string => self::itemLabel($state))
                 ->schema([
                     Grid::make(4)->schema([
-                        TextInput::make('slug')->label(__('admin.definitions.slug'))->required()->maxLength(64)->regex(self::SLUG)->distinct(),
-                        Select::make('region')->label(__('admin.world.city'))->options(fn (Get $get): array => ContentOptions::cities($get('../../regions')))->required(),
-                        Select::make('surface')->label(__('admin.world.surface'))->options(['asphalt' => 'asphalt', 'gravel' => 'gravel'])->required(),
-                        Select::make('kind')->label(__('admin.world.kind'))->helperText(__('admin.world.kind_hint'))->options(array_combine(['sprint', 'standard', 'endurance'], array_map(fn (string $kind): string => __("admin.world.kinds.{$kind}"), ['sprint', 'standard', 'endurance'])))->placeholder(__('admin.world.kinds.standard')),
+                        TextInput::make('slug')->helpKey('world.track_slug')->required()->maxLength(64)->regex(self::SLUG)->distinct(),
+                        Select::make('region')->helpKey('world.track_region')->options(fn (Get $get): array => ContentOptions::cities($get('../../regions')))->required(),
+                        Select::make('surface')->helpKey('world.surface')->options(['asphalt' => 'asphalt', 'gravel' => 'gravel'])->required(),
+                        Select::make('kind')->helpKey('world.kind')->options(array_combine(['sprint', 'standard', 'endurance'], array_map(fn (string $kind): string => __("admin.world.kinds.{$kind}"), ['sprint', 'standard', 'endurance'])))->placeholder(__('admin.world.kinds.standard')),
                     ]),
-                    DefinitionFields::texts('name', __('admin.definitions.name')),
+                    DefinitionFields::texts('name', __('admin.definitions.name'), 'world.track_name'),
                     Grid::make(3)->schema([
-                        Select::make('reference_tires')->label(__('admin.world.reference_tires'))->helperText(__('admin.world.reference_tires_hint'))->options(fn (): array => ContentOptions::parts(app(ContentDrafts::class)->workingModel()->slotOf('tires') ?? 'tires'))->placeholder('-'),
-                        TextInput::make('min_player_level')->label(__('admin.world.min_player_level'))->numeric()->integer()->minValue(1)->required(),
-                        Toggle::make('lit')->label(__('admin.world.lit'))->inline(false),
+                        Select::make('reference_tires')->helpKey('world.reference_tires')->options(fn (): array => ContentOptions::parts(app(ContentDrafts::class)->workingModel()->slotOf('tires') ?? 'tires'))->placeholder('-'),
+                        TextInput::make('min_player_level')->helpKey('world.min_player_level')->numeric()->integer()->minValue(1)->required(),
+                        Toggle::make('lit')->helpKey('world.lit')->inline(false),
                     ]),
                     Grid::make(3)->schema([
-                        TextInput::make('length_m')->label(__('admin.world.length_m'))->numeric()->integer()->minValue(1)->required(),
-                        TextInput::make('base_lap_ms')->label(__('admin.world.base_lap_ms'))->numeric()->integer()->minValue(1)->required(),
-                        TextInput::make('fuel_per_lap_ml')->label(__('admin.world.fuel_per_lap_ml'))->numeric()->integer()->minValue(1)->required(),
-                        TextInput::make('reward')->label(__('admin.world.reward'))->numeric()->prefix('$')->minValue(0.01)->required(),
-                        TextInput::make('xp_per_lap')->label(__('admin.world.xp_per_lap'))->numeric()->integer()->minValue(0)->required(),
+                        TextInput::make('length_m')->helpKey('world.length_m')->numeric()->integer()->minValue(1)->required(),
+                        TextInput::make('base_lap_ms')->helpKey('world.base_lap_ms')->numeric()->integer()->minValue(1)->required(),
+                        TextInput::make('fuel_per_lap_ml')->helpKey('world.fuel_per_lap_ml')->numeric()->integer()->minValue(1)->required(),
+                        TextInput::make('reward')->helpKey('world.reward')->numeric()->prefix('$')->minValue(0.01)->required(),
+                        TextInput::make('xp_per_lap')->helpKey('world.xp_per_lap')->numeric()->integer()->minValue(0)->required(),
                     ]),
-                    self::stats('demand', __('admin.world.demand'), __('admin.world.demand_hint'), $stats),
-                    self::stats('reference', __('admin.world.reference'), __('admin.world.reference_hint'), $stats),
+                    self::stats('demand', $stats),
+                    self::stats('reference', $stats),
                 ]),
         ];
     }
@@ -146,17 +146,16 @@ final class WorldFields
      *
      * @param  list<string>  $stats
      */
-    private static function stats(string $field, string $label, string $hint, array $stats): Repeater
+    private static function stats(string $field, array $stats): Repeater
     {
         return Repeater::make($field)
-            ->label($label)
-            ->helperText($hint)
+            ->helpKey("world.{$field}")
             ->minItems(1)
             ->addActionLabel(__('admin.definitions.stat_add'))
             ->columns(2)
             ->schema([
-                Select::make('stat')->label(__('admin.definitions.stat_key'))->options(array_combine($stats, $stats))->required()->distinct(),
-                TextInput::make('value')->label(__('admin.definitions.stat_value'))->numeric()->required(),
+                Select::make('stat')->helpKey('world.stat')->options(array_combine($stats, $stats))->required()->distinct(),
+                TextInput::make('value')->helpKey("world.{$field}_value")->numeric()->required(),
             ]);
     }
 

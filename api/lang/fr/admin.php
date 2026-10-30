@@ -742,6 +742,11 @@ return [
         'none' => 'Il n’y a pas de brouillons.',
         'none_hint' => 'Ce qui est dans le jeu est dans le paquet en ligne.',
     ],
+    'help' => [
+        'example' => 'Exemple',
+        'range' => 'Plage',
+        'guide' => 'Comment cela fonctionne',
+    ],
     'players' => [
         'nav' => 'Joueurs',
         'one' => 'Joueur',

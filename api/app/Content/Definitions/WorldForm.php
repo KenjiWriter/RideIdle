@@ -25,7 +25,7 @@ final class WorldForm
                 'name' => DefinitionForm::texts($region['name'] ?? []),
                 'map' => ['x' => $region['map']['x'] ?? null, 'y' => $region['map']['y'] ?? null],
                 'climate_seed' => $region['climate_seed'] ?? null,
-                'weather' => self::lines($region['weather_ppm'] ?? [], 'weather', 'ppm'),
+                'weather' => self::lines($region['weather_ppm'] ?? [], 'weather', 'percent', 10_000),
             ];
         }
 
@@ -80,7 +80,7 @@ final class WorldForm
                 'name' => DefinitionForm::i18n($line['name'] ?? []),
                 'map' => ['x' => DefinitionForm::number($line['map']['x'] ?? null), 'y' => DefinitionForm::number($line['map']['y'] ?? null)],
                 'climate_seed' => DefinitionForm::text($line['climate_seed'] ?? null),
-                'weather_ppm' => self::object((array) ($line['weather'] ?? []), 'weather', 'ppm'),
+                'weather_ppm' => self::object((array) ($line['weather'] ?? []), 'weather', 'percent', 10_000),
             ];
         }
 
@@ -136,12 +136,12 @@ final class WorldForm
      * @param  array<string, mixed>  $object
      * @return list<array<string, mixed>>
      */
-    private static function lines(array $object, string $keyField, string $valueField): array
+    private static function lines(array $object, string $keyField, string $valueField, int $scale = 1): array
     {
         $lines = [];
 
         foreach ($object as $key => $value) {
-            $lines[] = [$keyField => $key, $valueField => $value];
+            $lines[] = [$keyField => $key, $valueField => $scale === 1 || ! is_numeric($value) ? $value : $value / $scale];
         }
 
         return $lines;
@@ -153,7 +153,7 @@ final class WorldForm
      * @param  array<int|string, mixed>  $lines
      * @return array<string, mixed>
      */
-    private static function object(array $lines, string $keyField, string $valueField): array
+    private static function object(array $lines, string $keyField, string $valueField, int $scale = 1): array
     {
         $object = [];
 
@@ -161,7 +161,10 @@ final class WorldForm
             $key = DefinitionForm::text($line[$keyField] ?? null);
 
             if ($key !== null) {
-                $object[$key] = DefinitionForm::number($line[$valueField] ?? null);
+                $number = DefinitionForm::number($line[$valueField] ?? null);
+
+                // A number that a person writes in a unit (a percent) is turned back into the whole number of the document.
+                $object[$key] = $scale === 1 || ! is_numeric($number) ? $number : (int) round($number * $scale);
             }
         }
 

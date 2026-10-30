@@ -768,6 +768,11 @@ return [
         'none' => 'Nie ma szkiców.',
         'none_hint' => 'To, co jest w grze, jest w żywej paczce.',
     ],
+    'help' => [
+        'example' => 'Przykład',
+        'range' => 'Zakres',
+        'guide' => 'Jak to działa',
+    ],
     'players' => [
         'nav' => 'Gracze',
         'one' => 'Gracz',

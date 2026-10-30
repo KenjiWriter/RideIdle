@@ -768,6 +768,11 @@ return [
         'none' => 'There are no drafts.',
         'none_hint' => 'What is in the game is in the live pack.',
     ],
+    'help' => [
+        'example' => 'Example',
+        'range' => 'Range',
+        'guide' => 'How it works',
+    ],
     'players' => [
         'nav' => 'Players',
         'one' => 'Player',

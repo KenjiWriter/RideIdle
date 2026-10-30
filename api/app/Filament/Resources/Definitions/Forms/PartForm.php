@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Definitions\Forms;
 
 use App\Content\Catalog;
+use App\Filament\Support\FieldHelp;
+use App\Models\ContentDefinition;
 use App\Services\ContentDrafts;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
@@ -39,41 +41,43 @@ final class PartForm
         }
 
         return [
+            FieldHelp::guide('part'),
             Section::make(__('admin.definitions.sections.identification'))->schema([
                 DefinitionFields::slug(),
-                DefinitionFields::texts('name', __('admin.definitions.name')),
+                DefinitionFields::texts('name', __('admin.definitions.name'), 'definition.name'),
             ]),
             DefinitionFields::image(),
             Section::make(__('admin.definitions.sections.part'))->schema([
                 Grid::make(4)->schema([
-                    Select::make('slot')->label(__('admin.definitions.slot'))->options($slots)->required()->live(),
-                    Select::make('tire_kind')->label(__('admin.definitions.tire_kind'))->options(self::options(['all_season', 'street', 'slick', 'rain', 'offroad', 'winter']))->visible($tires)->required($tires),
-                    Select::make('tier')->label(__('admin.definitions.tier'))->options(array_combine(range(1, 10), range(1, 10)))->required(),
-                    TextInput::make('price')->label(__('admin.definitions.price'))->numeric()->prefix('$')->required(),
+                    Select::make('slot')->helpKey('part.slot')->options($slots)->required()->live(),
+                    Select::make('tire_kind')->helpKey('part.tire_kind')->options(self::options(['all_season', 'street', 'slick', 'rain', 'offroad', 'winter']))->visible($tires)->required($tires),
+                    Select::make('tier')->helpKey('part.tier')->options(array_combine(range(1, 10), range(1, 10)))->required(),
+                    TextInput::make('price')->helpKey('part.price')->numeric()->prefix('$')->required(),
                 ]),
                 Grid::make(2)->schema([
-                    TextInput::make('engine_layout')->label(__('admin.definitions.engine_layout'))->visible($engine)->required($engine),
-                    TextInput::make('engine_displacement_l')->label(__('admin.definitions.engine_displacement_l'))->numeric()->visible($engine)->required($engine),
+                    TextInput::make('engine_layout')->helpKey('part.engine_layout')->visible($engine)->required($engine),
+                    TextInput::make('engine_displacement_l')->helpKey('part.engine_displacement_l')->numeric()->visible($engine)->required($engine),
                 ]),
             ]),
             Section::make(__('admin.definitions.stats'))->schema([
                 Repeater::make('stats')
+                    ->helpKey('part.stats')
                     ->hiddenLabel()
                     ->minItems(1)
                     ->addActionLabel(__('admin.definitions.stat_add'))
                     ->columns(2)
                     ->schema([
-                        TextInput::make('key')->label(__('admin.definitions.stat_key'))->datalist(self::statNames())->required()->distinct()->regex('/^[a-z][a-z0-9_]*$/'),
-                        TextInput::make('value')->label(__('admin.definitions.stat_value'))->numeric()->required(),
+                        Select::make('key')->helpKey('part.stat_name')->options(fn (): array => FieldHelp::options('part.stat_name', self::statNames()))->searchable()->required()->distinct(),
+                        TextInput::make('value')->helpKey('part.stat_value')->numeric()->required(),
                     ]),
             ]),
             Section::make(__('admin.definitions.sections.requirements'))->schema([
                 Grid::make(3)->schema([
-                    TextInput::make('requires_min_cylinders')->label(__('admin.definitions.requires_min_cylinders'))->numeric(),
-                    Toggle::make('requires_booster')->label(__('admin.definitions.requires_booster')),
-                    Select::make('fits_powertrain')->label(__('admin.definitions.fits_powertrain'))->options(self::options(['ice', 'ev']))->placeholder('-'),
+                    TextInput::make('requires_min_cylinders')->helpKey('part.requires_min_cylinders')->numeric(),
+                    Toggle::make('requires_booster')->helpKey('part.requires_booster'),
+                    Select::make('fits_powertrain')->helpKey('part.fits_powertrain')->options(self::options(['ice', 'ev']))->placeholder('-'),
                 ]),
-                CheckboxList::make('fits_classes')->label(__('admin.definitions.fits_classes'))->options(self::options(['hatchback', 'hot_hatch', 'sedan', 'coupe', 'muscle', 'pickup', 'van', 'gt', 'super', 'hyper']))->columns(5),
+                CheckboxList::make('fits_classes')->helpKey('part.fits_classes')->options(self::options(['hatchback', 'hot_hatch', 'sedan', 'coupe', 'muscle', 'pickup', 'van', 'gt', 'super', 'hyper']))->columns(5),
             ])->collapsed(),
         ];
     }
@@ -85,6 +89,11 @@ final class PartForm
 
         foreach (app(Catalog::class)->parts() as $part) {
             array_push($names, ...array_keys($part['stats'] ?? []));
+        }
+
+        // A statistic that only a draft has is a name too, or the line that has it would be an empty choice.
+        foreach (ContentDefinition::query()->where('kind', ContentDefinition::KIND_PART)->whereNotNull('draft')->get() as $draft) {
+            array_push($names, ...array_keys((array) ($draft->draftDocument()['stats'] ?? [])));
         }
 
         $names = array_values(array_unique($names));

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Definitions\Forms;
 
+use App\Filament\Support\FieldHelp;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -23,43 +24,44 @@ final class VehicleForm
         $combustion = fn (Get $get): bool => $get('powertrain') !== 'ev';
 
         return [
+            FieldHelp::guide('vehicle'),
             Section::make(__('admin.definitions.sections.identification'))->schema([
                 DefinitionFields::slug(),
-                DefinitionFields::texts('name', __('admin.definitions.name')),
-                DefinitionFields::texts('description', __('admin.definitions.description'), long: true, required: false),
+                DefinitionFields::texts('name', __('admin.definitions.name'), 'definition.name'),
+                DefinitionFields::texts('description', __('admin.definitions.description'), 'definition.description', long: true, required: false),
             ]),
             DefinitionFields::image(),
             Section::make(__('admin.definitions.sections.car'))->schema([
                 Grid::make(3)->schema([
-                    Select::make('class')->label(__('admin.definitions.class'))->options(self::options(self::CLASSES))->required(),
-                    Select::make('drivetrain')->label(__('admin.definitions.drivetrain'))->options(self::options(['fwd', 'rwd', 'awd']))->required(),
-                    Select::make('powertrain')->label(__('admin.definitions.powertrain'))->options(self::options(['ice', 'ev']))->required()->live(),
+                    Select::make('class')->helpKey('vehicle.class')->options(self::options(self::CLASSES))->required(),
+                    Select::make('drivetrain')->helpKey('vehicle.drivetrain')->options(self::options(['fwd', 'rwd', 'awd']))->required(),
+                    Select::make('powertrain')->helpKey('vehicle.powertrain')->options(self::options(['ice', 'ev']))->required()->live(),
                 ]),
                 Grid::make(3)->schema([
-                    Select::make('engine_layout')->label(__('admin.definitions.engine_layout'))->options(self::options(['R4', 'V6', 'R6', 'V8', 'V10', 'V12']))->visible($combustion)->required($combustion),
-                    TextInput::make('engine_displacement_l')->label(__('admin.definitions.engine_displacement_l'))->numeric()->visible($combustion)->required($combustion),
-                    TextInput::make('engine_tune')->label(__('admin.definitions.engine_tune'))->numeric()->visible($combustion)->required($combustion),
-                    TextInput::make('engine_motors')->label(__('admin.definitions.engine_motors'))->numeric()->visible($electric)->required($electric),
+                    Select::make('engine_layout')->helpKey('vehicle.engine_layout')->options(self::options(['R4', 'V6', 'R6', 'V8', 'V10', 'V12']))->visible($combustion)->required($combustion),
+                    TextInput::make('engine_displacement_l')->helpKey('vehicle.engine_displacement_l')->numeric()->visible($combustion)->required($combustion),
+                    TextInput::make('engine_tune')->helpKey('vehicle.engine_tune')->numeric()->visible($combustion)->required($combustion),
+                    TextInput::make('engine_motors')->helpKey('vehicle.engine_motors')->numeric()->visible($electric)->required($electric),
                 ]),
                 Grid::make(3)->schema([
-                    TextInput::make('power_kw')->label(__('admin.definitions.power_kw'))->numeric()->required(),
-                    TextInput::make('mass_kg')->label(__('admin.definitions.mass_kg'))->numeric()->required(),
-                    TextInput::make('top_speed_kmh')->label(__('admin.definitions.top_speed_kmh'))->numeric()->required(),
-                    TextInput::make('clearance')->label(__('admin.definitions.clearance'))->numeric()->required(),
-                    TextInput::make('cargo_kg')->label(__('admin.definitions.cargo_kg'))->numeric()->required(),
-                    TextInput::make('seats')->label(__('admin.definitions.seats'))->numeric()->required(),
-                    TextInput::make('tank_l')->label(__('admin.definitions.tank_l'))->numeric()->visible($combustion)->required($combustion),
-                    TextInput::make('battery_kwh')->label(__('admin.definitions.battery_kwh'))->numeric()->visible($electric)->required($electric),
-                    TextInput::make('max_charge_kw')->label(__('admin.definitions.max_charge_kw'))->numeric()->visible($electric)->required($electric),
+                    TextInput::make('power_kw')->helpKey('vehicle.power_kw')->numeric()->required(),
+                    TextInput::make('mass_kg')->helpKey('vehicle.mass_kg')->numeric()->required(),
+                    TextInput::make('top_speed_kmh')->helpKey('vehicle.top_speed_kmh')->numeric()->required(),
+                    TextInput::make('clearance')->helpKey('vehicle.clearance')->numeric()->required(),
+                    TextInput::make('cargo_kg')->helpKey('vehicle.cargo_kg')->numeric()->required(),
+                    TextInput::make('seats')->helpKey('vehicle.seats')->numeric()->required(),
+                    TextInput::make('tank_l')->helpKey('vehicle.tank_l')->numeric()->visible($combustion)->required($combustion),
+                    TextInput::make('battery_kwh')->helpKey('vehicle.battery_kwh')->numeric()->visible($electric)->required($electric),
+                    TextInput::make('max_charge_kw')->helpKey('vehicle.max_charge_kw')->numeric()->visible($electric)->required($electric),
                 ]),
             ]),
             Section::make(__('admin.definitions.sections.offer'))->schema([
                 Grid::make(3)->schema([
-                    Select::make('tier')->label(__('admin.definitions.tier'))->options(array_combine(range(1, 10), range(1, 10)))->required(),
-                    TextInput::make('min_player_level')->label(__('admin.definitions.min_player_level'))->helperText(__('admin.definitions.min_player_level_hint'))->numeric()->required(),
-                    TextInput::make('price')->label(__('admin.definitions.price'))->numeric()->prefix('$')->required(),
+                    Select::make('tier')->helpKey('vehicle.tier')->options(array_combine(range(1, 10), range(1, 10)))->required(),
+                    TextInput::make('min_player_level')->helpKey('vehicle.min_player_level')->numeric()->required(),
+                    TextInput::make('price')->helpKey('vehicle.price')->numeric()->prefix('$')->required(),
                 ]),
-                CheckboxList::make('sources')->label(__('admin.definitions.sources'))->options(self::options(['start', 'exchange', 'dealer']))->required()->columns(3),
+                CheckboxList::make('sources')->helpKey('vehicle.sources')->options(self::options(['start', 'exchange', 'dealer']))->required()->columns(3),
             ]),
         ];
     }

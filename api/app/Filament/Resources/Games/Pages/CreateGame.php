@@ -6,6 +6,7 @@ namespace App\Filament\Resources\Games\Pages;
 
 use App\Filament\Pages\DomainPage;
 use App\Filament\Resources\Games\GameResource;
+use App\Filament\Support\FieldHelp;
 use App\Http\Middleware\SetAdminGame;
 use App\Models\Admin;
 use App\Models\Game;
@@ -51,9 +52,10 @@ class CreateGame extends CreateRecord
     {
         return [
             Step::make(__('admin.games.wizard.step_name'))->description(__('admin.games.wizard.step_name_hint'))->schema([
+                FieldHelp::guide('wizard'),
                 View::make('filament.games.preview')->viewData(['installation' => (string) parse_url((string) config('ride.web_url'), PHP_URL_HOST), 'fallback' => __('admin.games.name')]),
                 TextInput::make('name')
-                    ->label(__('admin.games.name'))
+                    ->helpKey('game.name')
                     ->required()
                     ->maxLength(64)
                     ->live(onBlur: true)
@@ -63,26 +65,24 @@ class CreateGame extends CreateRecord
                         }
                     }),
                 TextInput::make('slug')
-                    ->label(__('admin.games.slug'))
-                    ->helperText(__('admin.games.slug_hint'))
+                    ->helpKey('game.slug')
                     ->required()
                     ->regex(GameResource::SLUG)
                     ->unique(Game::class, 'slug'),
                 TextInput::make('domain')
-                    ->label(__('admin.games.domain'))
-                    ->helperText(__('admin.games.wizard.domain_hint'))
+                    ->helpKey('game.domain')
                     ->maxLength(190)
                     ->regex(DomainChecker::HOST)
                     ->validationMessages(['regex' => __('admin.games.wizard.domain_invalid')])
                     ->unique(Game::class, 'domain')
                     ->live(onBlur: true)
                     ->afterStateUpdated(fn (Set $set, ?string $state) => $set('domain', strtolower(trim((string) $state)))),
-                Select::make('locale')->label(__('admin.games.locale'))->options(config('ride.locale_names'))->required()->default('en'),
-                TextInput::make('theme_color')->label(__('admin.games.theme_color'))->helperText(__('admin.games.theme_color_hint'))->required()->regex('/^#[0-9a-fA-F]{6}$/')->default('#0e1013'),
+                Select::make('locale')->helpKey('game.locale')->options(config('ride.locale_names'))->required()->default('en'),
+                TextInput::make('theme_color')->helpKey('game.theme_color')->required()->regex('/^#[0-9a-fA-F]{6}$/')->default('#0e1013'),
             ]),
             Step::make(__('admin.games.wizard.step_start'))->description(__('admin.games.wizard.step_start_hint'))->schema([
                 Radio::make('start')
-                    ->label(__('admin.games.wizard.start'))
+                    ->helpKey('wizard.start')
                     ->options([
                         GameCreator::START_TEMPLATE => __('admin.games.wizard.start_template'),
                         GameCreator::START_COPY => __('admin.games.wizard.start_copy'),
@@ -97,7 +97,7 @@ class CreateGame extends CreateRecord
                     ->required()
                     ->live(),
                 Select::make('copy_from')
-                    ->label(__('admin.games.wizard.copy_from'))
+                    ->helpKey('wizard.copy_from')
                     ->options(fn (): array => Game::query()->orderBy('id')->pluck('name', 'slug')->all())
                     ->visible(fn (Get $get): bool => $get('start') === GameCreator::START_COPY)
                     ->required(fn (Get $get): bool => $get('start') === GameCreator::START_COPY),
@@ -109,8 +109,7 @@ class CreateGame extends CreateRecord
                     'check' => $this->dnsCheck,
                 ]),
                 Toggle::make('request_domain')
-                    ->label(__('admin.games.wizard.request_domain'))
-                    ->helperText(__('admin.games.wizard.request_domain_hint'))
+                    ->helpKey('wizard.request_domain')
                     ->default(true)
                     ->visible(fn (Get $get): bool => filled($get('domain')) && app(DomainJobs::class)->email() !== null),
             ]),

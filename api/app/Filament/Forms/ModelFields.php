@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Forms;
 
 use App\Content\GameModel;
+use App\Filament\Support\FieldHelp;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -22,11 +23,13 @@ final class ModelFields
     public static function schema(): array
     {
         return [
+            FieldHelp::guide('model'),
             Text::make(__('admin.model.hint')),
             Section::make(__('admin.model.slots'))
                 ->description(__('admin.model.slots_hint'))
                 ->schema([
                     Repeater::make('slots')
+                        ->helpKey('model.slots')
                         ->hiddenLabel()
                         ->reorderable()
                         ->minItems(1)
@@ -35,15 +38,16 @@ final class ModelFields
                         ->itemLabel(fn (array $state): ?string => $state['key'] ?? null)
                         ->columns(3)
                         ->schema([
-                            TextInput::make('key')->label(__('admin.model.slot_key'))->helperText(__('admin.model.slot_key_hint'))->required()->maxLength(32)->regex('/^[a-z][a-z0-9_]*$/')->distinct(),
-                            Select::make('role')->label(__('admin.model.slot_role'))->options(self::roles())->placeholder(__('admin.model.no_role')),
-                            Toggle::make('hidden')->label(__('admin.model.slot_hidden'))->inline(false),
+                            TextInput::make('key')->helpKey('model.key')->required()->maxLength(32)->regex('/^[a-z][a-z0-9_]*$/')->distinct(),
+                            Select::make('role')->helpKey('model.role')->options(self::roles())->placeholder(__('admin.model.no_role')),
+                            Toggle::make('hidden')->helpKey('model.hidden')->inline(false),
                         ]),
                 ]),
             Section::make(__('admin.model.stats'))
                 ->description(__('admin.model.stats_hint'))
                 ->schema([
                     Repeater::make('stats')
+                        ->helpKey('model.stats')
                         ->hiddenLabel()
                         ->reorderable()
                         ->minItems(1)
@@ -51,7 +55,7 @@ final class ModelFields
                         ->addActionLabel(__('admin.model.stat_add'))
                         ->itemLabel(fn (array $state): ?string => isset($state['key']) ? __("admin.model.stat_names.{$state['key']}") : null)
                         ->schema([
-                            Select::make('key')->label(__('admin.model.stat'))->options(self::stats())->required()->distinct(),
+                            Select::make('key')->helpKey('model.stat')->options(self::stats())->required()->distinct(),
                         ]),
                 ]),
         ];

@@ -8,6 +8,7 @@ use App\Content\Definitions\JsonDocument;
 use App\Content\Definitions\VocabularyForm;
 use App\Content\Vocabulary\MessageCatalog;
 use App\Filament\Forms\VocabularyFields;
+use App\Filament\Support\FieldHelp;
 use App\Models\ContentDefinition;
 use App\Services\ContentDrafts;
 use Filament\Actions\Action;
@@ -141,21 +142,21 @@ class VocabularyPage extends RulesDocumentPage
         }
 
         return [
+            FieldHelp::guide('vocabulary'),
             ...($catalog->available() ? [] : [Text::make(__('admin.vocabulary.no_catalog'))]),
             Select::make('area')
-                ->label(__('admin.vocabulary.area'))
+                ->helpKey('vocabulary.area')
                 ->options($options)
                 ->selectablePlaceholder(false)
                 ->required()
                 ->live()
                 ->afterStateUpdated(fn () => $this->fillForm()),
             TextInput::make('search')
-                ->label(__('admin.vocabulary.search'))
-                ->helperText(__('admin.vocabulary.search_hint'))
+                ->helpKey('vocabulary.search')
                 ->live(onBlur: true)
                 ->afterStateUpdated(fn () => $this->fillForm()),
             Toggle::make('only_changed')
-                ->label(__('admin.vocabulary.only_changed'))
+                ->helpKey('vocabulary.only_changed')
                 ->live()
                 ->afterStateUpdated(fn () => $this->fillForm()),
             Text::make(__('admin.vocabulary.shown', ['shown' => count($shown['keys']), 'matching' => $shown['matching']]).' '.__('admin.vocabulary.hint')),

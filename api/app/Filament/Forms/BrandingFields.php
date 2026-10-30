@@ -7,6 +7,7 @@ namespace App\Filament\Forms;
 use App\Content\Branding\Branding;
 use App\Content\Definitions\BrandingForm;
 use App\Content\Definitions\DefinitionForm;
+use App\Filament\Support\FieldHelp;
 use App\Services\ContentImages;
 use Filament\Forms\Components\Builder;
 use Filament\Forms\Components\Builder\Block;
@@ -64,6 +65,7 @@ final class BrandingFields
     public static function schema(): array
     {
         return [
+            FieldHelp::guide('branding'),
             Text::make(__('admin.branding.hint')),
             self::colors(),
             self::fonts(),
@@ -79,8 +81,7 @@ final class BrandingFields
 
         foreach (array_keys(Branding::COLORS) as $name) {
             $boxes[] = ColorPicker::make("colors.{$name}")
-                ->label(__("admin.branding.color_names.{$name}"))
-                ->helperText(__('admin.branding.color_default', ['color' => self::APP_COLORS[$name]]))
+                ->helpKey("branding.color_{$name}", ['default' => self::APP_COLORS[$name]])
                 ->regex('/^#[0-9a-fA-F]{6}$/');
         }
 
@@ -98,7 +99,7 @@ final class BrandingFields
 
         foreach (array_keys(Branding::FONT_ROLES) as $role) {
             $boxes[] = Select::make("fonts.{$role}")
-                ->label(__("admin.branding.font_roles.{$role}"))
+                ->helpKey("branding.font_{$role}")
                 ->options($presets)
                 ->placeholder(__('admin.branding.font_default', ['font' => $presets[self::APP_FONTS[$role]]]));
         }
@@ -117,6 +118,7 @@ final class BrandingFields
             ->collapsible()
             ->schema([
                 Textarea::make('css')
+                    ->helpKey('branding.css')
                     ->hiddenLabel()
                     ->rows(16)
                     ->maxLength(20000)
@@ -131,6 +133,7 @@ final class BrandingFields
             ->collapsible()
             ->schema([
                 Builder::make('blocks')
+                    ->helpKey('branding.blocks')
                     ->hiddenLabel()
                     ->reorderable()
                     ->collapsible()
@@ -147,7 +150,7 @@ final class BrandingFields
                         ]),
                         self::block('features', [
                             Repeater::make('items')
-                                ->label(__('admin.branding.fields.items'))
+                                ->helpKey('branding.items')
                                 ->reorderable()
                                 ->minItems(1)
                                 ->maxItems(BrandingForm::MAX_ITEMS)
@@ -183,9 +186,9 @@ final class BrandingFields
             ->collapsible()
             ->schema([
                 Group::make([
-                    TextInput::make('title')->label(__('admin.branding.share_title'))->maxLength(70),
+                    TextInput::make('title')->helpKey('branding.share_title')->maxLength(70),
                     self::texts('description', __('admin.branding.share_description'), long: true),
-                    ...self::picture(hint: __('admin.branding.share_image_hint', ['min' => ContentImages::MIN_SIDE, 'max' => ContentImages::MAX_SIDE])),
+                    ...self::picture(share: true),
                 ])->statePath('share'),
             ]);
     }
@@ -211,7 +214,7 @@ final class BrandingFields
         $limit = BrandingForm::LIMITS[$field] ?? 120;
         $boxes = [];
 
-        foreach (DefinitionForm::LOCALES as $locale) {
+        foreach (DefinitionForm::LOCALES as $position => $locale) {
             $box = $long ? Textarea::make($locale)->rows($field === 'body' ? 6 : 2) : TextInput::make($locale);
             $box->label(config("ride.locale_names.{$locale}", $locale))->maxLength($limit);
 
@@ -219,7 +222,7 @@ final class BrandingFields
                 $box->required($required ? true : self::hasAText(...));
             }
 
-            $boxes[] = $box;
+            $boxes[] = FieldHelp::apply($box, "branding.text_{$field}", ['limit' => $limit], label: false, help: $position === 0);
         }
 
         return Fieldset::make($label)->statePath($field)->schema($boxes)->columns(1);
@@ -243,19 +246,18 @@ final class BrandingFields
      *
      * @return list<mixed>
      */
-    private static function picture(bool $required = false, ?string $hint = null): array
+    private static function picture(bool $required = false, bool $share = false): array
     {
         return [
             Hidden::make('image'),
             View::make('filament.forms.definition-image')->viewData(fn (Get $get): array => ['name' => $get('image')]),
             FileUpload::make('image_upload')
-                ->label(__('admin.definitions.image_upload'))
-                ->helperText($hint ?? __('admin.definitions.image_hint', ['min' => ContentImages::MIN_SIDE, 'max' => ContentImages::MAX_SIDE]))
+                ->helpKey($share ? 'branding.share_image_upload' : 'branding.image_upload', ['min' => ContentImages::MIN_SIDE, 'max' => ContentImages::MAX_SIDE])
                 ->storeFiles(false)
                 ->acceptedFileTypes(['image/png', 'image/webp', 'image/jpeg'])
                 ->maxSize(intdiv(ContentImages::MAX_BYTES, 1024))
                 ->required($required ? self::hasNoPicture(...) : false),
-            Toggle::make('image_remove')->label(__('admin.definitions.image_remove'))->visible(fn (Get $get): bool => filled($get('image')))->default(false),
+            Toggle::make('image_remove')->helpKey('branding.image_remove')->visible(fn (Get $get): bool => filled($get('image')))->default(false),
         ];
     }
 

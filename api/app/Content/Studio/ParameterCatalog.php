@@ -70,7 +70,7 @@ final class ParameterCatalog
         }
 
         $found = [];
-        $this->walk($schema, $document[$section], $live[$section] ?? null, [$section], [$this->humanize($section)], $section, $section, false, null, $found);
+        $this->walk($schema, $document[$section], $live[$section] ?? null, [$section], [$section], [$this->humanize($section)], $section, $section, false, null, $found);
 
         return $found;
     }
@@ -140,10 +140,11 @@ final class ParameterCatalog
     /**
      * @param  array<string, mixed>  $schema
      * @param  list<string|int>  $path
+     * @param  list<string>  $pattern  the path with a star where the name is not one of a property of the schema
      * @param  list<string>  $trail  where it is, in words
      * @param  list<Parameter>  $found
      */
-    private function walk(array $schema, mixed $value, mixed $live, array $path, array $trail, string $section, ?string $unitKey, bool $inList, ?string $parentDescription, array &$found): void
+    private function walk(array $schema, mixed $value, mixed $live, array $path, array $pattern, array $trail, string $section, ?string $unitKey, bool $inList, ?string $parentDescription, array &$found): void
     {
         $schema = $this->resolve($schema);
 
@@ -172,6 +173,7 @@ final class ParameterCatalog
                     $child,
                     is_array($live) ? ($live[$key] ?? null) : null,
                     [...$path, $key],
+                    [...$pattern, $isList || ! isset($schema['properties'][$key]) ? '*' : (string) $key],
                     is_array($child) || is_object($child) ? [...$trail, $name] : $trail,
                     $section,
                     $isList || is_int($key) ? $unitKey : (string) $key,
@@ -207,6 +209,7 @@ final class ParameterCatalog
             live: is_numeric($live) && ! is_bool($live) ? $live : null,
             min: isset($schema['minimum']) && is_numeric($schema['minimum']) ? $schema['minimum'] : null,
             max: isset($schema['maximum']) && is_numeric($schema['maximum']) ? $schema['maximum'] : null,
+            pattern: '/'.implode('/', $pattern),
         );
     }
 

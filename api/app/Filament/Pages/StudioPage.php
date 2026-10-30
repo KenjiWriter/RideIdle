@@ -9,6 +9,7 @@ use App\Content\Studio\Parameter;
 use App\Content\Studio\ParameterCatalog;
 use App\Content\Studio\SimpleMode;
 use App\Filament\Forms\StudioFields;
+use App\Filament\Support\FieldHelp;
 use App\Services\ContentPacks;
 use App\Services\ContentPublisher;
 use Filament\Actions\Action;
@@ -74,22 +75,20 @@ class StudioPage extends RulesDocumentPage
         $shown = count($this->parameters($document, $section));
 
         return [
+            FieldHelp::guide('studio'),
             Toggle::make('simple')
-                ->label(__('admin.studio.simple'))
-                ->helperText(__('admin.studio.simple_hint'))
+                ->helpKey('studio.simple')
                 ->live()
                 ->afterStateUpdated(fn () => $this->fillForm()),
             Select::make('section')
-                ->label(__('admin.studio.section'))
-                ->helperText(__('admin.studio.section_hint'))
+                ->helpKey('studio.section')
                 ->options($options)
                 ->selectablePlaceholder(false)
                 ->required()
                 ->live()
                 ->afterStateUpdated(fn () => $this->fillForm()),
             Toggle::make('sliders')
-                ->label(__('admin.studio.sliders'))
-                ->helperText(__('admin.studio.sliders_hint'))
+                ->helpKey('studio.sliders')
                 ->live()
                 ->afterStateUpdated(fn () => $this->fillForm()),
             ...($effect === null ? [] : [Text::make($effect)]),

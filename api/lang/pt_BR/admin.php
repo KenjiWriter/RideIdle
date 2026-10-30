@@ -742,6 +742,11 @@ return [
         'none' => 'Não há rascunhos.',
         'none_hint' => 'O que está no jogo está no pacote no ar.',
     ],
+    'help' => [
+        'example' => 'Exemplo',
+        'range' => 'Faixa',
+        'guide' => 'Como funciona',
+    ],
     'players' => [
         'nav' => 'Jogadores',
         'one' => 'Jogador',

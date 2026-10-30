@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Forms;
 
 use App\Content\Studio\Parameter;
+use App\Filament\Support\FieldHelp;
 use Filament\Actions\Action;
 use Filament\Forms\Components\Slider;
 use Filament\Forms\Components\TextInput;
@@ -64,9 +65,13 @@ final class StudioFields
             ? Slider::make($name)->range($min, $max)->step($step)->tooltips()->live(debounce: 400)
             : TextInput::make($name)->numeric()->step($step)->minValue($min)->maxValue($max)->suffix($suffix === '' ? null : $suffix)->live(onBlur: true);
 
+        // What the catalog says of the number (in the language of the panel) wins over the label made from its key and the English of the schema.
+        $help = FieldHelp::forPattern($parameter->pattern);
+
         return $field
-            ->label($parameter->label)
-            ->helperText($parameter->description)
+            ->extraAttributes(['data-help' => 'rules.'.$parameter->pattern])
+            ->label($help['label'] ?? $parameter->label)
+            ->helperText($help === null ? $parameter->description : (FieldHelp::html($help) ?? $parameter->description))
             ->hint(fn (Get $get): string => self::say($get($name), $suffix).($live !== null && $live != $get($name) ? ' · '.__('admin.studio.live', ['value' => self::say($live, $suffix)]) : ''))
             ->hintColor(fn (Get $get): string => $live !== null && $live != $get($name) ? 'warning' : 'gray')
             ->hintAction(

@@ -742,6 +742,11 @@ return [
         'none' => 'Es gibt keine Entwürfe.',
         'none_hint' => 'Was im Spiel ist, ist im aktiven Paket.',
     ],
+    'help' => [
+        'example' => 'Beispiel',
+        'range' => 'Bereich',
+        'guide' => 'So funktioniert es',
+    ],
     'players' => [
         'nav' => 'Spieler',
         'one' => 'Spieler',

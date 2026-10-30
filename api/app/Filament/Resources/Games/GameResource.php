@@ -8,6 +8,7 @@ use App\Filament\Concerns\ForTheNetwork;
 use App\Filament\Resources\Games\Pages\CreateGame;
 use App\Filament\Resources\Games\Pages\EditGame;
 use App\Filament\Resources\Games\Pages\ListGames;
+use App\Filament\Support\FieldHelp;
 use App\Models\Admin;
 use App\Models\Game;
 use App\Services\ContentImages;
@@ -94,32 +95,30 @@ class GameResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->columns(1)->components([
+            FieldHelp::guide('game'),
             TextInput::make('slug')
-                ->label(__('admin.games.slug'))
-                ->helperText(__('admin.games.slug_hint'))
+                ->helpKey('game.slug')
                 ->required()
                 ->regex(self::SLUG)
                 ->unique(ignoreRecord: true)
                 ->disabled(fn (?Game $record): bool => $record !== null)
                 ->dehydrated(fn (?Game $record): bool => $record === null),
-            TextInput::make('name')->label(__('admin.games.name'))->required()->maxLength(64),
+            TextInput::make('name')->helpKey('game.name')->required()->maxLength(64),
             TextInput::make('domain')
-                ->label(__('admin.games.domain'))
-                ->helperText(__('admin.games.domain_hint'))
+                ->helpKey('game.domain')
                 ->maxLength(190)
                 ->regex(self::HOST)
                 ->unique(ignoreRecord: true),
-            Select::make('locale')->label(__('admin.games.locale'))->options(config('ride.locale_names'))->required()->default('en'),
-            TextInput::make('theme_color')->label(__('admin.games.theme_color'))->helperText(__('admin.games.theme_color_hint'))->required()->regex('/^#[0-9a-fA-F]{6}$/')->default('#0e1013'),
+            Select::make('locale')->helpKey('game.locale')->options(config('ride.locale_names'))->required()->default('en'),
+            TextInput::make('theme_color')->helpKey('game.theme_color')->required()->regex('/^#[0-9a-fA-F]{6}$/')->default('#0e1013'),
             ...self::iconFields('icon'),
             ...self::iconFields('icon_maskable'),
             Select::make('status')
-                ->label(__('admin.games.status'))
-                ->helperText(__('admin.games.status_hint'))
+                ->helpKey('game.status')
                 ->options([Game::STATUS_LIVE => __('admin.games.status_live'), Game::STATUS_DRAFT => __('admin.games.status_draft')])
                 ->required()
                 ->default(Game::STATUS_DRAFT),
-            Toggle::make('is_default')->label(__('admin.games.is_default'))->helperText(__('admin.games.is_default_hint'))->disabled()->dehydrated(false),
+            Toggle::make('is_default')->helpKey('game.is_default')->disabled()->dehydrated(false),
         ]);
     }
 
@@ -135,12 +134,11 @@ class GameResource extends Resource
             Hidden::make($field),
             View::make('filament.forms.definition-image')->viewData(fn (Get $get): array => ['name' => $get($field)]),
             FileUpload::make("{$field}_upload")
-                ->label(__("admin.games.{$field}"))
-                ->helperText(__("admin.games.{$field}_hint"))
+                ->helpKey("game.{$field}_upload", ['min' => 192])
                 ->storeFiles(false)
                 ->acceptedFileTypes(['image/png', 'image/webp', 'image/jpeg'])
                 ->maxSize(intdiv(ContentImages::MAX_BYTES, 1024)),
-            Toggle::make("{$field}_remove")->label(__('admin.games.icon_remove'))->visible(fn (Get $get): bool => filled($get($field)))->default(false),
+            Toggle::make("{$field}_remove")->helpKey("game.{$field}_remove")->visible(fn (Get $get): bool => filled($get($field)))->default(false),
         ];
     }
 

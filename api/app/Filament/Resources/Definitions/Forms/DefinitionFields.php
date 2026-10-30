@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources\Definitions\Forms;
 
 use App\Content\Definitions\DefinitionForm;
+use App\Filament\Support\FieldHelp;
 use App\Services\ContentImages;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -23,8 +24,7 @@ final class DefinitionFields
     public static function slug(): TextInput
     {
         return TextInput::make('slug')
-            ->label(__('admin.definitions.slug'))
-            ->helperText(__('admin.definitions.slug_hint'))
+            ->helpKey('definition.slug')
             ->required()
             ->maxLength(64)
             ->regex('/^[a-z0-9]+(-[a-z0-9]+)*$/')
@@ -42,12 +42,11 @@ final class DefinitionFields
             Hidden::make('image'),
             View::make('filament.forms.definition-image')->viewData(fn (Get $get): array => ['name' => $get('image')]),
             FileUpload::make('image_upload')
-                ->label(__('admin.definitions.image_upload'))
-                ->helperText(__('admin.definitions.image_hint', ['min' => ContentImages::MIN_SIDE, 'max' => ContentImages::MAX_SIDE]))
+                ->helpKey('definition.image_upload', ['min' => ContentImages::MIN_SIDE, 'max' => ContentImages::MAX_SIDE])
                 ->storeFiles(false)
                 ->acceptedFileTypes(['image/png', 'image/webp', 'image/jpeg'])
                 ->maxSize(intdiv(ContentImages::MAX_BYTES, 1024)),
-            Toggle::make('image_remove')->label(__('admin.definitions.image_remove'))->visible(fn (Get $get): bool => filled($get('image')))->default(false),
+            Toggle::make('image_remove')->helpKey('definition.image_remove')->visible(fn (Get $get): bool => filled($get('image')))->default(false),
         ]);
     }
 
@@ -55,16 +54,18 @@ final class DefinitionFields
      * A text in every language of the game: English and Polish are required, the others fall back to English, which the validation warns about.
      *
      * @param  string  $field  where the texts are in the state (the languages themselves when it is empty, for a list of texts)
+     * @param  string  $help  the key of the help of the text, which the first box says and every box is marked with
      * @param  bool  $long  a box for a paragraph and not a line
      */
-    public static function texts(string $field, string $label, bool $long = false, bool $required = true): Fieldset
+    public static function texts(string $field, string $label, string $help, bool $long = false, bool $required = true): Fieldset
     {
         $boxes = [];
 
-        foreach (DefinitionForm::LOCALES as $locale) {
+        foreach (DefinitionForm::LOCALES as $position => $locale) {
             $path = $field === '' ? $locale : "{$field}.{$locale}";
             $box = $long ? Textarea::make($path)->rows(2)->maxLength(200) : TextInput::make($path)->maxLength(200);
-            $boxes[] = $box->label(config("ride.locale_names.{$locale}", $locale))->required($required && in_array($locale, ['en', 'pl'], true));
+            $box->label(config("ride.locale_names.{$locale}", $locale))->required($required && in_array($locale, ['en', 'pl'], true));
+            $boxes[] = FieldHelp::apply($box, $help, label: false, help: $position === 0);
         }
 
         return Fieldset::make($label)->schema($boxes)->columns(1);

@@ -9,6 +9,7 @@ use App\Content\ContentSource;
 use App\Content\Rules;
 use App\Content\TutorialSteps;
 use App\Content\Vocabulary\Vocabulary;
+use App\Filament\Support\FieldHelp;
 use App\Games\CurrentGame;
 use App\Games\Games;
 use App\Listeners\AuditAdminSignIn;
@@ -53,6 +54,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // The forms of the panel take their labels and helper texts from one catalog (`->helpKey()`).
+        FieldHelp::register();
+
         // The sign-ins of the admin panel go to its trail.
         Event::subscribe(AuditAdminSignIn::class);
 
