@@ -6,10 +6,15 @@ import CarStage from '@/components/CarStage.vue'
 import CityTabs from '@/components/CityTabs.vue'
 import GameShell from '@/components/GameShell.vue'
 import { useMarketScreen } from '@/features/market/useMarketScreen'
+import { useUnits } from '@/game/useUnits'
 import { useFormat } from '@/i18n/useFormat'
 
 const { store, t, done, loadError, busy, error, cash, garage, city, hasRoom, className, load, attempt } = useMarketScreen()
 const { money, number } = useFormat()
+const { distanceKm, speed } = useUnits()
+
+/** How far a new car has been driven, at the most, when the dealer sells it: 15 km (canonical), shown in the unit of travel of the game. */
+const newCarMileage = computed(() => distanceKm(15))
 
 const offers = computed(() => store.market?.dealer ?? [])
 
@@ -27,7 +32,7 @@ const buy = (offer: DealerOffer) =>
   <GameShell>
     <header class="flex flex-col gap-1">
       <h1 class="ttl">{{ t('market.dealerTitle') }}</h1>
-      <p v-if="store.market" class="sub" data-test="sub">{{ t('market.dealerSub', { city }) }}</p>
+      <p v-if="store.market" class="sub" data-test="sub">{{ t('market.dealerSub', { city, distance: newCarMileage }) }}</p>
     </header>
 
     <CityTabs />
@@ -60,11 +65,11 @@ const buy = (offer: DealerOffer) =>
 
         <div class="flex flex-wrap gap-1.5">
           <span class="chip" data-test="engine">{{ offer.vehicle.engine }} · {{ t('car.power', { value: offer.vehicle.power_kw }) }}</span>
-          <span class="chip" data-test="speed">{{ t('market.speed', { value: offer.vehicle.top_speed_kmh }) }}</span>
+          <span class="chip" data-test="speed">{{ t('market.speed', { value: offer.vehicle.top_speed_kmh, speed: speed(offer.vehicle.top_speed_kmh) }) }}</span>
           <span class="chip" data-test="mass">{{ t('market.mass', { value: number(offer.vehicle.mass_kg) }) }}</span>
         </div>
 
-        <p class="sub">{{ t('market.dealerNew') }}</p>
+        <p class="sub">{{ t('market.dealerNew', { distance: newCarMileage }) }}</p>
 
         <button v-if="offer.open" type="button" class="btn btn-primary btn-sm" :disabled="busy || !hasRoom || cash < offer.price_cents" data-test="buy" @click="buy(offer)">{{ t('market.buy') }}</button>
         <button v-else type="button" class="btn btn-secondary btn-sm" disabled data-test="locked">{{ t('market.dealerLocked', { level: offer.level_required }) }}</button>

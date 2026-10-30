@@ -906,6 +906,8 @@ export interface MapTrack {
   /** The car drives it now. */
   current: boolean
   base_lap_ms: number
+  /** The length of a lap in metres (the screens show it in the lap unit of the game). */
+  length_m: number
   demand: Record<string, number>
   car: MapTrackCar | null
 }

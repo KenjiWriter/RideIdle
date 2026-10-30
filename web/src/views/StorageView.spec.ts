@@ -2,11 +2,13 @@ import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { storeToken } from '@/auth/token'
+import { setGame } from '@/game'
 import { setLocale } from '@/i18n'
 import { NOW } from '@/test/garageFixtures'
 import { respond, serveApi } from '@/test/fetchServer'
 import { aFind, aMarket } from '@/test/marketFixtures'
 import { mountView } from '@/test/mountView'
+import { aShipsGame } from '@/test/unitsFixtures'
 
 import StorageView from './StorageView.vue'
 
@@ -191,5 +193,29 @@ describe('StorageView', () => {
     expect(wrapper.get('[data-test="unit-small"] [data-test="open"]').text()).toContain('Otwórz')
     expect(wrapper.get('[data-test="unit-large"] [data-test="locked"]').text()).toBe('Wymaga poziomu gracza 9')
     expect(wrapper.get('[data-test="tab-storage"]').text()).toBe('Magazyny')
+  })
+
+  describe('in a game that counts in nautical miles', () => {
+    afterEach(() => {
+      setGame()
+    })
+
+    it('says the mileage of the car that was found in the unit of travel of the game', async () => {
+      setGame(aShipsGame())
+      const afterOpening = { ...aMarket({ garage: { owned: true, capacity: 3, used: 2, free: 1 } }, 480_000), bought: 9, repeated: false, opened: aFind() }
+      serve({
+        'GET /api/v1/market': () => respond(200, aMarket()),
+        'POST /api/v1/market/storage/small/open': () => respond(201, afterOpening),
+        'GET /api/v1/runs/current': noRun,
+      })
+
+      const { wrapper } = await mountView(StorageView, '/storage')
+      await flushPromises()
+      await wrapper.get('[data-test="unit-small"] [data-test="open"]').trigger('click')
+      await flushPromises()
+
+      // 120,000 km are 64,794.8 nm.
+      expect(wrapper.get('[data-test="found-km"]').text()).toBe('64,794.8 nm')
+    })
   })
 })

@@ -2,12 +2,14 @@ import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { storeToken } from '@/auth/token'
+import { setGame } from '@/game'
 import { setLocale } from '@/i18n'
 import { aFleet } from '@/test/fleetFixtures'
 import { NOW } from '@/test/garageFixtures'
 import { respond, serveApi } from '@/test/fetchServer'
 import { aListing, aMarket } from '@/test/marketFixtures'
 import { mountView } from '@/test/mountView'
+import { aShipsGame } from '@/test/unitsFixtures'
 
 import ExchangeView from './ExchangeView.vue'
 
@@ -290,5 +292,22 @@ describe('ExchangeView', () => {
     expect(wrapper.get('[data-test="listing-0"] [data-test="inspect"]').text()).toMatch(/^Inspekcja /)
     expect(wrapper.get('[data-test="listing-2"] [data-test="inspection"]').text()).toBe('Inspekcja: sprawny w 40%')
     expect(wrapper.get('[data-test="listing-0"] [data-test="buy"]').text()).toBe('Kup')
+  })
+
+  describe('in a game that counts in nautical miles', () => {
+    afterEach(() => {
+      setGame()
+    })
+
+    it('says the mileage of a listing in the unit of travel of the game', async () => {
+      setGame(aShipsGame())
+      serve({ 'GET /api/v1/market': () => respond(200, aMarket()), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(ExchangeView, '/exchange')
+      await flushPromises()
+
+      // 142,000 km are 76,673.9 nm.
+      expect(wrapper.get('[data-test="listing-0"] [data-test="km"]').text()).toBe('76,673.9 nm')
+    })
   })
 })

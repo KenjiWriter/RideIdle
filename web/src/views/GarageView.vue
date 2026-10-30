@@ -34,6 +34,7 @@ import { useRunStatus } from '@/features/run/useRunStatus'
 import { useRunPolling } from '@/features/run/useRunPolling'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
+import { useUnits } from '@/game/useUnits'
 import { formatLapTime } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useModel } from '@/model'
@@ -52,6 +53,7 @@ const away = useAwayStore()
 const garage = useGarageStore()
 const tutorial = useTutorialStore()
 const { money, number } = useFormat()
+const { distanceKm, speed } = useUnits()
 const { serviceLine } = useServiceLine()
 const { className } = useCarClass()
 
@@ -278,14 +280,14 @@ async function useCode(): Promise<void> {
             </div>
             <!-- The limit of the gearbox, when it has one, and the way to the screen of the technical state of the car. -->
             <div class="mt-1 flex items-center justify-between gap-3 text-xs">
-              <span v-if="gearboxLimit !== null" class="text-faint" data-test="gearbox-limit">{{ t('garage.gearboxLimit', { speed: number(gearboxLimit) }) }}</span>
+              <span v-if="gearboxLimit !== null" class="text-faint" data-test="gearbox-limit">{{ t('garage.gearboxLimit', { speed: speed(gearboxLimit) }) }}</span>
               <RouterLink :to="{ name: 'condition' }" class="-my-3 ml-auto py-3 text-amber no-underline" data-test="condition-link">
                 {{ t('garage.conditionLink', { percent: car.parts_condition_percent }) }}
               </RouterLink>
             </div>
             <!-- The odometer and the service of the car: the place to see that it is due is here, the place to do it is the workshop. -->
             <p class="sub mt-1" data-test="upkeep">
-              {{ t('workshop.mileage', { km: number(car.mileage_km) }) }} ·
+              {{ t('workshop.mileage', { km: number(car.mileage_km), distance: distanceKm(car.mileage_km) }) }} ·
               <span :class="{ 'text-danger': car.service.due_in_km < 0 }" data-test="upkeep-service">{{ serviceLine(car.service) }}</span>
             </p>
           </section>

@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { SURFACE_PREFIX, comparePart, type PartLike, type StatChange } from '@/features/parts/compare'
+import { useUnits } from '@/game/useUnits'
 import { useFormat } from '@/i18n/useFormat'
 
 const props = defineProps<{
@@ -14,8 +15,9 @@ const props = defineProps<{
 
 const { t, te } = useI18n()
 const { fixed } = useFormat()
+const { speedUnit } = useUnits()
 
-const comparison = computed(() => (props.fitted ? comparePart(props.offer, props.fitted) : null))
+const comparison = computed(() => (props.fitted ? comparePart(props.offer, props.fitted, speedUnit.value) : null))
 
 /** The name of a statistic without its value (or the name of a surface, for the grip on it), or its key where the messages do not know it. */
 function label(key: string): string {

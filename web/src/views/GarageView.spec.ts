@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { Run, RunSummary } from '@/api/types'
 import { readToken, storeToken } from '@/auth/token'
+import { setGame } from '@/game'
 import { POLL_MS } from '@/features/run/useRunPolling'
 import { readSeen, storeSeen } from '@/features/run/seen'
 import { setLocale } from '@/i18n'
@@ -11,6 +12,7 @@ import { aCar, aGarage, aMountedPart, aPart, aService } from '@/test/garageFixtu
 import { setModel } from '@/model'
 import { mountView } from '@/test/mountView'
 import { aStep, aTutorial } from '@/test/tutorialFixtures'
+import { aShipsGame } from '@/test/unitsFixtures'
 
 import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import { liveFields } from '@/test/runFixtures'
@@ -1201,6 +1203,25 @@ describe('GarageView', () => {
 
       expect(wrapper.findAll('[data-test="spots"] .spot')).toHaveLength(9)
       expect(wrapper.find('[data-test="slots"]').exists()).toBe(false)
+    })
+  })
+
+  describe('in a game that counts in nautical miles and knots', () => {
+    afterEach(() => {
+      setGame()
+    })
+
+    it('says the mileage, the service and the limit of the gearbox in the units of the game', async () => {
+      setGame(aShipsGame())
+      const gearbox = aMountedPart({ id: 31, slug: 'manual-5-gearbox-t1', name: 'Manual 5', slot: 'gearbox', stats: { gears: 5, top_speed_cap_kmh: 190, launch: 0 } })
+      serve(() => respond(200, runAnswer(aRun())), undefined, { 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({}, { gearbox }) })) })
+
+      const { wrapper } = await show()
+      await flushPromises()
+
+      // 260,123 km are 140,455.2 nm and 3,420 km are 1,846.7 nm; 190 km/h are 103 knots.
+      expect(wrapper.get('[data-test="upkeep"]').text()).toBe('Mileage: 140,455.2 nm · Service in 1,846.7 nm')
+      expect(wrapper.get('[data-test="gearbox-limit"]').text()).toBe('Gearbox limit: 103 kn')
     })
   })
 })

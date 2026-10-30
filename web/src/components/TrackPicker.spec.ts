@@ -4,10 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { MapCity, MapResponse, MapTrack, MapTrackCar, Run } from '@/api/types'
 import { storeToken } from '@/auth/token'
+import { setGame } from '@/game'
 import { i18n, setLocale } from '@/i18n'
 import { useRunStore } from '@/stores/run'
 import { respond, serveApi } from '@/test/fetchServer'
 import { liveFields } from '@/test/runFixtures'
+import { aShipsGame } from '@/test/unitsFixtures'
 
 import TrackPicker from './TrackPicker.vue'
 
@@ -55,13 +57,13 @@ function forTheCar(overrides: Partial<MapTrackCar> = {}): MapTrackCar {
 }
 
 function aTrack(overrides: Partial<MapTrack> & Pick<MapTrack, 'slug' | 'name'>): MapTrack {
-  return { kind: 'standard', surface: 'asphalt', lit: true, level_required: 1, open: true, current: false, base_lap_ms: 75_000, demand: { accel: 20 }, car: forTheCar(), ...overrides }
+  return { kind: 'standard', surface: 'asphalt', lit: true, level_required: 1, open: true, current: false, base_lap_ms: 75_000, length_m: 2_600, demand: { accel: 20 }, car: forTheCar(), ...overrides }
 }
 
 const TRACKS: MapTrack[] = [
   aTrack({ slug: 'zlomowo-street', name: 'Sprint uliczny Złomowo', current: true }),
-  aTrack({ slug: 'zlomowo-yard-dash', name: 'Sprint po złomowisku', kind: 'sprint', base_lap_ms: 12_000, car: forTheCar({ lap_ms: 11_000, cash_cents: 264, fuel_ml: 145, laps_per_tank: 310, tank_ms: 3_410_000, net_cents_per_hour: 69_000 }) }),
-  aTrack({ slug: 'zlomowo-ring-road', name: 'Obwodnica Złomowo', kind: 'endurance', level_required: 4, open: false, base_lap_ms: 300_000, car: forTheCar({ lap_ms: 275_000, cash_cents: 8_448, fuel_ml: 9_672, laps_per_tank: 4, tank_ms: 1_100_000, net_cents_per_hour: 85_000 }) }),
+  aTrack({ slug: 'zlomowo-yard-dash', name: 'Sprint po złomowisku', kind: 'sprint', base_lap_ms: 12_000, length_m: 600, car: forTheCar({ lap_ms: 11_000, cash_cents: 264, fuel_ml: 145, laps_per_tank: 310, tank_ms: 3_410_000, net_cents_per_hour: 69_000 }) }),
+  aTrack({ slug: 'zlomowo-ring-road', name: 'Obwodnica Złomowo', kind: 'endurance', level_required: 4, open: false, base_lap_ms: 300_000, length_m: 12_000, car: forTheCar({ lap_ms: 275_000, cash_cents: 8_448, fuel_ml: 9_672, laps_per_tank: 4, tank_ms: 1_100_000, net_cents_per_hour: 85_000 }) }),
 ]
 
 function aMap(tracks: MapTrack[] = TRACKS): MapResponse {
@@ -113,6 +115,7 @@ describe('TrackPicker', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals()
+    setGame()
   })
 
   it('lists the tracks of the city with their kind, and marks the one the car drives', async () => {
@@ -144,6 +147,76 @@ describe('TrackPicker', () => {
 
     expect(endurance.get('[data-test="laps"]').text()).toBe('4')
     expect(endurance.get('[data-test="fuel"]').text()).toBe('9.7 l')
+  })
+
+  it('says how long the lap is, how fast the car averages on it and what it burns for a hundred kilometres', async () => {
+    const { wrapper } = await show()
+    const street = wrapper.get('[data-test="track-numbers-zlomowo-street"]')
+
+    // 2600 m in 75 s is 124.8 km/h; 1.511 l over 2.6 km is 58.1 l/100 km.
+    expect(street.get('[data-test="length"]').text()).toBe('2,600 m')
+    expect(street.get('[data-test="speed"]').text()).toBe('125 km/h')
+    expect(street.get('[data-test="economy"]').text()).toBe('58.1 l/100 km')
+
+    // The sprint is short and quick: 600 m in 11 s is 196.4 km/h, and 0.145 l over 0.6 km is 24.2 l/100 km.
+    const sprint = wrapper.get('[data-test="track-numbers-zlomowo-yard-dash"]')
+
+    expect(sprint.get('[data-test="length"]').text()).toBe('600 m')
+    expect(sprint.get('[data-test="speed"]').text()).toBe('196 km/h')
+    expect(sprint.get('[data-test="economy"]').text()).toBe('24.2 l/100 km')
+
+    // The endurance track is long: 12 km in 275 s is 157.1 km/h, and 9.672 l over 12 km is 80.6 l/100 km.
+    const endurance = wrapper.get('[data-test="track-numbers-zlomowo-ring-road"]')
+
+    expect(endurance.get('[data-test="length"]').text()).toBe('12,000 m')
+    expect(endurance.get('[data-test="speed"]').text()).toBe('157 km/h')
+    expect(endurance.get('[data-test="economy"]').text()).toBe('80.6 l/100 km')
+  })
+
+  it('names the three numbers', async () => {
+    const { wrapper } = await show()
+    const labels = wrapper.get('[data-test="track-numbers-zlomowo-street"]').findAll('dt').map((label) => label.text())
+
+    expect(labels).toEqual(['Lap', 'Pays per lap', 'Track length', 'Average speed', 'Fuel per lap', 'Fuel use', 'A tank lasts', 'Laps per tank', 'After fuel, per hour', 'Place among the bots'])
+  })
+
+  it('counts in the units of the game: cables for the lap, knots for the speed, litres per nautical mile for the fuel', async () => {
+    setGame(aShipsGame())
+    const { wrapper } = await show()
+    const street = wrapper.get('[data-test="track-numbers-zlomowo-street"]')
+
+    // 2600 m is 14.0 cables; 124.8 km/h is 67.4 knots; 1.511 l over 1.404 nm is 1.1 l/nm.
+    expect(street.get('[data-test="length"]').text()).toBe('14.0 cb')
+    expect(street.get('[data-test="speed"]').text()).toBe('67 kn')
+    expect(street.get('[data-test="economy"]').text()).toBe('1.1 l/nm')
+  })
+
+  it('shows the numbers the way the language of the driver writes them', async () => {
+    await setLocale('pl')
+    const { wrapper } = await show()
+    const street = wrapper.get('[data-test="track-numbers-zlomowo-street"]')
+
+    expect(street.get('[data-test="length"]').text()).toBe('2600 m')
+    expect(street.get('[data-test="economy"]').text()).toBe('58,1 l/100 km')
+    expect(street.findAll('dt').map((label) => label.text()).slice(2, 4)).toEqual(['Długość toru', 'Średnia prędkość'])
+
+    await setLocale('fr')
+    const french = await show()
+
+    expect(french.wrapper.get('[data-test="track-numbers-zlomowo-street"] [data-test="length"]').text()).toBe('2 600 m')
+    expect(french.wrapper.get('[data-test="track-numbers-zlomowo-street"] [data-test="speed"]').text()).toBe('125 km/h')
+    expect(french.wrapper.get('[data-test="track-numbers-zlomowo-street"] [data-test="economy"]').text()).toBe('58,1 l/100 km')
+  })
+
+  it('leaves the three numbers out when the server does not say how long the track is (an older server)', async () => {
+    const older = TRACKS.map((track) => ({ ...track, length_m: undefined }) as unknown as MapTrack)
+    const { wrapper } = await show(aRun(), older)
+    const street = wrapper.get('[data-test="track-numbers-zlomowo-street"]')
+
+    expect(street.find('[data-test="length"]').exists()).toBe(false)
+    expect(street.find('[data-test="speed"]').exists()).toBe(false)
+    expect(street.find('[data-test="economy"]').exists()).toBe(false)
+    expect(street.get('[data-test="lap"]').text()).toBe('1:15.0')
   })
 
   it('does not offer a track that the level does not open, and says from which level it opens', async () => {

@@ -3,12 +3,14 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import type { PartInfo, SurfaceKey } from '@/api/types'
+import { useUnits } from '@/game/useUnits'
 import { useFormat } from '@/i18n/useFormat'
 
 const props = defineProps<{ part: Pick<PartInfo, 'stats' | 'surfaces' | 'requires' | 'engine'> }>()
 
 const { t, te } = useI18n()
 const { fixed } = useFormat()
+const { speed } = useUnits()
 
 /** The surfaces in the order the matrix of the rules lists them. */
 const SURFACES: SurfaceKey[] = ['asphalt_dry', 'asphalt_wet', 'gravel_dry', 'mud', 'snow']
@@ -42,7 +44,10 @@ const lines = computed(() => [
         : SIGNED.has(key) ? signed(value)
         : Math.round(value * 10) / 10
 
-      return te(`part.stat.${key}`) ? t(`part.stat.${key}`, { value: shown }) : `${key} ${shown}`
+      // The limit of a gearbox is a speed (km/h for the server): the message gets it in the unit of the game, and the number as it is for a vocabulary that wrote its own.
+      const named = key === 'top_speed_cap_kmh' ? { value: shown, speed: speed(value) } : { value: shown }
+
+      return te(`part.stat.${key}`) ? t(`part.stat.${key}`, named) : `${key} ${shown}`
     }),
 ])
 

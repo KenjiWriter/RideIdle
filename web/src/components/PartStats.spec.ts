@@ -1,7 +1,9 @@
 import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { setGame } from '@/game'
 import { i18n, setLocale } from '@/i18n'
+import { aShipsGame } from '@/test/unitsFixtures'
 
 import PartStats from './PartStats.vue'
 
@@ -15,6 +17,10 @@ const rainTires = {
 describe('PartStats', () => {
   beforeEach(async () => {
     await setLocale('en')
+  })
+
+  afterEach(() => {
+    setGame()
   })
 
   it('says what the part does in words, with the power as a percent', () => {
@@ -68,6 +74,12 @@ describe('PartStats', () => {
       expect(lines({ stats: { gears: 6, top_speed_cap_kmh: 240, launch: 2 } })).toEqual(['6 gears', 'Limit 240 km/h', 'Launch +2%'])
       expect(lines({ stats: { gears: 5, top_speed_cap_kmh: 190, launch: 0 } })).toEqual(['5 gears', 'Limit 190 km/h'])
       expect(lines({ stats: { gears: 6, launch: -2 } })).toEqual(['6 gears', 'Launch −2%'])
+    })
+
+    it('says the limit of a gearbox in the unit of speed of the game: 190 km/h are 103 knots', () => {
+      setGame(aShipsGame())
+
+      expect(lines({ stats: { gears: 5, top_speed_cap_kmh: 190, launch: 0 } })).toEqual(['5 gears', 'Limit 103 kn'])
     })
 
     it('says nothing of the lag of a supercharger that answers at once', () => {

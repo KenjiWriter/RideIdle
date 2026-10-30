@@ -6,6 +6,7 @@ import type { StorageClass, StorageFind, StorageUnit } from '@/api/types'
 import CityTabs from '@/components/CityTabs.vue'
 import GameShell from '@/components/GameShell.vue'
 import { useMarketScreen } from '@/features/market/useMarketScreen'
+import { useUnits } from '@/game/useUnits'
 import { useFormat } from '@/i18n/useFormat'
 
 /** What can be in a unit, from the worst to the best: the order of the odds on the card. */
@@ -13,6 +14,7 @@ const CLASSES: StorageClass[] = ['scrap', 'junk', 'good', 'gem']
 
 const { store, t, loadError, busy, error, cash, garage, city, hasRoom, className, load, attempt } = useMarketScreen()
 const { money, number, percent } = useFormat()
+const { distanceKm } = useUnits()
 
 const units = computed(() => store.market?.storage.units ?? [])
 const every = computed(() => store.market?.storage.pity_every ?? 0)
@@ -78,7 +80,7 @@ const open = (unit: StorageUnit) =>
         </div>
 
         <div class="flex flex-wrap gap-1.5">
-          <span class="chip" data-test="found-km">{{ t('market.km', { km: number(found.mileage_km) }) }}</span>
+          <span class="chip" data-test="found-km">{{ t('market.km', { km: number(found.mileage_km), distance: distanceKm(found.mileage_km) }) }}</span>
           <span class="chip" data-test="found-engine">{{ found.vehicle.engine }}</span>
           <span class="chip" data-test="found-year">{{ t('market.year', { year: modelYear(found) }) }}</span>
           <span class="chip" :class="found.condition.percent < 60 ? 'chip-bad' : 'chip-cy'" data-test="found-condition">{{ t('fleet.condition', { percent: found.condition.percent }) }}</span>

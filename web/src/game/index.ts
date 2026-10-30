@@ -2,6 +2,8 @@ import { computed, shallowRef } from 'vue'
 
 import { mediaUrl } from '@/api/client'
 
+import { DEFAULT_UNITS, parseUnits, type GameUnits } from './units'
+
 /** The game that the app is open on (GET /api/v1/meta/game): what the host of the page says, as the server knows it. */
 export interface GameInfo {
   slug: string
@@ -19,6 +21,8 @@ export interface GameInfo {
   /** Whether the game has a front page of its own (GET /api/v1/meta/landing); else the page at its address is the app's. */
   has_landing: boolean
   is_default: boolean
+  /** The units the game counts distances and speeds in (the server's numbers stay in metres, kilometres and km/h). */
+  units: GameUnits
 }
 
 /** The game that the app is until the server says another, and when it cannot be asked: the car game as it always was. */
@@ -32,13 +36,14 @@ export const DEFAULT_GAME: GameInfo = {
   theme_css_url: null,
   has_landing: false,
   is_default: true,
+  units: DEFAULT_UNITS,
 }
 
 const COLOR = /^#[0-9a-fA-F]{6}$/
 
 /**
  * A game from what the server answered, or null when the answer is not a game (a client that is older or newer than the server must not break on it): it has a
- * slug and a name; what else is missing or is not what it should be is what the car game has.
+ * slug and a name; what else is missing or is not what it should be (the units too, on an older server) is what the car game has.
  */
 export function parseGame(raw: unknown): GameInfo | null {
   const body = raw as Record<string, unknown> | null
@@ -59,6 +64,7 @@ export function parseGame(raw: unknown): GameInfo | null {
     theme_css_url: text(body.theme_css_url),
     has_landing: body.has_landing === true,
     is_default: body.is_default === true,
+    units: parseUnits(body.units),
   }
 }
 

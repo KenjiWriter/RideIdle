@@ -2,11 +2,14 @@ import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { storeToken } from '@/auth/token'
-import { setLocale } from '@/i18n'
+import { setGame } from '@/game'
+import { i18n, setLocale, setVocabulary } from '@/i18n'
+import en from '@/i18n/locales/en.json'
 import { NOW } from '@/test/garageFixtures'
 import { respond, serveApi } from '@/test/fetchServer'
 import { aMarket, anOffer, aVehicle } from '@/test/marketFixtures'
 import { mountView } from '@/test/mountView'
+import { aShipsGame } from '@/test/unitsFixtures'
 
 import DealerView from './DealerView.vue'
 
@@ -179,5 +182,39 @@ describe('DealerView', () => {
     expect(wrapper.get('[data-test="offer-kornet-v6"] [data-test="locked"]').text()).toBe('Wymaga poziomu gracza 9')
     expect(wrapper.get('[data-test="offer-rdzak-gt-2"] [data-test="buy"]').text()).toBe('Kup')
     expect(wrapper.get('[data-test="offer-rdzak-gt-2"] .tag').text()).toBe('Hatchback')
+  })
+
+  describe('in a game that counts in nautical miles and knots', () => {
+    afterEach(() => {
+      setGame()
+      // The texts of the app, as they were: a vocabulary is merged into the messages that the module keeps.
+      setVocabulary({})
+      i18n.global.setLocaleMessage('en', en)
+    })
+
+    it('says the mileage of a new car and the top speed of the cars in the units of the game', async () => {
+      setGame(aShipsGame())
+      serve({ 'GET /api/v1/market': () => respond(200, aMarket()), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(DealerView, '/dealer')
+      await flushPromises()
+
+      // 15 km are 8.1 nm; 150 km/h are 81 knots.
+      expect(wrapper.get('[data-test="sub"]').text()).toBe('Złomowo · new cars · mileage 0–8.1 nm')
+
+      const offer = wrapper.get('[data-test="offer-rdzak-gt-2"]')
+      expect(offer.get('[data-test="speed"]').text()).toBe('81 kn')
+      expect(offer.text()).toContain('Mileage 0–8.1 nm · condition 100% · no hidden defects')
+    })
+
+    it('still fills in {value}, the speed in km/h as the server has it, for a game whose vocabulary wrote its own message with it', async () => {
+      setVocabulary({ en: { 'market.speed': 'Top {value} km/h' } })
+      serve({ 'GET /api/v1/market': () => respond(200, aMarket()), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(DealerView, '/dealer')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="offer-rdzak-gt-2"] [data-test="speed"]').text()).toBe('Top 150 km/h')
+    })
   })
 })

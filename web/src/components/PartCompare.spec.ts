@@ -1,7 +1,9 @@
 import { mount } from '@vue/test-utils'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
+import { setGame } from '@/game'
 import { i18n, setLocale } from '@/i18n'
+import { aShipsGame } from '@/test/unitsFixtures'
 
 import PartCompare from './PartCompare.vue'
 
@@ -12,6 +14,10 @@ const show = (offer: Record<string, number>, fitted: typeof FITTED | null = FITT
 describe('PartCompare', () => {
   beforeEach(async () => {
     await setLocale('en')
+  })
+
+  afterEach(() => {
+    setGame()
   })
 
   it('names the part that is fitted and lists what differs, with the sign, the unit and the verdict of each change', () => {
@@ -91,6 +97,17 @@ describe('PartCompare', () => {
 
     expect(wrapper.findAll('li').map((item) => item.text())).toEqual(['▲ Wet +10% (better)', '▼ Mud −5% (worse)'])
     expect(wrapper.get('[data-test="compare-surface:asphalt_wet"]').classes()).toContain('cmp-up')
+  })
+
+  it('shows the change of the limit of a gearbox in km/h, and in the unit of speed of the game where that is another', () => {
+    const gearbox = { name: 'Manual 5', stats: { gears: 5, top_speed_cap_kmh: 190 } }
+    const props = { offer: { stats: { gears: 6, top_speed_cap_kmh: 240 } }, fitted: gearbox }
+
+    expect(mount(PartCompare, { props, global: { plugins: [i18n] } }).get('[data-test="compare-top_speed_cap_kmh"]').text()).toBe('▲ Speed limit +50 km/h (better)')
+
+    setGame(aShipsGame())
+
+    expect(mount(PartCompare, { props, global: { plugins: [i18n] } }).get('[data-test="compare-top_speed_cap_kmh"]').text()).toBe('▲ Speed limit +27 kn (better)')
   })
 
   it('names the surfaces in the language of the driver', async () => {

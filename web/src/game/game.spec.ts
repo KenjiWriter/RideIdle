@@ -2,12 +2,13 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_GAME, THEME_LINK_ID, applyGame, parseGame, setGame, themeLoaded, useGame, type GameInfo } from './index'
 import { loadGame } from './load'
+import { DEFAULT_UNITS } from './units'
 
 function respond(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
 }
 
-/** A game about ships, on a domain of its own, with a picture for an icon. */
+/** A game about ships, on a domain of its own, with a picture for an icon, that counts in cables, nautical miles and knots. */
 const ships: GameInfo = {
   slug: 'ships',
   name: 'Star Ships',
@@ -18,6 +19,12 @@ const ships: GameInfo = {
   theme_css_url: null,
   has_landing: false,
   is_default: false,
+  units: {
+    lap: { name: { en: 'cable', pl: 'kabel' }, short: { en: 'cb' }, metres: 185.2, decimals: 1 },
+    travel: { name: { en: 'nautical mile', pl: 'mila morska' }, short: { en: 'nm' }, metres: 1852, decimals: 1 },
+    speed: { name: { en: 'knot', pl: 'wezel' }, short: { en: 'kn' }, kmh: 1.852, decimals: 0 },
+    fuel_economy_per: 1,
+  },
 }
 
 /** A page like the one of the app: the title, the colour of the bar, the icons of the tab and of an iPhone. */
@@ -53,6 +60,7 @@ describe('the game of the app', () => {
       theme_css_url: null,
       has_landing: false,
       is_default: true,
+      units: DEFAULT_UNITS,
     })
     expect(useGame().game.value).toBe(DEFAULT_GAME)
     expect(useGame().name.value).toBe('RideIdle')
@@ -96,6 +104,22 @@ describe('parseGame', () => {
       theme_css_url: null,
       has_landing: false,
       is_default: false,
+      units: DEFAULT_UNITS,
+    })
+  })
+
+  it('reads the units of a game, and takes a server that does not say them (an older one) or says them badly for the units of the car game', () => {
+    expect(parseGame({ ...ships })?.units).toEqual(ships.units)
+
+    const older: Record<string, unknown> = { ...ships }
+    delete older.units
+
+    expect(parseGame(older)?.units).toEqual(DEFAULT_UNITS)
+    expect(parseGame({ ...ships, units: 'nautical' })?.units).toEqual(DEFAULT_UNITS)
+    expect(parseGame({ ...ships, units: { ...ships.units, travel: { metres: -1 }, fuel_economy_per: 7 } })?.units).toEqual({
+      ...ships.units,
+      travel: DEFAULT_UNITS.travel,
+      fuel_economy_per: 100,
     })
   })
 

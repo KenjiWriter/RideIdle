@@ -35,6 +35,7 @@ import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
 import { lockText } from '@/features/parts/lock'
+import { useUnits } from '@/game/useUnits'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useModel } from '@/model'
@@ -53,6 +54,7 @@ const { stats: STATS, roleOf } = useModel()
 
 const { t } = useI18n()
 const { number, money, percent, fixed } = useFormat()
+const { distanceKm, speedUnit } = useUnits()
 const store = useGarageStore()
 const run = useRunStore()
 const tutorial = useTutorialStore()
@@ -175,7 +177,7 @@ function fittedOf(part: OwnedPart): { name: string; stats: Record<string, number
 function verdictOf(part: OwnedPart): Verdict | null {
   const fitted = fittedOf(part)
 
-  return fitted && !part.mount_next?.locked ? (comparePart(part, fitted)?.verdict ?? null) : null
+  return fitted && !part.mount_next?.locked ? (comparePart(part, fitted, speedUnit.value)?.verdict ?? null) : null
 }
 
 const shownParts = computed(() => (inventoryFilter.value === null ? inventory.value : inventory.value.filter((part) => part.slot === inventoryFilter.value)))
@@ -732,7 +734,7 @@ async function finish(jobId: number): Promise<void> {
       <!-- The odometer, the service and how often the car breaks down; the service is a job on the car, paid when it is queued. -->
       <h3 class="kick !mb-0 mt-1">{{ t('workshop.conditionTitle') }}</h3>
       <div class="card flex flex-col gap-1.5 !p-3" data-test="condition">
-        <p class="text-[13px] text-ink" data-test="mileage">{{ t('workshop.mileage', { km: number(car.mileage_km) }) }}</p>
+        <p class="text-[13px] text-ink" data-test="mileage">{{ t('workshop.mileage', { km: number(car.mileage_km), distance: distanceKm(car.mileage_km) }) }}</p>
         <p class="text-[13px]" :class="car.service.due_in_km < 0 ? 'text-danger' : 'text-ink'" data-test="service-line">{{ serviceLine(car.service) }}</p>
         <p v-if="breakdownLine(car)" class="sub" data-test="breakdown-line">{{ breakdownLine(car) }}</p>
         <div class="flex flex-wrap items-center gap-2">

@@ -1,3 +1,5 @@
+import { KMH, type ShownSpeedUnit } from '@/game/units'
+
 /**
  * The statistics where LESS is better, when a part is set against the part that is fitted:
  * - `lag`: how late a booster answers (3/10 is better than 5/10);
@@ -18,6 +20,9 @@ interface Display {
   unit: string
 }
 
+/** The statistic that is a speed, which the server keeps in km/h and the game shows in its own unit of speed. */
+const SPEED_KEY = 'top_speed_cap_kmh'
+
 const DISPLAY: Record<string, Display> = {
   power_mult: { scale: 100, digits: 1, unit: '%' },
   boost_gain: { scale: 100, digits: 1, unit: '%' },
@@ -27,10 +32,14 @@ const DISPLAY: Record<string, Display> = {
   mass_kg: { scale: 1, digits: 1, unit: ' kg' },
   engine_mass_kg: { scale: 1, digits: 1, unit: ' kg' },
   capacity_l: { scale: 1, digits: 1, unit: ' l' },
-  top_speed_cap_kmh: { scale: 1, digits: 0, unit: ' km/h' },
 }
 
 const PLAIN: Display = { scale: 1, digits: 1, unit: '' }
+
+/** How a statistic is shown: the speed in the unit of the game (a knot is 1.852 km/h), the rest as the table has it. */
+function displayOf(key: string, speed: ShownSpeedUnit): Display {
+  return key === SPEED_KEY ? { scale: 1 / speed.kmh, digits: speed.decimals, unit: ` ${speed.short}` } : (DISPLAY[key] ?? PLAIN)
+}
 
 /** The grip of tires on a surface is a factor (1 is the full grip, 0.85 loses 15 % of it): its change is shown in percent. */
 const SURFACE: Display = { scale: 100, digits: 0, unit: '%' }
@@ -129,9 +138,12 @@ function walk(part: Record<string, number>, fitted: Record<string, number>, keyO
   return { shared, changes, gains }
 }
 
-/** Sets the statistics of a part against those of the part on the same slot of the car: like for like, never across two different statistics. */
-export function compareStats(part: Record<string, number>, fitted: Record<string, number>): Comparison {
-  const { shared, changes } = walk(part, fitted, (key) => key, (key) => DISPLAY[key] ?? PLAIN, (key) => LOWER_IS_BETTER.has(key))
+/**
+ * Sets the statistics of a part against those of the part on the same slot of the car: like for like, never across two different statistics. The change of the limit of a
+ * gearbox is shown in the unit of speed that is given (km/h where there is none).
+ */
+export function compareStats(part: Record<string, number>, fitted: Record<string, number>, speed: ShownSpeedUnit = KMH): Comparison {
+  const { shared, changes } = walk(part, fitted, (key) => key, (key) => displayOf(key, speed), (key) => LOWER_IS_BETTER.has(key))
 
   return { shared, changes }
 }
@@ -141,8 +153,8 @@ export function compareStats(part: Record<string, number>, fitted: Record<string
  * they do in the wet and on the mud as by their grip), and says where it leaves the part: worth fitting, worse, better in some things and worse in others, or the same.
  * Null when the two have nothing in common to set against each other.
  */
-export function comparePart(part: PartLike, fitted: PartLike): (Comparison & { verdict: Verdict | null }) | null {
-  const stats = walk(part.stats, fitted.stats, (key) => key, (key) => DISPLAY[key] ?? PLAIN, (key) => LOWER_IS_BETTER.has(key))
+export function comparePart(part: PartLike, fitted: PartLike, speed: ShownSpeedUnit = KMH): (Comparison & { verdict: Verdict | null }) | null {
+  const stats = walk(part.stats, fitted.stats, (key) => key, (key) => displayOf(key, speed), (key) => LOWER_IS_BETTER.has(key))
   const surfaces = part.surfaces && fitted.surfaces ? walk(part.surfaces, fitted.surfaces, (key) => `${SURFACE_PREFIX}${key}`, () => SURFACE, () => false) : { shared: 0, changes: [], gains: [] }
   const shared = stats.shared + surfaces.shared
 

@@ -10,6 +10,7 @@ import SpeedupButton from '@/components/SpeedupButton.vue'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
+import { useUnits } from '@/game/useUnits'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useModel } from '@/model'
@@ -39,6 +40,7 @@ const ICONS = {
 
 const { t } = useI18n()
 const { fixed, money } = useFormat()
+const { distanceKm } = useUnits()
 const map = useMapStore()
 const tutorial = useTutorialStore()
 const fleet = useFleetStore()
@@ -416,7 +418,7 @@ async function go(city: MapCity, boost = false): Promise<void> {
           <span class="chip" :class="selected.fit_percent < 80 ? 'chip-am' : 'chip-cy'">{{ selected.fit_percent }}%{{ selected.fit_percent < 80 ? ` · ${t('map.fitLow')}` : '' }}</span>
         </div>
 
-        <p v-if="selected.route" class="text-[13px] text-muted" data-test="route">{{ t('map.route', { km: selected.route.km, time: formatDuration(selected.route.ms), fuel: fixed(selected.route.fuel_ml / 1000, 1) }) }}</p>
+        <p v-if="selected.route" class="text-[13px] text-muted" data-test="route">{{ t('map.route', { km: selected.route.km, distance: distanceKm(selected.route.km), time: formatDuration(selected.route.ms), fuel: fixed(selected.route.fuel_ml / 1000, 1) }) }}</p>
 
         <div class="flex items-center justify-between gap-2.5 text-[13px] text-muted" data-test="garage">
           <span>{{ selected.garage.owned ? t('map.garage', { used: selected.garage.used, capacity: selected.garage.capacity }) : t('map.noGarage') }}</span>

@@ -3,10 +3,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { MapCity, MapResponse, Run, RunResponse } from '@/api/types'
 import { storeToken } from '@/auth/token'
+import { setGame } from '@/game'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { setModel } from '@/model'
 import { mountView } from '@/test/mountView'
+import { aShipsGame } from '@/test/unitsFixtures'
 import { liveFields } from '@/test/runFixtures'
 import { aTutorial } from '@/test/tutorialFixtures'
 
@@ -514,6 +516,36 @@ describe('MapView', () => {
     expect(wrapper.get('h1').text()).toBe('Mapa')
     expect(wrapper.get('[data-test="reason"]').text()).toBe('Wymaga poziomu gracza 12 (masz 3). Zdobywasz XP, jeżdżąc.')
     expect(wrapper.get('[data-test="go"]').text()).toBe('Jedź tutaj')
+  })
+
+  describe('in a game that counts in nautical miles', () => {
+    afterEach(() => {
+      setGame()
+    })
+
+    it('says the way to a city in the unit of travel of the game, and keeps the fuel in litres', async () => {
+      setGame(aShipsGame())
+      serve({ 'GET /api/v1/map': () => respond(200, aMap()), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(MapView, '/map')
+      await flushPromises()
+      await wrapper.get('[data-test="city-kruszyn"]').trigger('click')
+
+      // 38 km are 20.5 nm.
+      expect(wrapper.get('[data-test="route"]').text()).toBe('20.5 nm · 26 min 03 s · 2.3 l of fuel')
+    })
+
+    it('says it the way the language does: a no-break space before the unit in French', async () => {
+      setGame(aShipsGame())
+      await setLocale('fr')
+      serve({ 'GET /api/v1/map': () => respond(200, aMap()), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(MapView, '/map')
+      await flushPromises()
+      await wrapper.get('[data-test="city-kruszyn"]').trigger('click')
+
+      expect(wrapper.get('[data-test="route"]').text()).toBe('20,5 nm · 26 min 03 s · 2,3 l de carburant')
+    })
   })
 })
 

@@ -6,6 +6,7 @@ import CarStage from '@/components/CarStage.vue'
 import CityTabs from '@/components/CityTabs.vue'
 import GameShell from '@/components/GameShell.vue'
 import { useMarketScreen } from '@/features/market/useMarketScreen'
+import { useUnits } from '@/game/useUnits'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 
@@ -18,6 +19,7 @@ const WORN_ORDER = [1, 2, 4, 6, 0, 3, 5, 7]
 
 const { store, t, done, loadError, busy, error, cash, garage, city, hasRoom, className, askedAgoMs, load, attempt } = useMarketScreen()
 const { money, number } = useFormat()
+const { distanceKm } = useUnits()
 
 const now = ref(store.serverNow())
 let ticker: ReturnType<typeof setInterval> | undefined
@@ -118,7 +120,7 @@ const buyWreck = (wreck: YardCar) =>
         </div>
 
         <div class="flex flex-wrap gap-1.5">
-          <span class="chip" data-test="km">{{ t('market.km', { km: number(listing.mileage_km) }) }}</span>
+          <span class="chip" data-test="km">{{ t('market.km', { km: number(listing.mileage_km), distance: distanceKm(listing.mileage_km) }) }}</span>
           <span class="chip" data-test="engine">{{ listing.vehicle.engine }}</span>
           <span class="chip" data-test="year">{{ t('market.year', { year: modelYear(listing) }) }}</span>
           <span v-if="listing.condition" class="chip chip-cy" data-test="inspection">{{ t('market.inspection', { percent: listing.condition.percent }) }}</span>

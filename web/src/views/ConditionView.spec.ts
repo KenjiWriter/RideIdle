@@ -2,12 +2,14 @@ import { flushPromises } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { storeToken } from '@/auth/token'
+import { setGame } from '@/game'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { NOTHING_TO_REPAIR, NOW, aCar, aGarage, aGear, aJob, aMountedPart, aRepairStep, aService } from '@/test/garageFixtures'
 import { setModel } from '@/model'
 import { mountView } from '@/test/mountView'
 import { aTutorial } from '@/test/tutorialFixtures'
+import { aShipsGame } from '@/test/unitsFixtures'
 
 import ConditionView from './ConditionView.vue'
 
@@ -191,6 +193,37 @@ describe('ConditionView', () => {
     await flushPromises()
 
     expect(wrapper.get('[data-test="back"]').attributes('href')).toBe('/garage')
+  })
+
+  describe('in a game that counts in nautical miles', () => {
+    afterEach(() => {
+      setGame()
+    })
+
+    it('shows the mileage and how far the service is in the unit of travel of the game', async () => {
+      setGame(aShipsGame())
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: wornCar() })), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(ConditionView, '/garage/condition')
+      await flushPromises()
+
+      // 187,420 km are 101,198.7 nm; 2,580 km are 1,393.1 nm.
+      expect(wrapper.get('[data-test="mileage"]').text()).toBe('101,198.7 nm')
+      expect(wrapper.get('[data-test="service-km"]').text()).toBe('1,393.1 nm')
+      expect(wrapper.get('[data-test="service-line"]').text()).toBe('Service in 1,393.1 nm')
+    })
+
+    it('shows a service that is overdue in the same unit', async () => {
+      setGame(aShipsGame())
+      const late = wornCar({ service: aService({ since_km: 5_800, due_in_km: -800, overdue_km: 800, penalty_percent: 4 }) })
+      serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: late })), 'GET /api/v1/runs/current': noRun })
+
+      const { wrapper } = await mountView(ConditionView, '/garage/condition')
+      await flushPromises()
+
+      expect(wrapper.get('[data-test="service-km"]').text()).toBe('432.0 nm')
+      expect(wrapper.get('[data-test="service-line"]').text()).toBe('Service overdue by 432.0 nm: −4% performance')
+    })
   })
 })
 

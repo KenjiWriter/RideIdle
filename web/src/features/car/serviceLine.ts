@@ -1,6 +1,7 @@
 import { useI18n } from 'vue-i18n'
 
 import type { GarageCar, ServiceState } from '@/api/types'
+import { useUnits } from '@/game/useUnits'
 import { useFormat } from '@/i18n/useFormat'
 
 /** How long the car drives on average between two breakdowns, in words: the chance after a lap, the laps of an hour and no more. */
@@ -12,16 +13,20 @@ function everyText(hours: number): string {
 export function useServiceLine() {
   const { t } = useI18n()
   const { number } = useFormat()
+  const { distanceKm } = useUnits()
 
-  /** "Service in 3 420 km", or how late it is, and what the lateness takes off the performance. */
+  /**
+   * "Service in 3 420 km", or how late it is, and what the lateness takes off the performance. The distance is in the unit of travel of the game; `km` (the canonical
+   * number) stays for a vocabulary of a game that wrote its own message with it.
+   */
   function serviceLine(service: ServiceState): string {
     if (service.due_in_km >= 0) {
-      return t('workshop.serviceIn', { km: number(service.due_in_km) })
+      return t('workshop.serviceIn', { km: number(service.due_in_km), distance: distanceKm(service.due_in_km) })
     }
 
-    return service.penalty_percent > 0
-      ? t('workshop.serviceLatePenalty', { km: number(service.overdue_km), percent: service.penalty_percent })
-      : t('workshop.serviceLate', { km: number(service.overdue_km) })
+    const late = { km: number(service.overdue_km), distance: distanceKm(service.overdue_km) }
+
+    return service.penalty_percent > 0 ? t('workshop.serviceLatePenalty', { ...late, percent: service.penalty_percent }) : t('workshop.serviceLate', late)
   }
 
   /** "A breakdown about every 21 h", or null when the car does not break down or the lap is not known. */

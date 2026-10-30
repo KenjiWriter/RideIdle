@@ -111,6 +111,29 @@ describe('compareStats', () => {
     expect(by.launch).toMatchObject({ delta: 2, unit: '%' })
   })
 
+  it('shows the limit of a gearbox in km/h, or in the unit of speed that the game counts in, rounded to what is shown', () => {
+    const kmh = compareStats({ top_speed_cap_kmh: 240 }, { top_speed_cap_kmh: 190 }).changes[0]
+
+    expect(kmh).toMatchObject({ key: 'top_speed_cap_kmh', delta: 50, digits: 0, unit: ' km/h', better: true })
+
+    // 50 km/h are 27 knots; a unit with a decimal keeps one (50 / 1.609 = 31.1).
+    const knots = compareStats({ top_speed_cap_kmh: 240 }, { top_speed_cap_kmh: 190 }, { short: 'kn', kmh: 1.852, decimals: 0 }).changes[0]
+    const miles = compareStats({ top_speed_cap_kmh: 240 }, { top_speed_cap_kmh: 190 }, { short: 'mph', kmh: 1.609, decimals: 1 }).changes[0]
+
+    expect(knots).toMatchObject({ delta: 27, digits: 0, unit: ' kn', better: true })
+    expect(miles).toMatchObject({ delta: 31.1, digits: 1, unit: ' mph', better: true })
+    expect(compareStats({ top_speed_cap_kmh: 190 }, { top_speed_cap_kmh: 240 }, { short: 'kn', kmh: 1.852, decimals: 0 }).changes[0]).toMatchObject({ delta: -27, better: false })
+  })
+
+  it('leaves the other statistics as they are whatever the unit of speed is', () => {
+    const { changes } = compareStats({ mass_kg: 5, power_kw: 150 }, { mass_kg: -5, power_kw: 120 }, { short: 'kn', kmh: 1.852, decimals: 0 })
+
+    expect(changes).toMatchObject([
+      { key: 'mass_kg', delta: 10, unit: ' kg' },
+      { key: 'power_kw', delta: 30, unit: ' kW' },
+    ])
+  })
+
   it('leaves out a change that is too small to be seen in what is shown', () => {
     expect(compareStats({ grip: 100.04 }, { grip: 100 }).changes).toEqual([])
     expect(compareStats({ power_mult: 1.0004 }, { power_mult: 1 }).changes).toEqual([])
@@ -137,6 +160,22 @@ describe('comparing a part with the one that is fitted', () => {
   it('leaves the surfaces out when either part does not give them (a part that is not a tire has none)', () => {
     expect(comparePart({ stats: { grip: 100 }, surfaces: FITTED.surfaces }, { stats: { grip: 90 } })!.shared).toBe(1)
     expect(comparePart({ stats: { grip: 100 } }, { stats: { grip: 90 }, surfaces: null })!.shared).toBe(1)
+  })
+
+  it('takes the unit of speed to the changes of a gearbox, and the verdict does not depend on it', () => {
+    const knots = { short: 'kn', kmh: 1.852, decimals: 0 }
+    const gearbox = { stats: { gears: 6, top_speed_cap_kmh: 240 } }
+    const fitted = { stats: { gears: 5, top_speed_cap_kmh: 190 } }
+
+    expect(comparePart(gearbox, fitted)!.changes.map((change) => [change.delta, change.unit])).toEqual([
+      [1, ''],
+      [50, ' km/h'],
+    ])
+    expect(comparePart(gearbox, fitted, knots)!.changes.map((change) => [change.delta, change.unit])).toEqual([
+      [1, ''],
+      [27, ' kn'],
+    ])
+    expect(comparePart(gearbox, fitted, knots)!.verdict).toEqual(comparePart(gearbox, fitted)!.verdict)
   })
 
   describe('the verdict', () => {

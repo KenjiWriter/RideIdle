@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client'
 import type { MapTrack } from '@/api/types'
 import { useFlash } from '@/features/run/useFlash'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
+import { useUnits } from '@/game/useUnits'
 import { formatDuration, formatLapTime } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useMapStore } from '@/stores/map'
@@ -18,6 +19,7 @@ import { useRunStore } from '@/stores/run'
  */
 const { t } = useI18n()
 const { money, number } = useFormat()
+const { distance, speed, fuelEconomy } = useUnits()
 const map = useMapStore()
 const run = useRunStore()
 
@@ -32,6 +34,9 @@ onMounted(() => {
 const tracks = computed<MapTrack[]>(() => map.map?.cities.find((city) => city.here)?.tracks ?? [])
 /** A car on the road is between two cities: there is no track to choose. */
 const shown = computed(() => run.run !== null && run.run.stop_reason !== 'travel' && tracks.value.length > 1)
+
+/** What the car averages on a lap, in km/h: the length of the lap (metres) over the time of the lap (ms). */
+const meanSpeedKmh = (lengthM: number, lapMs: number): number => (lapMs > 0 ? (lengthM * 3.6) / (lapMs / 1000) : 0)
 
 function disabled(track: MapTrack): boolean {
   return busy.value !== null || !track.open || (track.car !== null && !track.car.fits_tank)
@@ -91,9 +96,23 @@ async function choose(track: MapTrack): Promise<void> {
             <dt class="text-muted">{{ t('trackPicker.pays') }}</dt>
             <dd class="mono whitespace-nowrap text-amber" data-test="pays">{{ money(track.car.cash_cents, 2) }}</dd>
           </div>
+          <template v-if="track.length_m > 0">
+            <div class="flex justify-between gap-2">
+              <dt class="text-muted">{{ t('trackPicker.length') }}</dt>
+              <dd class="mono whitespace-nowrap text-ink" data-test="length">{{ distance('lap', track.length_m) }}</dd>
+            </div>
+            <div class="flex justify-between gap-2">
+              <dt class="text-muted">{{ t('trackPicker.speed') }}</dt>
+              <dd class="mono whitespace-nowrap text-ink" data-test="speed">{{ speed(meanSpeedKmh(track.length_m, track.car.lap_ms)) }}</dd>
+            </div>
+          </template>
           <div class="flex justify-between gap-2">
             <dt class="text-muted">{{ t('trackPicker.fuelLap') }}</dt>
             <dd class="mono whitespace-nowrap text-ink" data-test="fuel">{{ t('car.liters', { value: number(track.car.fuel_ml / 1000, 1) }) }}</dd>
+          </div>
+          <div v-if="track.length_m > 0" class="flex justify-between gap-2">
+            <dt class="text-muted">{{ t('trackPicker.economy') }}</dt>
+            <dd class="mono whitespace-nowrap text-ink" data-test="economy">{{ fuelEconomy(track.car.fuel_ml, track.length_m) }}</dd>
           </div>
           <div class="flex justify-between gap-2">
             <dt class="text-muted">{{ t('trackPicker.tank') }}</dt>

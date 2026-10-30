@@ -10,6 +10,7 @@ import { useServiceLine } from '@/features/car/serviceLine'
 import { useFlash } from '@/features/run/useFlash'
 import { useLeaveOnSignOut } from '@/features/session/leaveOnSignOut'
 import { endSessionIfUnauthorized } from '@/features/session/unauthorized'
+import { useUnits } from '@/game/useUnits'
 import { formatDuration } from '@/i18n/format'
 import { useFormat } from '@/i18n/useFormat'
 import { useModel } from '@/model'
@@ -28,6 +29,7 @@ const NEEDS_REPAIR_PERCENT = 50
 
 const { t } = useI18n()
 const { number, money } = useFormat()
+const { distanceKm } = useUnits()
 const { roleOf } = useModel()
 const store = useGarageStore()
 const tutorial = useTutorialStore()
@@ -166,13 +168,13 @@ async function act(kind: JobKind, part: MountedPart | null): Promise<void> {
       <section class="grid grid-cols-2 gap-2" :aria-label="t('condition.title')">
         <div class="card !p-2.5" data-test="mileage-card">
           <p class="kick !mb-1">{{ t('condition.mileage') }}</p>
-          <p class="font-display text-[28px] font-bold leading-none" data-test="mileage">{{ t('condition.km', { km: number(car.mileage_km) }) }}</p>
+          <p class="font-display text-[28px] font-bold leading-none" data-test="mileage">{{ t('condition.km', { km: number(car.mileage_km), distance: distanceKm(car.mileage_km) }) }}</p>
           <p class="sub mt-1" data-test="overall">{{ t('condition.overall', { percent: car.parts_condition_percent }) }}</p>
         </div>
         <div class="card !p-2.5" data-test="service-card">
           <p class="kick !mb-1">{{ t('condition.serviceIn') }}</p>
           <p class="font-display text-[28px] font-bold leading-none" :class="{ 'text-danger': car.service.due_in_km < 0 }" data-test="service-km">
-            {{ t('condition.km', { km: number(Math.abs(car.service.due_in_km)) }) }}
+            {{ t('condition.km', { km: number(Math.abs(car.service.due_in_km)), distance: distanceKm(Math.abs(car.service.due_in_km)) }) }}
           </p>
           <div class="bar mt-2" :class="{ 'bar-bad': car.service.due_in_km < 0 }" role="progressbar" :aria-label="serviceLine(car.service)" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="serviceLeft">
             <i :style="{ width: `${serviceLeft}%` }" />

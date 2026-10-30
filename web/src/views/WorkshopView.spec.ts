@@ -2,6 +2,7 @@ import { flushPromises, type VueWrapper } from '@vue/test-utils'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { storeToken } from '@/auth/token'
+import { setGame } from '@/game'
 import { setLocale } from '@/i18n'
 import { respond, serveApi } from '@/test/fetchServer'
 import { NOTHING_TO_REPAIR, NOW, aCar, aGarage, aGear, aJob, aMergeOffer, aMergeResult, aMountedPart, aPart, aRepairStep, aService, anUpgradeStep } from '@/test/garageFixtures'
@@ -9,6 +10,7 @@ import { setModel } from '@/model'
 import { mountView } from '@/test/mountView'
 import { useRunStore } from '@/stores/run'
 import { aGoal, aTutorial } from '@/test/tutorialFixtures'
+import { aShipsGame } from '@/test/unitsFixtures'
 
 import WorkshopView from './WorkshopView.vue'
 
@@ -1098,6 +1100,30 @@ describe('WorkshopView', () => {
       await flushPromises()
 
       expect(soft.wrapper.get('[data-test="service-line"]').text()).toBe('Service overdue by 300 km')
+    })
+
+    describe('in a game that counts in nautical miles', () => {
+      afterEach(() => {
+        setGame()
+      })
+
+      it('shows the odometer and how far the service is, or how late, in the unit of travel of the game', async () => {
+        setGame(aShipsGame())
+        serve({ 'GET /api/v1/garage': () => respond(200, aGarage()) })
+
+        const { wrapper } = await mountView(WorkshopView, '/workshop')
+        await flushPromises()
+
+        // 260,123 km are 140,455.2 nm; 3,420 km are 1,846.7 nm.
+        expect(wrapper.get('[data-test="mileage"]').text()).toBe('Mileage: 140,455.2 nm')
+        expect(wrapper.get('[data-test="service-line"]').text()).toBe('Service in 1,846.7 nm')
+
+        serve({ 'GET /api/v1/garage': () => respond(200, aGarage({ car: aCar({ service: aService({ since_km: 5_800, due_in_km: -800, overdue_km: 800, penalty_percent: 4 }) }) })) })
+        const late = await mountView(WorkshopView, '/workshop')
+        await flushPromises()
+
+        expect(late.wrapper.get('[data-test="service-line"]').text()).toBe('Service overdue by 432.0 nm: −4% performance')
+      })
     })
 
     it('queues a service with no part, shows the job, and does not offer a second one while it waits', async () => {
