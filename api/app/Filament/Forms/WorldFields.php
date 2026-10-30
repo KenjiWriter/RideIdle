@@ -129,11 +129,17 @@ final class WorldFields
                         Toggle::make('lit')->helpKey('world.lit')->inline(false),
                     ]),
                     Grid::make(3)->schema([
-                        TextInput::make('length_m')->helpKey('world.length_m')->numeric()->integer()->minValue(1)->required(),
-                        TextInput::make('base_lap_ms')->helpKey('world.base_lap_ms')->numeric()->integer()->minValue(1)->required(),
-                        TextInput::make('fuel_per_lap_ml')->helpKey('world.fuel_per_lap_ml')->numeric()->integer()->minValue(1)->required(),
-                        TextInput::make('reward')->helpKey('world.reward')->numeric()->prefix('$')->minValue(0.01)->required(),
-                        TextInput::make('xp_per_lap')->helpKey('world.xp_per_lap')->numeric()->integer()->minValue(0)->required(),
+                        TextInput::make('length_m')->helpKey('world.length_m')->numeric()->integer()->minValue(1)->suffix('m')->required(),
+                        TextInput::make('speed_kmh')->helpKey('world.speed_kmh')->numeric()->minValue(20)->maxValue(300)->suffix('km/h')->required(fn (Get $get): bool => ! filled($get('base_lap_ms'))),
+                        TextInput::make('pay_per_hour')->helpKey('world.pay_per_hour')->numeric()->prefix('$')->minValue(0.01)->required(fn (Get $get): bool => ! filled($get('reward'))),
+                        TextInput::make('xp_per_hour')->helpKey('world.xp_per_hour')->numeric()->minValue(0)->maxValue(3600)->required(fn (Get $get): bool => ! filled($get('xp_per_lap'))),
+                    ]),
+                    // The numbers that were said by hand: the form has them only for a track that says them, and they are believed over the model.
+                    Grid::make(4)->schema([
+                        TextInput::make('base_lap_ms')->helpKey('world.base_lap_ms')->numeric()->integer()->minValue(1)->suffix('ms')->visible(fn (Get $get): bool => filled($get('base_lap_ms'))),
+                        TextInput::make('fuel_per_lap_ml')->helpKey('world.fuel_per_lap_ml')->numeric()->integer()->minValue(1)->suffix('ml')->visible(fn (Get $get): bool => filled($get('fuel_per_lap_ml'))),
+                        TextInput::make('reward')->helpKey('world.reward')->numeric()->prefix('$')->minValue(0.01)->visible(fn (Get $get): bool => filled($get('reward'))),
+                        TextInput::make('xp_per_lap')->helpKey('world.xp_per_lap')->numeric()->integer()->minValue(0)->visible(fn (Get $get): bool => filled($get('xp_per_lap'))),
                     ]),
                     self::stats('demand', $stats),
                     self::stats('reference', $stats),

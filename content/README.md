@@ -62,6 +62,8 @@ Z projektu (Systemy I i II, plansza Mapa) są **pięć torów** z profilami, **p
 | `wilcza-przelecz-switchbacks` | Wilcza Przełęcz | asfalt | 8 | 85 s | 25,00 $ | 2 | 1,7 l | przysp. 15, prędk. 5, przycz. 20, prow. 35, ham. 25 |
 | `autodrom-circuit` | Autodrom | asfalt | 12 | 80 s | 26,50 $ | 2 | 1,6 l | po 20 |
 
+**Od 2026-10-30 liczby tej tabeli (czas bazowy, paliwo, nagroda, XP) są wyprowadzane z modelu toru, a nie wpisywane** (dlatego `starter.json` ma przy torze `speed_kmh`, `pay_cents_per_hour` i `xp_per_hour`, a nie cztery stare pola). Tabela niżej pokazuje, co z modelu wychodzi; **jest taka sama jak przed modelem co do milisekundy, mililitra, centa i punktu XP**. Opis modelu: „Model toru” w tym rozdziale i `docs/settlement.md`.
+
 Z projektu są wagi (Systemy I, „Profil toru”), czasy bazowe tam, gdzie je podaje „Dowód” (drag 45 s, Kruszyn 95 s, autodrom 80 s), poziomy (plansza Mapa: Kruszyn 3, Suchy Pas 5, Wilcza Przełęcz 8, Autodrom 12) i szanse pogody (tabela „Klimat regionów”: np. Wilcza Przełęcz 25% sucho, 25% deszcz, 8% ulewa, 12% mgła, 5% śnieg). **Moje decyzje, których projekt nie rozstrzyga** (robocze):
 
 - Czas bazowy Wilczej Przełęczy (85 s) i **zużycie paliwa**: tyle samo na sekundę jazdy co na torze startowym (20 ml/s).
@@ -137,6 +139,36 @@ Plansza Flota (aktywne sloty z limitem 2, magazyn na 3 auta, trzeci slot za 600 
 **Sprzedaż aut i magazyny** (uwagi testera, liczby zatwierdzone przez użytkownika; zasady w `docs/api-runs.md`): `market.resale_ppm` (700 000, czyli 70% wartości z chwili zdobycia), `market.scrap_cents_per_kg` (25, podłoga sprzedaży: masa razy 0,25 $) i `market.storage`: `pity_every` (15), `classes` (`scrap`, `junk`, `good`, `gem`, każda z zakresami `age_years`, `condition_ppm` i `mileage_km` jako `min` i `max`) oraz `units` (`small`, `medium`, `large`, każdy z `unlock_level`, `pool_level` (auta paczki o `min_player_level` nie wyższym niż to), `price_cents`, `odds` (wagi czterech klas, w promilach) i, tylko dla małego, `gem_value_cap_cents` 1 200 000). Liczby: poziomy 3, 6 i 9, ceny 1 200, 3 500 i 6 000 $, szanse 70/25/4,5/0,5, 35/39/20/6 i 15/30/40/15%. Schemat wymaga wszystkich trzech części (definicja `storageClass` w `rules.schema.json`). **Wartość oczekiwana sprzedaży auta z magazynu to ok. 77 do 79% ceny magazynu, a małego z gwarancją ok. 92%**, co pilnuje `StorageUnitsTest` (granice 0,7 do 0,95): magazyn jest loterią z ujemnym oczekiwaniem, a nie farmą.
 
 **Siedem nowych aut** w paczce `core` (z Katalogu aut: moc, masa, prędkość maksymalna, cena i poziom; zbiornik i prześwit są moje): Rdzak GT-2 (giełda, dealer), Rdzak GT-3 (giełda, dealer), Rdzak GT-5 (dealer), Liman 2.0 (giełda, dealer), Kornet V6 (giełda, dealer), Furgon Z-1 (giełda, dealer) i Furgon Z-3 (dealer). Wraki startowe miały źródło `exchange` od początku, więc też trafiają na giełdę. Walidator pilnuje poziomu dealera z tieru (`max(1, 3 × tier − 3)`). **Symulator torów** widzi nowe auta (do poziomu toru) i zmienił wynik: bez korekty lekki, oszczędny Rdzak GT-2 wygrywał żwirowy Kruszyn i asfaltową Wilczą Przełęcz, więc **bramka terenu nie przechodziła**. Prześwit GT-2 (8) i GT-3 (10) jest niższy niż fabrycznego GT-4 (20) właśnie z tego powodu (Katalog nie podaje prześwitu, a jego masy i prędkości są „do kalibracji w symulatorze”). Teraz wygrywają cztery auta (Bizon 2 tory, Kuna 1, Rdzak GT-2 1, Rdzak GT-4 1), a bramki M3 i terenu przechodzą, ale **przewagi są cienkie**: 1,4% na Złomowie, 1,5% w Kruszynie, 14,9% na Suchym Pasie, **0,1% na Wilczej Przełęczy** (GT-2 nad GT-3) i 0,7% na Autodromie (GT-4 nad GT-3). Rodzina Rdzaków skupia wyniki, więc każda zmiana liczb je przestawi.
+
+### Model toru: długość jest źródłem (2026-10-30)
+
+Tor mówi, **jak jest długi** (`length_m`), **jak szybko jedzie nim auto wzorcowe** (`speed_kmh`: średnia prędkość ze wszystkimi trudnościami toru, czyli zakrętami, nawierzchnią, wzniesieniami i ruchem), **jakiego jest rodzaju** (`kind`) oraz **co płaci i daje godzina jazdy** (`pay_cents_per_hour`, `xp_per_hour`). Z tego gra liczy:
+
+- **okrążenie wzorcowe** = długość ÷ prędkość (`base_lap_ms` jest teraz liczbą pochodną),
+- **paliwo okrążenia** = obciążenie rodzaju toru (`track_model.fuel_ml_per_s`: sprint 12, standard 20, dystans 32 ml na sekundę) × czas okrążenia; auto łapczywsze od zwykłego spala więcej (mnożnik zużycia auta jak dotąd), a trudność toru podnosi paliwo na kilometr sama, bo im wolniej auto pokonuje kilometr, tym dłużej pracuje silnik,
+- **wypłata i XP za okrążenie** = to, co płaci i daje godzina, razy czas okrążenia (XP do całych).
+
+Podwojenie długości podwaja okrążenie, paliwo, wypłatę i XP za okrążenie, a **godzina zostaje taka sama** (zbiornik starcza na tyle samo czasu). Auto prawdziwe jedzie tor tak, jak mu każe dopasowanie do wag i wartości odniesienia toru (bez zmian). Cztery stare liczby (`base_lap_ms`, `fuel_per_lap_ml`, `reward_cents_per_lap`, `xp_per_lap`) zostają w schemacie jako **ręczne nadpisanie** i wygrywają z liczonymi (gry zrobione przed modelem działają bez zmian), a walidator ostrzega, gdy odbiegają od modelu o więcej niż 2%.
+
+| tor | rodzaj | długość | prędkość km/h | wypłata na godz. | XP na godz. | paliwo na 100 km |
+|---|---|---|---|---|---|---|
+| `zlomowo-street` | standard | 2 600 m | 124,8 | 744,00 $ | 960 | 57,7 l |
+| `kruszyn-quarry` | standard | 2 400 m | 90,947 | 833,68 $ | 757,89 | 79,2 l |
+| `suchy-pas-drag` | standard | 1 600 m | 128 | 936,00 $ | 800 | 56,3 l |
+| `wilcza-przelecz-switchbacks` | standard | 2 900 m | 122,824 | 1 058,82 $ | 847,06 | 58,6 l |
+| `autodrom-circuit` | standard | 3 200 m | 144 | 1 192,50 $ | 900 | 50,0 l |
+| `zlomowo-yard-dash` | sprint | 420 m | 126 | 600,00 $ | 900 | 34,3 l |
+| `zlomowo-ring-road` | dystans | 10 400 m | 124,8 | 756,00 $ | 864 | 92,3 l |
+| `autodrom-short-loop` | sprint | 520 m | 144 | 958,15 $ | 830,77 | 30,0 l |
+| `autodrom-endurance` | dystans | 14 400 m | 144 | 1 114,00 $ | 810 | 80,0 l |
+| `kruszyn-gravel-sprint` | sprint | 380 m | 91,2 | 700,80 $ | 720 | 47,4 l |
+| `kruszyn-quarry-marathon` | dystans | 8 300 m | 90,5455 | 808,36 $ | 665,45 | 127,2 l |
+| `suchy-pas-short-strip` | sprint | 500 m | 128,57 | 786,86 $ | 771,43 | 33,6 l |
+| `suchy-pas-long-run` | dystans | 8 500 m | 127,5 | 907,50 $ | 720 | 90,4 l |
+| `wilcza-przelecz-hairpin` | sprint | 480 m | 123,43 | 900,00 $ | 771,43 | 35,0 l |
+| `wilcza-przelecz-crossing` | dystans | 11 600 m | 122,8235 | 1 027,06 $ | 741,18 | 93,8 l |
+
+Prędkości mają od jednego do czterech miejsc po przecinku, bo dawne czasy okrążeń nie wynikały z okrągłych prędkości, a migracja ma być dokładna. **Zaokrąglenie ich do 0,1 km/h** zmieniłoby czas sześciu torów o do 0,053% (najwięcej o 166 ms na maratonie) i ruszyłoby tabele botów, więc jest osobną decyzją balansu, nie częścią migracji. XP na godzinę różni się między torami (665–960) z powodu ręcznych zaokrągleń do całych XP za okrążenie; migracja to zachowuje, a wyrównanie jest decyzją balansu (zmieniłoby tempo poziomów o −6% … +35% zależnie od toru). Tory stoją na trzech prędkościach (ok. 125, 144 i 91 km/h) bez związku z tym, czy są kręte czy szybkie: to kalibracja do ekonomii (czas okrążenia razy wypłata na godzinę), nie fizyka.
 
 **Trzynaście aut z Katalogu powyżej czwartego tieru** (2026-10-26, wariant A po pomiarze luki drabiny L6–L8): paczka `core` ma teraz wszystkie 23 auta spalinowe z Katalogu. Dochodzą Rdzak RS, Liman 3.0, Kornet R6, Bizon V8, Żubr R6 i Furgon Z-5 (tier 5, poziom 12), Serwal GT (tier 6, poziom 15), Kornet GT, Bizon SS, Żubr V8 i Grot Q8 (tier 7, poziom 18), Serwal V10 (tier 8, poziom 21) i Orzeł V12 (tier 10, poziom 27). Moc, masa, prędkość maksymalna, cena, poziom, tier i źródła są z Katalogu, a **prześwit, zbiornik, ładowność i miejsca są moje** (Katalog ich nie podaje i nie ruszają dochodu). Bizon V8 i Żubr R6 są też na giełdzie, reszta tylko u dealera. Pięć elektryków z Katalogu czeka na mechanikę ładowania. Przyspieszenie najlepszego auta (Orzeł V12: 390) mieści się pod sufitem 400 paska w garażu. Nagrodę okrążenia tych aut mnoży tier (`car.reward_ppm_from_tier`, niżej w „Symulator v1, etap 1”).
 

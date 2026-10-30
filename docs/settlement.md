@@ -69,8 +69,31 @@ Rozliczanie czyta tylko liczby całkowite, które `RunFreezer` policzył raz: pr
 | `RunInputs`, `CarStats`, `TrackProfile`, `WeatherEffect` | Dane wejściowe: statystyki auta, wagi i wartości odniesienia toru, mnożniki pogody |
 | `FrozenRun` | `config` (to, co ląduje w kolumnie `race_runs.config`) i okrążenie planowanej awarii |
 | `SeededWeather`, `Rng` | Pogoda segmentu z ziarna klimatu regionu: pierwsze 32 bity `sha256("ziarno\|domena\|indeks")` modulo 1 000 000 |
+| `TrackModel` | Liczby toru z jego długości i prędkości (patrz „Model toru” niżej): czysta klasa, same liczby całkowite, nie zna `RunFreezer` ani rozliczenia |
 
 Czas okrążenia to `baza / perf^1,15` zaokrąglone do ms, gdzie `perf` to suma wag razy statystyka z pogodą podzielona przez wartość odniesienia, obcięta do 0,2–1,6. Nagroda i XP na pogodę to `Ppm::mul`. Awaria jest zaplanowana na pierwsze okrążenie po wykonanych, którego rzut z ziarna biegu jest mniejszy od szansy.
+
+### Model toru: długość jest źródłem (2026-10-30)
+
+`base` z powyższego wzoru (okrążenie wzorcowe, czyli okrążenie auta, do którego tor jest zrobiony), paliwo okrążenia, wypłata za okrążenie i XP za okrążenie **nie są już wpisywane osobno**. Liczy je `TrackModel` (`api/app/Domain/Run/TrackModel.php`) z tego, co mówi tor: długości (`length_m`), średniej prędkości auta wzorcowego (`speed_kmh`, ze wszystkimi trudnościami wliczonymi: zakrętami, nawierzchnią, wzniesieniami i ruchem), rodzaju (`kind`) oraz tego, co płaci i daje godzina (`pay_cents_per_hour`, `xp_per_hour`).
+
+| Liczba | Wzór |
+|---|---|
+| Okrążenie wzorcowe, ms | `długość_m × 3600 ÷ prędkość_km/h` |
+| Paliwo okrążenia dla auta o zużyciu 1,0, ml | `obciążenie (ml na sekundę) × czas okrążenia (s)`; obciążenie zależy od rodzaju toru i jest w regułach (`track_model.fuel_ml_per_s`: sprint 12, standard 20, dystans 32) |
+| Wypłata za okrążenie, centy | `wypłata na godzinę × czas okrążenia ÷ godzina` |
+| XP za okrążenie | `XP na godzinę × czas okrążenia ÷ godzina`, do całych |
+
+Wszystkie cztery to liczby całkowite z zaokrągleniem połowy w górę; prędkość jest w dziesięciotysięcznych km/h (do czterech miejsc po przecinku), a długość toru mieści się najwyżej w 10^11 m (większą liczbę klasa **odrzuca wyjątkiem**, zamiast cicho przejść na `float`, bo wynik zależny od maszyny jest gorszy niż brak wyniku).
+
+Co z tego wynika dla gry:
+- **Długość jest skalą rytmu, nie ekonomii.** Podwojenie długości podwaja okrążenie, paliwo, wypłatę i XP za okrążenie, a **nie zmienia** tego, co daje godzina, ani tego, na jak długo starcza zbiornik (pojemność ÷ obciążenie). Operator nie rozwali balansu zmianą długości.
+- **Auto prawdziwe** liczy się jak dotąd: `okrążenie wzorcowe ÷ dopasowanie^1,15`, a paliwo to paliwo toru razy mnożnik zużycia auta (moc, napęd, dodatki, afiksy). Szybsze auto pokonuje ten sam dystans szybciej, bo ma wyższe dopasowanie, a nie dlatego, że tor ma inną liczbę. Pogoda i noc nie zmieniają paliwa okrążenia (jedna zamrożona liczba na bieg, jak dotąd).
+- **Rdzeń rozliczenia jest nietknięty.** `Settler`, `RunConfig`, `RunFreezer` i tabele botów dostają te same liczby całkowite co przedtem; model działa w warstwie treści (`TrackNumbers::derive`, wołane raz przy budowie `Rules`) i oddaje liczby pod tymi samymi kluczami, które czytał kod: `base_lap_ms`, `fuel_per_lap_ml`, `reward_cents_per_lap`, `xp_per_lap` (oraz, do pokazania, `speed_kmh`, `pay_cents_per_hour`, `xp_per_hour`, `fuel_ml_per_s`).
+- **Ręcznie wpisana liczba wygrywa** z liczoną (cztery stare pola zostają w schemacie jako „ręczne nadpisanie”): gry i paczki zrobione przed modelem działają bez zmian, a walidator pakietów ostrzega, gdy ręczna liczba odbiega od modelu o więcej niż 2%.
+- **Zamrożone biegi** (`race_runs.config`) nie zmieniają się nigdy: nowe liczby wchodzą dopiero przy ponownym zamrożeniu.
+
+**Migracja 15 torów jest dokładna co do milisekundy, mililitra, centa i punktu XP.** Prędkości toru mają od jednego do czterech miejsc po przecinku (np. 124,8 km/h dla ulicy Złomowo, 90,947 dla kamieniołomu, 90,5455 dla maratonu), bo dawne czasy nie wynikały z okrągłych prędkości. Dowód stały w testach: `tests/Support/frozen-before-track-model.json` to migawka tego, na co zamrażają się wszystkie auta spalinowe paczki na wszystkich torach (414 przypadków, z oponami odniesienia na żwirze) **przed** modelem, a `TrackMigrationTest` porównuje z nią to, co zamrażają dziś.
 
 ## Zapis w bazie (`api/app/Services/`)
 

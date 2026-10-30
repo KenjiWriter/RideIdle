@@ -42,6 +42,10 @@ final class WorldForm
                 'lit' => (bool) ($track['lit'] ?? false),
                 'min_player_level' => $track['min_player_level'] ?? null,
                 'length_m' => $track['length_m'] ?? null,
+                'speed_kmh' => $track['speed_kmh'] ?? null,
+                'pay_per_hour' => isset($track['pay_cents_per_hour']) ? $track['pay_cents_per_hour'] / 100 : null,
+                'xp_per_hour' => $track['xp_per_hour'] ?? null,
+                // The numbers that were said by hand, for the tracks that still say them: they are believed over the model, and the form shows them only where they are.
                 'base_lap_ms' => $track['base_lap_ms'] ?? null,
                 'fuel_per_lap_ml' => $track['fuel_per_lap_ml'] ?? null,
                 'reward' => isset($track['reward_cents_per_lap']) ? $track['reward_cents_per_lap'] / 100 : null,
@@ -105,12 +109,19 @@ final class WorldForm
 
             $track['lit'] = ! empty($line['lit']);
 
-            foreach (['min_player_level', 'length_m', 'base_lap_ms', 'fuel_per_lap_ml'] as $field) {
+            foreach (['min_player_level', 'length_m'] as $field) {
                 $track[$field] = DefinitionForm::number($line[$field] ?? null);
             }
 
-            $track['reward_cents_per_lap'] = DefinitionForm::cents($line['reward'] ?? null);
-            $track['xp_per_lap'] = DefinitionForm::number($line['xp_per_lap'] ?? null);
+            // What the model needs, and what was said by hand: a number that the form does not have is not in the document (the schema says which ones a track must have).
+            foreach (['speed_kmh' => 'speed_kmh', 'pay_cents_per_hour' => 'pay_per_hour', 'xp_per_hour' => 'xp_per_hour', 'base_lap_ms' => 'base_lap_ms', 'fuel_per_lap_ml' => 'fuel_per_lap_ml', 'reward_cents_per_lap' => 'reward', 'xp_per_lap' => 'xp_per_lap'] as $field => $box) {
+                $number = in_array($field, ['pay_cents_per_hour', 'reward_cents_per_lap'], true) ? DefinitionForm::cents($line[$box] ?? null) : DefinitionForm::number($line[$box] ?? null);
+
+                if ($number !== null) {
+                    $track[$field] = $number;
+                }
+            }
+
             $track['demand'] = self::object((array) ($line['demand'] ?? []), 'stat', 'value');
             $track['reference'] = self::object((array) ($line['reference'] ?? []), 'stat', 'value');
 
