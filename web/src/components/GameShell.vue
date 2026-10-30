@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
 
+import MissionGoal from '@/components/MissionGoal.vue'
+import MissionToast from '@/components/MissionToast.vue'
 import TutorialGoal from '@/components/TutorialGoal.vue'
 import TutorialOverlay from '@/components/TutorialOverlay.vue'
+import { useMissionsSync } from '@/features/missions/useMissionsSync'
 import { useTutorialReward } from '@/features/run/useTutorialReward'
 import { useTutorialSync } from '@/features/tutorial/useTutorialSync'
 import { useGarageStore } from '@/stores/garage'
@@ -34,6 +37,9 @@ onMounted(() => {
 // The goal of the step that is on is kept true on every screen of the game, without the driver having to go to another tab to bring it up to date.
 useTutorialSync()
 
+// The number of missions that can be taken, in the bar at the top, is kept true the same way.
+useMissionsSync()
+
 /**
  * What the mentor paid for a step is said once, on whichever screen the driver is on. The experience that went to the car shows in the bar of the garage, which is asked for again.
  */
@@ -49,7 +55,9 @@ const { rewardMessage } = useTutorialReward(() => {
     <GameHud />
     <div class="flex flex-1 flex-col gap-3 px-3.5 py-3">
       <TutorialGoal />
+      <MissionGoal />
       <p v-if="rewardMessage" class="card card-hi text-sm" role="status" data-test="tutorial-reward">{{ rewardMessage }}</p>
+      <MissionToast />
       <slot />
     </div>
     <GameNav />

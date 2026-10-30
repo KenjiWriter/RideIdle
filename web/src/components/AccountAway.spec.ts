@@ -115,4 +115,17 @@ describe('AccountAway', () => {
     expect(wrapper.get('[data-test="away-car-3-waiting"]').text()).toBe('brak paliwa')
     expect(wrapper.get('[data-test="away-jobs"]').text()).toContain('Ulepszono: Street tires')
   })
+
+  it('tells what the missions did in the break: how many were done, and what the server took for the driver when a period ended', () => {
+    const wrapper = mountAway(aSummary({ missions: { done: 4, collected: 2, cash_cents: 3_000, xp: 12, coins: 2 } }))
+
+    expect(wrapper.get('[data-test="away-missions-done"]').text()).toBe('Missions done: 4')
+    expect(wrapper.get('[data-test="away-missions-taken"]').text()).toBe('Taken for you when the period ended: 2 ($30, 12 XP)')
+    expect(wrapper.get('[data-test="away-missions-coins"]').text()).toBe('Bonus for the whole set: +2 RideCoin')
+  })
+
+  it('has no line of the missions when they did nothing', () => {
+    expect(mountAway(aSummary({ missions: null })).find('[data-test="away-missions"]').exists()).toBe(false)
+    expect(mountAway(aSummary({ missions: { done: 1, collected: 0, cash_cents: 0, xp: 0, coins: 0 } })).find('[data-test="away-missions-taken"]').exists()).toBe(false)
+  })
 })

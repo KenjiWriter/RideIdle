@@ -25,6 +25,8 @@ const earned = computed(() => cars.value.reduce((sum, car) => sum + car.earned_c
 const refills = computed(() => cars.value.reduce((sum, car) => sum + (car.refills ?? 0), 0))
 const chargesUsed = computed(() => cars.value.reduce((sum, car) => sum + (car.refill_charges ?? 0), 0))
 const bonus = computed(() => cars.value.reduce((sum, car) => sum + (car.bonus_cents ?? 0), 0))
+/** What the missions did in the break: how many were done, and what the server took for the driver when a period ended. */
+const missions = computed(() => props.summary.missions ?? null)
 
 /** What the police made of a boosted journey, in words (nothing when they did not stop the car). */
 function police(journey: AwayJourney): string | null {
@@ -76,6 +78,15 @@ function police(journey: AwayJourney): string | null {
         {{ chargesUsed > 0 ? t('run.away.refills', { n: refills, charges: chargesUsed }, refills) : t('run.away.refillsFree', { n: refills }, refills) }}
       </p>
       <p v-if="bonus > 0" class="text-[13px] text-amber" data-test="away-extras-bonus">{{ t('run.away.bonus', { amount: money(bonus, 2) }) }}</p>
+    </div>
+
+    <div v-if="missions" class="flex flex-col gap-1" data-test="away-missions">
+      <p class="kick !mb-0">{{ t('awayAccount.missionsTitle') }}</p>
+      <p v-if="missions.done > 0" class="text-[13px] text-ink" data-test="away-missions-done">{{ t('awayAccount.missionsDone', { count: number(missions.done) }) }}</p>
+      <p v-if="missions.collected > 0" class="text-[13px] text-muted" data-test="away-missions-taken">
+        {{ t('awayAccount.missionsTaken', { count: number(missions.collected), cash: money(missions.cash_cents), xp: number(missions.xp) }) }}
+      </p>
+      <p v-if="missions.coins > 0" class="text-[13px] text-amber" data-test="away-missions-coins">{{ t('awayAccount.missionsCoins', { coins: number(missions.coins) }) }}</p>
     </div>
 
     <div v-if="jobs.length > 0" class="flex flex-col gap-1.5" data-test="away-jobs">

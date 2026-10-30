@@ -16,7 +16,7 @@ export const useAwayStore = defineStore('away', () => {
   const visible = computed(() => {
     const away = summary.value
 
-    return away !== null && ((away.cars ?? []).some((car) => !car.played) || (away.jobs ?? []).length > 0 || (away.journeys ?? []).length > 0)
+    return away !== null && ((away.cars ?? []).some((car) => !car.played) || (away.jobs ?? []).length > 0 || (away.journeys ?? []).length > 0 || (away.missions ?? null) !== null)
   })
 
   async function load(): Promise<void> {

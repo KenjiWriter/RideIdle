@@ -9,6 +9,7 @@ import { levelOf } from '@/features/player/level'
 import { usePremiumCoins } from '@/features/player/usePremiumCoins'
 import { useFormat } from '@/i18n/useFormat'
 import { useGarageStore } from '@/stores/garage'
+import { useMissionsStore } from '@/stores/missions'
 import { usePremiumStore } from '@/stores/premium'
 import { useRunStore } from '@/stores/run'
 import { useSessionStore } from '@/stores/session'
@@ -21,6 +22,11 @@ const garage = useGarageStore()
 const session = useSessionStore()
 const { coins, ensure: ensureCoins } = usePremiumCoins()
 const premium = usePremiumStore()
+const missions = useMissionsStore()
+
+/** The plate of the missions is there until the game says it has none, with the number of the ones that can be taken. */
+const showMissions = computed(() => missions.view?.available !== false)
+const missionsCount = computed(() => missions.claimable)
 
 const progress = computed(() => levelOf(run.wallet?.xp ?? 0))
 const fill = computed(() => Math.min(100, Math.round((progress.value.into / progress.value.needed) * 100)))
@@ -69,6 +75,21 @@ const phaseName = computed(() => (te(`clock.phase.${time.value.phase}`) ? t(`clo
           />
           <circle cx="12" cy="12" r="3" />
         </svg>
+      </RouterLink>
+
+      <!-- The missions: a plate like the gear, with how many can be taken. -->
+      <RouterLink
+        v-if="showMissions"
+        :to="{ name: 'missions' }"
+        class="hud-gear hud-missions"
+        :aria-label="missionsCount > 0 ? t('hud.missionsCount', { count: missionsCount }, missionsCount) : t('hud.missions')"
+        data-test="hud-missions"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m9 11 3 3L22 4" />
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+        </svg>
+        <b v-if="missionsCount > 0" class="hud-badge" data-test="hud-missions-count">{{ missionsCount > 99 ? '99+' : missionsCount }}</b>
       </RouterLink>
 
       <div class="lvl" data-test="level">

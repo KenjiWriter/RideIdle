@@ -20,6 +20,7 @@ import RecoveryPanel from '@/components/RecoveryPanel.vue'
 import RunAlerts from '@/components/RunAlerts.vue'
 import SlotChips from '@/components/SlotChips.vue'
 import SlotDetail from '@/components/SlotDetail.vue'
+import MissionsGlance from '@/components/MissionsGlance.vue'
 import SpecCard from '@/components/SpecCard.vue'
 import { carPicture } from '@/features/art'
 import { useServiceLine } from '@/features/car/serviceLine'
@@ -221,6 +222,7 @@ async function useCode(): Promise<void> {
     <template v-else>
       <AwaySummary v-if="run.away" :summary="run.away" :now-ms="run.run.server_time_ms" @dismiss="run.dismissAway()" />
       <AccountAway v-if="away.visible && away.summary" :summary="away.summary" @dismiss="away.dismiss().catch(() => undefined)" />
+      <MissionsGlance />
 
       <section class="flex flex-col gap-3" aria-labelledby="run-title" data-test="run">
         <!-- The car on its stage, as the showroom of the canvas has it: the name in outline behind it, the level and the state of the run on the floor. -->

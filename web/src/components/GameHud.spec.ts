@@ -8,9 +8,11 @@ import { storeToken } from '@/auth/token'
 import { i18n, setLocale } from '@/i18n'
 import { useGarageStore } from '@/stores/garage'
 import { useMapStore } from '@/stores/map'
+import { useMissionsStore } from '@/stores/missions'
 import { usePremiumStore } from '@/stores/premium'
 import { useRunStore } from '@/stores/run'
 import { respond, serveApi } from '@/test/fetchServer'
+import { missionsView } from '@/test/missionsFixtures'
 import { passOffer, premiumView, vipOffer } from '@/test/premiumFixtures'
 import { liveFields } from '@/test/runFixtures'
 
@@ -44,6 +46,7 @@ const aRouter = () =>
     routes: [
       { path: '/garage', name: 'garage', component: { template: '<div />' } },
       { path: '/premium', name: 'premium', component: { template: '<div />' } },
+      { path: '/missions', name: 'missions', component: { template: '<div />' } },
     ],
   })
 
@@ -297,6 +300,32 @@ describe('GameHud', () => {
       await flushPromises()
 
       expect(wrapper.find('[data-test="hud-vip"]').exists()).toBe(false)
+    })
+  })
+
+  describe('the missions', () => {
+    it('are a plate beside the gear that leads to them, with the number that can be taken', () => {
+      const pinia = createPinia()
+      setActivePinia(pinia)
+      useMissionsStore().apply(missionsView({ claimable: 3 }))
+      const wrapper = mount(GameHud, { global: { plugins: [pinia, i18n, aRouter()] } })
+
+      expect(wrapper.get('[data-test="hud-missions"]').attributes('href')).toBe('/missions')
+      expect(wrapper.get('[data-test="hud-missions-count"]').text()).toBe('3')
+      expect(wrapper.get('[data-test="hud-missions"]').attributes('aria-label')).toBe('Missions: 3 to take')
+    })
+
+    it('are a plate with no number when nothing waits, and nothing at all when the game has no missions', () => {
+      const none = show()
+
+      expect(none.get('[data-test="hud-missions"]').attributes('aria-label')).toBe('Missions')
+      expect(none.find('[data-test="hud-missions-count"]').exists()).toBe(false)
+
+      const pinia = createPinia()
+      setActivePinia(pinia)
+      useMissionsStore().apply({ available: false, now_ms: 1 })
+
+      expect(mount(GameHud, { global: { plugins: [pinia, i18n, aRouter()] } }).find('[data-test="hud-missions"]').exists()).toBe(false)
     })
   })
 })
