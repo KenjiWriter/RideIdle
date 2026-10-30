@@ -82,6 +82,42 @@ describe('the missions of the pack', function () {
             ->and($errors)->toContain('rules/missions.json /periodic/weekly/0/templates/daily-laps-long');
     });
 
+    it('refuse a main mission with a param it cannot have, a rarity or a kind of tires that do not exist, a key used twice and a level nobody reaches', function () {
+        $content = withMissions(function (array $missions): array {
+            $driver = &$missions['chains'][0]['missions'];
+            $driver[0]['param'] = 'rare';
+            $driver[1]['key'] = $driver[0]['key'];
+            $mechanic = &$missions['chains'][1]['missions'];
+            $mechanic[2]['param'] = 'moon';
+            $mechanic[5]['param'] = 'mythic';
+            $mechanic[0]['min_player_level'] = 31;
+            unset($driver, $mechanic);
+
+            return $missions;
+        });
+        $errors = missionErrors($content);
+
+        expect($errors)->toContain('rules/missions.json /chains/0/missions/0/param')
+            ->and($errors)->toContain('rules/missions.json /chains/0/missions/1/key')
+            ->and($errors)->toContain('rules/missions.json /chains/1/missions/2/param')
+            ->and($errors)->toContain('rules/missions.json /chains/1/missions/5/param')
+            ->and($errors)->toContain('rules/missions.json /chains/1/missions/0/min_player_level');
+    });
+
+    it('warn of a title or a sentence of a main mission that lacks a language, and do not stop the pack for it', function () {
+        $content = withMissions(function (array $missions): array {
+            unset($missions['chains'][0]['missions'][0]['text']['fr'], $missions['chains'][2]['title']['de']);
+
+            return $missions;
+        });
+        $result = PackValidator::fromConfig()->validateSource($content);
+        $warned = array_map(static fn (array $issue): string => "{$issue['file']} {$issue['pointer']}", $result->warnings());
+
+        expect($result->errors())->toBe([])
+            ->and($warned)->toContain('rules/missions.json /chains/0/missions/0/text/fr')
+            ->and($warned)->toContain('rules/missions.json /chains/2/title/de');
+    });
+
     it('refuse a time zone that does not exist and a step of the tutorial that is not there', function () {
         $content = contentWith(['rules/starter' => function (array $rules): array {
             $rules['missions']['timezone'] = 'Mars/Olympus';

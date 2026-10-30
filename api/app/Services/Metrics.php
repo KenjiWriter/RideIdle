@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\LedgerEntry;
 use App\Models\Travel;
 use App\Models\TutorialProgress;
 use App\Models\User;
+use App\Models\UserMissionPeriod;
 use App\Models\UserVisit;
 use App\Models\WorkshopJob;
 use Carbon\CarbonImmutable;
@@ -48,7 +50,8 @@ final class Metrics
      *     sessions: array{drivers: int, sessions: int, per_driver: float|null, median_minutes: float|null},
      *     activity: list<array{day: string, active: int, new: int, returning: int}>,
      *     first_steps: array<string, array{reached: int, rate: float|null, median_minutes: float|null, within_target: int|null, target_minutes: int|null}>,
-     *     tutorial: array<string, array{reached: int, rate: float|null}>
+     *     tutorial: array<string, array{reached: int, rate: float|null}>,
+     *     missions: array{days: list<array{day: string, drawn: int, done: int, bonus_taken: int}>, coins_30_days: int}
      * }
      */
     public function report(CarbonImmutable $from, CarbonImmutable $to, ?CarbonImmutable $now = null): array
@@ -70,6 +73,7 @@ final class Metrics
             'activity' => $this->activity($now),
             'first_steps' => $this->firstSteps($accounts),
             'tutorial' => $this->tutorial($accounts),
+            'missions' => $this->missions($now),
         ];
     }
 
@@ -190,6 +194,30 @@ final class Metrics
         }
 
         return $rows;
+    }
+
+    /**
+     * How the missions of the days are done, for the last fourteen days and all accounts: how many sets were drawn, how many were done whole and how many of those
+     * took their bonus; and how many premium coins the bonuses gave in thirty days.
+     *
+     * @return array{days: list<array{day: string, drawn: int, done: int, bonus_taken: int}>, coins_30_days: int}
+     */
+    private function missions(CarbonImmutable $now): array
+    {
+        $first = $now->startOfDay()->subDays(13);
+        $sets = UserMissionPeriod::query()->where('kind', 'daily')->where('period_key', '>=', $first->toDateString())->get(['period_key', 'completed_at', 'bonus_claimed_at'])->groupBy('period_key');
+        $days = [];
+
+        for ($i = 0; $i < 14; $i++) {
+            $day = $first->addDays($i)->toDateString();
+            $rows = $sets->get($day, collect());
+
+            $days[] = ['day' => $day, 'drawn' => $rows->count(), 'done' => $rows->whereNotNull('completed_at')->count(), 'bonus_taken' => $rows->whereNotNull('bonus_claimed_at')->count()];
+        }
+
+        $coins = (int) LedgerEntry::query()->where('currency', 'premium')->where('reason', 'mission_bonus')->where('created_at', '>=', $now->subDays(30))->sum('delta');
+
+        return ['days' => $days, 'coins_30_days' => $coins];
     }
 
     /**

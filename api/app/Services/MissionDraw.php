@@ -90,6 +90,24 @@ final class MissionDraw
         };
     }
 
+    /**
+     * What a main mission pays, worked out when it opens from a tank of the best car of the driver: its cash and XP are parts of it, the experience of the car is
+     * that many laps of it, and the items are as the mission gives them.
+     *
+     * @param  array{cash_tanks_ppm?: int, xp_tanks_ppm?: int, car_xp_laps?: int, items?: list<array<string, string>>}  $reward
+     * @param  array{laps: int, lap_cash_cents: int, gross_cents: int, net_cents: int, xp: int, fuel_cents: int}  $tankful
+     * @return array{cash_cents: int, xp: int, car_xp: int, items: list<array<string, string>>}
+     */
+    public function chainReward(array $reward, array $tankful): array
+    {
+        return [
+            'cash_cents' => isset($reward['cash_tanks_ppm']) ? $this->dollars((int) round(max(0, $tankful['net_cents']) * $reward['cash_tanks_ppm'] / 1_000_000)) : 0,
+            'xp' => isset($reward['xp_tanks_ppm']) ? max(1, (int) round($tankful['xp'] * $reward['xp_tanks_ppm'] / 1_000_000)) : 0,
+            'car_xp' => isset($reward['car_xp_laps']) ? (int) $reward['car_xp_laps'] * $this->rules->carXpPerLap() : 0,
+            'items' => $reward['items'] ?? [],
+        ];
+    }
+
     /** Whole dollars, and at least one. */
     private function dollars(int $cents): int
     {

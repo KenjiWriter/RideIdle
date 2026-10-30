@@ -7,6 +7,7 @@ namespace App\Services;
 use App\Content\Rules;
 use App\Models\CrateOpening;
 use App\Models\LedgerEntry;
+use App\Models\MergeAttempt;
 use App\Models\RaceRun;
 use App\Models\Settlement;
 use App\Models\SettlementEvent;
@@ -50,7 +51,7 @@ final class MissionProgress
             'upgrade' => $this->jobs($userId, WorkshopJob::KIND_UPGRADE, $fromMs, $toMs),
             'mount' => $this->jobs($userId, WorkshopJob::KIND_MOUNT, $fromMs, $toMs),
             'service' => $this->jobs($userId, WorkshopJob::KIND_SERVICE, $fromMs, $toMs),
-            'merge' => $this->jobs($userId, WorkshopJob::KIND_MERGE, $fromMs, $toMs),
+            'merge' => MergeAttempt::query()->where('user_id', $userId)->where('success', true)->where('finished_ms', '>=', $fromMs)->where('finished_ms', '<', $toMs)->count(),
             'journey' => Travel::query()->where('user_id', $userId)->where('status', Travel::STATUS_ARRIVED)->where('arrive_ms', '>=', $fromMs)->where('arrive_ms', '<', $toMs)->count(),
             'crate' => CrateOpening::query()->where('user_id', $userId)->where('pity_group', 'not like', self::CRATE_STREAM_PREFIX.'%')
                 ->where('created_at', '>=', $this->at($fromMs))->where('created_at', '<', $this->at($toMs))->count(),

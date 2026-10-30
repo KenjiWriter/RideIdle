@@ -7,11 +7,17 @@ namespace App\Services;
 use App\Content\MissionCatalog;
 use App\Content\Rules;
 use App\Content\TutorialSteps;
+use App\Domain\Run\Rarity;
 use App\Exceptions\RuleRefusedException;
+use App\Models\Car;
+use App\Models\CityGarage;
+use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\TutorialProgress;
 use App\Models\UserMission;
 use App\Models\UserMissionPeriod;
+use App\Support\I18nText;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -43,6 +49,8 @@ final class Missions
         private readonly RunService $runs,
         private readonly Workshop $workshop,
         private readonly TutorialSteps $steps,
+        private readonly MissionCatalog $catalog,
+        private readonly DriverFacts $facts,
     ) {}
 
     /**
@@ -58,7 +66,7 @@ final class Missions
 
         $state = $this->evaluate($userId);
 
-        return $this->build($userId, $state['locked'], $state['auto_collected']);
+        return $this->build($userId, $state['locked'], $state['main_locked'], $state['auto_collected']);
     }
 
     /**
@@ -170,7 +178,8 @@ final class Missions
      * (what was done is counted for the last time, and what is done and was not taken is taken), the sets of the periods the driver is in are drawn if they are
      * not yet, and the progress of every mission that is not done is counted.
      *
-     * @return array{locked: string|null, auto_collected: list<array<string, mixed>>} `locked` says why there are no sets: `tutorial` (not far enough yet)
+     * @return array{locked: string|null, main_locked: string|null, auto_collected: list<array<string, mixed>>} `locked` says why there are no sets and `main_locked` why there
+     *                                                                                                          are no main missions: `tutorial` (not far enough yet)
      */
     public function evaluate(int $userId): array
     {
@@ -198,8 +207,143 @@ final class Missions
                 }
             }
 
-            return ['locked' => $locked, 'auto_collected' => $collected];
+            $mainLocked = $this->mainLockedBy($userId);
+
+            if ($mainLocked === null) {
+                foreach ($this->catalog->chains() as $chain) {
+                    $this->advanceChain($userId, $chain);
+                }
+            }
+
+            return ['locked' => $locked, 'main_locked' => $mainLocked, 'auto_collected' => $collected];
         }, Ledger::DEADLOCK_ATTEMPTS);
+    }
+
+    /**
+     * What the missions of the driver did while they were away, from the moment the break began: how many were noticed done, and what the server took for the driver
+     * when a period ended (the cash, the XP and the coins of a whole set). Null when there is nothing to tell. The caller has brought the missions up to date.
+     *
+     * @return array{done: int, collected: int, cash_cents: int, xp: int, coins: int}|null
+     */
+    public function awayReport(int $userId, CarbonInterface $from): ?array
+    {
+        if (! $this->rules->missionsOn()) {
+            return null;
+        }
+
+        $done = UserMission::query()->where('user_id', $userId)->where('completed_at', '>=', $from)->count();
+        $taken = UserMission::query()->where('user_id', $userId)->where('auto_claimed', true)->where('claimed_at', '>=', $from)->get(['claim_result']);
+        $coins = (int) UserMissionPeriod::query()->where('user_id', $userId)->where('bonus_auto_claimed', true)->where('bonus_claimed_at', '>=', $from)->sum('bonus_coins');
+        $report = [
+            'done' => $done,
+            'collected' => $taken->count(),
+            'cash_cents' => (int) $taken->sum(fn (UserMission $row): int => (int) ($row->claim_result['cash_cents'] ?? 0)),
+            'xp' => (int) $taken->sum(fn (UserMission $row): int => (int) ($row->claim_result['xp'] ?? 0)),
+            'coins' => $coins,
+        ];
+
+        return $done === 0 && $report['collected'] === 0 && $coins === 0 ? null : $report;
+    }
+
+    /** Why a driver has no main missions yet: the tutorial is not over. A driver who left it has them. */
+    private function mainLockedBy(int $userId): ?string
+    {
+        $rows = TutorialProgress::query()->where('user_id', $userId)->get();
+
+        if ($rows->contains('state', TutorialProgress::STATE_SKIPPED)) {
+            return null;
+        }
+
+        return $rows->whereIn('state', [TutorialProgress::STATE_DONE, TutorialProgress::STATE_DECLINED])->count() >= $this->steps->count() ? null : 'tutorial';
+    }
+
+    /**
+     * Keeps a chain of main missions up to date: counts the mission that is open, and opens the next one when it is done and the level of the driver allows (a
+     * driver who has done more than the first missions asks gets several done at once).
+     *
+     * @param  array{key: string, missions: list<array<string, mixed>>}  $chain
+     */
+    private function advanceChain(int $userId, array $chain): void
+    {
+        for ($guard = 0; $guard < count($chain['missions']); $guard++) {
+            $rows = UserMission::query()->where('user_id', $userId)->where('kind', UserMission::KIND_MAIN)->where('period_key', $chain['key'])->orderBy('slot')->get();
+
+            $this->count($rows);
+
+            if ($rows->isNotEmpty() && $rows->last()->completed_at === null) {
+                return;
+            }
+
+            $next = $chain['missions'][$rows->count()] ?? null;
+            $tankful = $next === null ? null : $this->scale->tankful($userId);
+
+            if ($next === null || $tankful === null || $this->rules->playerLevelAt($this->ledger->xp($userId)) < ($next['min_player_level'] ?? 1)) {
+                return;
+            }
+
+            $now = now();
+
+            UserMission::query()->insertOrIgnore([
+                'user_id' => $userId,
+                'kind' => UserMission::KIND_MAIN,
+                'period_key' => $chain['key'],
+                'slot' => $rows->count() + 1,
+                'mission_key' => $next['key'],
+                'objective' => $next['objective'],
+                'params' => json_encode(['param' => $next['param'] ?? null], JSON_THROW_ON_ERROR),
+                'target' => $next['count'],
+                'progress' => 0,
+                'reward' => json_encode($this->draw->chainReward($next['reward'], $tankful), JSON_THROW_ON_ERROR),
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+    }
+
+    /** What the driver has reached of a main mission, counted over all the time, or a state of the game (a level, the cars they have). */
+    private function measureMain(UserMission $row): int
+    {
+        $param = (string) ($row->params['param'] ?? '');
+
+        return match ($row->objective) {
+            'player_level' => $this->rules->playerLevelAt($this->ledger->xp($row->user_id)),
+            'car_level' => (int) Car::query()->where('user_id', $row->user_id)->max('level'),
+            'cars_owned' => Car::query()->where('user_id', $row->user_id)->count(),
+            'garages_owned' => CityGarage::query()->where('user_id', $row->user_id)->count(),
+            'rarity_owned' => Part::query()->where('user_id', $row->user_id)->where('rarity', '>=', Rarity::fromKey($param)->value)->count(),
+            'tires_mounted' => $this->facts->tiresMounted($row->user_id, $param) ? 1 : 0,
+            default => $this->progress->measure($row->user_id, $row->objective, 0, PHP_INT_MAX),
+        };
+    }
+
+    /**
+     * The chains of main missions for the screen: for each, the missions that are open or done and not yet taken, how many are done and taken, and, when the next one
+     * waits for a level, which.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function mainView(int $userId): array
+    {
+        $level = $this->rules->playerLevelAt($this->ledger->xp($userId));
+        $chains = [];
+
+        foreach ($this->catalog->chains() as $chain) {
+            $rows = UserMission::query()->where('user_id', $userId)->where('kind', UserMission::KIND_MAIN)->where('period_key', $chain['key'])->orderBy('slot')->get();
+            $next = $chain['missions'][$rows->count()] ?? null;
+            $open = $rows->isEmpty() || $rows->last()->completed_at !== null;
+
+            $chains[] = [
+                'key' => $chain['key'],
+                'title' => I18nText::from($chain['title'])->for(),
+                'total' => count($chain['missions']),
+                'done' => $rows->filter(fn (UserMission $row): bool => $row->completed_at !== null)->count(),
+                'taken' => $rows->filter(fn (UserMission $row): bool => $row->claimed_at !== null)->count(),
+                'missions' => $rows->filter(fn (UserMission $row): bool => $row->claimed_at === null)->values()->map(fn (UserMission $row): array => $this->missionView($row))->all(),
+                'waiting' => $open && $next !== null && $level < ($next['min_player_level'] ?? 1) ? ['min_player_level' => (int) $next['min_player_level']] : null,
+            ];
+        }
+
+        return $chains;
     }
 
     private function ensureOn(): void
@@ -309,7 +453,13 @@ final class Missions
             }
 
             $key = "{$row->objective}|{$row->window_from_ms}|{$row->window_to_ms}";
-            $done = $counted[$key] ??= $this->progress->measure($row->user_id, $row->objective, (int) $row->window_from_ms, (int) $row->window_to_ms);
+
+            if ($row->kind === UserMission::KIND_MAIN) {
+                $done = $this->measureMain($row);
+            } else {
+                $done = $counted[$key] ??= $this->progress->measure($row->user_id, $row->objective, (int) $row->window_from_ms, (int) $row->window_to_ms);
+            }
+
             $progress = max($row->progress, $done);
 
             if ($progress !== $row->progress || $progress >= $row->target) {
@@ -394,7 +544,7 @@ final class Missions
      * @param  list<array<string, mixed>>  $collected
      * @return array<string, mixed>
      */
-    private function build(int $userId, ?string $locked, array $collected): array
+    private function build(int $userId, ?string $locked, ?string $mainLocked, array $collected): array
     {
         $now = Carbon::now();
         $periods = [];
@@ -424,8 +574,10 @@ final class Missions
             'available' => true,
             'now_ms' => $now->getTimestampMs(),
             'locked' => $locked,
+            'main_locked' => $mainLocked,
             'claimable' => $takeable,
             'periods' => $periods,
+            'main' => $mainLocked === null ? $this->mainView($userId) : [],
             'auto_collected' => $collected,
         ];
     }
@@ -433,11 +585,19 @@ final class Missions
     /** @return array<string, mixed> */
     private function missionView(UserMission $row): array
     {
+        $main = $row->kind === UserMission::KIND_MAIN ? $this->catalog->chainMission($row->period_key, $row->mission_key) : null;
+
         return [
             'id' => $row->id,
             'kind' => $row->kind,
             'slot' => $row->slot,
             'key' => $row->mission_key,
+            ...($row->kind === UserMission::KIND_MAIN ? [
+                'chain' => $row->period_key,
+                'title' => $main === null ? $row->mission_key : I18nText::from($main['title'])->for(),
+                'text' => $main === null ? '' : I18nText::from($main['text'])->for(),
+                'param' => $row->params['param'] ?? null,
+            ] : []),
             'objective' => $row->objective,
             'target' => $row->target,
             'progress' => min($row->progress, $row->target),

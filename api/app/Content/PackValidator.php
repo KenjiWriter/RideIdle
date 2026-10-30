@@ -575,6 +575,49 @@ final class PackValidator
                 }
             }
         }
+
+        $rarities = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+        $tires = array_keys($rules['tire_matrix'] ?? []);
+        $chainKeys = [];
+        $missionKeys = [];
+
+        foreach ($missions['chains'] ?? [] as $chainIndex => $chain) {
+            if (isset($chainKeys[$chain['key']])) {
+                $result->addError($file, "/chains/{$chainIndex}/key", "The key {$chain['key']} is used by two chains.");
+            }
+
+            $chainKeys[$chain['key']] = true;
+
+            foreach ($chain['missions'] as $index => $mission) {
+                $pointer = "/chains/{$chainIndex}/missions/{$index}";
+
+                if (isset($missionKeys[$mission['key']])) {
+                    $result->addError($file, "{$pointer}/key", "The key {$mission['key']} is used by two missions.");
+                }
+
+                $missionKeys[$mission['key']] = true;
+                $objective = $mission['objective'];
+                $param = $mission['param'] ?? null;
+
+                if ($objective === 'rarity_owned' && ! in_array($param, $rarities, true)) {
+                    $result->addError($file, "{$pointer}/param", 'The mission counts the parts of a rarity, and param is not one of: '.implode(', ', $rarities).'.');
+                } elseif ($objective === 'tires_mounted' && ! in_array($param, $tires, true)) {
+                    $result->addError($file, "{$pointer}/param", 'The mission is about a kind of tires, and param is not one of: '.implode(', ', $tires).'.');
+                } elseif (! in_array($objective, ['rarity_owned', 'tires_mounted'], true) && $param !== null) {
+                    $result->addError($file, "{$pointer}/param", "The goal {$objective} takes no param.");
+                }
+
+                if (isset($mission['min_player_level']) && $mission['min_player_level'] > $levels) {
+                    $result->addError($file, "{$pointer}/min_player_level", "No driver reaches level {$mission['min_player_level']}: the highest level is {$levels}.");
+                }
+
+                foreach ($mission['reward']['items'] ?? [] as $position => $item) {
+                    if ($item['type'] === 'crate' && ! in_array($item['kind'], $kinds, true)) {
+                        $result->addError($file, "{$pointer}/reward/items/{$position}/kind", "The game has no crate {$item['kind']}.");
+                    }
+                }
+            }
+        }
     }
 
     private function validateManifest(string $packPath, PackValidationResult $result): void
@@ -728,6 +771,17 @@ final class PackValidator
             }
 
             $texts['/share/description'] = $data['share']['description'] ?? null;
+        }
+
+        if ($name === 'missions') {
+            foreach ($data['chains'] ?? [] as $chainIndex => $chain) {
+                $texts["/chains/{$chainIndex}/title"] = $chain['title'] ?? null;
+
+                foreach ($chain['missions'] ?? [] as $index => $mission) {
+                    $texts["/chains/{$chainIndex}/missions/{$index}/title"] = $mission['title'] ?? null;
+                    $texts["/chains/{$chainIndex}/missions/{$index}/text"] = $mission['text'] ?? null;
+                }
+            }
         }
 
         if ($name === 'tutorial') {

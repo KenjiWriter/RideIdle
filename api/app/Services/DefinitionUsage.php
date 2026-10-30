@@ -12,6 +12,7 @@ use App\Models\Part;
 use App\Models\RaceRun;
 use App\Models\TutorialProgress;
 use App\Models\User;
+use App\Models\UserMission;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -43,8 +44,8 @@ final class DefinitionUsage
     }
 
     /**
-     * What a new document of the rules or of the tutorial takes out that the players are using: the cities that have a garage, a workshop, a job or a journey of
-     * a player, the tracks that a run drives and the steps of the tutorial that a driver has met. Taking such a thing out would leave a player in a place that
+     * What a new document of the rules, of the tutorial or of the missions takes out that the players are using: the cities that have a garage, a workshop, a job or a journey of
+     * a player, the tracks that a run drives the steps of the tutorial that a driver has met and the main missions that a driver has. Taking such a thing out would leave a player in a place that
      * is not there, so it is refused; a name is for good, and changing one is taking it out. Words for the panel, by what they are.
      *
      * @param  array<string, mixed>  $before
@@ -72,6 +73,30 @@ final class DefinitionUsage
 
                 if ($count > 0) {
                     $used[] = "track {$track} ({$count})";
+                }
+            }
+        }
+
+        if ($slug === 'missions') {
+            $kept = [];
+
+            foreach ($after['chains'] ?? [] as $chain) {
+                foreach ($chain['missions'] as $mission) {
+                    $kept[$chain['key'].'/'.$mission['key']] = true;
+                }
+            }
+
+            foreach ($before['chains'] ?? [] as $chain) {
+                foreach ($chain['missions'] as $mission) {
+                    if (isset($kept[$chain['key'].'/'.$mission['key']])) {
+                        continue;
+                    }
+
+                    $count = UserMission::query()->where('kind', UserMission::KIND_MAIN)->where('period_key', $chain['key'])->where('mission_key', $mission['key'])->whereIn('user_id', $this->players())->count();
+
+                    if ($count > 0) {
+                        $used[] = "mission {$chain['key']}/{$mission['key']} ({$count})";
+                    }
                 }
             }
         }

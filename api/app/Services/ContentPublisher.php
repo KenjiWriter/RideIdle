@@ -306,7 +306,7 @@ final class ContentPublisher
             return;
         }
 
-        foreach (['starter', 'tutorial'] as $name) {
+        foreach (['starter', 'tutorial', 'missions'] as $name) {
             $key = "rules/{$name}";
 
             if (! $live->has($key) || ! $candidate->has($key)) {

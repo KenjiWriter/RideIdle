@@ -39,6 +39,7 @@ final class AwaySummary
         private readonly RunService $runs,
         private readonly Catalog $catalog,
         private readonly Rules $rules,
+        private readonly Missions $missions,
     ) {}
 
     /**
@@ -68,7 +69,7 @@ final class AwaySummary
      * The summary of the break that waits for the driver, or `pending: false` when there is none. What is due is carried out first and every car is settled, so the
      * earnings are current.
      *
-     * @return array{pending: bool, from_ms?: int, to_ms?: int, away_minutes?: int, earned_cents?: int, bonus_cents?: int, auto_refills?: int, auto_refill_charges?: int, cars?: list<array<string, mixed>>, jobs?: list<array<string, mixed>>, journeys?: list<array<string, mixed>>}
+     * @return array{pending: bool, from_ms?: int, to_ms?: int, away_minutes?: int, earned_cents?: int, bonus_cents?: int, auto_refills?: int, auto_refill_charges?: int, cars?: list<array<string, mixed>>, jobs?: list<array<string, mixed>>, journeys?: list<array<string, mixed>>, missions?: array{done: int, collected: int, cash_cents: int, xp: int, coins: int}|null}
      */
     public function summary(User $user): array
     {
@@ -78,6 +79,11 @@ final class AwaySummary
 
         $userId = (int) $user->getKey();
         $this->workshop->advance($userId);
+
+        // The missions that were done while the driver was away, and the ones the server took for them when a period ended, are on the books before they are told.
+        if ($this->rules->missionsOn()) {
+            $this->missions->evaluate($userId);
+        }
 
         $runs = RaceRun::query()->where('user_id', $userId)->with('car')->orderBy('id')->get();
 
@@ -106,6 +112,7 @@ final class AwaySummary
             'cars' => $cars,
             'jobs' => $this->jobs($userId, $fromMs, $toMs),
             'journeys' => $this->journeys($userId, $fromMs, $toMs),
+            'missions' => $this->missions->awayReport($userId, $from),
         ];
     }
 

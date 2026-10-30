@@ -31,7 +31,7 @@ function missionTemplate(string $objective, array $extra = []): array
  *
  * @param  array<string, mixed>  $daily  more or other slots of the day: the key of the slot and its templates
  */
-function theMissionsAre(?array $daily = null, ?array $weekly = null, ?array $monthly = null): void
+function theMissionsAre(?array $daily = null, ?array $weekly = null, ?array $monthly = null, ?array $chains = null): void
 {
     app()->instance(MissionCatalog::class, MissionCatalog::fromArray([
         'schema' => 0,
@@ -44,7 +44,7 @@ function theMissionsAre(?array $daily = null, ?array $weekly = null, ?array $mon
             'weekly' => $weekly ?? [['key' => 'drive', 'templates' => ['t-week-laps' => missionTemplate('laps', ['tanks_ppm' => 500_000])]]],
             'monthly' => $monthly ?? [['key' => 'drive', 'templates' => ['t-month-laps' => missionTemplate('laps', ['tanks_ppm' => 900_000])]]],
         ],
-        'chains' => [],
+        'chains' => $chains ?? [],
     ]));
 }
 

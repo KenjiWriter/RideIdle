@@ -309,5 +309,690 @@
       }
     ]
   },
-  "chains": []
+  "chains": [
+    {
+      "key": "driver",
+      "title": {
+        "en": "Driver",
+        "pl": "Kierowca",
+        "fr": "Pilote",
+        "de": "Fahrer",
+        "pt-BR": "Piloto"
+      },
+      "missions": [
+        {
+          "key": "driver-laps-50",
+          "title": {
+            "en": "The first 50 laps",
+            "pl": "Pierwsze 50 okrążeń",
+            "fr": "Les 50 premiers tours",
+            "de": "Die ersten 50 Runden",
+            "pt-BR": "As primeiras 50 voltas"
+          },
+          "text": {
+            "en": "Drive 50 laps in all. Every car of yours counts.",
+            "pl": "Przejedź razem 50 okrążeń. Liczą się wszystkie Twoje auta.",
+            "fr": "Bouclez 50 tours en tout. Toutes vos voitures comptent.",
+            "de": "Fahre insgesamt 50 Runden. Alle deine Autos zählen.",
+            "pt-BR": "Dê 50 voltas no total. Todos os seus carros contam."
+          },
+          "objective": "laps",
+          "count": 50,
+          "reward": {
+            "cash_tanks_ppm": 100000,
+            "xp_tanks_ppm": 50000
+          }
+        },
+        {
+          "key": "driver-laps-250",
+          "title": {
+            "en": "Warming up",
+            "pl": "Rozgrzewka",
+            "fr": "Mise en route",
+            "de": "Warmfahren",
+            "pt-BR": "Aquecimento"
+          },
+          "text": {
+            "en": "Drive 250 laps in all. The car is only warming up.",
+            "pl": "Przejedź razem 250 okrążeń. Auto dopiero się rozgrzewa.",
+            "fr": "Bouclez 250 tours en tout. La voiture ne fait que chauffer.",
+            "de": "Fahre insgesamt 250 Runden. Das Auto wird gerade erst warm.",
+            "pt-BR": "Dê 250 voltas no total. O carro está só esquentando."
+          },
+          "objective": "laps",
+          "count": 250,
+          "reward": {
+            "cash_tanks_ppm": 150000,
+            "xp_tanks_ppm": 80000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "slot"
+              }
+            ]
+          }
+        },
+        {
+          "key": "driver-level-10",
+          "title": {
+            "en": "Level ten",
+            "pl": "Dziesiąty poziom",
+            "fr": "Niveau dix",
+            "de": "Stufe zehn",
+            "pt-BR": "Nível dez"
+          },
+          "text": {
+            "en": "Reach driver level 10. Levels open new tracks and parts.",
+            "pl": "Dobij do 10. poziomu kierowcy. Poziomy otwierają nowe tory i części.",
+            "fr": "Atteignez le niveau 10 de pilote. Les niveaux ouvrent de nouvelles pistes et pièces.",
+            "de": "Erreiche Fahrerstufe 10. Stufen öffnen neue Strecken und Teile.",
+            "pt-BR": "Chegue ao nível 10 de piloto. Os níveis abrem novas pistas e peças."
+          },
+          "objective": "player_level",
+          "count": 10,
+          "reward": {
+            "cash_tanks_ppm": 200000,
+            "xp_tanks_ppm": 100000
+          }
+        },
+        {
+          "key": "driver-cash-5k",
+          "title": {
+            "en": "The first $5,000",
+            "pl": "Pierwsze 5 000 $",
+            "fr": "Les premiers 5 000 $",
+            "de": "Die ersten 5.000 $",
+            "pt-BR": "Os primeiros $ 5.000"
+          },
+          "text": {
+            "en": "Earn $5,000 on the track in all. Only the money of the laps counts.",
+            "pl": "Zarób na torze łącznie 5 000 $. Liczą się tylko pieniądze z okrążeń.",
+            "fr": "Gagnez 5 000 $ en piste au total. Seul l’argent des tours compte.",
+            "de": "Verdiene insgesamt 5.000 $ auf der Strecke. Nur das Geld der Runden zählt.",
+            "pt-BR": "Ganhe $ 5.000 na pista no total. Só o dinheiro das voltas conta."
+          },
+          "objective": "cash_earned",
+          "count": 500000,
+          "reward": {
+            "cash_tanks_ppm": 200000,
+            "xp_tanks_ppm": 100000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "slot"
+              }
+            ]
+          }
+        },
+        {
+          "key": "driver-laps-1000",
+          "title": {
+            "en": "A thousand laps",
+            "pl": "Tysiąc okrążeń",
+            "fr": "Mille tours",
+            "de": "Tausend Runden",
+            "pt-BR": "Mil voltas"
+          },
+          "text": {
+            "en": "Drive 1,000 laps in all.",
+            "pl": "Przejedź razem 1000 okrążeń.",
+            "fr": "Bouclez 1 000 tours en tout.",
+            "de": "Fahre insgesamt 1.000 Runden.",
+            "pt-BR": "Dê 1.000 voltas no total."
+          },
+          "objective": "laps",
+          "count": 1000,
+          "reward": {
+            "cash_tanks_ppm": 300000,
+            "xp_tanks_ppm": 150000,
+            "car_xp_laps": 50
+          }
+        },
+        {
+          "key": "driver-level-15",
+          "title": {
+            "en": "Level fifteen",
+            "pl": "Piętnasty poziom",
+            "fr": "Niveau quinze",
+            "de": "Stufe fünfzehn",
+            "pt-BR": "Nível quinze"
+          },
+          "text": {
+            "en": "Reach driver level 15.",
+            "pl": "Dobij do 15. poziomu kierowcy.",
+            "fr": "Atteignez le niveau 15 de pilote.",
+            "de": "Erreiche Fahrerstufe 15.",
+            "pt-BR": "Chegue ao nível 15 de piloto."
+          },
+          "objective": "player_level",
+          "count": 15,
+          "reward": {
+            "cash_tanks_ppm": 400000,
+            "xp_tanks_ppm": 150000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "mixed"
+              }
+            ]
+          }
+        },
+        {
+          "key": "driver-cash-100k",
+          "title": {
+            "en": "A hundred thousand",
+            "pl": "Sto tysięcy",
+            "fr": "Cent mille",
+            "de": "Hunderttausend",
+            "pt-BR": "Cem mil"
+          },
+          "text": {
+            "en": "Earn $100,000 on the track in all.",
+            "pl": "Zarób na torze łącznie 100 000 $.",
+            "fr": "Gagnez 100 000 $ en piste au total.",
+            "de": "Verdiene insgesamt 100.000 $ auf der Strecke.",
+            "pt-BR": "Ganhe $ 100.000 na pista no total."
+          },
+          "objective": "cash_earned",
+          "count": 10000000,
+          "reward": {
+            "cash_tanks_ppm": 500000,
+            "xp_tanks_ppm": 200000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "mixed"
+              }
+            ]
+          }
+        },
+        {
+          "key": "driver-laps-5000",
+          "title": {
+            "en": "Five thousand laps",
+            "pl": "Pięć tysięcy okrążeń",
+            "fr": "Cinq mille tours",
+            "de": "Fünftausend Runden",
+            "pt-BR": "Cinco mil voltas"
+          },
+          "text": {
+            "en": "Drive 5,000 laps in all. A real driver does not count them, but the game does.",
+            "pl": "Przejedź razem 5000 okrążeń. Prawdziwy kierowca nie liczy, ale gra liczy.",
+            "fr": "Bouclez 5 000 tours en tout. Un vrai pilote ne compte pas, mais le jeu, si.",
+            "de": "Fahre insgesamt 5.000 Runden. Ein echter Fahrer zählt nicht, aber das Spiel schon.",
+            "pt-BR": "Dê 5.000 voltas no total. Um piloto de verdade não conta, mas o jogo conta."
+          },
+          "objective": "laps",
+          "count": 5000,
+          "reward": {
+            "cash_tanks_ppm": 600000,
+            "xp_tanks_ppm": 250000,
+            "car_xp_laps": 200,
+            "items": [
+              {
+                "type": "part",
+                "rarity": "epic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "mechanic",
+      "title": {
+        "en": "Mechanic",
+        "pl": "Mechanik",
+        "fr": "Mécanicien",
+        "de": "Mechaniker",
+        "pt-BR": "Mecânico"
+      },
+      "missions": [
+        {
+          "key": "mechanic-mount-5",
+          "title": {
+            "en": "The first five",
+            "pl": "Pierwsza piątka",
+            "fr": "Les cinq premières",
+            "de": "Die ersten fünf",
+            "pt-BR": "As primeiras cinco"
+          },
+          "text": {
+            "en": "Mount 5 parts on your cars in all.",
+            "pl": "Zamontuj razem 5 części na swoich autach.",
+            "fr": "Montez 5 pièces sur vos voitures au total.",
+            "de": "Baue insgesamt 5 Teile an deine Autos.",
+            "pt-BR": "Monte 5 peças nos seus carros no total."
+          },
+          "objective": "mount",
+          "count": 5,
+          "reward": {
+            "cash_tanks_ppm": 100000,
+            "xp_tanks_ppm": 50000
+          }
+        },
+        {
+          "key": "mechanic-upgrade-3",
+          "title": {
+            "en": "Upgrader",
+            "pl": "Ulepszacz",
+            "fr": "Améliorateur",
+            "de": "Tuner",
+            "pt-BR": "Aprimorador"
+          },
+          "text": {
+            "en": "Upgrade parts three times. Every upgrade the workshop finishes counts.",
+            "pl": "Ulepsz części trzy razy. Liczy się każde ulepszenie, które warsztat skończy.",
+            "fr": "Améliorez des pièces trois fois. Chaque amélioration terminée à l’atelier compte.",
+            "de": "Verbessere Teile dreimal. Jede Verbesserung, die die Werkstatt fertigstellt, zählt.",
+            "pt-BR": "Aprimore peças três vezes. Cada aprimoramento concluído na oficina conta."
+          },
+          "objective": "upgrade",
+          "count": 3,
+          "reward": {
+            "cash_tanks_ppm": 150000,
+            "xp_tanks_ppm": 80000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "slot"
+              }
+            ]
+          }
+        },
+        {
+          "key": "mechanic-rain-tires",
+          "title": {
+            "en": "For the rain",
+            "pl": "Na deszcz",
+            "fr": "Pour la pluie",
+            "de": "Für den Regen",
+            "pt-BR": "Para a chuva"
+          },
+          "text": {
+            "en": "Put rain tires on the car you play.",
+            "pl": "Załóż na auto, którym grasz, opony deszczowe.",
+            "fr": "Montez des pneus pluie sur la voiture que vous jouez.",
+            "de": "Montiere Regenreifen an das Auto, das du fährst.",
+            "pt-BR": "Coloque pneus de chuva no carro que você joga."
+          },
+          "objective": "tires_mounted",
+          "count": 1,
+          "param": "rain",
+          "reward": {
+            "cash_tanks_ppm": 150000,
+            "xp_tanks_ppm": 80000
+          }
+        },
+        {
+          "key": "mechanic-service-5",
+          "title": {
+            "en": "Regular service",
+            "pl": "Regularny serwis",
+            "fr": "Entretien régulier",
+            "de": "Regelmäßige Wartung",
+            "pt-BR": "Revisão em dia"
+          },
+          "text": {
+            "en": "Have the car serviced five times. A serviced car breaks down less.",
+            "pl": "Zrób pięć serwisów. Serwisowane auto psuje się rzadziej.",
+            "fr": "Faites réviser la voiture cinq fois. Une voiture entretenue tombe moins en panne.",
+            "de": "Lass das Auto fünfmal warten. Ein gewartetes Auto fällt seltener aus.",
+            "pt-BR": "Faça cinco revisões. Um carro revisado quebra menos."
+          },
+          "objective": "service",
+          "count": 5,
+          "reward": {
+            "cash_tanks_ppm": 200000,
+            "xp_tanks_ppm": 100000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "slot"
+              }
+            ]
+          }
+        },
+        {
+          "key": "mechanic-merge-3",
+          "title": {
+            "en": "Merger",
+            "pl": "Złota rączka",
+            "fr": "Fusionneur",
+            "de": "Verschmelzer",
+            "pt-BR": "Fusão"
+          },
+          "text": {
+            "en": "Merge parts successfully three times: several weaker ones make one rarer part.",
+            "pl": "Połącz części udanie trzy razy: z kilku słabszych powstaje jedna rzadsza.",
+            "fr": "Fusionnez des pièces avec succès trois fois : plusieurs pièces plus faibles en font une plus rare.",
+            "de": "Verschmelze Teile dreimal erfolgreich: Mehrere schwächere ergeben ein selteneres.",
+            "pt-BR": "Funda peças com sucesso três vezes: várias mais fracas viram uma mais rara."
+          },
+          "objective": "merge",
+          "count": 3,
+          "reward": {
+            "cash_tanks_ppm": 250000,
+            "xp_tanks_ppm": 120000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "mixed"
+              }
+            ]
+          }
+        },
+        {
+          "key": "mechanic-rare-3",
+          "title": {
+            "en": "Rare finds",
+            "pl": "Rzadkie znaleziska",
+            "fr": "Trouvailles rares",
+            "de": "Seltene Funde",
+            "pt-BR": "Achados raros"
+          },
+          "text": {
+            "en": "Own three parts of Rare quality or better, in the inventory or on a car.",
+            "pl": "Miej trzy części rzadkie albo lepsze, w skrzyni lub na aucie.",
+            "fr": "Possédez trois pièces rares ou mieux, en stock ou sur une voiture.",
+            "de": "Besitze drei Teile mit Seltenheit Selten oder besser, im Lager oder am Auto.",
+            "pt-BR": "Tenha três peças raras ou melhores, no estoque ou em um carro."
+          },
+          "objective": "rarity_owned",
+          "count": 3,
+          "param": "rare",
+          "reward": {
+            "cash_tanks_ppm": 300000,
+            "xp_tanks_ppm": 150000
+          }
+        },
+        {
+          "key": "mechanic-upgrade-20",
+          "title": {
+            "en": "Twenty upgrades",
+            "pl": "Dwadzieścia ulepszeń",
+            "fr": "Vingt améliorations",
+            "de": "Zwanzig Verbesserungen",
+            "pt-BR": "Vinte aprimoramentos"
+          },
+          "text": {
+            "en": "Do twenty upgrades of parts.",
+            "pl": "Zrób dwadzieścia ulepszeń części.",
+            "fr": "Faites vingt améliorations de pièces.",
+            "de": "Führe zwanzig Verbesserungen an Teilen durch.",
+            "pt-BR": "Faça vinte aprimoramentos de peças."
+          },
+          "objective": "upgrade",
+          "count": 20,
+          "reward": {
+            "cash_tanks_ppm": 400000,
+            "xp_tanks_ppm": 200000,
+            "car_xp_laps": 100,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "mixed"
+              }
+            ]
+          }
+        },
+        {
+          "key": "mechanic-epic-1",
+          "title": {
+            "en": "An Epic part",
+            "pl": "Epicka część",
+            "fr": "Une pièce épique",
+            "de": "Ein episches Teil",
+            "pt-BR": "Uma peça épica"
+          },
+          "text": {
+            "en": "Get a part of Epic quality or better.",
+            "pl": "Zdobądź część epicką albo lepszą.",
+            "fr": "Obtenez une pièce épique ou mieux.",
+            "de": "Besorge ein Teil mit Seltenheit Episch oder besser.",
+            "pt-BR": "Consiga uma peça épica ou melhor."
+          },
+          "objective": "rarity_owned",
+          "count": 1,
+          "param": "epic",
+          "reward": {
+            "cash_tanks_ppm": 500000,
+            "xp_tanks_ppm": 250000,
+            "items": [
+              {
+                "type": "part",
+                "rarity": "epic"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "collector",
+      "title": {
+        "en": "Collector",
+        "pl": "Kolekcjoner",
+        "fr": "Collectionneur",
+        "de": "Sammler",
+        "pt-BR": "Colecionador"
+      },
+      "missions": [
+        {
+          "key": "collector-crates-5",
+          "title": {
+            "en": "First crates",
+            "pl": "Pierwsze skrzynki",
+            "fr": "Premières caisses",
+            "de": "Erste Kisten",
+            "pt-BR": "Primeiras caixas"
+          },
+          "text": {
+            "en": "Open five crates in the shop.",
+            "pl": "Otwórz pięć skrzynek w sklepie.",
+            "fr": "Ouvrez cinq caisses à la boutique.",
+            "de": "Öffne fünf Kisten im Shop.",
+            "pt-BR": "Abra cinco caixas na loja."
+          },
+          "objective": "crate",
+          "count": 5,
+          "reward": {
+            "cash_tanks_ppm": 100000,
+            "xp_tanks_ppm": 50000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "slot"
+              }
+            ]
+          }
+        },
+        {
+          "key": "collector-journeys-3",
+          "title": {
+            "en": "On the road",
+            "pl": "W drodze",
+            "fr": "En route",
+            "de": "Unterwegs",
+            "pt-BR": "Na estrada"
+          },
+          "text": {
+            "en": "Finish three journeys to other cities.",
+            "pl": "Zakończ trzy podróże do innych miast.",
+            "fr": "Terminez trois voyages vers d’autres villes.",
+            "de": "Beende drei Reisen in andere Städte.",
+            "pt-BR": "Conclua três viagens para outras cidades."
+          },
+          "objective": "journey",
+          "count": 3,
+          "reward": {
+            "cash_tanks_ppm": 150000,
+            "xp_tanks_ppm": 80000
+          }
+        },
+        {
+          "key": "collector-cars-2",
+          "title": {
+            "en": "A second car",
+            "pl": "Drugie auto",
+            "fr": "Une deuxième voiture",
+            "de": "Ein zweites Auto",
+            "pt-BR": "Um segundo carro"
+          },
+          "text": {
+            "en": "Have two cars in your garage.",
+            "pl": "Miej w garażu dwa auta.",
+            "fr": "Ayez deux voitures dans votre garage.",
+            "de": "Habe zwei Autos in deiner Garage.",
+            "pt-BR": "Tenha dois carros na sua garagem."
+          },
+          "objective": "cars_owned",
+          "count": 2,
+          "reward": {
+            "cash_tanks_ppm": 200000,
+            "xp_tanks_ppm": 100000
+          }
+        },
+        {
+          "key": "collector-crates-25",
+          "title": {
+            "en": "Twenty-five crates",
+            "pl": "Dwadzieścia pięć skrzynek",
+            "fr": "Vingt-cinq caisses",
+            "de": "Fünfundzwanzig Kisten",
+            "pt-BR": "Vinte e cinco caixas"
+          },
+          "text": {
+            "en": "Open 25 crates in the shop in all.",
+            "pl": "Otwórz razem 25 skrzynek w sklepie.",
+            "fr": "Ouvrez 25 caisses à la boutique au total.",
+            "de": "Öffne insgesamt 25 Kisten im Shop.",
+            "pt-BR": "Abra 25 caixas na loja no total."
+          },
+          "objective": "crate",
+          "count": 25,
+          "reward": {
+            "cash_tanks_ppm": 250000,
+            "xp_tanks_ppm": 120000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "mixed"
+              }
+            ]
+          }
+        },
+        {
+          "key": "collector-garages-3",
+          "title": {
+            "en": "Garages in cities",
+            "pl": "Garaże w miastach",
+            "fr": "Garages en ville",
+            "de": "Garagen in Städten",
+            "pt-BR": "Garagens nas cidades"
+          },
+          "text": {
+            "en": "Have garages in three cities.",
+            "pl": "Miej garaże w trzech miastach.",
+            "fr": "Ayez des garages dans trois villes.",
+            "de": "Habe Garagen in drei Städten.",
+            "pt-BR": "Tenha garagens em três cidades."
+          },
+          "objective": "garages_owned",
+          "count": 3,
+          "reward": {
+            "cash_tanks_ppm": 300000,
+            "xp_tanks_ppm": 150000
+          }
+        },
+        {
+          "key": "collector-cars-4",
+          "title": {
+            "en": "Four cars",
+            "pl": "Cztery auta",
+            "fr": "Quatre voitures",
+            "de": "Vier Autos",
+            "pt-BR": "Quatro carros"
+          },
+          "text": {
+            "en": "Own four cars.",
+            "pl": "Miej cztery auta.",
+            "fr": "Possédez quatre voitures.",
+            "de": "Besitze vier Autos.",
+            "pt-BR": "Tenha quatro carros."
+          },
+          "objective": "cars_owned",
+          "count": 4,
+          "reward": {
+            "cash_tanks_ppm": 400000,
+            "xp_tanks_ppm": 200000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "mixed"
+              }
+            ]
+          }
+        },
+        {
+          "key": "collector-journeys-25",
+          "title": {
+            "en": "Traveller",
+            "pl": "Podróżnik",
+            "fr": "Voyageur",
+            "de": "Reisender",
+            "pt-BR": "Viajante"
+          },
+          "text": {
+            "en": "Finish 25 journeys in all.",
+            "pl": "Zakończ razem 25 podróży.",
+            "fr": "Terminez 25 voyages au total.",
+            "de": "Beende insgesamt 25 Reisen.",
+            "pt-BR": "Conclua 25 viagens no total."
+          },
+          "objective": "journey",
+          "count": 25,
+          "reward": {
+            "cash_tanks_ppm": 400000,
+            "xp_tanks_ppm": 200000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "premium"
+              }
+            ]
+          }
+        },
+        {
+          "key": "collector-crates-100",
+          "title": {
+            "en": "The hundredth crate",
+            "pl": "Setna skrzynka",
+            "fr": "La centième caisse",
+            "de": "Die hundertste Kiste",
+            "pt-BR": "A centésima caixa"
+          },
+          "text": {
+            "en": "Open 100 crates in the shop in all.",
+            "pl": "Otwórz razem 100 skrzynek w sklepie.",
+            "fr": "Ouvrez 100 caisses à la boutique au total.",
+            "de": "Öffne insgesamt 100 Kisten im Shop.",
+            "pt-BR": "Abra 100 caixas na loja no total."
+          },
+          "objective": "crate",
+          "count": 100,
+          "reward": {
+            "cash_tanks_ppm": 600000,
+            "xp_tanks_ppm": 300000,
+            "items": [
+              {
+                "type": "part",
+                "rarity": "epic"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
 }

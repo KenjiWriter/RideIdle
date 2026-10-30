@@ -62,6 +62,10 @@ final class MetricsReport extends Command
         $this->line('Who came on each of the last fourteen days (all accounts)');
         $this->table(['day', 'active', 'new', 'returning'], $report['activity']);
 
+        $this->newLine();
+        $this->line("The missions of the day (all accounts); the bonuses gave {$report['missions']['coins_30_days']} premium coins in thirty days");
+        $this->table(['day', 'sets drawn', 'done whole', 'bonus taken'], $report['missions']['days']);
+
         return self::SUCCESS;
     }
 
