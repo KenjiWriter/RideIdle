@@ -649,7 +649,9 @@
     "coins": "RideCoin: {count}",
     "settings": "Konto i ustawienia",
     "refuel": "Zatankuj",
-    "fuel": "Paliwo: {percent}%"
+    "fuel": "Paliwo: {percent}%",
+    "missions": "Misje",
+    "missionsCount": "Misje: {count} do odebrania | Misje: {count} do odebrania | Misje: {count} do odebrania"
   },
   "onboarding": {
     "step": "Krok {step} z {total}"
@@ -784,6 +786,85 @@
     "lawyered": "Prawnik załatwił sprawę: bez mandatu.",
     "defaulted": "Nie wybrano na czas: mandat {amount} został zapłacony."
   },
+  "missions": {
+    "title": "Misje",
+    "intro": "Zadania na dziś, tydzień i miesiąc oraz cele główne. Postęp liczy się sam, także gdy Cię nie ma.",
+    "tabs": "Rodzaje misji",
+    "tab": {
+      "main": "Główne",
+      "daily": "Dzienne",
+      "weekly": "Tygodniowe",
+      "monthly": "Miesięczne"
+    },
+    "loadError": "Nie udało się wczytać misji.",
+    "error": "Nie udało się odebrać nagrody. Spróbuj jeszcze raz.",
+    "none": "W tej grze nie ma misji.",
+    "locked": {
+      "sets": "Misje dnia, tygodnia i miesiąca pojawią się po pierwszych krokach samouczka.",
+      "main": "Misje główne zaczną się, gdy skończysz samouczek."
+    },
+    "notDrawn": "Zestaw pojawi się, gdy będziesz mieć auto, które może jechać.",
+    "setCount": "Wykonane: {done} z {total}",
+    "resets": "Reset za {time}",
+    "claim": "Odbierz",
+    "claimAll": "Odbierz wszystko ({count})",
+    "claimed": "Odebrane",
+    "done": "Wykonane",
+    "gave": "Odebrano",
+    "gotIt": "Rozumiem",
+    "collected": "Po zakończeniu okresu odebrano za Ciebie: {cash} i {coins} RideCoin.",
+    "bonusTitle": "Premia za komplet",
+    "bonusText": {
+      "daily": "Wykonaj wszystkie misje dnia.",
+      "weekly": "Wykonaj wszystkie misje tygodnia.",
+      "monthly": "Wykonaj wszystkie misje miesiąca."
+    },
+    "bonusClaim": "Odbierz {coins} RideCoin",
+    "bonusTaken": "Odebrano {coins} RideCoin.",
+    "chainCount": "{done} z {total}",
+    "waiting": "Następna misja otwiera się od poziomu {level}.",
+    "chainFinished": "Ten łańcuch jest ukończony.",
+    "noChains": "Nie ma jeszcze misji głównych.",
+    "reward": {
+      "label": "Nagroda",
+      "xp": "{xp} XP",
+      "carXp": "{xp} XP auta"
+    },
+    "item": {
+      "crate": {
+        "slot": "Skrzynka slotowa",
+        "mixed": "Skrzynka mieszana",
+        "premium": "Skrzynka premium"
+      },
+      "part": "Część: {rarity}"
+    },
+    "glance": {"title": "Misje dnia", "take": "Do odebrania: {count}"},
+    "toast": {
+      "one": "Misja wykonana: {title}",
+      "many": "Wykonane misje: {count}"
+    },
+    "goal": {
+      "aria": "Cel: misja główna",
+      "label": "Misja główna",
+      "next": "Następny cel",
+      "ready": "Gotowe do odebrania",
+      "show": "Pokaż",
+      "take": "Odbierz"
+    },
+    "objective": {
+      "laps": "Przejedź {n} okrążenie | Przejedź {n} okrążenia | Przejedź {n} okrążeń",
+      "cash_earned": "Zarób na torze {amount}",
+      "wet_laps": "Przejedź {n} okrążenie na mokrym | Przejedź {n} okrążenia na mokrym | Przejedź {n} okrążeń na mokrym",
+      "fuel_spent": "Wydaj {amount} na paliwo",
+      "upgrade": "Zrób {n} ulepszenie części | Zrób {n} ulepszenia części | Zrób {n} ulepszeń części",
+      "mount": "Zamontuj {n} część | Zamontuj {n} części | Zamontuj {n} części",
+      "service": "Zrób {n} serwis | Zrób {n} serwisy | Zrób {n} serwisów",
+      "crate": "Otwórz {n} skrzynkę | Otwórz {n} skrzynki | Otwórz {n} skrzynek",
+      "parts_bought": "Kup {n} część w sklepie | Kup {n} części w sklepie | Kup {n} części w sklepie",
+      "journey": "Zakończ {n} podróż | Zakończ {n} podróże | Zakończ {n} podróży",
+      "car_bought": "Kup {n} auto | Kup {n} auta | Kup {n} aut"
+    }
+  },
   "awayAccount": {
     "title": "Reszta konta",
     "cars": "Pozostałe auta: +{earned}",
@@ -807,7 +888,11 @@
     "policePaid": "Zatrzymała cię policja: mandat zapłacony, {amount}.",
     "policeBribed": "Zatrzymała cię policja: łapówka przeszła, {amount}.",
     "policeBribeFailed": "Zatrzymała cię policja: łapówka nie pomogła, {amount}.",
-    "policeLawyered": "Zatrzymała cię policja: prawnik załatwił sprawę."
+    "policeLawyered": "Zatrzymała cię policja: prawnik załatwił sprawę.",
+    "missionsTitle": "Misje",
+    "missionsDone": "Wykonane misje: {count}",
+    "missionsTaken": "Odebrane za Ciebie po zakończeniu okresu: {count} ({cash}, {xp} XP)",
+    "missionsCoins": "Premia za komplet: +{coins} RideCoin"
   },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standardowy", "endurance": "Dystans" },

@@ -649,7 +649,9 @@
     "coins": "RideCoin: {count}",
     "settings": "Konto und Einstellungen",
     "refuel": "Tanken",
-    "fuel": "Kraftstoff: {percent} %"
+    "fuel": "Kraftstoff: {percent} %",
+    "missions": "Missionen",
+    "missionsCount": "Missionen: {count} zum Abholen | Missionen: {count} zum Abholen"
   },
   "onboarding": {
     "step": "Schritt {step} von {total}"
@@ -784,6 +786,85 @@
     "lawyered": "Der Anwalt hat es geregelt: keine Strafe.",
     "defaulted": "Du hast nicht rechtzeitig gewählt: die Strafe von {amount} wurde bezahlt."
   },
+  "missions": {
+    "title": "Missionen",
+    "intro": "Aufgaben für den Tag, die Woche und den Monat sowie die Hauptziele. Der Fortschritt zählt von allein, auch wenn du nicht da bist.",
+    "tabs": "Arten von Missionen",
+    "tab": {
+      "main": "Haupt",
+      "daily": "Täglich",
+      "weekly": "Wöchentlich",
+      "monthly": "Monatlich"
+    },
+    "loadError": "Die Missionen konnten nicht geladen werden.",
+    "error": "Die Belohnung konnte nicht abgeholt werden. Versuche es noch einmal.",
+    "none": "Dieses Spiel hat keine Missionen.",
+    "locked": {
+      "sets": "Die Missionen für Tag, Woche und Monat kommen nach den ersten Schritten des Tutorials.",
+      "main": "Die Hauptmissionen beginnen, wenn du das Tutorial beendet hast."
+    },
+    "notDrawn": "Das Set kommt, sobald du ein Auto hast, das fahren kann.",
+    "setCount": "Geschafft: {done} von {total}",
+    "resets": "Neustart in {time}",
+    "claim": "Abholen",
+    "claimAll": "Alle abholen ({count})",
+    "claimed": "Abgeholt",
+    "done": "Geschafft",
+    "gave": "Du hast bekommen",
+    "gotIt": "Verstanden",
+    "collected": "Als der Zeitraum endete, hat der Server für dich abgeholt: {cash} und {coins} RideCoin.",
+    "bonusTitle": "Bonus für das ganze Set",
+    "bonusText": {
+      "daily": "Schaffe alle Missionen des Tages.",
+      "weekly": "Schaffe alle Missionen der Woche.",
+      "monthly": "Schaffe alle Missionen des Monats."
+    },
+    "bonusClaim": "{coins} RideCoin abholen",
+    "bonusTaken": "Du hast {coins} RideCoin abgeholt.",
+    "chainCount": "{done} von {total}",
+    "waiting": "Die nächste Mission öffnet sich ab Stufe {level}.",
+    "chainFinished": "Diese Kette ist geschafft.",
+    "noChains": "Es gibt noch keine Hauptmissionen.",
+    "reward": {
+      "label": "Belohnung",
+      "xp": "{xp} XP",
+      "carXp": "{xp} Auto-XP"
+    },
+    "item": {
+      "crate": {
+        "slot": "Slot-Kiste",
+        "mixed": "Gemischte Kiste",
+        "premium": "Premium-Kiste"
+      },
+      "part": "Teil: {rarity}"
+    },
+    "glance": {"title": "Missionen des Tages", "take": "{count} zum Abholen | {count} zum Abholen"},
+    "toast": {
+      "one": "Mission geschafft: {title}",
+      "many": "Missionen geschafft: {count}"
+    },
+    "goal": {
+      "aria": "Ziel: eine Hauptmission",
+      "label": "Hauptmission",
+      "next": "Nächstes Ziel",
+      "ready": "Bereit zum Abholen",
+      "show": "Zeigen",
+      "take": "Abholen"
+    },
+    "objective": {
+      "laps": "Fahre {n} Runde | Fahre {n} Runden",
+      "cash_earned": "Verdiene {amount} auf der Strecke",
+      "wet_laps": "Fahre {n} Runde auf nasser Strecke | Fahre {n} Runden auf nasser Strecke",
+      "fuel_spent": "Gib {amount} für Kraftstoff aus",
+      "upgrade": "Führe {n} Verbesserung an Teilen durch | Führe {n} Verbesserungen an Teilen durch",
+      "mount": "Baue {n} Teil an | Baue {n} Teile an",
+      "service": "Lass das Auto {n} Mal warten | Lass das Auto {n} Mal warten",
+      "crate": "Öffne {n} Kiste | Öffne {n} Kisten",
+      "parts_bought": "Kaufe {n} Teil im Shop | Kaufe {n} Teile im Shop",
+      "journey": "Beende {n} Reise | Beende {n} Reisen",
+      "car_bought": "Kaufe {n} Auto | Kaufe {n} Autos"
+    }
+  },
   "awayAccount": {
     "title": "Der Rest des Kontos",
     "cars": "Andere Autos: +{earned}",
@@ -807,7 +888,11 @@
     "policePaid": "Die Polizei hat dich angehalten: Strafe bezahlt, {amount}.",
     "policeBribed": "Die Polizei hat dich angehalten: die Bestechung hat geklappt, {amount}.",
     "policeBribeFailed": "Die Polizei hat dich angehalten: die Bestechung hat nicht geklappt, {amount}.",
-    "policeLawyered": "Die Polizei hat dich angehalten: der Anwalt hat es geregelt."
+    "policeLawyered": "Die Polizei hat dich angehalten: der Anwalt hat es geregelt.",
+    "missionsTitle": "Missionen",
+    "missionsDone": "Geschaffte Missionen: {count}",
+    "missionsTaken": "Für dich abgeholt, als der Zeitraum endete: {count} ({cash}, {xp} XP)",
+    "missionsCoins": "Bonus für das ganze Set: +{coins} RideCoin"
   },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Langstrecke" },

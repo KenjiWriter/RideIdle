@@ -633,6 +633,7 @@ export interface AwayAccount {
   cars?: AwayCar[]
   jobs?: AwayJob[]
   journeys?: AwayJourney[]
+  missions?: AwayMissions | null
 }
 
 /** GET /api/v1/away and POST /api/v1/away/seen. */
@@ -1109,4 +1110,109 @@ export interface MarketResponse {
   bought?: number | null
   /** The car found in a storage unit that was just opened, null when the request came a second time. */
   opened?: StorageFind | null
+}
+
+/** The kinds of sets of missions that come back, and the main missions. */
+export type MissionPeriodKind = 'daily' | 'weekly' | 'monthly'
+export type MissionKind = MissionPeriodKind | 'main'
+
+/** What a mission gives besides cash and XP: a crate of a kind, opened when the reward is taken, or a part of a rarity. */
+export type MissionItem = { type: 'crate'; kind: 'slot' | 'mixed' | 'premium' } | { type: 'part'; rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' }
+
+export interface MissionReward {
+  cash_cents: number
+  xp: number
+  car_xp: number
+  items: MissionItem[]
+}
+
+/** A mission of a set, or a main mission. `progress` never goes over `target`; the cents of `cash_earned` and `fuel_spent` are the goal in cents. */
+export interface Mission {
+  id: number
+  kind: MissionKind
+  slot: number
+  key: string
+  objective: string
+  target: number
+  progress: number
+  status: 'open' | 'completed' | 'claimed'
+  reward: MissionReward
+  auto_claimed: boolean
+  claimed_at_ms: number | null
+  /** Main missions only: the chain, their own title and sentence in the language of the driver, and what they are about (a rarity, a kind of tires). */
+  chain?: string
+  title?: string
+  text?: string
+  param?: string | null
+}
+
+/** The bonus in premium coins for having done every mission of a set: locked, ready to take, or taken. Null when the set pays none. */
+export interface MissionBonus {
+  coins: number
+  state: 'locked' | 'ready' | 'claimed'
+}
+
+export interface MissionSet {
+  key: string
+  from_ms: number
+  to_ms: number
+  resets_in_ms: number
+  drawn: boolean
+  missions: Mission[]
+  done: number
+  total: number
+  bonus: MissionBonus | null
+}
+
+/** A chain of main missions: the ones that are open or done and not taken, how many are done and taken, and the level the next one waits for. */
+export interface MissionChain {
+  key: string
+  title: string
+  total: number
+  done: number
+  taken: number
+  missions: Mission[]
+  waiting: { min_player_level: number } | null
+}
+
+/** What the server took for the driver when a period had ended: a mission, or the bonus of a set. */
+export type MissionCollected = { type: 'mission'; kind: MissionPeriodKind; period_key: string; mission: Mission } | { type: 'bonus'; kind: MissionPeriodKind; period_key: string; coins: number }
+
+/** GET /api/v1/missions (`available: false` when the game has no missions). */
+export interface MissionsView {
+  available: boolean
+  now_ms: number
+  locked?: string | null
+  main_locked?: string | null
+  claimable?: number
+  periods?: Record<MissionPeriodKind, MissionSet>
+  main?: MissionChain[]
+  auto_collected?: MissionCollected[]
+}
+
+/** What taking missions gave. */
+export interface MissionsClaimed {
+  missions: Mission[]
+  cash_cents: number
+  xp: number
+  car_xp: number
+  crates: string[]
+  parts: OwnedPart[]
+}
+
+/** The answer of the calls that take missions. */
+export interface MissionsResponse {
+  data: MissionsView
+  repeated?: boolean
+  claimed?: MissionsClaimed
+  bonus_coins?: number
+}
+
+/** What the missions did while the driver was away (in the summary of the break). */
+export interface AwayMissions {
+  done: number
+  collected: number
+  cash_cents: number
+  xp: number
+  coins: number
 }

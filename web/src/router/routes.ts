@@ -45,5 +45,7 @@ export const routes: RouteRecordRaw[] = [
   { path: '/dealer', name: 'dealer', component: () => import('@/views/DealerView.vue'), meta: { requiresAuth: true, game: true } },
   // The premium shop is reached from the coins in the bar at the top and from the card of the fuel: the navigation has no place of its own for it.
   { path: '/premium', name: 'premium', component: () => import('@/views/PremiumView.vue'), meta: { requiresAuth: true, game: true } },
+  // The missions are reached from the plate in the bar at the top: the navigation has no place of its own for them.
+  { path: '/missions', name: 'missions', component: () => import('@/views/MissionsView.vue'), meta: { requiresAuth: true, game: true } },
   { path: '/storage', name: 'storage', component: () => import('@/views/StorageView.vue'), meta: { requiresAuth: true, game: true } },
 ]

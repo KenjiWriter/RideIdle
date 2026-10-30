@@ -649,7 +649,9 @@
     "coins": "RideCoin: {count}",
     "settings": "Compte et réglages",
     "refuel": "Faire le plein",
-    "fuel": "Carburant : {percent} %"
+    "fuel": "Carburant : {percent} %",
+    "missions": "Missions",
+    "missionsCount": "Missions : {count} à récupérer | Missions : {count} à récupérer"
   },
   "onboarding": {
     "step": "Étape {step} sur {total}"
@@ -784,6 +786,85 @@
     "lawyered": "L’avocat a réglé l’affaire : pas d’amende.",
     "defaulted": "Vous n’avez pas choisi à temps : l’amende de {amount} a été payée."
   },
+  "missions": {
+    "title": "Missions",
+    "intro": "Des tâches pour la journée, la semaine et le mois, et les objectifs principaux. La progression se compte toute seule, même quand vous n’êtes pas là.",
+    "tabs": "Types de missions",
+    "tab": {
+      "main": "Principales",
+      "daily": "Du jour",
+      "weekly": "De la semaine",
+      "monthly": "Du mois"
+    },
+    "loadError": "Impossible de charger les missions.",
+    "error": "Impossible de récupérer la récompense. Réessayez.",
+    "none": "Ce jeu n’a pas de missions.",
+    "locked": {
+      "sets": "Les missions du jour, de la semaine et du mois arrivent après les premières étapes du tutoriel.",
+      "main": "Les missions principales commencent quand vous avez fini le tutoriel."
+    },
+    "notDrawn": "La série arrive quand vous avez une voiture qui peut rouler.",
+    "setCount": "Terminées : {done} sur {total}",
+    "resets": "Remise à zéro dans {time}",
+    "claim": "Récupérer",
+    "claimAll": "Tout récupérer ({count})",
+    "claimed": "Récupérée",
+    "done": "Terminée",
+    "gave": "Vous avez reçu",
+    "gotIt": "Compris",
+    "collected": "À la fin de la période, le serveur a récupéré pour vous : {cash} et {coins} RideCoin.",
+    "bonusTitle": "Bonus de la série complète",
+    "bonusText": {
+      "daily": "Terminez toutes les missions du jour.",
+      "weekly": "Terminez toutes les missions de la semaine.",
+      "monthly": "Terminez toutes les missions du mois."
+    },
+    "bonusClaim": "Récupérer {coins} RideCoin",
+    "bonusTaken": "Vous avez récupéré {coins} RideCoin.",
+    "chainCount": "{done} sur {total}",
+    "waiting": "La mission suivante s’ouvre au niveau {level}.",
+    "chainFinished": "Cette chaîne est terminée.",
+    "noChains": "Il n’y a pas encore de missions principales.",
+    "reward": {
+      "label": "Récompense",
+      "xp": "{xp} XP",
+      "carXp": "{xp} XP de la voiture"
+    },
+    "item": {
+      "crate": {
+        "slot": "Caisse de slot",
+        "mixed": "Caisse mixte",
+        "premium": "Caisse premium"
+      },
+      "part": "Pièce : {rarity}"
+    },
+    "glance": {"title": "Missions du jour", "take": "{count} à récupérer | {count} à récupérer"},
+    "toast": {
+      "one": "Mission terminée : {title}",
+      "many": "Missions terminées : {count}"
+    },
+    "goal": {
+      "aria": "Objectif : une mission principale",
+      "label": "Mission principale",
+      "next": "Prochain objectif",
+      "ready": "Prête à récupérer",
+      "show": "Afficher",
+      "take": "Récupérer"
+    },
+    "objective": {
+      "laps": "Bouclez {n} tour | Bouclez {n} tours",
+      "cash_earned": "Gagnez {amount} en piste",
+      "wet_laps": "Bouclez {n} tour sur piste mouillée | Bouclez {n} tours sur piste mouillée",
+      "fuel_spent": "Dépensez {amount} en carburant",
+      "upgrade": "Faites {n} amélioration de pièce | Faites {n} améliorations de pièces",
+      "mount": "Montez {n} pièce | Montez {n} pièces",
+      "service": "Faites réviser la voiture {n} fois | Faites réviser la voiture {n} fois",
+      "crate": "Ouvrez {n} caisse | Ouvrez {n} caisses",
+      "parts_bought": "Achetez {n} pièce à la boutique | Achetez {n} pièces à la boutique",
+      "journey": "Terminez {n} voyage | Terminez {n} voyages",
+      "car_bought": "Achetez {n} voiture | Achetez {n} voitures"
+    }
+  },
   "awayAccount": {
     "title": "Le reste du compte",
     "cars": "Autres voitures : +{earned}",
@@ -807,7 +888,11 @@
     "policePaid": "La police vous a arrêté : amende payée, {amount}.",
     "policeBribed": "La police vous a arrêté : le pot-de-vin a marché, {amount}.",
     "policeBribeFailed": "La police vous a arrêté : le pot-de-vin n’a pas marché, {amount}.",
-    "policeLawyered": "La police vous a arrêté : l’avocat a réglé l’affaire."
+    "policeLawyered": "La police vous a arrêté : l’avocat a réglé l’affaire.",
+    "missionsTitle": "Missions",
+    "missionsDone": "Missions terminées : {count}",
+    "missionsTaken": "Récupérées pour vous à la fin de la période : {count} ({cash}, {xp} XP)",
+    "missionsCoins": "Bonus de la série complète : +{coins} RideCoin"
   },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Endurance" },

@@ -649,7 +649,9 @@
     "coins": "RideCoin: {count}",
     "settings": "Account and settings",
     "refuel": "Refuel",
-    "fuel": "Fuel: {percent}%"
+    "fuel": "Fuel: {percent}%",
+    "missions": "Missions",
+    "missionsCount": "Missions: {count} to take | Missions: {count} to take"
   },
   "onboarding": {
     "step": "Step {step} of {total}"
@@ -784,6 +786,85 @@
     "lawyered": "The lawyer settled it: no fine.",
     "defaulted": "You did not choose in time: the fine of {amount} was paid."
   },
+  "missions": {
+    "title": "Missions",
+    "intro": "Tasks for the day, the week and the month, and the main goals. The progress counts by itself, also while you are away.",
+    "tabs": "Kinds of missions",
+    "tab": {
+      "main": "Main",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "loadError": "The missions could not be loaded.",
+    "error": "The reward could not be taken. Try again.",
+    "none": "This game has no missions.",
+    "locked": {
+      "sets": "The missions of the day, the week and the month come after the first steps of the tutorial.",
+      "main": "The main missions start when you finish the tutorial."
+    },
+    "notDrawn": "The set comes when you have a car that can drive.",
+    "setCount": "Done: {done} of {total}",
+    "resets": "Resets in {time}",
+    "claim": "Take",
+    "claimAll": "Take all ({count})",
+    "claimed": "Taken",
+    "done": "Done",
+    "gave": "You got",
+    "gotIt": "Got it",
+    "collected": "When the period ended, the server took for you: {cash} and {coins} RideCoin.",
+    "bonusTitle": "Bonus for the whole set",
+    "bonusText": {
+      "daily": "Do every mission of the day.",
+      "weekly": "Do every mission of the week.",
+      "monthly": "Do every mission of the month."
+    },
+    "bonusClaim": "Take {coins} RideCoin",
+    "bonusTaken": "You took {coins} RideCoin.",
+    "chainCount": "{done} of {total}",
+    "waiting": "The next mission opens at level {level}.",
+    "chainFinished": "This chain is done.",
+    "noChains": "There are no main missions yet.",
+    "reward": {
+      "label": "Reward",
+      "xp": "{xp} XP",
+      "carXp": "{xp} car XP"
+    },
+    "item": {
+      "crate": {
+        "slot": "Slot crate",
+        "mixed": "Mixed crate",
+        "premium": "Premium crate"
+      },
+      "part": "Part: {rarity}"
+    },
+    "glance": {"title": "Missions of the day", "take": "{count} to take | {count} to take"},
+    "toast": {
+      "one": "Mission done: {title}",
+      "many": "Missions done: {count}"
+    },
+    "goal": {
+      "aria": "Goal: a main mission",
+      "label": "Main mission",
+      "next": "Next goal",
+      "ready": "Ready to take",
+      "show": "Show",
+      "take": "Take"
+    },
+    "objective": {
+      "laps": "Drive {n} lap | Drive {n} laps",
+      "cash_earned": "Earn {amount} on the track",
+      "wet_laps": "Drive {n} lap on a wet track | Drive {n} laps on a wet track",
+      "fuel_spent": "Spend {amount} on fuel",
+      "upgrade": "Upgrade parts {n} time | Upgrade parts {n} times",
+      "mount": "Mount {n} part | Mount {n} parts",
+      "service": "Have the car serviced {n} time | Have the car serviced {n} times",
+      "crate": "Open {n} crate | Open {n} crates",
+      "parts_bought": "Buy {n} part in the shop | Buy {n} parts in the shop",
+      "journey": "Finish {n} journey | Finish {n} journeys",
+      "car_bought": "Buy {n} car | Buy {n} cars"
+    }
+  },
   "awayAccount": {
     "title": "The rest of your account",
     "cars": "Other cars: +{earned}",
@@ -807,7 +888,11 @@
     "policePaid": "The police stopped you: fine paid, {amount}.",
     "policeBribed": "The police stopped you: the bribe worked, {amount}.",
     "policeBribeFailed": "The police stopped you: the bribe did not work, {amount}.",
-    "policeLawyered": "The police stopped you: the lawyer settled it."
+    "policeLawyered": "The police stopped you: the lawyer settled it.",
+    "missionsTitle": "Missions",
+    "missionsDone": "Missions done: {count}",
+    "missionsTaken": "Taken for you when the period ended: {count} ({cash}, {xp} XP)",
+    "missionsCoins": "Bonus for the whole set: +{coins} RideCoin"
   },
   "trackPicker": {
     "kind": { "sprint": "Sprint", "standard": "Standard", "endurance": "Endurance" },
