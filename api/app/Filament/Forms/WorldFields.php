@@ -324,8 +324,8 @@ final class WorldFields
             ->modalDescription(__('admin.world.advise_hint'))
             ->modalSubmitActionLabel(__('admin.world.advise_use'))
             ->schema([
-                TextInput::make('corners')->helpKey('world.advise_corners')->numeric()->minValue(0)->default(4)->suffix(__('admin.world.per_unit', ['unit' => $unit]))->required(),
-                TextInput::make('climb')->helpKey('world.advise_climb')->numeric()->minValue(0)->default(0)->suffix(__('admin.world.per_unit', ['unit' => $unit]))->required(),
+                TextInput::make('corners')->helpKey('world.advise_corners', ['unit' => $unit])->numeric()->minValue(0)->default(4)->suffix(__('admin.world.per_unit', ['unit' => $unit]))->required(),
+                TextInput::make('climb')->helpKey('world.advise_climb', ['unit' => $unit])->numeric()->minValue(0)->default(0)->suffix(__('admin.world.per_unit', ['unit' => $unit]))->required(),
                 Select::make('traffic')->helpKey('world.advise_traffic')->options(FieldHelp::options('world.advise_traffic', [0, 1, 2, 3]))->default(0)->required(),
             ])
             ->action(function (array $data, Get $get, Set $set) use ($measures, $advisor): void {

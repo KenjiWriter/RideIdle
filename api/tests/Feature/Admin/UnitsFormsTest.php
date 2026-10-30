@@ -10,6 +10,7 @@ use App\Filament\Pages\TutorialPage;
 use App\Filament\Pages\WorldPage;
 use App\Filament\Resources\Vehicles\Pages\CreateVehicle;
 use App\Filament\Resources\Vehicles\Pages\EditVehicle;
+use App\Filament\Support\FieldHelp;
 use App\Models\ContentDefinition;
 use Livewire\Livewire;
 
@@ -70,6 +71,18 @@ describe('the world page', function () {
 
         expect($draft['roads'][0]['km'])->toBe(37)
             ->and($draft['tracks']['zlomowo-street'])->toMatchArray(['length_m' => 2_593, 'speed_kmh' => 37.04]);
+    });
+});
+
+describe('the speed calculator of a track', function () {
+    it('says, in the help of its boxes, which unit of travel they are asked in, and no name of a word that is not put in place', function () {
+        foreach (['advise_corners', 'advise_climb'] as $key) {
+            foreach (['pl', 'en', 'fr', 'de', 'pt_BR'] as $locale) {
+                $html = (string) FieldHelp::html(FieldHelp::own("world.{$key}", $locale), ['unit' => 'nm']);
+
+                expect($html)->toContain('nm')->and($html)->not->toContain(':unit');
+            }
+        }
     });
 });
 
