@@ -746,6 +746,7 @@ return [
         'example' => 'Beispiel',
         'range' => 'Bereich',
         'guide' => 'So funktioniert es',
+        'options' => 'Was die Optionen bedeuten (:count)',
     ],
     'players' => [
         'nav' => 'Spieler',

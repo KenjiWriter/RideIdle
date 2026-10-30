@@ -746,6 +746,7 @@ return [
         'example' => 'Exemplo',
         'range' => 'Faixa',
         'guide' => 'Como funciona',
+        'options' => 'O que significam as opções (:count)',
     ],
     'players' => [
         'nav' => 'Jogadores',

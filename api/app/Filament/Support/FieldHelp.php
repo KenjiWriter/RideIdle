@@ -184,7 +184,9 @@ final class FieldHelp
         }
 
         if ($items !== []) {
-            $lines[] = '<ul style="margin:.25rem 0 0 1.1rem;list-style:disc">'.implode('', $items).'</ul>';
+            // A long list of options stays closed until it is asked for, so that a form with several choices stays short.
+            $lines[] = '<details style="margin:.25rem 0 0"><summary style="cursor:pointer;font-weight:600">'.e((string) __('admin.help.options', ['count' => count($items)])).'</summary>'
+                .'<ul style="margin:.25rem 0 0 1.1rem;list-style:disc">'.implode('', $items).'</ul></details>';
         }
 
         return $lines === [] ? null : new HtmlString('<div style="display:grid;gap:.25rem">'.implode('', $lines).'</div>');
