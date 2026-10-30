@@ -27,7 +27,7 @@ return [
                 'shop' => ['label' => 'Shop', 'help' => 'Crates and the rarity of parts: odds, strength and prices.'],
                 'affixes' => ['label' => 'Affixes', 'help' => 'The strength, the odds and the effects of the affixes of parts, including those that depend on the surface.'],
                 'wear' => ['label' => 'Wear and service', 'help' => 'The life of parts in kilometres, the cost of repair and of service.'],
-                'premium' => ['label' => 'Premium currency', 'help' => 'The prices of RideCoin packs, speeding up for coins and the price of the lawyer.'],
+                'premium' => ['label' => 'Premium currency', 'help' => 'The prices of RideCoin packs, speeding up for coins, the price of the lawyer, the auto-refill (packs of charges), the VIP account and the pass of the unlimited refill.'],
                 'workshop' => ['label' => 'Workshop', 'help' => 'The times of fitting, upgrading and merging, the prices of bays and mechanics, the length of the queue.'],
                 'tire_matrix' => ['label' => 'Tire matrix', 'help' => 'The grip of every kind of tire on every surface.'],
                 'weather' => ['label' => 'Weather', 'help' => 'How the weather affects a lap.'],

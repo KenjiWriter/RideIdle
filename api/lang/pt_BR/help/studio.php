@@ -27,7 +27,7 @@ return [
                 'shop' => ['label' => 'Loja', 'help' => 'As caixas e a raridade das peças: chances, força e preços.'],
                 'affixes' => ['label' => 'Afixos', 'help' => 'A força, as chances e os efeitos dos afixos das peças, inclusive os que dependem do piso.'],
                 'wear' => ['label' => 'Desgaste e revisão', 'help' => 'A vida das peças em quilômetros, o custo do reparo e da revisão.'],
-                'premium' => ['label' => 'Moeda premium', 'help' => 'Os preços dos pacotes de RideCoin, a aceleração com moedas e o preço do advogado.'],
+                'premium' => ['label' => 'Moeda premium', 'help' => 'Os preços dos pacotes de RideCoin, a aceleração com moedas, o preço do advogado, o reabastecimento automático (pacotes de cargas), a conta VIP e o passe de reabastecimento ilimitado.'],
                 'workshop' => ['label' => 'Oficina', 'help' => 'Os tempos de instalação, melhoria e fusão, os preços de baias e mecânicos, o tamanho da fila.'],
                 'tire_matrix' => ['label' => 'Matriz de pneus', 'help' => 'A aderência de cada tipo de pneu em cada piso.'],
                 'weather' => ['label' => 'Clima', 'help' => 'Como o clima afeta uma volta.'],

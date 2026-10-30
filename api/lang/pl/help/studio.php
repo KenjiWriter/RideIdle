@@ -27,7 +27,7 @@ return [
                 'shop' => ['label' => 'Sklep', 'help' => 'Skrzynki i rzadkość części: szanse, siła i ceny.'],
                 'affixes' => ['label' => 'Afiksy', 'help' => 'Siła, szanse i efekty afiksów części, także zależnych od nawierzchni.'],
                 'wear' => ['label' => 'Zużycie i serwis', 'help' => 'Życie części w kilometrach, koszt naprawy i serwisu.'],
-                'premium' => ['label' => 'Waluta premium', 'help' => 'Ceny paczek RideCoin, przyspieszanie za monety i cena prawnika.'],
+                'premium' => ['label' => 'Waluta premium', 'help' => 'Ceny paczek RideCoin, przyspieszanie za monety, cena prawnika, auto-tankowanie (paczki ładunków), konto VIP i przepustka bez limitu tankowania.'],
                 'workshop' => ['label' => 'Warsztat', 'help' => 'Czasy montażu, ulepszeń i łączenia, ceny stanowisk i mechaników, długość kolejki.'],
                 'tire_matrix' => ['label' => 'Macierz opon', 'help' => 'Przyczepność każdego rodzaju opon na każdej nawierzchni.'],
                 'weather' => ['label' => 'Pogoda', 'help' => 'Jak pogoda wpływa na okrążenie.'],

@@ -27,7 +27,7 @@ return [
                 'shop' => ['label' => 'Boutique', 'help' => 'Les caisses et la rareté des pièces : chances, puissance et prix.'],
                 'affixes' => ['label' => 'Affixes', 'help' => 'La puissance, les chances et les effets des affixes des pièces, y compris ceux qui dépendent de la surface.'],
                 'wear' => ['label' => 'Usure et entretien', 'help' => 'La durée de vie des pièces en kilomètres, le coût de la réparation et de l’entretien.'],
-                'premium' => ['label' => 'Monnaie premium', 'help' => 'Les prix des packs de RideCoin, l’accélération contre des pièces et le prix de l’avocat.'],
+                'premium' => ['label' => 'Monnaie premium', 'help' => 'Les prix des packs de RideCoin, l’accélération contre des pièces, le prix de l’avocat, le ravitaillement automatique (packs de charges), le compte VIP et le pass de ravitaillement illimité.'],
                 'workshop' => ['label' => 'Atelier', 'help' => 'Les durées de montage, d’amélioration et de fusion, les prix des postes et des mécaniciens, la longueur de la file.'],
                 'tire_matrix' => ['label' => 'Matrice des pneus', 'help' => 'L’adhérence de chaque type de pneu sur chaque surface.'],
                 'weather' => ['label' => 'Météo', 'help' => 'La façon dont la météo influe sur un tour.'],
