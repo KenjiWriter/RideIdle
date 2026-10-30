@@ -34,7 +34,9 @@ return [
                 'regions' => ['label' => 'Cities (numbers)', 'help' => 'The position of the cities on the map and their requirements.'],
                 'roads' => ['label' => 'Roads', 'help' => 'The distances between cities in kilometres, and with them the time and cost of a journey.'],
                 'travel' => ['label' => 'Travel and speed-up', 'help' => 'The speed and fuel of a journey, and the boosted drive with the police and fines.'],
-                'tracks' => ['label' => 'Tracks: times, rewards, weights', 'help' => 'A track’s length, lap time, fuel, reward and XP, and the weights of its statistics; it changes the earnings per hour directly.'],
+                'tracks' => ['label' => 'Tracks: speed, pay, XP, weights', 'help' => 'The length and the speed of a track, what an hour pays and gives (the lap, the fuel and the reward of a lap come from them) and the weights of the statistics of a track; it changes what an hour earns directly.'],
+                'track_model' => ['label' => 'Track model', 'help' => 'The load of the engine by kind of track (the fuel of a lap comes from it) and the constants of the difficulty calculator of the form of a track.'],
+                'units' => ['label' => 'Units of the game', 'help' => 'What the game counts distance and speed in: what the operator writes and the player sees. The numbers in the rules stay in metres, kilometres and km/h.'],
             ],
         ],
         'sliders' => [

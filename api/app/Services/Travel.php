@@ -314,6 +314,7 @@ final class Travel
                     'kind' => $this->rules->trackKind($trackSlug),
                     'surface' => $track['surface'],
                     'lit' => $track['lit'],
+                    'length_m' => $track['length_m'],
                     'base_lap_ms' => $track['base_lap_ms'],
                     'demand' => $track['demand'],
                 ],

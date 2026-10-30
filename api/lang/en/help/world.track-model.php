@@ -23,5 +23,29 @@ return [
             'range' => 'From 0 to 3600, at most two decimals.',
             'tip' => 'On a very short track the rounding of the XP of a lap to a whole number can change the result by as much as a fifth; in wet weather it is 7% less.',
         ],
+        'advise_corners' => [
+            'label' => 'Corners',
+            'help' => 'How many sharp corners the track has per unit of travel (in this game: :unit). Each takes some speed off in the calculator; how much is in the studio (“Speed lost per corner”).',
+            'example' => 'Autodrome: about 3.6 a kilometre; Złomowo street track: 4.5; mountain switchbacks: 8 and more.',
+            'range' => 'From 0 up.',
+        ],
+        'advise_climb' => [
+            'label' => 'Climb',
+            'help' => 'How many metres the track climbs per unit of travel (in this game: :unit). Every 10 metres take some speed off in the calculator (studio: “Speed lost per 10 m of climb”).',
+            'example' => 'A flat track: 0; a mountain road: 20–40 m a kilometre.',
+            'range' => 'From 0 up.',
+        ],
+        'advise_traffic' => [
+            'label' => 'Traffic and narrow places',
+            'help' => 'How much traffic, passing and narrow places slow the car: from 0 (an empty track) to 3 (tight and crowded). Every step takes some speed off in the calculator.',
+            'example' => 'Autodrome: 0; a city street: 2; a scrapyard: 3.',
+            'range' => '0, 1, 2 or 3.',
+            'options' => [
+                0 => ['label' => 'Empty track', 'help' => 'Nothing gets in the way.'],
+                1 => ['label' => 'Some traffic', 'help' => 'Now and then the car has to slow down.'],
+                2 => ['label' => 'Dense traffic', 'help' => 'The car often brakes for others.'],
+                3 => ['label' => 'Tight and crowded', 'help' => 'Narrow places and constant traffic.'],
+            ],
+        ],
     ],
 ];

@@ -22,5 +22,15 @@ return [
             'help' => 'Po utworzeniu gry zleć serwerowi ustawienie domeny (wpis serwera WWW) i certyfikatu SSL. Serwer podejmuje zlecenie w ciągu minuty, a jego przebieg widać na stronie „Domena i SSL”.',
             'tip' => 'Domena powinna już wskazywać na ten serwer (użyj „Sprawdź DNS” powyżej), a instalacja musi mieć adres e-mail dla Let’s Encrypt (ACME_EMAIL); bez nich przełącznik się nie pokazuje albo zlecenie jest odrzucane, a gra i tak powstaje. Zlecenie można dać później na stronie „Domena i SSL”.',
         ],
+        'units' => [
+            'label' => 'Układ jednostek',
+            'help' => 'W jakich jednostkach nowa gra liczy dystans i prędkość: to, co wpisuje operator i co widzi gracz (liczby w regułach zostają w metrach, kilometrach i km/h). Zmienia się to potem w Studiu („Jednostki gry”) i w tekście reguł.',
+            'tip' => 'Dotyczy tylko gry zaczynanej od szablonu; kopia innej gry ma jednostki tamtej, a gra bez treści nie ma żadnych.',
+            'options' => [
+                'metric' => ['label' => 'Metryczny', 'help' => 'Metry na torze, kilometry w podróży, km/h, zużycie w l/100 km: gra samochodowa.'],
+                'nautical' => ['label' => 'Morski', 'help' => 'Mile morskie na torze i w podróży, węzły, zużycie w litrach na milę morską: gra o statkach.'],
+                'imperial' => ['label' => 'Mile', 'help' => 'Mile na torze i w podróży, mile na godzinę, zużycie w litrach na 100 mil.'],
+            ],
+        ],
     ],
 ];

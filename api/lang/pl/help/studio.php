@@ -34,7 +34,9 @@ return [
                 'regions' => ['label' => 'Miasta (liczby)', 'help' => 'Położenie miast na mapie i ich wymagania.'],
                 'roads' => ['label' => 'Drogi', 'help' => 'Odległości między miastami w kilometrach, a z nimi czas i koszt podróży.'],
                 'travel' => ['label' => 'Podróże i przyspieszenie', 'help' => 'Prędkość i paliwo podróży oraz przyspieszona jazda z policją i mandatami.'],
-                'tracks' => ['label' => 'Tory: czasy, nagrody, wagi', 'help' => 'Długość, czas okrążenia, paliwo, nagroda i XP toru oraz wagi statystyk toru; wprost zmienia zarobek na godzinę.'],
+                'tracks' => ['label' => 'Tory: prędkość, wypłata, XP, wagi', 'help' => 'Długość i prędkość toru, wypłata i XP na godzinę (z nich wychodzą okrążenie, paliwo i nagroda za okrążenie) oraz wagi statystyk toru; wprost zmienia zarobek na godzinę.'],
+                'track_model' => ['label' => 'Model toru', 'help' => 'Obciążenie silnika według rodzaju toru (z niego wychodzi paliwo okrążenia) i stałe kalkulatora trudności z formularza toru.'],
+                'units' => ['label' => 'Jednostki gry', 'help' => 'W czym gra liczy dystans i prędkość: to, co wpisuje operator i co widzi gracz. Liczby w regułach zostają w metrach, kilometrach i km/h.'],
             ],
         ],
         'sliders' => [

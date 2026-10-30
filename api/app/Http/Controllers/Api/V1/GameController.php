@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Content\Branding\Branding;
+use App\Content\Units\Measures;
 use App\Games\CurrentGame;
 use App\Http\Controllers\Controller;
 use App\Models\Game;
@@ -45,6 +46,7 @@ final class GameController extends Controller
             'theme_css_url' => $branding->hasTheme() ? route('theme', [], false).'?v='.rawurlencode($branding->number()) : null,
             'has_landing' => $branding->hasLanding(),
             'is_default' => (bool) $game->is_default,
+            'units' => Measures::ofTheGame()->toArray(),
         ]), 60);
     }
 

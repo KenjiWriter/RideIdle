@@ -23,5 +23,29 @@ return [
             'range' => 'Od 0 do 3600, najwyżej dwa miejsca po przecinku.',
             'tip' => 'Na bardzo krótkim torze zaokrąglenie XP za okrążenie do całych zmienia wynik nawet o jedną piątą; w mokrej pogodzie jest o 7% mniej.',
         ],
+        'advise_corners' => [
+            'label' => 'Zakręty',
+            'help' => 'Ile ostrych zakrętów ma tor na jednostkę podróży (w tej grze: :unit). Każdy zabiera kalkulatorowi trochę prędkości; ile, mówi Studio („Strata prędkości na zakręt”).',
+            'example' => 'Autodrom: ok. 3,6 na kilometr; ulica Złomowo: 4,5; serpentyny górskie: 8 i więcej.',
+            'range' => 'Od 0 w górę.',
+        ],
+        'advise_climb' => [
+            'label' => 'Przewyższenie',
+            'help' => 'Ile metrów tor się wznosi na jednostkę podróży (w tej grze: :unit). Każde 10 metrów zabiera kalkulatorowi trochę prędkości (Studio: „Strata prędkości na 10 m przewyższenia”).',
+            'example' => 'Tor płaski: 0; droga górska: 20–40 m na kilometr.',
+            'range' => 'Od 0 w górę.',
+        ],
+        'advise_traffic' => [
+            'label' => 'Ruch i wąskie miejsca',
+            'help' => 'Jak bardzo ruch, mijanki i wąskie przejazdy spowalniają auto: od 0 (pusty tor) do 3 (ciasno i tłoczno). Każdy stopień zabiera kalkulatorowi trochę prędkości.',
+            'example' => 'Autodrom: 0; ulica miejska: 2; złomowisko: 3.',
+            'range' => '0, 1, 2 albo 3.',
+            'options' => [
+                0 => ['label' => 'Pusty tor', 'help' => 'Nic nie przeszkadza.'],
+                1 => ['label' => 'Trochę ruchu', 'help' => 'Czasem trzeba zwolnić.'],
+                2 => ['label' => 'Gęsty ruch', 'help' => 'Auto często hamuje przez innych.'],
+                3 => ['label' => 'Ciasno i tłoczno', 'help' => 'Wąskie przejazdy i ciągły ruch.'],
+            ],
+        ],
     ],
 ];

@@ -869,6 +869,25 @@
       "required": ["speed_share_ppm", "fuel_ml_per_km"],
       "additionalProperties": false
     },
+    "units": {
+      "description": "What the game counts distance and speed in, and what a person writes and is shown: the numbers of the rules and of the API stay in metres, kilometres and km/h in every game, and these are the units that the panel and the app turn them into. Without it the game has metres, kilometres, km/h and the litres of 100 km.",
+      "type": "object",
+      "properties": {
+        "lap": { "description": "The unit of the length of a lap of a track.", "$ref": "#/$defs/distance_unit" },
+        "travel": { "description": "The unit of the roads between the cities, of the odometer of a car, of the interval of the service, of the life of the parts and of the mileage of the cars for sale.", "$ref": "#/$defs/distance_unit" },
+        "speed": { "description": "The unit of speed: of a track, of a car, of the part that limits it.", "$ref": "#/$defs/speed_unit" },
+        "fuel_economy": {
+          "description": "How much distance the fuel use is shown per.",
+          "type": "object",
+          "properties": {
+            "per": { "description": "The fuel use is shown per this many units of travel: 100 gives \"l/100 km\", 1 gives \"l per nautical mile\".", "type": "integer", "enum": [1, 10, 100], "minimum": 1, "maximum": 100 }
+          },
+          "required": ["per"],
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
     "tracks": {
       "type": "object",
       "minProperties": 1,
@@ -929,6 +948,27 @@
           },
           "required": ["sprint", "standard", "endurance"],
           "additionalProperties": false
+        },
+        "advisor": {
+          "description": "What the button of the form of a track that suggests a speed counts with: the speed of the reference car on a straight and empty track of each surface, and what the corners, the climbs and the traffic take off it. The game does not read any of it: a track says its speed, and this only helps to find one for a new track. Without it the button has 180 km/h on asphalt and 130 on gravel, and takes off 10, 5 and 5 km/h.",
+          "type": "object",
+          "properties": {
+            "free_speed_kmh": {
+              "description": "The speed on a straight and empty track of each surface, in km/h.",
+              "type": "object",
+              "properties": {
+                "asphalt": { "type": "integer", "minimum": 20, "maximum": 300 },
+                "gravel": { "type": "integer", "minimum": 20, "maximum": 300 }
+              },
+              "required": ["asphalt", "gravel"],
+              "additionalProperties": false
+            },
+            "corner_loss_kmh": { "description": "What a sharp corner in every kilometre of the track takes off the speed, in km/h.", "type": "integer", "minimum": 0, "maximum": 100 },
+            "climb_loss_kmh": { "description": "What every 10 metres that the track climbs in a kilometre take off the speed, in km/h.", "type": "integer", "minimum": 0, "maximum": 100 },
+            "traffic_loss_kmh": { "description": "What a step of traffic and narrow places (0 is an empty track, 3 a tight and crowded one) takes off the speed, in km/h.", "type": "integer", "minimum": 0, "maximum": 100 }
+          },
+          "required": ["free_speed_kmh", "corner_loss_kmh", "climb_loss_kmh", "traffic_loss_kmh"],
+          "additionalProperties": false
         }
       },
       "required": ["fuel_ml_per_s"],
@@ -938,6 +978,30 @@
   "required": ["schema", "version", "fuel", "repair", "breakdown", "wear", "tow", "stock_tires", "car", "engines", "drivetrain", "garage", "market", "start", "clock", "player", "shop", "workshop", "tire_matrix", "weather", "regions", "roads", "travel", "tracks", "bots"],
   "additionalProperties": false,
   "$defs": {
+    "distance_unit": {
+      "description": "A unit of distance: its name and its short form in the languages, how many metres it is, and how many decimals it is shown with.",
+      "type": "object",
+      "properties": {
+        "name": { "$ref": "common.schema.json#/$defs/i18n" },
+        "short": { "$ref": "common.schema.json#/$defs/i18n" },
+        "metres": { "description": "How many metres one of the unit is: 1 for a metre, 1000 for a kilometre, 1852 for a nautical mile.", "type": "number", "exclusiveMinimum": 0, "maximum": 1000000000000 },
+        "decimals": { "description": "The decimals of the number when it is shown, 0 for a whole number.", "type": "integer", "minimum": 0, "maximum": 4 }
+      },
+      "required": ["name", "short", "metres"],
+      "additionalProperties": false
+    },
+    "speed_unit": {
+      "description": "A unit of speed: its name and its short form in the languages, how many km/h it is, and how many decimals it is shown with.",
+      "type": "object",
+      "properties": {
+        "name": { "$ref": "common.schema.json#/$defs/i18n" },
+        "short": { "$ref": "common.schema.json#/$defs/i18n" },
+        "kmh": { "description": "How many km/h one of the unit is: 1 for km/h, 1.852 for a knot.", "type": "number", "exclusiveMinimum": 0, "maximum": 1000000 },
+        "decimals": { "description": "The decimals of the number when it is shown, 0 for a whole number.", "type": "integer", "minimum": 0, "maximum": 4 }
+      },
+      "required": ["name", "short", "kmh"],
+      "additionalProperties": false
+    },
     "purchase_prices": {
       "description": "What the next one costs, by how many there are already: the first is free (it is there from the start), and every price is higher than the one before.",
       "type": "array",

@@ -23,5 +23,29 @@ return [
             'range' => 'Von 0 bis 3600, höchstens zwei Dezimalstellen.',
             'tip' => 'Auf einer sehr kurzen Strecke kann die Rundung der XP einer Runde auf ganze Zahlen das Ergebnis um bis zu ein Fünftel ändern; bei nassem Wetter sind es 7 % weniger.',
         ],
+        'advise_corners' => [
+            'label' => 'Kurven',
+            'help' => 'Wie viele scharfe Kurven die Strecke je Reiseeinheit hat (in diesem Spiel: :unit). Jede nimmt dem Rechner etwas Tempo; wie viel, sagt das Studio („Tempoverlust pro Kurve“).',
+            'example' => 'Autodrom: etwa 3,6 je Kilometer; Stadtstrecke Złomowo: 4,5; Bergserpentinen: 8 und mehr.',
+            'range' => 'Von 0 aufwärts.',
+        ],
+        'advise_climb' => [
+            'label' => 'Steigung',
+            'help' => 'Wie viele Meter die Strecke je Reiseeinheit ansteigt (in diesem Spiel: :unit). Je 10 Meter nehmen dem Rechner etwas Tempo (Studio: „Tempoverlust je 10 m Steigung“).',
+            'example' => 'Flache Strecke: 0; Bergstraße: 20–40 m je Kilometer.',
+            'range' => 'Von 0 aufwärts.',
+        ],
+        'advise_traffic' => [
+            'label' => 'Verkehr und Engstellen',
+            'help' => 'Wie stark Verkehr, Überholen und Engstellen das Auto bremsen: von 0 (leere Strecke) bis 3 (eng und voll). Jede Stufe nimmt dem Rechner etwas Tempo.',
+            'example' => 'Autodrom: 0; Stadtstraße: 2; Schrottplatz: 3.',
+            'range' => '0, 1, 2 oder 3.',
+            'options' => [
+                0 => ['label' => 'Leere Strecke', 'help' => 'Nichts stört.'],
+                1 => ['label' => 'Etwas Verkehr', 'help' => 'Ab und zu muss das Auto bremsen.'],
+                2 => ['label' => 'Dichter Verkehr', 'help' => 'Das Auto bremst oft für andere.'],
+                3 => ['label' => 'Eng und voll', 'help' => 'Engstellen und ständiger Verkehr.'],
+            ],
+        ],
     ],
 ];

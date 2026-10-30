@@ -23,5 +23,29 @@ return [
             'range' => 'De 0 a 3600, no máximo duas casas decimais.',
             'tip' => 'Em uma pista muito curta, o arredondamento do XP da volta para inteiro pode mudar o resultado em até um quinto; com tempo molhado são 7% a menos.',
         ],
+        'advise_corners' => [
+            'label' => 'Curvas',
+            'help' => 'Quantas curvas fechadas a pista tem por unidade de viagem (neste jogo: :unit). Cada uma tira um pouco de velocidade no calculador; quanto, diz o estúdio (“Velocidade perdida por curva”).',
+            'example' => 'Autódromo: cerca de 3,6 por quilômetro; pista urbana de Złomowo: 4,5; serpentinas de montanha: 8 ou mais.',
+            'range' => 'De 0 para cima.',
+        ],
+        'advise_climb' => [
+            'label' => 'Subida',
+            'help' => 'Quantos metros a pista sobe por unidade de viagem (neste jogo: :unit). Cada 10 metros tiram um pouco de velocidade no calculador (estúdio: “Velocidade perdida por 10 m de subida”).',
+            'example' => 'Pista plana: 0; estrada de montanha: 20 a 40 m por quilômetro.',
+            'range' => 'De 0 para cima.',
+        ],
+        'advise_traffic' => [
+            'label' => 'Trânsito e trechos estreitos',
+            'help' => 'O quanto o trânsito, as ultrapassagens e os trechos estreitos atrasam o carro: de 0 (pista vazia) a 3 (apertada e cheia). Cada grau tira um pouco de velocidade no calculador.',
+            'example' => 'Autódromo: 0; rua de cidade: 2; ferro-velho: 3.',
+            'range' => '0, 1, 2 ou 3.',
+            'options' => [
+                0 => ['label' => 'Pista vazia', 'help' => 'Nada atrapalha.'],
+                1 => ['label' => 'Algum trânsito', 'help' => 'De vez em quando o carro precisa reduzir.'],
+                2 => ['label' => 'Trânsito denso', 'help' => 'O carro freia muito por causa dos outros.'],
+                3 => ['label' => 'Apertada e cheia', 'help' => 'Trechos estreitos e trânsito constante.'],
+            ],
+        ],
     ],
 ];

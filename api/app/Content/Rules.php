@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Content;
 
+use App\Content\Units\Measures;
 use App\Domain\Economy\PlayerXpCurve;
 use App\Domain\Run\Rarity;
 use App\Domain\Run\Surface;
@@ -698,6 +699,12 @@ final class Rules
     public function travelFuelMlPerKm(): int
     {
         return $this->data['travel']['fuel_ml_per_km'];
+    }
+
+    /** What this game counts distance and speed in: the units of its rules, or the car game's where they say none. */
+    public function measures(): Measures
+    {
+        return Measures::fromRules($this->data);
     }
 
     /** The slug of the tires that the reference car of the bots of a track has instead of the stock ones, or null when it has the stock ones. */

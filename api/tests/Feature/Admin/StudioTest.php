@@ -79,9 +79,9 @@ describe('the catalog', function () {
         $rules = studioRules();
         $sections = $catalog->sections($rules);
 
-        // The version of the schema is not a rule; the other 756 numbers of the file are.
+        // The version of the schema is not a rule; the other 768 numbers of the file are.
         expect($sections)->not->toHaveKey('schema')
-            ->and(array_sum($sections))->toBe(756)
+            ->and(array_sum($sections))->toBe(768)
             ->and(array_keys($sections))->toContain('player', 'workshop', 'tracks', 'premium', 'travel');
 
         foreach ($catalog->parameters($rules, 'workshop') as $parameter) {
@@ -125,7 +125,7 @@ describe('the catalog', function () {
 
         expect($catalog->sections($rules))->not->toHaveKey('mystery')
             ->and(collect($catalog->parameters($rules, 'player'))->pluck('key')->all())->not->toContain('unknown_number')
-            ->and(array_sum($catalog->sections($rules)))->toBe(756);
+            ->and(array_sum($catalog->sections($rules)))->toBe(768);
     });
 
     it('sets a number to what a person wrote, in their unit, and keeps it inside the limits', function () {

@@ -233,7 +233,7 @@ describe('the world', function () {
         Livewire::test(WorldPage::class)
             ->fillForm(worldState(function (array $state): array {
                 $state['regions'][0]['name']['en'] = null;
-                $state['tracks'][0]['length_m'] = null;
+                $state['tracks'][0]['length'] = null;
 
                 return $state;
             }))

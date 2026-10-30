@@ -34,7 +34,9 @@ return [
                 'regions' => ['label' => 'Villes (nombres)', 'help' => 'La position des villes sur la carte et leurs exigences.'],
                 'roads' => ['label' => 'Routes', 'help' => 'Les distances entre les villes en kilomètres, et avec elles la durée et le coût d’un voyage.'],
                 'travel' => ['label' => 'Voyages et accélération', 'help' => 'La vitesse et le carburant d’un voyage, et la conduite accélérée avec la police et les amendes.'],
-                'tracks' => ['label' => 'Circuits : temps, récompenses, poids', 'help' => 'La longueur, le temps au tour, le carburant, la récompense et l’XP d’un circuit, et les poids de ses statistiques ; cela change directement le gain par heure.'],
+                'tracks' => ['label' => 'Circuits : vitesse, gain, XP, poids', 'help' => 'La longueur et la vitesse d’un circuit, ce que donne une heure (le tour, le carburant et le gain d’un tour en découlent) et les poids des statistiques d’un circuit ; cela change directement ce que rapporte une heure.'],
+                'track_model' => ['label' => 'Modèle de circuit', 'help' => 'La charge du moteur selon le type de circuit (le carburant d’un tour en découle) et les constantes du calculateur de difficulté du formulaire de circuit.'],
+                'units' => ['label' => 'Unités du jeu', 'help' => 'Dans quoi le jeu compte la distance et la vitesse : ce que l’opérateur écrit et ce que le joueur voit. Les nombres des règles restent en mètres, kilomètres et km/h.'],
             ],
         ],
         'sliders' => [

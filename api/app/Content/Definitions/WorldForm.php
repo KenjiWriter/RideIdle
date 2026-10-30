@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Content\Definitions;
 
+use App\Content\Units\Measures;
+
 /**
  * What the world page holds and what it does to the rules: the cities (the regions of the rules), the roads between them and the tracks, as the state of the form
  * (lists of lines, the reward in dollars, the weather and the demands as lines of a name and a number) and back into the sections of the document, in the order of
@@ -30,6 +32,7 @@ final class WorldForm
         }
 
         $tracks = [];
+        $measures = Measures::fromRules($rules);
 
         foreach ($rules['tracks'] ?? [] as $slug => $track) {
             $tracks[] = [
@@ -41,8 +44,9 @@ final class WorldForm
                 'reference_tires' => $track['reference_tires'] ?? null,
                 'lit' => (bool) ($track['lit'] ?? false),
                 'min_player_level' => $track['min_player_level'] ?? null,
-                'length_m' => $track['length_m'] ?? null,
-                'speed_kmh' => $track['speed_kmh'] ?? null,
+                // The length and the speed are shown in the units of the game, with the decimals that bring them back to the same metre and the same km/h.
+                'length' => isset($track['length_m']) ? $measures->lap->inBox($track['length_m']) : null,
+                'speed' => isset($track['speed_kmh']) ? $measures->speed->inBox($track['speed_kmh']) : null,
                 'pay_per_hour' => isset($track['pay_cents_per_hour']) ? $track['pay_cents_per_hour'] / 100 : null,
                 'xp_per_hour' => $track['xp_per_hour'] ?? null,
                 // The numbers that were said by hand, for the tracks that still say them: they are believed over the model, and the form shows them only where they are.
@@ -89,6 +93,7 @@ final class WorldForm
         }
 
         $tracks = [];
+        $measures = Measures::fromRules($rules);
 
         foreach ((array) ($state['tracks'] ?? []) as $line) {
             $slug = DefinitionForm::text($line['slug'] ?? null);
@@ -109,13 +114,16 @@ final class WorldForm
 
             $track['lit'] = ! empty($line['lit']);
 
-            foreach (['min_player_level', 'length_m'] as $field) {
-                $track[$field] = DefinitionForm::number($line[$field] ?? null);
-            }
+            $track['min_player_level'] = DefinitionForm::number($line['min_player_level'] ?? null);
+            $track['length_m'] = self::converted(DefinitionForm::number($line['length'] ?? null), static fn (int|float $value): int|float => $measures->lap->toMetres($value));
 
             // What the model needs, and what was said by hand: a number that the form does not have is not in the document (the schema says which ones a track must have).
-            foreach (['speed_kmh' => 'speed_kmh', 'pay_cents_per_hour' => 'pay_per_hour', 'xp_per_hour' => 'xp_per_hour', 'base_lap_ms' => 'base_lap_ms', 'fuel_per_lap_ml' => 'fuel_per_lap_ml', 'reward_cents_per_lap' => 'reward', 'xp_per_lap' => 'xp_per_lap'] as $field => $box) {
-                $number = in_array($field, ['pay_cents_per_hour', 'reward_cents_per_lap'], true) ? DefinitionForm::cents($line[$box] ?? null) : DefinitionForm::number($line[$box] ?? null);
+            foreach (['speed_kmh' => 'speed', 'pay_cents_per_hour' => 'pay_per_hour', 'xp_per_hour' => 'xp_per_hour', 'base_lap_ms' => 'base_lap_ms', 'fuel_per_lap_ml' => 'fuel_per_lap_ml', 'reward_cents_per_lap' => 'reward', 'xp_per_lap' => 'xp_per_lap'] as $field => $box) {
+                $number = match ($field) {
+                    'pay_cents_per_hour', 'reward_cents_per_lap' => DefinitionForm::cents($line[$box] ?? null),
+                    'speed_kmh' => self::converted(DefinitionForm::number($line[$box] ?? null), static fn (int|float $value): int|float => $measures->speed->toKmh($value)),
+                    default => DefinitionForm::number($line[$box] ?? null),
+                };
 
                 if ($number !== null) {
                     $track[$field] = $number;
@@ -139,6 +147,12 @@ final class WorldForm
         $rules['tracks'] = $tracks;
 
         return $rules;
+    }
+
+    /** What a person wrote in the unit of the game as the number of the document; what is not a number is left for the schema to say. */
+    private static function converted(mixed $number, callable $toDocument): mixed
+    {
+        return is_int($number) || is_float($number) ? $toDocument($number) : $number;
     }
 
     /**

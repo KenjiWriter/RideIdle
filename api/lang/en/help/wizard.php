@@ -22,5 +22,15 @@ return [
             'help' => 'When the game is made, ask the server to set up the domain (the web server entry) and the SSL certificate. The server takes the request up within a minute, and you can follow it on the page “Domain and SSL”.',
             'tip' => 'The domain should already point at this server (use “Check DNS” above), and the installation needs an e-mail address for Let’s Encrypt (ACME_EMAIL); without them the switch is not shown or the request is refused, and the game is still made. You can ask again later on the page “Domain and SSL”.',
         ],
+        'units' => [
+            'label' => 'System of units',
+            'help' => 'What the new game counts distance and speed in: what the operator writes and the player sees (the numbers in the rules stay in metres, kilometres and km/h). It is changed later in the studio (“Units of the game”) and in the text of the rules.',
+            'tip' => 'It is only for a game that starts from the template; a copy of another game has the units of that one, and a game with no content has none.',
+            'options' => [
+                'metric' => ['label' => 'Metric', 'help' => 'Metres on a track, kilometres on the road, km/h, fuel use in l/100 km: the car game.'],
+                'nautical' => ['label' => 'Nautical', 'help' => 'Nautical miles on a track and on the road, knots, fuel use in litres per nautical mile: a game of ships.'],
+                'imperial' => ['label' => 'Miles', 'help' => 'Miles on a track and on the road, miles an hour, fuel use in litres per 100 miles.'],
+            ],
+        ],
     ],
 ];

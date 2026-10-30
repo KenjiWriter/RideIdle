@@ -334,7 +334,9 @@ return [
             'regions' => 'Miasta (liczby)',
             'roads' => 'Drogi',
             'travel' => 'Podróże i przyspieszenie',
-            'tracks' => 'Tory: czasy, nagrody, wagi',
+            'tracks' => 'Tory: prędkość, wypłata, XP, wagi',
+            'track_model' => 'Model toru',
+            'units' => 'Jednostki gry',
         ],
     ],
     'model' => [
@@ -472,6 +474,16 @@ return [
     ],
 
     'world' => [
+        'preview' => 'Auto wzorcowe: okrążenie :lap, średnio :speed, paliwo :fuel l na okrążenie (:economy), :laps okrążeń na godzinę. Okrążenie płaci :cash $ i daje :xp XP.',
+        'preview_wait' => 'Wpisz długość i prędkość toru (albo ręczne okrążenie), a tu pokaże się, co z tego wychodzi dla auta wzorcowego.',
+        'advise' => 'Podpowiedz prędkość',
+        'advise_hint' => 'Kalkulator trudności liczy prędkość auta wzorcowego z zakrętów, wzniesień i ruchu na torze (liczby kalkulatora są w Studiu, „Model toru”). To tylko podpowiedź: wynik trafia do pola „Prędkość toru” i możesz go poprawić.',
+        'advise_use' => 'Użyj tej prędkości',
+        'per_unit' => 'na :unit',
+        'to_model' => 'Przejdź na model',
+        'to_model_hint' => 'Ten tor ma liczby wpisane ręcznie, które wygrywają z modelem. Przejście zamienia je na prędkość oraz wypłatę i XP na godzinę, które dają te same liczby co do milisekundy, mililitra, centa i punktu XP; czego nie da się zrobić dokładnie, zostaje ręczne.',
+        'to_model_done' => 'Liczby tego toru zamienione na model (zapisz, żeby zachować).',
+        'to_model_left' => 'Zostają ręczne: :fields.',
         'nav' => 'Świat',
         'title' => 'Świat: miasta, drogi i tory',
         'cities' => 'Miasta',

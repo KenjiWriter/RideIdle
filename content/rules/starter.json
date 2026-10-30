@@ -583,7 +583,16 @@
       "bribe_fail_stop_ms": 300000,
       "lawyer_coins": 5
     } },
-  "track_model": { "fuel_ml_per_s": { "sprint": 12, "standard": 20, "endurance": 32 } },
+  "units": {
+    "lap": { "name": { "pl": "metr", "en": "metre", "fr": "mètre", "de": "Meter", "pt-BR": "metro" }, "short": { "pl": "m", "en": "m", "fr": "m", "de": "m", "pt-BR": "m" }, "metres": 1, "decimals": 0 },
+    "travel": { "name": { "pl": "kilometr", "en": "kilometre", "fr": "kilomètre", "de": "Kilometer", "pt-BR": "quilômetro" }, "short": { "pl": "km", "en": "km", "fr": "km", "de": "km", "pt-BR": "km" }, "metres": 1000, "decimals": 0 },
+    "speed": { "name": { "pl": "kilometr na godzinę", "en": "kilometre per hour", "fr": "kilomètre par heure", "de": "Kilometer pro Stunde", "pt-BR": "quilômetro por hora" }, "short": { "pl": "km/h", "en": "km/h", "fr": "km/h", "de": "km/h", "pt-BR": "km/h" }, "kmh": 1, "decimals": 0 },
+    "fuel_economy": { "per": 100 }
+  },
+  "track_model": {
+    "fuel_ml_per_s": { "sprint": 12, "standard": 20, "endurance": 32 },
+    "advisor": { "free_speed_kmh": { "asphalt": 180, "gravel": 130 }, "corner_loss_kmh": 10, "climb_loss_kmh": 5, "traffic_loss_kmh": 5 }
+  },
   "tracks": {
     "zlomowo-street": {
       "name": {

@@ -34,7 +34,9 @@ return [
                 'regions' => ['label' => 'Cidades (números)', 'help' => 'A posição das cidades no mapa e seus requisitos.'],
                 'roads' => ['label' => 'Estradas', 'help' => 'As distâncias entre as cidades em quilômetros e, com elas, o tempo e o custo de uma viagem.'],
                 'travel' => ['label' => 'Viagens e aceleração', 'help' => 'A velocidade e o combustível de uma viagem, e a condução acelerada com a polícia e as multas.'],
-                'tracks' => ['label' => 'Pistas: tempos, recompensas, pesos', 'help' => 'O comprimento, o tempo de volta, o combustível, a recompensa e o XP de uma pista e os pesos das estatísticas dela; muda diretamente o ganho por hora.'],
+                'tracks' => ['label' => 'Pistas: velocidade, prêmio, XP, pesos', 'help' => 'A extensão e a velocidade de uma pista, o que uma hora rende (dela saem a volta, o combustível e o prêmio de uma volta) e os pesos das estatísticas de uma pista; muda diretamente o que uma hora rende.'],
+                'track_model' => ['label' => 'Modelo de pista', 'help' => 'A carga do motor por tipo de pista (dela sai o combustível de uma volta) e as constantes do calculador de dificuldade do formulário de pista.'],
+                'units' => ['label' => 'Unidades do jogo', 'help' => 'Em que o jogo conta distância e velocidade: o que o operador escreve e o jogador vê. Os números das regras ficam em metros, quilômetros e km/h.'],
             ],
         ],
         'sliders' => [

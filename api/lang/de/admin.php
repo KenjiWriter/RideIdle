@@ -445,6 +445,16 @@ return [
     ],
 
     'world' => [
+        'preview' => 'Referenzauto: eine Runde von :lap, im Schnitt :speed, :fuel l Kraftstoff pro Runde (:economy), :laps Runden pro Stunde. Eine Runde bringt :cash $ und gibt :xp XP.',
+        'preview_wait' => 'Gib die Länge und das Tempo der Strecke ein (oder eine Runde von Hand), und hier erscheint, was das für das Referenzauto ergibt.',
+        'advise' => 'Tempo vorschlagen',
+        'advise_hint' => 'Der Schwierigkeitsrechner ermittelt das Tempo des Referenzautos aus den Kurven, den Steigungen und dem Verkehr der Strecke (seine Zahlen stehen im Studio, „Streckenmodell“). Das ist nur ein Vorschlag: Das Ergebnis geht in das Feld „Tempo der Strecke“, und du kannst es ändern.',
+        'advise_use' => 'Dieses Tempo verwenden',
+        'per_unit' => 'pro :unit',
+        'to_model' => 'Zum Modell wechseln',
+        'to_model_hint' => 'Diese Strecke hat von Hand geschriebene Zahlen, die vor dem Modell gelten. Der Wechsel macht daraus ein Tempo sowie Verdienst und XP pro Stunde, die dieselben Zahlen ergeben, auf die Millisekunde, den Milliliter, den Cent und den XP-Punkt genau; was sich nicht genau machen lässt, bleibt von Hand.',
+        'to_model_done' => 'Die Zahlen dieser Strecke sind zum Modell gewechselt (speichere, um sie zu behalten).',
+        'to_model_left' => 'Bleiben von Hand: :fields.',
         'nav' => 'Welt',
         'title' => 'Die Welt: Städte, Straßen und Strecken',
         'cities' => 'Städte',

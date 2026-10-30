@@ -445,6 +445,16 @@ return [
     ],
 
     'world' => [
+        'preview' => 'Carro de referência: uma volta de :lap, em média :speed, :fuel l de combustível por volta (:economy), :laps voltas por hora. Uma volta paga $:cash e dá :xp XP.',
+        'preview_wait' => 'Informe a extensão e a velocidade da pista (ou uma volta à mão), e aqui aparecerá o que isso dá para o carro de referência.',
+        'advise' => 'Sugerir velocidade',
+        'advise_hint' => 'O calculador de dificuldade calcula a velocidade do carro de referência a partir das curvas, das subidas e do trânsito da pista (os números dele estão no estúdio, “Modelo de pista”). É só uma sugestão: o resultado vai para o campo “Velocidade da pista”, e você pode mudá-lo.',
+        'advise_use' => 'Usar esta velocidade',
+        'per_unit' => 'por :unit',
+        'to_model' => 'Passar para o modelo',
+        'to_model_hint' => 'Esta pista tem números escritos à mão, que valem mais do que o modelo. A passagem os transforma em uma velocidade e em prêmio e XP por hora que dão os mesmos números, com exatidão de milissegundo, mililitro, centavo e ponto de XP; o que não pode ser feito com exatidão continua à mão.',
+        'to_model_done' => 'Os números desta pista foram passados para o modelo (salve para mantê-los).',
+        'to_model_left' => 'Continuam à mão: :fields.',
         'nav' => 'Mundo',
         'title' => 'O mundo: cidades, estradas e pistas',
         'cities' => 'Cidades',

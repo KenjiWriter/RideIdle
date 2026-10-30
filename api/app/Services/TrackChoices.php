@@ -44,6 +44,7 @@ final class TrackChoices
                 'level_required' => $required,
                 'open' => $playerLevel >= $required,
                 'current' => $run !== null && $run->track_slug === $slug,
+                'length_m' => $track['length_m'],
                 'base_lap_ms' => $track['base_lap_ms'],
                 'demand' => $track['demand'],
                 'car' => $run === null ? null : $this->forCar($run, $slug),

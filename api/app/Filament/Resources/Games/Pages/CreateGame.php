@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Games\Pages;
 
+use App\Content\Units\Measures;
 use App\Filament\Pages\DomainPage;
 use App\Filament\Resources\Games\GameResource;
 use App\Filament\Support\FieldHelp;
@@ -88,6 +89,12 @@ class CreateGame extends CreateRecord
                     ->default(GameCreator::START_TEMPLATE)
                     ->required()
                     ->live(),
+                Select::make('units')
+                    ->helpKey('wizard.units')
+                    ->options(FieldHelp::options('wizard.units', Measures::PRESETS))
+                    ->default('metric')
+                    ->visible(fn (Get $get): bool => $get('start') === GameCreator::START_TEMPLATE)
+                    ->required(fn (Get $get): bool => $get('start') === GameCreator::START_TEMPLATE),
                 Select::make('copy_from')
                     ->helpKey('wizard.copy_from')
                     ->options(fn (): array => Game::query()->orderBy('id')->pluck('name', 'slug')->all())
@@ -127,6 +134,7 @@ class CreateGame extends CreateRecord
             copyFrom: isset($data['copy_from']) ? (string) $data['copy_from'] : null,
             requestDomain: (bool) ($data['request_domain'] ?? false) && filled($data['domain'] ?? null),
             by: $admin instanceof Admin ? $admin : null,
+            units: isset($data['units']) ? (string) $data['units'] : null,
         );
 
         $this->warnings = $made['warnings'];

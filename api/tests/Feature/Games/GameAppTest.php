@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Content\Units\Measures;
 use App\Filament\Resources\Games\Pages\EditGame;
 use App\Games\CurrentGame;
 use App\Mail\AccountLinkMail;
@@ -47,6 +48,7 @@ describe('the game as the app asks for it', function () {
             'theme_css_url' => null,
             'has_landing' => false,
             'is_default' => true,
+            'units' => Measures::metric()->toArray(),
         ])
             ->and($response->headers->get('Cache-Control'))->toContain('public')->toContain('max-age=60');
 

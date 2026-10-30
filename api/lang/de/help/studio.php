@@ -34,7 +34,9 @@ return [
                 'regions' => ['label' => 'Städte (Zahlen)', 'help' => 'Die Lage der Städte auf der Karte und ihre Anforderungen.'],
                 'roads' => ['label' => 'Straßen', 'help' => 'Die Entfernungen zwischen den Städten in Kilometern und damit Zeit und Kosten einer Reise.'],
                 'travel' => ['label' => 'Reisen und Beschleunigung', 'help' => 'Tempo und Kraftstoff einer Reise sowie die beschleunigte Fahrt mit Polizei und Bußgeldern.'],
-                'tracks' => ['label' => 'Strecken: Zeiten, Belohnungen, Gewichte', 'help' => 'Länge, Rundenzeit, Kraftstoff, Belohnung und XP einer Strecke sowie die Gewichte ihrer Werte; ändert direkt den Verdienst pro Stunde.'],
+                'tracks' => ['label' => 'Strecken: Tempo, Verdienst, XP, Gewichte', 'help' => 'Länge und Tempo einer Strecke, was eine Stunde bringt (daraus ergeben sich Runde, Kraftstoff und Verdienst einer Runde) und die Gewichte der Statistiken einer Strecke; es ändert direkt, was eine Stunde einbringt.'],
+                'track_model' => ['label' => 'Streckenmodell', 'help' => 'Die Last des Motors je Art der Strecke (daraus ergibt sich der Kraftstoff einer Runde) und die Konstanten des Schwierigkeitsrechners im Streckenformular.'],
+                'units' => ['label' => 'Einheiten des Spiels', 'help' => 'In was das Spiel Entfernung und Tempo zählt: was der Betreiber schreibt und der Spieler sieht. Die Zahlen in den Regeln bleiben in Metern, Kilometern und km/h.'],
             ],
         ],
         'sliders' => [

@@ -22,5 +22,15 @@ return [
             'help' => 'Wenn das Spiel angelegt ist, den Server bitten, die Domain (den Eintrag des Webservers) und das SSL-Zertifikat einzurichten. Der Server nimmt die Anfrage innerhalb einer Minute auf, und du kannst sie auf der Seite „Domain und SSL“ verfolgen.',
             'tip' => 'Die Domain sollte schon auf diesen Server zeigen (nutze oben „DNS prüfen“), und die Installation braucht eine E-Mail-Adresse für Let’s Encrypt (ACME_EMAIL); ohne sie erscheint der Schalter nicht oder die Anfrage wird abgelehnt, und das Spiel wird trotzdem angelegt. Du kannst später auf der Seite „Domain und SSL“ erneut anfragen.',
         ],
+        'units' => [
+            'label' => 'Einheitensystem',
+            'help' => 'In was das neue Spiel Entfernung und Tempo zählt: was der Betreiber schreibt und der Spieler sieht (die Zahlen in den Regeln bleiben in Metern, Kilometern und km/h). Das ändert man später im Studio („Einheiten des Spiels“) und im Text der Regeln.',
+            'tip' => 'Es gilt nur für ein Spiel, das von der Vorlage ausgeht; eine Kopie eines anderen Spiels hat dessen Einheiten, und ein Spiel ohne Inhalt hat keine.',
+            'options' => [
+                'metric' => ['label' => 'Metrisch', 'help' => 'Meter auf einer Strecke, Kilometer auf der Straße, km/h, Verbrauch in l/100 km: das Autospiel.'],
+                'nautical' => ['label' => 'Nautisch', 'help' => 'Seemeilen auf einer Strecke und auf der Straße, Knoten, Verbrauch in Litern pro Seemeile: ein Schiffsspiel.'],
+                'imperial' => ['label' => 'Meilen', 'help' => 'Meilen auf einer Strecke und auf der Straße, Meilen pro Stunde, Verbrauch in Litern pro 100 Meilen.'],
+            ],
+        ],
     ],
 ];

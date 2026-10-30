@@ -22,5 +22,15 @@ return [
             'help' => 'Une fois le jeu créé, demander au serveur de mettre en place le domaine (l’entrée du serveur web) et le certificat SSL. Le serveur prend la demande en charge en moins d’une minute, et vous pouvez la suivre sur la page « Domaine et SSL ».',
             'tip' => 'Le domaine devrait déjà pointer vers ce serveur (utilisez « Vérifier le DNS » ci-dessus), et l’installation a besoin d’une adresse e-mail pour Let’s Encrypt (ACME_EMAIL) ; sans elles, l’interrupteur n’apparaît pas ou la demande est refusée, et le jeu est quand même créé. Vous pourrez redemander plus tard sur la page « Domaine et SSL ».',
         ],
+        'units' => [
+            'label' => 'Système d’unités',
+            'help' => 'Dans quoi le nouveau jeu compte la distance et la vitesse : ce que l’opérateur écrit et ce que le joueur voit (les nombres des règles restent en mètres, kilomètres et km/h). Cela se change ensuite dans le studio (« Unités du jeu ») et dans le texte des règles.',
+            'tip' => 'Cela ne vaut que pour un jeu qui part du modèle ; une copie d’un autre jeu a les unités de celui-ci, et un jeu sans contenu n’en a aucune.',
+            'options' => [
+                'metric' => ['label' => 'Métrique', 'help' => 'Des mètres sur un circuit, des kilomètres sur la route, des km/h, la consommation en l/100 km : le jeu de voitures.'],
+                'nautical' => ['label' => 'Marin', 'help' => 'Des milles marins sur un circuit et sur la route, des nœuds, la consommation en litres par mille marin : un jeu de bateaux.'],
+                'imperial' => ['label' => 'Milles', 'help' => 'Des milles sur un circuit et sur la route, des milles à l’heure, la consommation en litres pour 100 milles.'],
+            ],
+        ],
     ],
 ];

@@ -334,7 +334,9 @@ return [
             'regions' => 'Cities (numbers)',
             'roads' => 'Roads',
             'travel' => 'Travel and boost',
-            'tracks' => 'Tracks: times, rewards, weights',
+            'tracks' => 'Tracks: speed, pay, XP, weights',
+            'track_model' => 'Track model',
+            'units' => 'Units of the game',
         ],
     ],
     'model' => [
@@ -472,6 +474,16 @@ return [
     ],
 
     'world' => [
+        'preview' => 'Reference car: a lap of :lap, :speed on average, :fuel l of fuel a lap (:economy), :laps laps an hour. A lap pays $:cash and gives :xp XP.',
+        'preview_wait' => 'Enter the length and the speed of the track (or a lap by hand), and this will show what it comes to for the reference car.',
+        'advise' => 'Suggest a speed',
+        'advise_hint' => 'The difficulty calculator works out the speed of the reference car from the corners, the climbs and the traffic of the track (its numbers are in the studio, “Track model”). It is only a suggestion: the result goes to the “Track speed” field, and you can change it.',
+        'advise_use' => 'Use this speed',
+        'per_unit' => 'per :unit',
+        'to_model' => 'Move to the model',
+        'to_model_hint' => 'This track has numbers written by hand, which are believed over the model. Moving turns them into a speed and the pay and XP of an hour that make the same numbers to the millisecond, the millilitre, the cent and the point of XP; what cannot be made exactly stays by hand.',
+        'to_model_done' => 'The numbers of this track are moved to the model (save to keep them).',
+        'to_model_left' => 'Stay by hand: :fields.',
         'nav' => 'World',
         'title' => 'The world: cities, roads and tracks',
         'cities' => 'Cities',

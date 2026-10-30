@@ -445,6 +445,16 @@ return [
     ],
 
     'world' => [
+        'preview' => 'Voiture de référence : un tour de :lap, :speed en moyenne, :fuel l de carburant par tour (:economy), :laps tours à l’heure. Un tour rapporte :cash $ et donne :xp XP.',
+        'preview_wait' => 'Saisissez la longueur et la vitesse du circuit (ou un tour à la main), et ceci montrera ce que cela donne pour la voiture de référence.',
+        'advise' => 'Suggérer une vitesse',
+        'advise_hint' => 'Le calculateur de difficulté calcule la vitesse de la voiture de référence à partir des virages, des montées et de la circulation du circuit (ses nombres sont dans le studio, « Modèle de circuit »). Ce n’est qu’une suggestion : le résultat va dans le champ « Vitesse du circuit », et vous pouvez le modifier.',
+        'advise_use' => 'Utiliser cette vitesse',
+        'per_unit' => 'par :unit',
+        'to_model' => 'Passer au modèle',
+        'to_model_hint' => 'Ce circuit a des nombres écrits à la main, qui l’emportent sur le modèle. Le passage les change en une vitesse et en un gain et une XP à l’heure qui font les mêmes nombres à la milliseconde, au millilitre, au cent et au point d’XP près ; ce qui ne peut pas être fait exactement reste à la main.',
+        'to_model_done' => 'Les nombres de ce circuit sont passés au modèle (enregistrez pour les conserver).',
+        'to_model_left' => 'Restent à la main : :fields.',
         'nav' => 'Monde',
         'title' => 'Le monde : villes, routes et circuits',
         'cities' => 'Villes',

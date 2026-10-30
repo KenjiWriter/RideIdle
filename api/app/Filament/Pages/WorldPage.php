@@ -32,7 +32,7 @@ class WorldPage extends RulesDocumentPage
 
     protected function fields(array $document): array
     {
-        return WorldFields::schema(array_map('strval', array_keys($document['weather'] ?? [])));
+        return WorldFields::schema(array_map('strval', array_keys($document['weather'] ?? [])), $document);
     }
 
     protected function toState(array $document): array
