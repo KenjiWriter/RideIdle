@@ -1,0 +1,33 @@
+# Notes of agent rules-drivetrain-tires
+
+Files written (five locales pl, en, fr, de, pt_BR), 67 entries each, every entry has label, help, example, range; 43 of them also a tip; no `options` (none of the patterns is a choice):
+
+- `api/lang/<locale>/help/rules.rules-drivetrain-tires.php` (area `rules`), `php -l` clean, identical keys in all five.
+
+The files are generated (scratchpad `gen-rdt*.js`, `emit-rdt.js`) from `content/rules/starter.json`, so the numbers in examples are the CURRENT values and are computed, not typed. Re-running `node emit-rdt.js` in the scratchpad rewrites the files after a change of the rules (the texts of "Teraz ..." examples then follow the document).
+
+## Sources
+
+- `drivetrain/*` (start, handling, mass_penalty, fuel, service, traction/*): `content/schema/rules.schema.json` (`$defs/drivetrain`, `surfaces`), `Rules::drivetrain()` (every factor is taken as a ratio to the row of `drivetrain.reference`, FWD now; the traction as an integer ratio in ppm), `Rules::serviceCostCents()`, `RunInputsFactory::stats()` (start x mass x power factor on acceleration, handling x mass on Handling, fuel on the fuel use) and `RunInputsFactory::make()` (traction x tire matrix x surface affix on grip, handling and braking), `Travel::journeyOf()` (the same `fuelUseMultiplier` is used for the fuel of journeys), `docs/api-runs.md` section "Napęd: FWD, RWD i AWD" (ratios x1.082 / x1.077 / x1.160 / x0.940 checked against my own numbers).
+- `drivetrain/*/power_limit/{kw,exponent}`: `Rules::drivetrainPowerFactor()` (absolute, not divided by the reference; `(kw / power) ^ exponent` above the limit; power = the whole car with engine part and booster), schema `exclusiveMinimum 0`, `maximum 2` for the exponent. Loss figures in the examples are computed from the pack cars (Bizon V8 371 kW, Bizon SS 512 kW, Orzeł V12 663 kW) and two hypothetical FWD powers (163 and 239 kW, the values from the docs).
+- `tire_matrix/*/*`: schema (`tire_matrix`, `surfaces`), `Rules::tireGripPpm()`, `RunInputsFactory::make()` (matrix, the legendary "surface_loss" and surface affixes, traction, weather), `Surface::of()` (track surface + weather ground = one of five surfaces), `README` of the content ("Nawierzchnie i macierz opon": street tires = old flat multipliers, slick T7 not in the shop, level 18, Kruszyn tracks with `reference_tires`), `RunFreezer::lapMs()` (a statistic counts at most 1.6 x the track reference). Names of the tire kinds are the names of the pack parts (`content/packs/core/parts/*-tires-*.json`), names of surfaces and weather and statistics are `part.surface.*`, `weather.*`, `carStat.*`, `car.drivetrain.*` of the web locales.
+- `weather/*/{reward_ppm,xp_ppm,stat_ppm/*}`: schema (`weather`), `RunInputsFactory::make()` (stat_ppm multiplied into the traction statistics, others stay as they are), `RunFreezer::freeze()` (lap cash = reward per lap x reward_ppm after the bots place; XP of the lap is worked out from the DRY lap and only then multiplied by xp_ppm), `docs/api-runs.md` ("XP okrążenia ma sufit toru": the XP of the car itself, 10 a lap, does not depend on the weather).
+
+## UNSURE
+
+- `/drivetrain/types/*/mass_penalty_ppm`: what the penalty stands for physically (weight of the drive hardware) is not stated anywhere; the entries only say what the code does (it multiplies acceleration and Handling together, ratio to the reference drive) and that it comes on top of the mass of the car (docs D5: heavy cars may be penalised twice). Nothing about "hardware weight" is claimed.
+- `/drivetrain/types/*/start_ppm` (and the others) of the REFERENCE drive: the entries say that the reference row does not change its own cars and only moves the others; this is true while `drivetrain.reference` is that drive. If the operator changes `reference`, the "reference drive" sentences of the FWD entries (and the "(FWD, 92%)" examples, which read the document at generation time) no longer describe the right row. The panel texts are static, the sentence says "(now ...)" only in some places.
+- `/tire_matrix/*/*` tips about the shop ("Slick T7 is not in the shop and needs level 18", "Kruszyn tracks use off-road tires as reference tires") come from `content/README.md` and `starter.json` (`tracks.*.reference_tires`), not from code I read; they are design facts that may change without the matrix changing.
+
+## Things that look inconsistent (for the coordinator)
+
+1. Units: the factors `start/handling/mass_penalty/fuel/service` of a drive are shown as Percent (92%), but `traction_ppm/*`, the whole `tire_matrix` and `weather/*/stat_ppm/*` are `Plain` (the operator sees 970000 next to 92%). The entries therefore write "1 000 000 = x1" for the Plain ones. Showing them as Percent too would be more consistent; it is not a bug.
+2. Limits: for `power_limit/kw` and `power_limit/exponent` the input says `min: null`, but the schema has `exclusiveMinimum 0` (a drive with 0 kW or a negative exponent is rejected on publication, not by the field). The ranges in the entries say "more than 0 kW" / "more than 0, at most 2". Percent fields have `minimum 1` ppm, so the panel's lowest legal value is 0.0001% (weather `reward_ppm`/`xp_ppm`: 0 is legal, text says "0% or more").
+3. The weather `reward_ppm` example in `docs/api-runs.md` ("Autodrom, Orzeł V12: 45,05 $ dry, 41,90 $ in rain") predates the bots; the place among the bots (x1.5 for the first place ... x0.8) is not part of that sum, so I did NOT use it; the entries give a neutral example (a 10 $ lap pays 9.30 $ in rain) computed from the current 93%.
+4. `weather.*.stat_ppm` is an empty JSON array `[]` in `starter.json` for dry, cloudy, rain and snow (a PHP/JSON quirk of an empty object); the schema says `object`. The Studio probably handles it, I only note it.
+5. `drivetrain.types.awd` has no `power_limit` in the document, so there are no AWD power-limit patterns in the input; the FWD/RWD tips say "a drive can also have no limit (now AWD)".
+6. The input header says 67 patterns and 67 are written (36 drivetrain minus the two missing AWD power limit rows = 34, 30 tire matrix, 3 weather).
+
+## Update (coordinator correction, unit detection fixed)
+
+`/drivetrain/types/{fwd,rwd,awd}/traction_ppm/*` (15) and `/weather/*/stat_ppm/*` (1) are now shown as PERCENT; those 16 entries were rewritten in all five locales (help, example, range, tip in percent, e.g. 97 %, 90 %; range = "more than 0 % (at least 1 ppm in the document), no upper limit"). `/tire_matrix/*/*` stays Plain (raw ppm, "1 000 000 = x1") because the coordinator did not list it. Inconsistency note 1 above is therefore partly obsolete: only the tire matrix is still Plain next to Percent fields. Unchanged: all other 51 entries (checked by diff of the old and new files).
