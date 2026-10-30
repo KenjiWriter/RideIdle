@@ -533,6 +533,35 @@ final class Rules
         return ($this->infinity()['enabled'] ?? false) === true;
     }
 
+    /**
+     * The missions as the rules give them: the switch, the time zone and the hour at which a day, a week and a month of the missions start, the step of the tutorial
+     * after which the sets start, and for each period what a whole set pays (cash and XP as parts of a tank of the best car, in ppm) and the premium coins for having
+     * done all of it. Null when the rules do not mention them, which is the same as off.
+     *
+     * @return array{enabled: bool, timezone: string, reset_hour: int, unlock_after_step: string, periods: array<string, array{bonus_coins: int, cash_ppm: int, xp_ppm: int}>}|null
+     */
+    public function missions(): ?array
+    {
+        $missions = $this->data['missions'] ?? null;
+
+        return $missions === null ? null : [
+            'enabled' => (bool) $missions['enabled'],
+            'timezone' => (string) $missions['timezone'],
+            'reset_hour' => (int) $missions['reset_hour'],
+            'unlock_after_step' => (string) $missions['unlock_after_step'],
+            'periods' => array_map(
+                static fn (array $period): array => ['bonus_coins' => (int) $period['bonus_coins'], 'cash_ppm' => (int) $period['cash_ppm'], 'xp_ppm' => (int) $period['xp_ppm']],
+                $missions['periods'],
+            ),
+        ];
+    }
+
+    /** Whether the game has missions: they are in the rules and switched on. */
+    public function missionsOn(): bool
+    {
+        return ($this->missions()['enabled'] ?? false) === true;
+    }
+
     /** How many cars a garage holds. */
     public function garageCapacity(): int
     {

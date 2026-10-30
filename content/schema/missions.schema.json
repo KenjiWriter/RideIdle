@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rideidle.local/schema/missions.schema.json",
+  "title": "Missions (content/rules/missions.json, schema v0)",
+  "description": "The missions of the game as data: the pools that the daily, weekly and monthly sets are drawn from, and the chains of main missions. How many missions a set has is the number of its slots; what the sets pay in all, when they reset and what the bonus for a whole set is are numbers of the rules (rules/starter.json, section missions). Provisional, like the rules.",
+  "type": "object",
+  "properties": {
+    "schema": { "const": 0 },
+    "version": { "type": "string", "pattern": "^[0-9]{4}\\.[0-9]{1,2}\\.[0-9]+$" },
+    "periodic": {
+      "description": "The sets that come back: a set of a day, a week or a month has one mission for every slot, drawn from the templates of the slot (by weight, from a seed that is the driver and the period, so that the same driver gets the same set all through the period). A driver draws a set the first time they look in the period.",
+      "type": "object",
+      "properties": {
+        "daily": { "$ref": "#/$defs/slots" },
+        "weekly": { "$ref": "#/$defs/slots" },
+        "monthly": { "$ref": "#/$defs/slots" }
+      },
+      "required": ["daily", "weekly", "monthly"],
+      "additionalProperties": false
+    },
+    "chains": {
+      "description": "The main missions: a chain is a line of missions that the driver does one after another (the next one opens when the one before it is done), and every chain has one mission at a time, so a driver has several main goals at once. What a mission counts is everything the driver has done, not only what they did after it opened.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": { "$ref": "common.schema.json#/$defs/slug" },
+          "title": { "$ref": "common.schema.json#/$defs/i18n" },
+          "missions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/chainMission" } }
+        },
+        "required": ["key", "title", "missions"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schema", "version", "periodic"],
+  "additionalProperties": false,
+  "$defs": {
+    "objective": {
+      "description": "What a mission counts. Counted over the period: laps (every car of the driver, also while they are away), cash_earned (what the laps paid, in cents; what a mission paid does not count), wet_laps (laps on a wet ground), fuel_spent (cents paid for fuel), upgrade, mount and service (jobs of the workshop that were done), crate (crates of the shop opened; the crates that missions give do not count), parts_bought, journey (journeys that ended) and car_bought (cars bought on the exchange or at the dealer). In a chain they are counted over all the time, and a chain also has repair (repairs after a breakdown), merge (attempts at merging parts), player_level, car_level (the best car), cars_owned, garages_owned, rarity_owned (parts of the rarity in param, or better, owned) and tires_mounted (tires of the kind in param on the car that is played).",
+      "enum": [
+        "laps", "cash_earned", "wet_laps", "fuel_spent", "upgrade", "mount", "service", "crate", "parts_bought", "journey", "car_bought",
+        "repair", "merge", "player_level", "car_level", "cars_owned", "garages_owned", "rarity_owned", "tires_mounted"
+      ]
+    },
+    "items": {
+      "description": "What a mission gives besides cash and XP. A crate is opened for the driver when the reward is taken (the same draw as the shop, with the odds of its kind, but its own count of openings for the guarantees; it costs nothing), and a part is a part of the rarity from the pool of the shop that the level of the driver opens, in a slot that is drawn.",
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": { "type": { "const": "crate" }, "kind": { "enum": ["slot", "mixed", "premium"] } },
+            "required": ["type", "kind"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": { "type": { "const": "part" }, "rarity": { "enum": ["common", "uncommon", "rare", "epic", "legendary"] } },
+            "required": ["type", "rarity"],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "slots": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": { "description": "What the slot is for, for the people who edit it.", "$ref": "common.schema.json#/$defs/slug" },
+          "templates": {
+            "description": "The missions the slot can draw, by key. Every level of the game has to have at least one that fits it (min_player_level and max_player_level).",
+            "type": "object",
+            "minProperties": 1,
+            "propertyNames": { "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+            "additionalProperties": { "$ref": "#/$defs/template" }
+          }
+        },
+        "required": ["key", "templates"],
+        "additionalProperties": false
+      }
+    },
+    "template": {
+      "type": "object",
+      "properties": {
+        "objective": { "$ref": "#/$defs/objective" },
+        "tanks_ppm": { "description": "For laps, wet_laps, cash_earned and fuel_spent: how much of a tank of the best car of the driver the goal is (1 000 000 is one full tank: its laps, what they pay, what the fuel costs).", "type": "integer", "minimum": 1, "maximum": 100000000 },
+        "count": { "description": "For the other goals: how many times.", "type": "integer", "minimum": 1, "maximum": 100000 },
+        "weight": { "description": "How often the slot draws it, against the others of the slot.", "type": "integer", "minimum": 1, "maximum": 1000 },
+        "reward_share": { "description": "Its share of what the set pays in cash and XP (the set pays the same whatever it draws; the shares tell how it is divided).", "type": "integer", "minimum": 1, "maximum": 1000 },
+        "min_player_level": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "max_player_level": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "car_xp_laps": { "description": "Experience for the car that is played, as many laps of it as this.", "type": "integer", "minimum": 1, "maximum": 100000 },
+        "items": { "$ref": "#/$defs/items" }
+      },
+      "required": ["objective", "weight", "reward_share"],
+      "additionalProperties": false
+    },
+    "chainMission": {
+      "type": "object",
+      "properties": {
+        "key": { "$ref": "common.schema.json#/$defs/slug" },
+        "title": { "$ref": "common.schema.json#/$defs/i18n" },
+        "text": { "description": "One sentence on what to do and why, in the voice of the game.", "$ref": "common.schema.json#/$defs/i18n" },
+        "objective": { "$ref": "#/$defs/objective" },
+        "count": { "description": "The goal: how many, or the level, or the number of cars. For the facts that are not counted (tires_mounted) it is 1.", "type": "integer", "minimum": 1, "maximum": 100000000 },
+        "param": { "description": "The rarity (rarity_owned) or the kind of tires (tires_mounted) the mission is about.", "type": "string", "pattern": "^[a-z_]+$" },
+        "min_player_level": { "description": "The mission opens only for a driver of this level, whatever the chain has done.", "type": "integer", "minimum": 1, "maximum": 100 },
+        "reward": {
+          "type": "object",
+          "properties": {
+            "cash_tanks_ppm": { "description": "Cash, as a part of the net earnings of a tank of the best car of the driver (1 000 000 is a tank).", "type": "integer", "minimum": 1, "maximum": 100000000 },
+            "xp_tanks_ppm": { "description": "Experience for the driver, as a part of the XP of a tank of the best car.", "type": "integer", "minimum": 1, "maximum": 100000000 },
+            "car_xp_laps": { "description": "Experience for the car that is played, as many laps of it as this.", "type": "integer", "minimum": 1, "maximum": 100000 },
+            "items": { "$ref": "#/$defs/items" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": ["key", "title", "text", "objective", "count", "reward"],
+      "additionalProperties": false
+    }
+  }
+}

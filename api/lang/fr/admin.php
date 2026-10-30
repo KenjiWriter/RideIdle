@@ -275,6 +275,7 @@ return [
             'affixes' => 'Ce que cela change : la force, les chances et les effets des affixes des pièces, y compris ceux qui dépendent de la surface.',
             'wear' => 'Ce que cela change : la durée de vie des pièces, le coût de la réparation et de l’entretien et la façon dont la négligence abîme une voiture.',
             'premium' => 'Ce que cela change : le prix des lots de pièces, l’accélération contre des pièces et le prix de l’avocat.',
+            'missions' => 'Ce que cela change : l’heure à laquelle commence le jour des missions et ce que paient les séries (de l’argent et de l’XP en part de réservoir, et le bonus en pièces pour une série complète). Ce sont les seules pièces gratuites du jeu.',
             'workshop' => 'Ce que cela change : les durées de montage, d’amélioration et de fusion, le prix des postes et des mécaniciens et la longueur de la file.',
             'tire_matrix' => 'Ce que cela change : l’adhérence de chaque type de pneu sur chaque surface.',
             'weather' => 'Ce que cela change : l’effet de la météo sur un tour.',

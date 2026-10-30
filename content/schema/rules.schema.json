@@ -611,6 +611,58 @@
       "required": ["currency", "price_currency", "products"],
       "additionalProperties": false
     },
+    "missions": {
+      "description": "The missions: sets of a day, a week and a month that are drawn for every driver, and chains of main missions (the pools and the chains are in rules/missions). Here is what changes the economy: when a period starts, what a set pays and the premium coins for a whole set. What the missions pay is on top of the earnings of the cars and does not count in the economy of the game, as the VIP account does not.",
+      "type": "object",
+      "properties": {
+        "enabled": { "description": "Whether the game has missions. When it is off nothing is drawn, shown or paid; what the drivers have not taken stays where it is.", "type": "boolean" },
+        "timezone": { "description": "The time zone in which the day, the week and the month of the missions start (a name of the IANA database).", "type": "string", "pattern": "^[A-Za-z]+([_/+-][A-Za-z0-9]+)*$" },
+        "reset_hour": { "description": "The hour of the day (in the time zone) at which the day of the missions starts; the week starts on Monday and the month on the first at this hour. Four in the morning keeps an evening session in one day.", "type": "integer", "minimum": 0, "maximum": 23 },
+        "unlock_after_step": { "description": "The key of the step of the tutorial after which the daily, weekly and monthly missions start (a driver who left the tutorial has them at once). The main missions start when the tutorial is over.", "$ref": "common.schema.json#/$defs/slug" },
+        "periods": {
+          "type": "object",
+          "properties": {
+        "daily": {
+          "description": "The daily set: what a whole set pays in cash and XP, and the bonus for having done every mission of it.",
+          "type": "object",
+          "properties": {
+            "bonus_coins": { "description": "The premium coins that a driver gets for having done every mission of the set. They are the only premium coins the missions give, and paid for in no other way, so this is all the free coins the game hands out for a day of missions. The schema caps it so that a slip of the hand does not make the missions a tap.", "type": "integer", "minimum": 0, "maximum": 5 },
+            "cash_ppm": { "description": "What the whole set pays in cash, as a part of the net earnings of a tank of the best car of the driver (1 000 000 is one tank). The missions of the set divide it by their shares, so the set pays the same whichever missions it draws.", "type": "integer", "minimum": 0, "maximum": 10000000 },
+            "xp_ppm": { "description": "What the whole set pays in XP of the driver, as a part of the XP of a tank of the best car (1 000 000 is one tank). The level of a driver is a gate of the game, so keep it small.", "type": "integer", "minimum": 0, "maximum": 10000000 }
+          },
+          "required": ["bonus_coins", "cash_ppm", "xp_ppm"],
+          "additionalProperties": false
+        },
+        "weekly": {
+          "description": "The weekly set: what a whole set pays in cash and XP, and the bonus for having done every mission of it.",
+          "type": "object",
+          "properties": {
+            "bonus_coins": { "description": "The premium coins that a driver gets for having done every mission of the set. They are the only premium coins the missions give, and paid for in no other way, so this is all the free coins the game hands out for a week of missions. The schema caps it so that a slip of the hand does not make the missions a tap.", "type": "integer", "minimum": 0, "maximum": 20 },
+            "cash_ppm": { "description": "What the whole set pays in cash, as a part of the net earnings of a tank of the best car of the driver (1 000 000 is one tank). The missions of the set divide it by their shares, so the set pays the same whichever missions it draws.", "type": "integer", "minimum": 0, "maximum": 10000000 },
+            "xp_ppm": { "description": "What the whole set pays in XP of the driver, as a part of the XP of a tank of the best car (1 000 000 is one tank). The level of a driver is a gate of the game, so keep it small.", "type": "integer", "minimum": 0, "maximum": 10000000 }
+          },
+          "required": ["bonus_coins", "cash_ppm", "xp_ppm"],
+          "additionalProperties": false
+        },
+        "monthly": {
+          "description": "The monthly set: what a whole set pays in cash and XP, and the bonus for having done every mission of it.",
+          "type": "object",
+          "properties": {
+            "bonus_coins": { "description": "The premium coins that a driver gets for having done every mission of the set. They are the only premium coins the missions give, and paid for in no other way, so this is all the free coins the game hands out for a month of missions. The schema caps it so that a slip of the hand does not make the missions a tap.", "type": "integer", "minimum": 0, "maximum": 60 },
+            "cash_ppm": { "description": "What the whole set pays in cash, as a part of the net earnings of a tank of the best car of the driver (1 000 000 is one tank). The missions of the set divide it by their shares, so the set pays the same whichever missions it draws.", "type": "integer", "minimum": 0, "maximum": 10000000 },
+            "xp_ppm": { "description": "What the whole set pays in XP of the driver, as a part of the XP of a tank of the best car (1 000 000 is one tank). The level of a driver is a gate of the game, so keep it small.", "type": "integer", "minimum": 0, "maximum": 10000000 }
+          },
+          "required": ["bonus_coins", "cash_ppm", "xp_ppm"],
+          "additionalProperties": false
+        }
+          },
+          "required": ["daily", "weekly", "monthly"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["enabled", "timezone", "reset_hour", "unlock_after_step", "periods"],
+      "additionalProperties": false
+    },
     "workshop": {
       "description": "Jobs of the workshop: putting a part on a car and taking it off. One mechanic, and no equipment yet, so a job takes base_time_ms of the slot times the tier, cut by the level of the mechanic.",
       "type": "object",

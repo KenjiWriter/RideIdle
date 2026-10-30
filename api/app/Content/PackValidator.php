@@ -9,6 +9,7 @@ use App\Content\Branding\CssPolicy;
 use App\Content\Vocabulary\MessageCatalog;
 use App\Services\ContentImages;
 use App\Support\Locale;
+use DateTimeZone;
 use InvalidArgumentException;
 use JsonException;
 use Opis\JsonSchema\Errors\ErrorFormatter;
@@ -42,6 +43,7 @@ final class PackValidator
         'vocabulary' => 'vocabulary.schema.json',
         'model' => 'model.schema.json',
         'branding' => 'branding.schema.json',
+        'missions' => 'missions.schema.json',
     ];
 
     private readonly Validator $validator;
@@ -130,13 +132,13 @@ final class PackValidator
 
         $this->warnAboutMissingPictures($pictures, $result);
 
-        foreach (['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json', 'economy' => 'economy.schema.json', 'vocabulary' => 'vocabulary.schema.json', 'model' => 'model.schema.json', 'branding' => 'branding.schema.json'] as $name => $schemaFile) {
+        foreach (['starter' => 'rules.schema.json', 'tutorial' => 'tutorial.schema.json', 'economy' => 'economy.schema.json', 'vocabulary' => 'vocabulary.schema.json', 'model' => 'model.schema.json', 'branding' => 'branding.schema.json', 'missions' => 'missions.schema.json'] as $name => $schemaFile) {
             if (! $source->has("rules/{$name}")) {
                 // A pack with no vocabulary is a pack that does not change the words of the app, one with no model is a game of the cars of the first pack, and one
                 // with no branding is the app as it looks.
                 match ($name) {
                     'economy' => $result->addWarning("rules/{$name}.json", '', 'The anchors of the economy are missing: the simulators cannot be run on this content.'),
-                    'vocabulary', 'model', 'branding' => null,
+                    'vocabulary', 'model', 'branding', 'missions' => null,
                     default => $result->addError("rules/{$name}.json", '', 'The document is missing.'),
                 };
 
@@ -305,6 +307,7 @@ final class PackValidator
         $this->checkModel($source, $rules, $result);
         $this->checkWorld($rules, $result);
         $this->checkTutorial($source, $parts, $vehicles, $regions, $result);
+        $this->checkMissions($source, $rules, $result);
         $this->checkWithdrawn($source, $parts, $vehicles, $result);
         $this->checkAffixes($rules, $result);
     }
@@ -478,6 +481,99 @@ final class PackValidator
 
         if ($listing !== null && ! in_array($listing, $vehicles, true)) {
             $result->addError($file, '/script/exchange_listing/vehicle', "The listing of the tutorial is {$listing}, which is not a car of the pack.");
+        }
+    }
+
+    /**
+     * What the schema cannot say about the missions: the numbers of the rules and the pools of the document agree, a goal is the kind of goal its template says it
+     * is (a part of a tank, or a number of times), the keys of the templates are the keys of one template, the crates they give are crates of the game, and every
+     * level of the game can draw a mission for every slot, so that a set is never short of one.
+     *
+     * @param  array<string, mixed>  $rules
+     */
+    private function checkMissions(ContentSource $source, array $rules, PackValidationResult $result): void
+    {
+        $file = 'rules/missions.json';
+        $has = $source->has('rules/missions');
+        $section = $rules['missions'] ?? null;
+
+        if ($section === null) {
+            if ($has) {
+                $result->addWarning($file, '', 'The pack has missions, but the rules have no missions section: the game does not draw them.');
+            }
+
+            return;
+        }
+
+        if (! in_array($section['timezone'], DateTimeZone::listIdentifiers(), true)) {
+            $result->addError('rules/starter.json', '/missions/timezone', "{$section['timezone']} is not a time zone.");
+        }
+
+        if ($source->has('rules/tutorial') && ! in_array($section['unlock_after_step'], array_column($source->document('rules/tutorial')['steps'] ?? [], 'key'), true)) {
+            $result->addError('rules/starter.json', '/missions/unlock_after_step', "The tutorial has no step {$section['unlock_after_step']}.");
+        }
+
+        if (! $has) {
+            if ($section['enabled']) {
+                $result->addWarning('rules/starter.json', '/missions/enabled', 'The missions are on, but the pack has no rules/missions.json to draw them from.');
+            }
+
+            return;
+        }
+
+        if (($section['periods'] ?? []) !== [] && ! isset($rules['premium']) && array_sum(array_column($section['periods'], 'bonus_coins')) > 0) {
+            $result->addWarning('rules/starter.json', '/missions/periods', 'The sets pay premium coins, and the rules have no premium currency: nothing is paid.');
+        }
+
+        $missions = $source->document('rules/missions');
+        $levels = (int) ($rules['player']['max_level'] ?? 30);
+        $kinds = array_keys($rules['shop']['crates']['kinds'] ?? []);
+        $keys = [];
+
+        foreach (MissionCatalog::PERIODS as $period) {
+            foreach ($missions['periodic'][$period] ?? [] as $index => $slot) {
+                $where = "/periodic/{$period}/{$index}";
+                $covered = array_fill(1, $levels, false);
+
+                foreach ($slot['templates'] as $key => $template) {
+                    $pointer = "{$where}/templates/{$key}";
+
+                    if (isset($keys[$key])) {
+                        $result->addError($file, $pointer, "The key {$key} is used by two templates.");
+                    }
+
+                    $keys[$key] = true;
+                    $objective = $template['objective'];
+
+                    if (! in_array($objective, MissionCatalog::PERIODIC_OBJECTIVES, true)) {
+                        $result->addError($file, "{$pointer}/objective", "{$objective} is a goal of the main missions: a set cannot count it over a period.");
+                    } elseif (in_array($objective, MissionCatalog::TANK_OBJECTIVES, true) && ! isset($template['tanks_ppm'])) {
+                        $result->addError($file, $pointer, "The goal {$objective} is a part of a tank, and the template has no tanks_ppm.");
+                    } elseif (! in_array($objective, MissionCatalog::TANK_OBJECTIVES, true) && ! isset($template['count'])) {
+                        $result->addError($file, $pointer, "The goal {$objective} is a number of times, and the template has no count.");
+                    }
+
+                    if (isset($template['max_player_level'], $template['min_player_level']) && $template['max_player_level'] < $template['min_player_level']) {
+                        $result->addError($file, "{$pointer}/max_player_level", 'The highest level is lower than the lowest.');
+                    }
+
+                    foreach ($template['items'] ?? [] as $position => $item) {
+                        if ($item['type'] === 'crate' && ! in_array($item['kind'], $kinds, true)) {
+                            $result->addError($file, "{$pointer}/items/{$position}/kind", "The game has no crate {$item['kind']}.");
+                        }
+                    }
+
+                    for ($level = (int) ($template['min_player_level'] ?? 1); $level <= min($levels, (int) ($template['max_player_level'] ?? $levels)); $level++) {
+                        $covered[$level] = true;
+                    }
+                }
+
+                $gap = array_search(false, $covered, true);
+
+                if ($gap !== false) {
+                    $result->addError($file, $where, "No template of the slot {$slot['key']} fits a driver of level {$gap}: the set would have no mission for it.");
+                }
+            }
         }
     }
 

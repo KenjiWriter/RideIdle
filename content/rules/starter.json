@@ -398,6 +398,17 @@
       "coins-huge": { "name": { "en": "Huge pack", "pl": "Ogromna paczka", "fr": "Pack géant", "de": "Riesiges Paket", "pt-BR": "Pacote gigante" }, "coins": 1300, "price_minor": 9999 }
     }
   },
+  "missions": {
+    "enabled": true,
+    "timezone": "Europe/Warsaw",
+    "reset_hour": 4,
+    "unlock_after_step": "travel",
+    "periods": {
+      "daily": { "bonus_coins": 2, "cash_ppm": 60000, "xp_ppm": 50000 },
+      "weekly": { "bonus_coins": 8, "cash_ppm": 200000, "xp_ppm": 150000 },
+      "monthly": { "bonus_coins": 25, "cash_ppm": 600000, "xp_ppm": 400000 }
+    }
+  },
   "workshop": {
     "mechanic_level": 1,
     "time_cut_ppm_per_level": 20000,

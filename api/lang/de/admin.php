@@ -275,6 +275,7 @@ return [
             'affixes' => 'Das ändert sich: Stärke, Chancen und Wirkungen der Affixe von Teilen, auch derer, die vom Untergrund abhängen.',
             'wear' => 'Das ändert sich: wie lange Teile halten, was Reparatur und Wartung kosten und wie Vernachlässigung ein Auto verdirbt.',
             'premium' => 'Das ändert sich: die Preise der Münzpakete, das Beschleunigen mit Münzen und der Preis des Anwalts.',
+            'missions' => 'Das ändert sich: wann der Missionstag beginnt und was die Sets zahlen (Geld und XP als Teil eines Tanks sowie den Bonus in Münzen für ein ganzes Set). Das sind die einzigen kostenlosen Münzen im Spiel.',
             'workshop' => 'Das ändert sich: die Zeiten für Einbau, Aufwertung und Verschmelzen, die Preise von Plätzen und Mechanikern und die Länge der Warteschlange.',
             'tire_matrix' => 'Das ändert sich: der Grip jeder Reifenart auf jedem Untergrund.',
             'weather' => 'Das ändert sich: wie das Wetter eine Runde beeinflusst.',

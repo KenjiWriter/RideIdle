@@ -275,6 +275,7 @@ return [
             'affixes' => 'O que muda: a força, as chances e os efeitos dos afixos das peças, inclusive os que dependem do piso.',
             'wear' => 'O que muda: quanto tempo duram as peças, quanto custam o reparo e a revisão e como o descuido estraga um carro.',
             'premium' => 'O que muda: os preços dos pacotes de moedas, a aceleração com moedas e o preço do advogado.',
+            'missions' => 'O que muda: quando o dia de missões começa e o que os conjuntos pagam (dinheiro e XP como parte de um tanque e o bônus em moedas por um conjunto completo). São as únicas moedas grátis do jogo.',
             'workshop' => 'O que muda: os tempos de montagem, melhoria e fusão, os preços de baias e mecânicos e o tamanho da fila.',
             'tire_matrix' => 'O que muda: a aderência de cada tipo de pneu em cada piso.',
             'weather' => 'O que muda: como o clima afeta uma volta.',

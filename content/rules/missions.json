@@ -1,0 +1,313 @@
+{
+  "schema": 0,
+  "version": "2026.10.1",
+  "periodic": {
+    "daily": [
+      {
+        "key": "drive",
+        "templates": {
+          "daily-laps": {
+            "objective": "laps",
+            "tanks_ppm": 600000,
+            "weight": 3,
+            "reward_share": 2
+          },
+          "daily-laps-long": {
+            "objective": "laps",
+            "tanks_ppm": 900000,
+            "weight": 1,
+            "reward_share": 3
+          }
+        }
+      },
+      {
+        "key": "earn",
+        "templates": {
+          "daily-cash": {
+            "objective": "cash_earned",
+            "tanks_ppm": 600000,
+            "weight": 1,
+            "reward_share": 2
+          }
+        }
+      },
+      {
+        "key": "fuel",
+        "templates": {
+          "daily-fuel": {
+            "objective": "fuel_spent",
+            "tanks_ppm": 700000,
+            "weight": 1,
+            "reward_share": 1
+          }
+        }
+      },
+      {
+        "key": "workshop",
+        "templates": {
+          "daily-mount": {
+            "objective": "mount",
+            "count": 1,
+            "weight": 2,
+            "reward_share": 1
+          },
+          "daily-upgrade": {
+            "objective": "upgrade",
+            "count": 1,
+            "min_player_level": 10,
+            "weight": 2,
+            "reward_share": 1
+          }
+        }
+      },
+      {
+        "key": "shop",
+        "templates": {
+          "daily-crate": {
+            "objective": "crate",
+            "count": 1,
+            "weight": 2,
+            "reward_share": 1
+          },
+          "daily-parts": {
+            "objective": "parts_bought",
+            "count": 1,
+            "weight": 1,
+            "reward_share": 1
+          }
+        }
+      },
+      {
+        "key": "extra",
+        "templates": {
+          "daily-service": {
+            "objective": "service",
+            "count": 1,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "slot"
+              }
+            ],
+            "weight": 2,
+            "reward_share": 2
+          },
+          "daily-laps-marathon": {
+            "objective": "laps",
+            "tanks_ppm": 1200000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "slot"
+              }
+            ],
+            "weight": 1,
+            "reward_share": 3
+          }
+        }
+      }
+    ],
+    "weekly": [
+      {
+        "key": "drive",
+        "templates": {
+          "weekly-laps": {
+            "objective": "laps",
+            "tanks_ppm": 4000000,
+            "weight": 1,
+            "reward_share": 2
+          }
+        }
+      },
+      {
+        "key": "earn",
+        "templates": {
+          "weekly-cash": {
+            "objective": "cash_earned",
+            "tanks_ppm": 4000000,
+            "weight": 1,
+            "reward_share": 2
+          }
+        }
+      },
+      {
+        "key": "workshop",
+        "templates": {
+          "weekly-upgrade": {
+            "objective": "upgrade",
+            "count": 3,
+            "min_player_level": 10,
+            "weight": 2,
+            "reward_share": 1
+          },
+          "weekly-mount": {
+            "objective": "mount",
+            "count": 3,
+            "weight": 2,
+            "reward_share": 1
+          },
+          "weekly-service": {
+            "objective": "service",
+            "count": 2,
+            "weight": 1,
+            "reward_share": 1
+          }
+        }
+      },
+      {
+        "key": "shop",
+        "templates": {
+          "weekly-crate": {
+            "objective": "crate",
+            "count": 3,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "mixed"
+              }
+            ],
+            "weight": 2,
+            "reward_share": 1
+          },
+          "weekly-parts": {
+            "objective": "parts_bought",
+            "count": 3,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "mixed"
+              }
+            ],
+            "weight": 1,
+            "reward_share": 1
+          }
+        }
+      },
+      {
+        "key": "world",
+        "templates": {
+          "weekly-journey": {
+            "objective": "journey",
+            "count": 2,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "slot"
+              }
+            ],
+            "weight": 2,
+            "reward_share": 1
+          },
+          "weekly-rain": {
+            "objective": "wet_laps",
+            "tanks_ppm": 1500000,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "slot"
+              }
+            ],
+            "weight": 1,
+            "reward_share": 1
+          }
+        }
+      }
+    ],
+    "monthly": [
+      {
+        "key": "drive",
+        "templates": {
+          "monthly-laps": {
+            "objective": "laps",
+            "tanks_ppm": 20000000,
+            "weight": 1,
+            "reward_share": 2
+          }
+        }
+      },
+      {
+        "key": "earn",
+        "templates": {
+          "monthly-cash": {
+            "objective": "cash_earned",
+            "tanks_ppm": 20000000,
+            "weight": 1,
+            "reward_share": 2
+          }
+        }
+      },
+      {
+        "key": "workshop",
+        "templates": {
+          "monthly-upgrade": {
+            "objective": "upgrade",
+            "count": 10,
+            "min_player_level": 10,
+            "items": [
+              {
+                "type": "part",
+                "rarity": "rare"
+              }
+            ],
+            "weight": 2,
+            "reward_share": 1
+          },
+          "monthly-service": {
+            "objective": "service",
+            "count": 6,
+            "items": [
+              {
+                "type": "part",
+                "rarity": "rare"
+              }
+            ],
+            "weight": 1,
+            "reward_share": 1
+          },
+          "monthly-mount": {
+            "objective": "mount",
+            "count": 8,
+            "items": [
+              {
+                "type": "part",
+                "rarity": "rare"
+              }
+            ],
+            "weight": 1,
+            "reward_share": 1
+          }
+        }
+      },
+      {
+        "key": "world",
+        "templates": {
+          "monthly-journey": {
+            "objective": "journey",
+            "count": 8,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "premium"
+              }
+            ],
+            "weight": 2,
+            "reward_share": 1
+          },
+          "monthly-crate": {
+            "objective": "crate",
+            "count": 12,
+            "items": [
+              {
+                "type": "crate",
+                "kind": "premium"
+              }
+            ],
+            "weight": 2,
+            "reward_share": 1
+          }
+        }
+      }
+    ]
+  },
+  "chains": []
+}
