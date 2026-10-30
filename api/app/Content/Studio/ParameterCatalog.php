@@ -70,7 +70,7 @@ final class ParameterCatalog
         }
 
         $found = [];
-        $this->walk($schema, $document[$section], $live[$section] ?? null, [$section], [$section], [$this->humanize($section)], $section, $section, false, null, $found);
+        $this->walk($schema, $document[$section], $live[$section] ?? null, [$section], [$section], [$this->humanize($section)], $section, $section, null, false, null, $found);
 
         return $found;
     }
@@ -142,9 +142,11 @@ final class ParameterCatalog
      * @param  list<string|int>  $path
      * @param  list<string>  $pattern  the path with a star where the name is not one of a property of the schema
      * @param  list<string>  $trail  where it is, in words
+     * @param  string|null  $container  the name of the nearest object above that has one: the unit of a number that is named by what it is for (`uncommon`) is the one of the object
+     *                                  that holds the numbers (`base_ppm`)
      * @param  list<Parameter>  $found
      */
-    private function walk(array $schema, mixed $value, mixed $live, array $path, array $pattern, array $trail, string $section, ?string $unitKey, bool $inList, ?string $parentDescription, array &$found): void
+    private function walk(array $schema, mixed $value, mixed $live, array $path, array $pattern, array $trail, string $section, ?string $unitKey, ?string $container, bool $inList, ?string $parentDescription, array &$found): void
     {
         $schema = $this->resolve($schema);
 
@@ -156,6 +158,8 @@ final class ParameterCatalog
         if (is_array($value)) {
             $isList = ($schema['type'] ?? null) === 'array';
             $description = isset($schema['description']) ? (string) $schema['description'] : $parentDescription;
+            $own = end($path);
+            $below = is_string($own) && ! is_numeric($own) ? $own : $container;
 
             foreach ($value as $key => $child) {
                 $childSchema = $isList
@@ -177,6 +181,7 @@ final class ParameterCatalog
                     is_array($child) || is_object($child) ? [...$trail, $name] : $trail,
                     $section,
                     $isList || is_int($key) ? $unitKey : (string) $key,
+                    $below,
                     $isList,
                     $description,
                     $found,
@@ -204,13 +209,21 @@ final class ParameterCatalog
             label: $named ? $this->humanize($unitKey).' '.($inList ? ((int) $key) + 1 : $key) : $this->humanize($key),
             description: isset($schema['description']) ? (string) $schema['description'] : null,
             integer: $integer,
-            unit: Unit::of($named ? $unitKey : $key),
+            unit: $this->unitOf($named ? $unitKey : $key, $named ? null : $container),
             value: $value,
             live: is_numeric($live) && ! is_bool($live) ? $live : null,
             min: isset($schema['minimum']) && is_numeric($schema['minimum']) ? $schema['minimum'] : null,
             max: isset($schema['maximum']) && is_numeric($schema['maximum']) ? $schema['maximum'] : null,
             pattern: '/'.implode('/', $pattern),
         );
+    }
+
+    /** The unit of a number by its name; a name that says none (`uncommon`, `tires`, `min`) has the unit that the name of the object holding it says (`base_ppm`, `base_time_ms`). */
+    private function unitOf(string $key, ?string $container): Unit
+    {
+        $unit = Unit::of($key);
+
+        return $unit === Unit::Plain && $container !== null ? Unit::of($container) : $unit;
     }
 
     /**
