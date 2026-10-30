@@ -84,8 +84,8 @@ return [
             'tip' => 'Masa wpływa też na cenę złomu: sprzedaż auta płaci nie mniej niż masa × 0,25 $/kg. Masę auta zmieniają jeszcze części, które coś ważą (chłodnice, intercoolery), i silnik z części.',
         ],
         'top_speed_kmh' => [
-            'label' => 'Prędkość maksymalna (km/h)',
-            'help' => 'Prędkość maksymalna auta z silnikiem fabrycznym. Rośnie z pierwiastkiem sześciennym zysku mocy (silnik z części, doładowanie) i nie przekracza limitu skrzyni biegów. Część torów ją liczy (do 15% wag), a od niej zależy czas podróży między miastami (średnio połowa tej prędkości).',
+            'label' => 'Prędkość maksymalna',
+            'help' => 'Prędkość maksymalna auta z silnikiem fabrycznym. Rośnie z pierwiastkiem sześciennym zysku mocy (silnik z części, doładowanie) i nie przekracza limitu skrzyni biegów. Część torów ją liczy (do 15% wag), a od niej zależy czas podróży między miastami (średnio połowa tej prędkości). Pole liczy w jednostce prędkości gry (napis przy polu mówi w jakiej); w dokumencie zostają km/h.',
             'example' => 'Rdzak GT-4: 175 km/h; Orzeł V12: 345 km/h.',
             'range' => '60 – 450 km/h (ze schematu).',
         ],

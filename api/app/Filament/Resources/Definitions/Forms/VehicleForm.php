@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources\Definitions\Forms;
 
+use App\Content\Units\Measures;
 use App\Filament\Support\FieldHelp;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Select;
@@ -20,6 +21,7 @@ final class VehicleForm
     /** @return list<mixed> */
     public static function schema(): array
     {
+        $speed = Measures::ofTheGame()->speed;
         $electric = fn (Get $get): bool => $get('powertrain') === 'ev';
         $combustion = fn (Get $get): bool => $get('powertrain') !== 'ev';
 
@@ -46,7 +48,14 @@ final class VehicleForm
                 Grid::make(3)->schema([
                     TextInput::make('power_kw')->helpKey('vehicle.power_kw')->numeric()->required(),
                     TextInput::make('mass_kg')->helpKey('vehicle.mass_kg')->numeric()->required(),
-                    TextInput::make('top_speed_kmh')->helpKey('vehicle.top_speed_kmh')->numeric()->required(),
+                    // The speed of a car is whole km/h in the document, and is shown and written in the unit of speed of the game.
+                    TextInput::make('top_speed_kmh')
+                        ->helpKey('vehicle.top_speed_kmh')
+                        ->numeric()
+                        ->suffix($speed->shortFor())
+                        ->formatStateUsing(fn (mixed $state): mixed => is_numeric($state) ? $speed->inBox($state) : $state)
+                        ->dehydrateStateUsing(fn (mixed $state): mixed => is_numeric($state) ? (int) round($speed->toKmh($state)) : $state)
+                        ->required(),
                     TextInput::make('clearance')->helpKey('vehicle.clearance')->numeric()->required(),
                     TextInput::make('cargo_kg')->helpKey('vehicle.cargo_kg')->numeric()->required(),
                     TextInput::make('seats')->helpKey('vehicle.seats')->numeric()->required(),

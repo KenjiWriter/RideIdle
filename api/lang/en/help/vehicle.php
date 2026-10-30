@@ -84,8 +84,8 @@ return [
             'tip' => 'Mass also sets the scrap price: selling a car pays no less than mass × $0.25 per kg. The mass of the car is also changed by parts that weigh something (radiators, intercoolers) and by an engine part.',
         ],
         'top_speed_kmh' => [
-            'label' => 'Top speed (km/h)',
-            'help' => 'The top speed of the car with the factory engine. It grows with the cube root of the power gained (engine part, booster) and never goes above the limit of the gearbox. Some tracks count it (up to 15% of their weights), and travel time between cities depends on it (on average half of this speed).',
+            'label' => 'Top speed',
+            'help' => 'The top speed of the car with the factory engine. It grows with the cube root of the power gained (engine part, booster) and never goes above the limit of the gearbox. Some tracks count it (up to 15% of their weights), and travel time between cities depends on it (on average half of this speed). The box counts in the unit of speed of the game (the text next to it says which); the document keeps km/h.',
             'example' => 'Rdzak GT-4: 175 km/h; Orzeł V12: 345 km/h.',
             'range' => '60 – 450 km/h (from the schema).',
         ],

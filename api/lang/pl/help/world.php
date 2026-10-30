@@ -74,8 +74,8 @@ return [
             'help' => 'Drugi koniec drogi: inne miasto niż w polu „Z miasta”.',
         ],
         'km' => [
-            'label' => 'Długość (km)',
-            'help' => 'Jak długa jest droga. Teraz auto jedzie po niej z połową swojej prędkości maksymalnej i pali 60 ml paliwa na km (razy zużycie auta), więc dwa razy więcej km to dwa razy dłuższa podróż i dwa razy więcej paliwa.',
+            'label' => 'Długość',
+            'help' => 'Jak długa jest droga. Teraz auto jedzie po niej z połową swojej prędkości maksymalnej i pali 60 ml paliwa na km (razy zużycie auta), więc dwa razy więcej km to dwa razy dłuższa podróż i dwa razy więcej paliwa. Pole liczy w jednostce, w której gra liczy drogi (napis przy polu mówi w jakiej); w dokumencie droga to całe kilometry.',
             'example' => 'Złomowo – Kruszyn to 38 km: około 26 minut i ok. 2,3 l paliwa dla Rdzaka.',
             'range' => 'Liczba całkowita, co najmniej 1 km.',
             'tip' => 'Kilometry zwiększają też przebieg auta i zużycie jego części, a podróż przyspieszona jest szybsza, pali więcej i grozi zatrzymaniem przez policję. Połowa prędkości i 60 ml na km to liczby podróży w Studio parametrów.',

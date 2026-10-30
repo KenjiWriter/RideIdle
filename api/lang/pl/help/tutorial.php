@@ -79,8 +79,8 @@ return [
             'range' => 'Liczba całkowita od 1.',
         ],
         'listing_mileage_km' => [
-            'label' => 'Przebieg (km)',
-            'help' => 'Przebieg auta z ogłoszenia. Kupione auto dostaje ten przebieg, więc od niego zależy, jak szybko zbliży się serwis.',
+            'label' => 'Przebieg',
+            'help' => 'Przebieg auta z ogłoszenia. Kupione auto dostaje ten przebieg, więc od niego zależy, jak szybko zbliży się serwis. Pole liczy w jednostce podróży gry (napis przy polu mówi w jakiej); w dokumencie zostają kilometry.',
             'example' => 'Obecnie 280 000 km.',
             'range' => 'Liczba całkowita od 1, w kilometrach.',
         ],

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Forms;
 
 use App\Content\Definitions\SchemaChoices;
+use App\Content\Units\Measures;
 use App\Filament\Resources\Definitions\Forms\DefinitionFields;
 use App\Filament\Support\FieldHelp;
 use App\Models\ContentDefinition;
@@ -26,6 +27,7 @@ final class TutorialFields
     /** @return list<mixed> */
     public static function schema(): array
     {
+        $travel = Measures::ofTheGame()->travel;
         $targets = SchemaChoices::targets();
         $conditions = [...SchemaChoices::conditions(), ...array_map(fn (string $name): string => $name.':', SchemaChoices::conditionParameters())];
         $jobs = SchemaChoices::arrangedJobs();
@@ -46,7 +48,13 @@ final class TutorialFields
                     Grid::make(5)->schema([
                         Select::make('listing_vehicle')->helpKey('tutorial.listing_vehicle')->options(fn (): array => ContentOptions::cars())->placeholder('-')->searchable(),
                         TextInput::make('listing_age_years')->helpKey('tutorial.listing_age_years')->numeric()->integer()->minValue(1),
-                        TextInput::make('listing_mileage_km')->helpKey('tutorial.listing_mileage_km')->numeric()->integer()->minValue(1),
+                        TextInput::make('listing_mileage_km')
+                            ->helpKey('tutorial.listing_mileage_km')
+                            ->numeric()
+                            ->minValue(0)
+                            ->suffix($travel->shortFor())
+                            ->formatStateUsing(fn (mixed $state): mixed => is_numeric($state) ? $travel->inBox($state * 1000) : $state)
+                            ->dehydrateStateUsing(fn (mixed $state): mixed => is_numeric($state) ? (int) round($travel->toMetres($state) / 1000) : $state),
                         TextInput::make('listing_condition')->helpKey('tutorial.listing_condition')->numeric()->suffix('%')->minValue(0.0001)->maxValue(100),
                         TextInput::make('listing_price')->helpKey('tutorial.listing_price')->numeric()->prefix('$')->minValue(0.01),
                     ]),

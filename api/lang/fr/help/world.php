@@ -74,8 +74,8 @@ return [
             'help' => 'L’autre extrémité de la route : une autre ville que « De ».',
         ],
         'km' => [
-            'label' => 'Longueur (km)',
-            'help' => 'La longueur de la route. Pour l’instant une voiture la parcourt à la moitié de sa vitesse max. et brûle 60 ml de carburant par km (fois sa soif), donc deux fois plus de km, c’est deux fois plus de temps et de carburant.',
+            'label' => 'Longueur',
+            'help' => 'La longueur de la route. Pour l’instant une voiture la parcourt à la moitié de sa vitesse max. et brûle 60 ml de carburant par km (fois sa soif), donc deux fois plus de km, c’est deux fois plus de temps et de carburant. Le champ compte dans l’unité dans laquelle le jeu compte les routes (le texte à côté dit laquelle) ; dans le document, une route compte en kilomètres entiers.',
             'example' => 'Złomowo – Kruszyn fait 38 km : environ 26 minutes et environ 2,3 l de carburant pour une Rdzak.',
             'range' => 'Un nombre entier, au moins 1 km.',
             'tip' => 'Les km s’ajoutent aussi au compteur de la voiture et à l’usure de ses pièces, et un trajet accéléré est plus rapide, consomme plus et risque un arrêt de la police. La moitié de la vitesse et les 60 ml par km sont les chiffres de voyage du Studio de paramètres.',

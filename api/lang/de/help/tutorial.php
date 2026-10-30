@@ -79,8 +79,8 @@ return [
             'range' => 'Eine ganze Zahl ab 1.',
         ],
         'listing_mileage_km' => [
-            'label' => 'Laufleistung (km)',
-            'help' => 'Die Laufleistung des Autos im Angebot. Das gekaufte Auto bekommt diese Laufleistung, sie bestimmt also, wie bald seine Wartung fällig wird.',
+            'label' => 'Laufleistung',
+            'help' => 'Die Laufleistung des Autos im Angebot. Das gekaufte Auto bekommt diese Laufleistung, sie bestimmt also, wie bald seine Wartung fällig wird. Das Feld zählt in der Reiseeinheit des Spiels (der Text daneben sagt, in welcher); das Dokument behält Kilometer.',
             'example' => 'Derzeit 280.000 km.',
             'range' => 'Eine ganze Zahl ab 1, in Kilometern.',
         ],

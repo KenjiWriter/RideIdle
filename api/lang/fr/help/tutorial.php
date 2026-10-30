@@ -79,8 +79,8 @@ return [
             'range' => 'Un nombre entier à partir de 1.',
         ],
         'listing_mileage_km' => [
-            'label' => 'Kilométrage (km)',
-            'help' => 'Le kilométrage de la voiture de l’annonce. La voiture achetée reçoit ce kilométrage, qui décide donc de la date de son prochain entretien.',
+            'label' => 'Kilométrage',
+            'help' => 'Le kilométrage de la voiture de l’annonce. La voiture achetée reçoit ce kilométrage, qui décide donc de la date de son prochain entretien. Le champ compte dans l’unité de voyage du jeu (le texte à côté dit laquelle) ; le document garde les kilomètres.',
             'example' => 'Aujourd’hui 280 000 km.',
             'range' => 'Un nombre entier à partir de 1, en kilomètres.',
         ],

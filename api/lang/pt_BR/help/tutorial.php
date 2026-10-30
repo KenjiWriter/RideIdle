@@ -79,8 +79,8 @@ return [
             'range' => 'Um número inteiro a partir de 1.',
         ],
         'listing_mileage_km' => [
-            'label' => 'Quilometragem (km)',
-            'help' => 'A quilometragem do carro do anúncio. O carro comprado recebe essa quilometragem, então ela decide quando a revisão dele vence.',
+            'label' => 'Quilometragem',
+            'help' => 'A quilometragem do carro do anúncio. O carro comprado recebe essa quilometragem, então ela decide quando a revisão dele vence. O campo conta na unidade de viagem do jogo (o texto ao lado diz qual); o documento guarda quilômetros.',
             'example' => 'Hoje 280.000 km.',
             'range' => 'Um número inteiro a partir de 1, em quilômetros.',
         ],

@@ -74,8 +74,8 @@ return [
             'help' => 'A outra ponta da estrada: uma cidade diferente de “De”.',
         ],
         'km' => [
-            'label' => 'Extensão (km)',
-            'help' => 'Quão longa é a estrada. Por ora o carro a percorre à metade da sua velocidade máxima e queima 60 ml de combustível por km (vezes a sede dele), então o dobro de km é o dobro de tempo e de combustível.',
+            'label' => 'Extensão',
+            'help' => 'Quão longa é a estrada. Por ora o carro a percorre à metade da sua velocidade máxima e queima 60 ml de combustível por km (vezes a sede dele), então o dobro de km é o dobro de tempo e de combustível. O campo conta na unidade em que o jogo conta as estradas (o texto ao lado diz qual); no documento uma estrada é de quilômetros inteiros.',
             'example' => 'Złomowo – Kruszyn tem 38 km: cerca de 26 minutos e cerca de 2,3 l de combustível para um Rdzak.',
             'range' => 'Um número inteiro, no mínimo 1 km.',
             'tip' => 'Os km também somam ao odômetro do carro e ao desgaste das peças dele, e uma viagem acelerada é mais rápida, gasta mais e corre o risco de uma parada da polícia. A metade da velocidade e os 60 ml por km são os números de viagem do Estúdio de parâmetros.',

@@ -79,8 +79,8 @@ return [
             'range' => 'A whole number from 1.',
         ],
         'listing_mileage_km' => [
-            'label' => 'Mileage (km)',
-            'help' => 'The mileage of the car of the listing. The bought car gets this mileage, so it decides how soon its service is due.',
+            'label' => 'Mileage',
+            'help' => 'The mileage of the car of the listing. The bought car gets this mileage, so it decides how soon its service is due. The box counts in the unit of travel of the game (the text next to it says which); the document keeps kilometres.',
             'example' => 'Now 280,000 km.',
             'range' => 'A whole number from 1, in kilometers.',
         ],

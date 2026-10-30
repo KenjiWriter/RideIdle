@@ -84,8 +84,8 @@ return [
             'tip' => 'La masse fixe aussi le prix de la ferraille : la vente d’une voiture rapporte au moins masse × 0,25 $ par kg. La masse de la voiture change aussi avec les pièces qui pèsent quelque chose (radiateurs, intercoolers) et avec un moteur en pièce.',
         ],
         'top_speed_kmh' => [
-            'label' => 'Vitesse maximale (km/h)',
-            'help' => 'La vitesse maximale de la voiture avec son moteur d’origine. Elle croît avec la racine cubique du gain de puissance (moteur en pièce, suralimentation) et ne dépasse jamais la limite de la boîte de vitesses. Certains circuits la comptent (jusqu’à 15 % de leurs poids), et la durée des trajets entre villes en dépend (en moyenne la moitié de cette vitesse).',
+            'label' => 'Vitesse maximale',
+            'help' => 'La vitesse maximale de la voiture avec son moteur d’origine. Elle croît avec la racine cubique du gain de puissance (moteur en pièce, suralimentation) et ne dépasse jamais la limite de la boîte de vitesses. Certains circuits la comptent (jusqu’à 15 % de leurs poids), et la durée des trajets entre villes en dépend (en moyenne la moitié de cette vitesse). Le champ compte dans l’unité de vitesse du jeu (le texte à côté dit laquelle) ; le document garde les km/h.',
             'example' => 'Rdzak GT-4 : 175 km/h ; Orzeł V12 : 345 km/h.',
             'range' => '60 – 450 km/h (d’après le schéma).',
         ],

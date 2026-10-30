@@ -171,7 +171,8 @@ describe('the world', function () {
             return $state;
         }))->call('save');
 
-        expect(Livewire::test(WorldPage::class)->get('data.roads'))->toContain(['from' => publishedRules()['roads'][0]['from'], 'to' => publishedRules()['roads'][0]['to'], 'km' => 99]);
+        // The box of the length of a road holds a number that has a unit (a float, as every box of a number that is not a whole number): 99 and 99.0 are the same road.
+        expect(array_values(Livewire::test(WorldPage::class)->get('data.roads'))[0])->toEqual(['from' => publishedRules()['roads'][0]['from'], 'to' => publishedRules()['roads'][0]['to'], 'km' => 99]);
 
         Livewire::test(WorldPage::class)->callAction('discard');
 

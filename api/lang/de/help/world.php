@@ -74,8 +74,8 @@ return [
             'help' => 'Das andere Ende der Straße: eine andere Stadt als bei „Von“.',
         ],
         'km' => [
-            'label' => 'Länge (km)',
-            'help' => 'Wie lang die Straße ist. Derzeit fährt ein Auto sie mit der Hälfte seines Höchsttempos und verbrennt 60 ml Kraftstoff pro km (mal seinem Durst); doppelt so viele km sind also doppelt so viel Fahrzeit und doppelt so viel Kraftstoff.',
+            'label' => 'Länge',
+            'help' => 'Wie lang die Straße ist. Derzeit fährt ein Auto sie mit der Hälfte seines Höchsttempos und verbrennt 60 ml Kraftstoff pro km (mal seinem Durst); doppelt so viele km sind also doppelt so viel Fahrzeit und doppelt so viel Kraftstoff. Das Feld zählt in der Einheit, in der das Spiel Straßen zählt (der Text daneben sagt, in welcher); im Dokument ist eine Straße ganze Kilometer.',
             'example' => 'Złomowo – Kruszyn sind 38 km: etwa 26 Minuten und etwa 2,3 l Kraftstoff für einen Rdzak.',
             'range' => 'Eine ganze Zahl, mindestens 1 km.',
             'tip' => 'Die km erhöhen auch den Kilometerstand des Autos und den Verschleiß seiner Teile, und eine beschleunigte Reise ist schneller, verbraucht mehr und riskiert einen Halt durch die Polizei. Die halbe Geschwindigkeit und die 60 ml pro km sind die Reisezahlen im Parameter-Studio.',

@@ -42,12 +42,14 @@ final class WorldFields
      */
     public static function schema(array $weather, array $document = []): array
     {
+        $measures = Measures::fromRules($document);
+
         return [
             FieldHelp::guide('world'),
             Tabs::make('world')->persistTabInQueryString()->tabs([
                 Tab::make(__('admin.world.cities'))->schema(self::cities($weather)),
-                Tab::make(__('admin.world.roads'))->schema(self::roads()),
-                Tab::make(__('admin.world.tracks'))->schema(self::tracks(Measures::fromRules($document), $document)),
+                Tab::make(__('admin.world.roads'))->schema(self::roads($measures)),
+                Tab::make(__('admin.world.tracks'))->schema(self::tracks($measures, $document)),
             ]),
         ];
     }
@@ -91,7 +93,7 @@ final class WorldFields
     }
 
     /** @return list<mixed> */
-    private static function roads(): array
+    private static function roads(Measures $measures): array
     {
         $cities = fn (Get $get): array => ContentOptions::cities($get('../../regions'));
 
@@ -105,7 +107,15 @@ final class WorldFields
                 ->schema([
                     Select::make('from')->helpKey('world.from')->options($cities)->required(),
                     Select::make('to')->helpKey('world.to')->options($cities)->required(),
-                    TextInput::make('km')->helpKey('world.km')->numeric()->integer()->minValue(1)->required(),
+                    // A road is whole kilometres in the document, and is shown and written in the unit of travel of the game (20 nautical miles is 37 km, and shows as 19.978).
+                    TextInput::make('km')
+                        ->helpKey('world.km')
+                        ->numeric()
+                        ->minValue(0)
+                        ->suffix($measures->travel->shortFor())
+                        ->formatStateUsing(fn (mixed $state): mixed => is_numeric($state) ? $measures->travel->inBox($state * 1000) : $state)
+                        ->dehydrateStateUsing(fn (mixed $state): mixed => is_numeric($state) ? (int) round($measures->travel->toMetres($state) / 1000) : $state)
+                        ->required(),
                 ]),
         ];
     }

@@ -84,8 +84,8 @@ return [
             'tip' => 'Die Masse bestimmt auch den Schrottpreis: Der Verkauf eines Autos zahlt mindestens Masse × 0,25 $ pro kg. Die Masse des Autos ändern außerdem Teile, die etwas wiegen (Kühler, Ladeluftkühler), und ein Motor als Teil.',
         ],
         'top_speed_kmh' => [
-            'label' => 'Höchstgeschwindigkeit (km/h)',
-            'help' => 'Die Höchstgeschwindigkeit des Autos mit Serienmotor. Sie wächst mit der Kubikwurzel des Leistungsgewinns (Motor als Teil, Aufladung) und liegt nie über der Grenze des Getriebes. Manche Strecken zählen sie (bis zu 15 % ihrer Gewichte), und die Reisezeit zwischen Städten hängt von ihr ab (im Schnitt die Hälfte dieser Geschwindigkeit).',
+            'label' => 'Höchstgeschwindigkeit',
+            'help' => 'Die Höchstgeschwindigkeit des Autos mit Serienmotor. Sie wächst mit der Kubikwurzel des Leistungsgewinns (Motor als Teil, Aufladung) und liegt nie über der Grenze des Getriebes. Manche Strecken zählen sie (bis zu 15 % ihrer Gewichte), und die Reisezeit zwischen Städten hängt von ihr ab (im Schnitt die Hälfte dieser Geschwindigkeit). Das Feld zählt in der Einheit des Tempos des Spiels (der Text daneben sagt, in welcher); das Dokument behält km/h.',
             'example' => 'Rdzak GT-4: 175 km/h; Orzeł V12: 345 km/h.',
             'range' => '60 – 450 km/h (aus dem Schema).',
         ],

@@ -84,8 +84,8 @@ return [
             'tip' => 'A massa também define o preço da sucata: vender um carro paga no mínimo massa × $0,25 por kg. A massa do carro também muda com peças que pesam algo (radiadores, intercoolers) e com um motor em forma de peça.',
         ],
         'top_speed_kmh' => [
-            'label' => 'Velocidade máxima (km/h)',
-            'help' => 'A velocidade máxima do carro com o motor de fábrica. Cresce com a raiz cúbica do ganho de potência (motor em forma de peça, sobrealimentação) e nunca passa do limite do câmbio. Algumas pistas a contam (até 15% dos seus pesos), e o tempo de viagem entre cidades depende dela (em média, metade desta velocidade).',
+            'label' => 'Velocidade máxima',
+            'help' => 'A velocidade máxima do carro com o motor de fábrica. Cresce com a raiz cúbica do ganho de potência (motor em forma de peça, sobrealimentação) e nunca passa do limite do câmbio. Algumas pistas a contam (até 15% dos seus pesos), e o tempo de viagem entre cidades depende dela (em média, metade desta velocidade). O campo conta na unidade de velocidade do jogo (o texto ao lado diz qual); o documento guarda km/h.',
             'example' => 'Rdzak GT-4: 175 km/h; Orzeł V12: 345 km/h.',
             'range' => '60 – 450 km/h (do esquema).',
         ],

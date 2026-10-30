@@ -74,8 +74,8 @@ return [
             'help' => 'The other end of the road: a different city than “From”.',
         ],
         'km' => [
-            'label' => 'Length (km)',
-            'help' => 'How long the road is. Right now a car drives it at half its top speed and burns 60 ml of fuel per km (times its thirst), so twice the km is twice the travel time and twice the fuel.',
+            'label' => 'Length',
+            'help' => 'How long the road is. Right now a car drives it at half its top speed and burns 60 ml of fuel per km (times its thirst), so twice the km is twice the travel time and twice the fuel. The box counts in the unit that the game counts roads in (the text next to it says which); in the document a road is whole kilometres.',
             'example' => 'Złomowo – Kruszyn is 38 km: about 26 minutes and about 2.3 l of fuel for a Rdzak.',
             'range' => 'A whole number, at least 1 km.',
             'tip' => 'The km also add to the odometer of the car and the wear of its parts, and a boosted journey is faster, burns more and risks a police stop. The half of the speed and the 60 ml per km are the travel numbers in the Parameter studio.',
